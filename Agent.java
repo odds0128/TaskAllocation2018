@@ -6,17 +6,22 @@
 import java.util.ArrayList;
 import java.util.Random;
 
-public class Agent {
-    public static final int leader = 1 ;
-    public static final int wait   = 0 ;
-    public static final int member = -1;
-    public static final int relMax = 5 ;
-
-    int    role   = wait;
+public class Agent implements SetParam{
+    public static int _id = 0;
+    public static int _leader_num = 0;
+    public static int _member_num = 0;
+    int id;
+    int    role   = WAIT;
     double e_leader = 0.5, e_member = 0.5;
     int res[] = {};
     double rel[] = {};
     ArrayList<Integer> relAgents = new ArrayList<Integer>();
+
+    Agent(){
+        id = _id;
+        _id++;
+        doRole();
+    }
 
     /**
      * setRelメソッド
@@ -42,13 +47,40 @@ public class Agent {
      * eの値によって次の自分の役割を選択する.
      */
     private void doRole(){
-        if( e_leader > e_member ) role = leader;
-        else if( e_member > e_leader ) role = member;
-        else{
+        if( e_leader > e_member ) {
+            role = LEADER;
+            _leader_num++;
+        }else if( e_member > e_leader ){
+            role = MEMBER;
+            _member_num++;
+        }else{
             Random random = new Random();
             boolean ran = random.nextBoolean();
-            if( ran ) role = leader;
-            else role = member;
+            if( ran ){
+                role = LEADER;
+                _leader_num++;
+            }else{
+                role = MEMBER;
+                _member_num++;
+            }
         }
+    }
+
+    /**
+     * inactiveメソッド
+     * チームが解散になったときに待機状態になる.
+     */
+    private void inactivate(){
+        if( role == LEADER ) _leader_num-- ;
+        else _member_num-- ;
+        role = WAIT;
+    }
+
+    @Override
+    public String toString(){
+        String str = "ID: " + id + ", ";
+        if( role == LEADER ) str += "I'm a leader. \n" ;
+        else str += "I'm a member. \n";
+        return str;
     }
 }

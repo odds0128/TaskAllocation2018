@@ -13,14 +13,15 @@ public class CheckParam implements SetParam {
      * @param taskQueue
      */
     static void checkTask(ArrayList<Task> taskQueue ) {
-            System.out.println("Queuesize: " + taskQueue.size());
-            for (int i = 0; i < maxTasks; i++) {
-                Task temp = taskQueue.remove(0);
-                System.out.println("number of subtasks : " + temp.subTaskNum);
-                temp.showSubTask();
-            }
-            System.out.println("Queuesize: " + taskQueue.size());
+        int num = taskQueue.size();
+        System.out.println("Queuesize: " + num);
+        for (int i = 0; i < num; i++) {
+            Task temp = taskQueue.remove(0);
+            System.out.print( temp );
+            System.out.println("  Remains: " + taskQueue.size());
         }
+        System.out.println();
+    }
 
     /**
      * checkAgentメソッド
@@ -28,12 +29,13 @@ public class CheckParam implements SetParam {
      * @param agents
      */
     static void checkAgent(Agent[][] agents) {
-            for (int i = 0; i < row; i++) {
-                for (int j = 0; j < column; j++) {
-//                    System.out.print("ID: " + Agent.id + ", ");
-                }
-                System.out.println();
+        System.out.println("Total Agents is " + Agent._id );
+        System.out.println("Leaders is " + Agent._leader_num );
+        System.out.println("Members is " + Agent._member_num );
+        for (int i = 0; i < ROW; i++) {
+            for (int j = 0; j < COLUMN; j++) {
+                System.out.print(agents[i][j]);
             }
         }
-
+    }
 }

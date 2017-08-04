@@ -6,11 +6,10 @@
 import java.lang.Math;
 import java.util.Random;
 
-public class SubTask {
-    public static final int resNum  = 6;
-    public static final int bias    = 0;
-    public static final int uniform = 1;
-    int reqRes[] = new int[resNum];
+public class SubTask implements SetParam{
+    public static int _subtask_id ;
+    int subtask_id ;
+    int reqRes[] = new int[RESOURSE_NUM];
     Random random = new Random();
 
     /**
@@ -19,7 +18,10 @@ public class SubTask {
      * 今はそれだけ
      * @param taskType
      */
-    SubTask( int taskType ){
+    SubTask( int taskType, boolean b ){
+        if( b ) _subtask_id = 0;
+        subtask_id = _subtask_id;
+        _subtask_id ++;
         setResources(taskType);
     }
 
@@ -30,13 +32,21 @@ public class SubTask {
      */
     void setResources(int taskType){
         // とりあえずuniformだけで
-        if( taskType ==  bias){
+        if( taskType ==  BIAS){
         }else{
-            for (int i = 0; i < resNum; i++) {
+            for (int i = 0; i < RESOURSE_NUM; i++) {
                 int rand = random.nextInt(2);
                 reqRes[i] = rand;
             }
         }
     }
 
+    @Override
+    public String toString() {
+        String str = " subtask " + subtask_id + ": " ;
+        for( int i = 0; i < RESOURSE_NUM ;i++ ){
+            str +=  reqRes[i] +" " ;
+        }
+        return str;
+    }
 }
