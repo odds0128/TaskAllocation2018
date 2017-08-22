@@ -1,17 +1,16 @@
 /**
  * @author Funato
- * @version 1.0
+ * @version 1.1
  */
 
-import java.util.ArrayList;
-import java.util.Random;
+import java.util.*;
 
 public class Task implements SetParam{
-    public static int _task_id = 0;
+    static int _task_id = 0;
     int task_id;
     ArrayList<SubTask> subTasks = new ArrayList<SubTask>();
     Random random = new Random();
-    int subTaskNum = random.nextInt(4)+3;;
+    public int subTaskNum = random.nextInt(4)+3;;
 
     /**
      * コンストラクタ
@@ -29,7 +28,7 @@ public class Task implements SetParam{
      * パラメータで指定されたタイプのサブタスクを指定数作成する.
      * @param taskType
      */
-    void setSubTasks(int taskType){
+    private void setSubTasks(int taskType){
         for( int i = 0; i < subTaskNum; i++){
             if( i == 0 ) subTasks.add(new SubTask(UNIFORM, RESET) );
             else subTasks.add(new SubTask(UNIFORM, CONT) );
