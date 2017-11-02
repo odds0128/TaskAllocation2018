@@ -1,50 +1,61 @@
 /**
  * @author Funato
- * @version 1.1
+ * @version 2.0
  */
 
 import java.util.Random;
 
 public class SubTask implements SetParam{
-    static int _subtask_id ;
+    private static int _subtask_id ;
+    static long _seed;
+    static Random _randSeed;
     int subtask_id ;
-    int reqRes[] = new int[RESOURCE_NUM];
-    Random random = new Random();
+    int reqRes;
 
     /**
      * コンストラクタ
-     * パラメータで指定されたタイプでサブタスクを初期化する.
-     * @param taskType
+     * b == true はあるタスクについて最初のサブタスク生成ということ
+     * seedを引数とするこちらのコンストラクタはタームの最初のサブタスク生成時に呼び出される
      */
-    SubTask( int taskType, boolean b ){
+    SubTask( boolean b, long seed ){
+        if( b ) _subtask_id = 0;
+        setSeed(seed);
+        this.subtask_id = _subtask_id;
+        _subtask_id ++;
+        setResource();
+    }
+
+    /**
+     * コンストラクタ
+     * 上と同様に, 同じseedを使ってサブタスクを生成する
+     */
+    SubTask( boolean b ){
         if( b ) _subtask_id = 0;
         this.subtask_id = _subtask_id;
         _subtask_id ++;
-        setResources(taskType);
+        setResource();
     }
 
     /**
      * setResourcesメソッド
-     * パラメータが指定するタイプのサブタスクが要求するリソースの設定.
-     * @param taskType
+     * 1~4の間で要求リソースを定義
      */
-    private void setResources(int taskType){
-        // とりあえずuniformだけで
-        if( taskType ==  BIAS){
-        }else{
-            for (int i = 0; i < RESOURCE_NUM; i++) {
-                int rand = random.nextInt(2);
-                reqRes[i] = rand;
-            }
-        }
+    private void setResource(){
+          int rand = _randSeed.nextInt(4) + 1;
+          reqRes   = rand;
+    }
+
+    static void setSeed(long seed){
+        _seed = seed;
+        _randSeed = new Random(_seed);
+    }
+    static void clearST(){
+        _subtask_id = 0;
     }
 
     @Override
     public String toString() {
-        String str = " subtask " + subtask_id + ": " ;
-        for( int i = 0; i < RESOURCE_NUM ;i++ ){
-            str +=  reqRes[i] +" " ;
-        }
-        return str;
+        StringBuilder str = new StringBuilder(" subtask " + subtask_id + ": " + reqRes);
+        return str.toString();
     }
 }

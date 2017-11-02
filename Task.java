@@ -1,46 +1,75 @@
 /**
  * @author Funato
- * @version 1.1
+ * @version 2.0
  */
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 public class Task implements SetParam{
-    static int _task_id = 0;
-    int task_id;
-    ArrayList<SubTask> subTasks = new ArrayList<SubTask>();
-    Random random = new Random();
-    public int subTaskNum = random.nextInt(4)+3;;
+    private static int _task_id = 0;
+    private static long _seed;
+    private static Random _randSeed ;
+    private int task_id;
+    boolean flag = false;
+    List<SubTask> subTasks = new ArrayList<>();
+    public int subTaskNum ;
+    int fromBirth = 0;
+    int fromPicked = 0;
 
     /**
      * コンストラクタ
-     * パラメータで指定されたタイプのサブタスクをランダムに生成する.
-     * @param taskType
+     * タームの最初のタスク生成時に呼び出される
+     * パラメータで指定されたseedのサブタスクをランダムに生成する.
      */
-    Task( int taskType ){
+    Task( long seed ){
         this.task_id = _task_id;
         _task_id++;
-        setSubTasks(taskType);
+        setSeed(seed);
+        this.subTaskNum = _randSeed.nextInt(4) + 3;
+        setSubTasks(seed);
+    }
+    /**
+     * setSubTasksメソッド
+     * パラメータで指定されたseedのサブタスクを指定数作成する.
+     * @param seed
+     */
+    private void setSubTasks(long seed){
+        subTasks.add(new SubTask( RESET, seed) );
+        for(int i = 1; i < subTaskNum; i++) subTasks.add( new SubTask(CONT) );
     }
 
     /**
-     * setSubTasksメソッド
-     * パラメータで指定されたタイプのサブタスクを指定数作成する.
-     * @param taskType
+     * コンストラクタ
+     * 残りのタスクを生成する.
      */
-    private void setSubTasks(int taskType){
-        for( int i = 0; i < subTaskNum; i++){
-            if( i == 0 ) subTasks.add(new SubTask(UNIFORM, RESET) );
-            else subTasks.add(new SubTask(UNIFORM, CONT) );
-        }
+    Task( ){
+        this.task_id = _task_id;
+        _task_id++;
+        this.subTaskNum = _randSeed.nextInt(4) + 3;
+        setSubTasks();
+    }
+    /**
+     * setSubTasksメソッド
+     * 残りのサブタスクを指定数作成する.
+     * @param
+     */
+    private void setSubTasks(){
+        subTasks.add(new SubTask( RESET ) );
+        for(int i = 1; i < subTaskNum; i++) subTasks.add( new SubTask(CONT) );
+    }
+
+    static void setSeed(long seed){
+        _seed = seed;
+        _randSeed = new Random(_seed);
+    }
+    static void clearT(){
+        _task_id = 0;
     }
 
     @Override
     public String toString(){
-        String str = "Task " + task_id + ", Subtasks :" + subTaskNum + "\n" ;
-        for( int i = 0; i < subTaskNum ;i++ ){
-            str +=  subTasks.get(i) +"\n" ;
-        }
-        return str;
+        return "Task " + task_id + ", Subtasks :" + subTaskNum;
     }
 }
