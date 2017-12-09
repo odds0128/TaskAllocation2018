@@ -8,30 +8,23 @@ class Message implements SetParam{
     private Agent to;
     private int   messageType;
     // メッセージにサブタスクを載せること自体は悪いことじゃないことに注意. 最終的には渡さないといけない
-    private int subTaskSize;
-    private SubTask subtask;
+    private int resType;
     private boolean reply;
-    private boolean result;
+    private SubTask subtask;  // チーム編成が成功したら, 割り当てるサブタスクが入る. 失敗したらnull
 
     Message(Agent from, Agent to, int type, Object o) {
         this.from = from;
         this.to   = to;
         this.messageType = type;
         if( type == PROPOSAL ){
-            this.subTaskSize = Integer.parseInt( o.toString() );
+            this.resType = (int) o;
         }
         if( type == REPLY ){
             this.reply       = Boolean.parseBoolean( o.toString() );
         }
-        if( type == CHARGE ){
-            this.subtask     = (SubTask) o ;
-        }
         if( type == RESULT ){
             this.subtask     = (SubTask) o ;
-            if( subtask == null ) this.result = SUCCESS;
-            else this.result = FAILURE;
         }
-
     }
 
     Agent getFrom() {
@@ -49,15 +42,14 @@ class Message implements SetParam{
     boolean getReply( ) {
         return reply;
     }
-    boolean getResult() {
-        return result;
-    }
+    int getResType(){ return resType; }
 
     @Override
     public String toString(){
         StringBuilder str = new StringBuilder();
         str.append(" from: " + from.id );
-        str.append( ", type: " + messageType );
+        str.append(", to: " + to.id);
+        str.append(", type: " + messageType );
         str.append(", " + reply);
         return str.toString();
     }

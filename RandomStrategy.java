@@ -2,22 +2,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * ProximityOrientedクラス(距離志向戦略)
- * 近いエージェントを優先するエージェント
- * リーダーは信頼エージェント(通信可能範囲)から選ぶ.
- * メンバは信頼エージェントであるリーダーの要請を受ける
+ * RandomStrategyクラス
+ * 何もかもランダムで決定する戦略
+ * 役割選択, メンバ選択, リーダー選択がランダム
  */
-public class ProximityOriented implements Strategy, SetParam {
+public class RandomStrategy implements Strategy, SetParam {
     public void act(Agent agent) {
-        if ((Manager.getTicks() - agent.validatedTicks) > RENEW_ROLE_TICKS ) agent.inactivate(0);
-
-        else
-// */
-            if (agent.role == LEADER && agent.phase == PROPOSITION) proposeAsL(agent);
-            else if (agent.role == MEMBER && agent.phase == WAITING) replyAsM(agent);
-            else if (agent.role == LEADER && agent.phase == REPORT) reportAsL(agent);
-            else if (agent.role == MEMBER && agent.phase == RECEPTION) receiveAsM(agent);
-            else if (agent.role == MEMBER && agent.phase == EXECUTION) executeAsM(agent);
+        if (agent.role == LEADER && agent.phase == PROPOSITION) proposeAsL(agent);
+        else if (agent.role == MEMBER && agent.phase == WAITING) replyAsM(agent);
+        else if (agent.role == LEADER && agent.phase == REPORT) reportAsL(agent);
+        else if (agent.role == MEMBER && agent.phase == RECEPTION) receiveAsM(agent);
+        else if (agent.role == MEMBER && agent.phase == EXECUTION) executeAsM(agent);
     }
 
     private void proposeAsL(Agent leader) {
@@ -40,7 +35,7 @@ public class ProximityOriented implements Strategy, SetParam {
             member.nextPhase();
         }
 /*        else if (member.index++ > MAX_REL_AGENTS) {
-            member.inactivate(0);
+            inactivate(member, 0);
         }
 // */
     }
@@ -78,19 +73,12 @@ public class ProximityOriented implements Strategy, SetParam {
         // 残存サブタスク数が0になればタスク終了とみなす
         if (leader.restSubTask == 0) {
             Manager.finishTask(leader);
-            leader.inactivate(1);
+            inactivate(leader,1);
         }
 
         // 再検討するサブタスクがあれば再送する. ただし, 全信頼エージェントに送っているんだったらもう諦める
-        // 諦めない!
         if (resendants.size() > 0) {
-            if (MAX_PROPOSITION_NUM - leader.index < resendants.size()) {
-                Manager.disposeTask(leader);
-                leader.inactivate(0);
-            } else {
                 leader.candidates.addAll(selectMembers(leader, resendants));
-            }
-// */        leader.candidates.addAll(selectMembers(leader, resendants));
         }
         leader.replies.clear();
         leader.results.clear();
@@ -109,7 +97,7 @@ public class ProximityOriented implements Strategy, SetParam {
             member.executionTime = member.calcExecutionTime(member);
             member.nextPhase();
         } else {
-            member.inactivate(0);
+            inactivate(member,0);
         }
     }
 
@@ -120,13 +108,13 @@ public class ProximityOriented implements Strategy, SetParam {
             // 自分のサブタスクが終わったら
             // リーダーに終了を通知して非活性に
 //            System.out.println("ID: " + member.id + ", leader: " + member.leader.id + ", success, subtask " + member.mySubTask );
-            member.inactivate(1);
+            inactivate(member,1);
         }
     }
 
     /**
      * selectMembersメソッド
-     * POAgentでは近い奴からサブタスクを任せる
+     * ランダムにサブタスクを任せる
      *
      * @param subtasks
      */
@@ -135,7 +123,7 @@ public class ProximityOriented implements Strategy, SetParam {
         Agent candidate;
         SubTask subtask;
         for (int i = 0; i < subtasks.size(); i++) {
-            candidate = leader.relRanking.get(leader.index++ );
+            candidate = leader.relAgents.get(leader.index++ % MAX_REL_AGENTS);
             subtask = subtasks.get(i);
             leader.allocations.add(new Allocation(candidate, subtask));
             temp.add(candidate);
@@ -169,8 +157,41 @@ public class ProximityOriented implements Strategy, SetParam {
         }
         return myLeader;
     }
+    private void renewRel(Agent agent, Agent target, int evaluation) {
+        assert !agent.equals(target) : "alert4";
+        double temp = agent.reliabilities[target.id];
 
+        // 信頼度の更新式
+        if (agent.role == LEADER) {
+            agent.reliabilities[target.id] = temp * (1 - α) + evaluation * α;
+        } else {
+            agent.reliabilities[target.id] = temp * (1 - α) + evaluation * α;
+        }
+    }
 
-    public void inactivate() {
+    private void inactivate(Agent agent, int success) {
+        if (agent.role == LEADER){
+            if (success == 1) agent.didTasksAsLeader++;
+            if (agent.ourTask != null) Manager.disposeTask(agent);
+            agent.ourTask = null;
+            agent.candidates.clear();
+            agent.teamMembers.clear();
+            agent.allocations.clear();
+            agent.replies.clear();
+            agent.results.clear();
+            agent.restSubTask = 0;
+            agent.phase = PROPOSAL;
+        }
+        else{
+            if (success == 1) agent.didTasksAsMember++;
+            agent.phase = WAITING;
+        }
+        agent.joined = false;
+//        agent.phase = SELECT_ROLE;    // ランダム手法では役割選択の必要がないわけだが, 他と揃えるために1tickまたせるべきか?
+        agent.leader = null;
+        agent.mySubTask = null;
+        agent.index = 0;
+        agent.validatedTicks = Manager.getTicks();
+        agent.messages.clear();
     }
 }

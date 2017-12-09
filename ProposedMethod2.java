@@ -2,15 +2,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * ProposedMethodクラス
+ * ProposedMethod2クラス
  * 信頼度, 信頼エージェントの更新をする.
- * それによってメンバの選定並びにリーダーからの要請を受諾するかどうか決定する
+ * それに加えて, 合計処理時間のテーブルを持たせる
+ * 合計処理時間 ≡ サブタスクの割り当てにかかる時間 + メンバのサブタスクの処理時間 + サブタスク完了報告到着までの時間
+ * このテーブルにより, 処理時間の短いエージェント → 信頼度の高いエージェント　と選定していく
  */
-public class ProposedMethod implements SetParam, Strategy {
+public class ProposedMethod2 implements SetParam, Strategy {
     static final double γ = γ_p;
 
+    // 期待処理時間テーブル ... 自分がリーダーの時の相手の期待処理時間を表す
+    static ExecutionTimeTable[] etTable = new ExecutionTimeTable[AGENT_NUM];
+
     public void act(Agent agent) {
-        renewLeaderRel(agent);
         assert agent.relAgents.size() <= MAX_REL_AGENTS : "alert3";
         if ((Manager.getTicks() - agent.validatedTicks) > RENEW_ROLE_TICKS ) agent.inactivate(0);
         else if (agent.role == LEADER && agent.phase == PROPOSITION) proposeAsL(agent);
@@ -35,30 +39,42 @@ public class ProposedMethod implements SetParam, Strategy {
         else if (agent.role == MEMBER && agent.phase == EXECUTION) executeAsM(agent);
 //        agent.relAgents = decreaseDEC(agent);
     }
-
     private void proposeAsL(Agent leader) {
-        leader.checkMessages(leader);
         leader.ourTask = Manager.getTask();
-        if (leader.ourTask == null) return;
+        if (leader.ourTask == null){
+            Agent._leader_num--;
+            leader.candidates.clear();
+            leader.teamMembers.clear();
+            leader.allocations.clear();
+            leader.replies.clear();
+            leader.results.clear();
+            leader.restSubTask = 0;
+            leader.replyNum = 0;
+            leader.joined = false;
+            leader.role = JONE_DOE;
+            leader.phase = SELECT_ROLE;
+            return;
+        }
         leader.restSubTask = leader.ourTask.subTaskNum;                       // 残りサブタスク数を設定
+        leader.selectSubTask();
         leader.candidates = selectMembers(leader, leader.ourTask.subTasks);   // メッセージ送信
         leader.nextPhase();  // 次のフェイズへ
     }
-
     private void replyAsM(Agent member) {
-        member.checkMessages(member);
         if (member.messages.size() == 0) return;     // メッセージをチェック
         member.leader = selectLeader(member, member.messages);
+        if( member.leader != null ) {
+            member.joined = true;
+//            System.out.println("ID: "+ member.id + ", my leader is " + member.leader.id );
+            member.sendMessage(member, member.leader, REPLY, ACCEPT);
+        }
         // どのリーダーからの要請も受けないのならinactivate
         // どっかには参加するのなら交渉2フェイズへ
         if (member.joined) {
             member.nextPhase();
         }
-        /* else if (member.index++ > MAX_REL_AGENTS) {
-            member.inactivate(0);
-        }
-        // */
     }
+
 
     private void reportAsL(Agent leader) {
 //        System.out.println(" ID: " +leader.id + ", messages: " + leader.messages.size() );
@@ -133,7 +149,7 @@ public class ProposedMethod implements SetParam, Strategy {
         }
         // サブタスクが割り当てられなかったら信頼度を更新し, inactivate
         else {
-        //    if( member.id == 4 ) System.out.println( member.meanResponseTicks + ", waitTime: " + responseTime);
+            //    if( member.id == 4 ) System.out.println( member.meanResponseTicks + ", waitTime: " + responseTime);
             member.relAgents = renewRel(member, member.leader, -(double)responseTime/member.meanResponseTicks );
             member.inactivate(0);
         }
@@ -170,63 +186,6 @@ public class ProposedMethod implements SetParam, Strategy {
             leader.sendMessage(leader, candidate, PROPOSAL, subtask.resType);
         }
         return temp;
-    }
-
-    /**
-     * selectLeaderメソッド
-     * メンバがどのリーダーの要請を受けるかを判断する
-     * 信頼エージェントのリストにあるリーダーエージェントからの要請を受ける
-     */
-    // 互恵主義と合理主義のどちらかによって行動を変える
-    public Agent selectLeader(Agent member, List<Message> messages) {
-        int size = messages.size();
-        Agent myLeader = null;
-
-        // messageキューに溜まっている参加要請を確認し, 参加するチームを選ぶ
-        for (int i = 0; i < size; i++) {
-            Message message = messages.remove(0);
-            Agent from = message.getFrom();
-            // まだどこにも参加していないかを確認する
-            if (!member.joined) {
-                // もし信頼エージェントがいない or 自分がメンバエージェントとして雑魚 なら合理主義
-                // 2017/11/17 現状ランダムで選択することになっている. "来た中で最も信頼度の高いやつ"にできるといい
-                if (member.relAgents.size() == 0 || member.e_member < THRESHOLD_RECIPROCITY) {
-                    member.sendMessage(member, from, REPLY, ACCEPT);
-                    member.joined = true;
-                    myLeader = from;
-                    member.totalOffers++;
-                    member.acceptTime = Manager.getTicks();
-                    member.principle = RATIONAL;
-                }
-                // 協調主義なら, 信頼エージェントを優先して承認する
-                else if (member.inTheList(from, member.relAgents) > -1) {
-                    // リーダーに受理を伝えてフラグを更新
-                    member.sendMessage(member, from, REPLY, ACCEPT);
-                    member.joined = true;
-                    myLeader = from;
-                    member.totalOffers++;
-                    member.acceptTime = Manager.getTicks();
-                    member.principle = RECIPROCAL;
-                }
-                // 協調主義で, 信頼エージェントではない場合もε-greedyで承認する
-                else {
-                    member.principle = RECIPROCAL;
-                    if (member.epsilonGreedy()) {
-                        member.sendMessage(member, from, REPLY, ACCEPT);
-                        member.joined = true;
-                        myLeader = from;
-                        member.totalOffers++;
-                        member.acceptTime = Manager.getTicks();
-                    } else {
-                        member.sendMessage(member, from, REPLY, REJECT);
-                    }
-                }
-                // すでにどこかに参加する予定なら残り全て拒否
-            } else {
-                member.sendMessage(member, from, REPLY, REJECT);
-            }
-        }
-        return myLeader;
     }
 
     /**
@@ -358,15 +317,16 @@ public class ProposedMethod implements SetParam, Strategy {
         return tmp;
     }
 
-    private void renewLeaderRel(Agent agent){
-        int size = agent.messages.size();
-        Message m;
-        // まず最初にかつてのリーダーからの結果報告はないか確認する
-        for (int i = 0; i < size; i++) {
-            m = agent.messages.remove(0);
-            // 結果報告だったらそれを元に信頼度を更新する
-        }
-
+    /**
+     * renewETTableメソッド
+     * ETTable = executionTimeTable
+     * 任意のタイミングでmemberエージェントに割り当てたサブタスクの合計処理時間により更新
+     * @param leader
+     * @param member
+     * @param et
+     */
+    private void renewETTable(Agent leader, Agent member, int et){
+        etTable[leader.id].renewMET(member.id, et);
     }
 
     /**
@@ -382,6 +342,57 @@ public class ProposedMethod implements SetParam, Strategy {
             }
         }
     }
+    /**
+     * selectLeaderメソッド
+     * メンバがどのリーダーの要請を受けるかを判断する
+     * 信頼エージェントのリストにあるリーダーエージェントからの要請を受ける
+     */
+    // 互恵主義と合理主義のどちらかによって行動を変える
+    public Agent selectLeader(Agent member, List<Message> messages) {
+        int size = messages.size();
+        Message message;
+        Agent myLeader = null;
+        Agent from;
+        Agent temp;
+
+        // 有効なメッセージがなければリターンする
+        if (size == 0) return null;
+
+        // あったらεグリーディーで選択する
+        if( member.epsilonGreedy() ) {
+            myLeader = messages.remove(member._randSeed.nextInt( messages.size() ) ).getFrom();
+            for( int i = 0; i < size - 1; i++ ){
+                member.sendMessage(member, messages.remove(0).getFrom(), REPLY, REJECT);
+            }
+        }
+        // messageキューに溜まっている参加要請を確認し, 参加するチームを選ぶ
+        else {
+            message = messages.remove(0);
+            temp = message.getFrom();
+            for (int i = 0; i < size - 1; i++) {
+                message = messages.remove(0);
+                from = message.getFrom();
+                // もし暫定信頼度一位のやつより信頼度高いやついたら, 暫定のやつを断って今のやつを暫定(ryに入れる
+                if (member.reliabilities[temp.id] < member.reliabilities[from.id]) {
+                    member.sendMessage(member, temp, REPLY, REJECT);
+                    temp = from;
+                }
+                // 暫定一位がその座を守れば挑戦者を断る
+                else{
+                    member.sendMessage(member, from, REPLY, REJECT);
+                }
+            }
+            if (member.principle == RATIONAL) {
+                myLeader = temp;
+            } else {
+                if (member.inTheList(temp, member.relAgents) > -1) {
+                    myLeader = temp;
+                } else member.sendMessage(member, temp, REPLY, REJECT);
+            }
+        }
+        return myLeader;
+    }
+
 
     public void inactivate() {
     }

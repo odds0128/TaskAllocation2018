@@ -1,9 +1,10 @@
-public class Tuple {
+public class Allocation {
     private Agent candidate;
     private SubTask subtask;
     private boolean flag = false;
+    private int allocationTime = 0;
 
-    Tuple(Agent agent, SubTask subtask){
+    Allocation(Agent agent, SubTask subtask){
         this.candidate = agent;
         this.subtask   = subtask;
     }
@@ -14,6 +15,14 @@ public class Tuple {
 
     SubTask getSubtask(){
         return subtask;
+    }
+
+    void setAllocationTime(int time){
+        this.allocationTime = time;
+    }
+
+    int getAllocationTime(){
+        return allocationTime;
     }
 
     void setFlag(){

@@ -10,7 +10,9 @@ public class SubTask implements SetParam{
     static long _seed;
     static Random _randSeed;
     int subtask_id ;
-    int reqRes;
+    int reqRes[] = new int[RESOURCE_NUM];
+    int resType  ;
+    int resentTimes = 0;
 
     /**
      * コンストラクタ
@@ -22,7 +24,7 @@ public class SubTask implements SetParam{
         setSeed(seed);
         this.subtask_id = _subtask_id;
         _subtask_id ++;
-        setResource();
+        setResources(UNIFORM);
     }
 
     /**
@@ -33,16 +35,36 @@ public class SubTask implements SetParam{
         if( b ) _subtask_id = 0;
         this.subtask_id = _subtask_id;
         _subtask_id ++;
-        setResource();
+        setResources(UNIFORM);
     }
 
     /**
      * setResourcesメソッド
      * 1~4の間で要求リソースを定義
      */
-    private void setResource(){
-          int rand = _randSeed.nextInt(4) + 1;
-          reqRes   = rand;
+    private void setResources(int taskType){
+        // とりあえずuniformだけで
+        if( taskType ==  BIAS){
+        }else{
+            resType = _randSeed.nextInt(RESOURCE_NUM);
+            reqRes[resType] = 1;
+        }
+
+    }
+
+    /**
+     * canResendメソッド
+     * このサブタスクが再送可能回数を超えていないか判断する
+     * すでに規定の回数再送されていたらfalse
+     * まだ再送できるのであればtrueを返す
+     * @return
+     */
+    public boolean canResend(){
+        if( this.resentTimes >= RESEND_TIMES ) return false;
+        else {
+            resentTimes++;
+            return true;
+        }
     }
 
     static void setSeed(long seed){
@@ -55,7 +77,8 @@ public class SubTask implements SetParam{
 
     @Override
     public String toString() {
-        StringBuilder str = new StringBuilder(" subtask " + subtask_id + ": " + reqRes);
+        StringBuilder str = new StringBuilder( subtask_id + " needs " + resType + ":  ");
+        for( int i = 0; i < RESOURCE_NUM; i++ ) str.append( reqRes[i] + ", ");
         return str.toString();
     }
 }

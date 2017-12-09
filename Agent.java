@@ -9,42 +9,59 @@ import java.util.List;
 import java.util.Random;
 
 public class Agent implements SetParam {
-    static private final double α = LEARNING_RATE;
     static int _id = 0;
     static int _leader_num = 0;
     static int _member_num = 0;
     static long _seed;
     static Random _randSeed;
+    static int[] resSizeArray = new int[RESOURCE_NUM + 1];
+
     // リーダーもメンバも持つパラメータ
     int id;
     int x, y;
     int role = JONE_DOE;
     int phase = SELECT_ROLE;
     Strategy strategy;
-    int resource = 0;
-    int didTasks = 0;
+    int resSize = 0;
+    int res[] = new int[RESOURCE_NUM];
+    int didTasksAsLeader = 0;
+    int didTasksAsMember = 0;
+    int[] workWith = new int[AGENT_NUM];
     int validatedTicks = 0;
     boolean joined = false;
     double e_leader = INITIAL_VALUE_OF_DSL, e_member = INITIAL_VALUE_OF_DSM;
-    double rel[] = new double[AGENT_NUM];
+    SubTask mySubTask;
+    double[] reliabilities = new double[AGENT_NUM];
     List<Message> messages;
     List<Agent> relAgents = new ArrayList<>();
+    List<Agent> relRanking = new ArrayList<>();
+    int principle = RATIONAL;
     // リーダーエージェントが持つパラメータ
-    List<Agent> candidates;        // これからチームへの参加を要請するエージェントのリスト
+    List<Agent> candidates;         // これからチームへの参加を要請するエージェントのリスト
     List<Agent> teamMembers;        // すでにサブタスクを送っていてメンバの選定から外すエージェントのリスト
-    List<Tuple> allocations;       // サブタスクの割り当て候補を< agent, subtask >のリストで保持
+    List<Allocation> allocations;       // サブタスクの割り当て候補を< agent, subtask >のリストで保持
     List<Message> replies;
     List<Message> results;
     Task ourTask;                  // 持ってきた(割り振られた)タスク
     int restSubTask;               // 残りのサブタスク数
     int index = 0;                 // 一回要請を送ったメンバにもう一度送らないようにindex管理
+    int replyNum = 0;
+    int prevIndex = 0;
+    int executedSubTasks = 0;   // 今まで自分の元で処理されて来たサブタスク数
+    int totalExecutedTicks = 0; // 今まで自分の元で処理されて来たサブタスクの合計処理時間(= 往復の通信時間 + メンバの処理時間)
+    double meanExecutedTicks = 0; // 今まで自分の元で処理されて来たサブタスクの平均処理時間(=  totalExecutedTicks / executedTicks)
     // メンバエージェントのみが持つパラメータ
     Agent leader;
-    SubTask mySubTask;
     int executionTime;
+    int acceptTime = 0;   // 現在のオファーを受理した時刻
+    int totalOffers = 0;   // 今まで自分が受理して来たオファー数
+    int totalResponseTicks = 0;   // 受理応答からの待ち時間の合計
+    double meanResponseTicks = 0;   // 受理応答からの待ち時間の平均
+    int totalSubtaskSize = 0;   // 処理して来たサブタスクの大きさの合計
+    int meanSubtaskSize = 0;   // 処理して来たサブタスクの大きさの平均
 
     // seedが変わった(各タームの最初の)エージェントの生成
-    Agent(long seed, int x, int y, Strategy strategy ) {
+    Agent(long seed, int x, int y, Strategy strategy) {
         setSeed(seed);
         int rand;
         this.id = _id;
@@ -52,12 +69,12 @@ public class Agent implements SetParam {
         this.x = x;
         this.y = y;
         this.strategy = strategy;
-        rand = _randSeed.nextInt(4) + 1;
-        resource = rand;
-        Arrays.fill(rel, INITIAL_VALUE_OF_DEC);
+        setResource(UNIFORM);
+        Arrays.fill(reliabilities, INITIAL_VALUE_OF_DEC);
         selectRole();
         messages = new ArrayList<>();
     }
+
     // 残りのエージェントの生成
     Agent(int x, int y, Strategy strategy) {
         int rand;
@@ -66,16 +83,35 @@ public class Agent implements SetParam {
         this.x = x;
         this.y = y;
         this.strategy = strategy;
-        rand = _randSeed.nextInt(4) + 1;
-        resource = rand;
-        Arrays.fill(rel, INITIAL_VALUE_OF_DEC);
+        setResource(UNIFORM);
+        Arrays.fill(reliabilities, INITIAL_VALUE_OF_DEC);
         selectRole();
         messages = new ArrayList<>();
     }
 
+    void setResource(int agentType) {
+        if (agentType == BIAS) {
+/*            for (int i = 0; i < RESOURCE_NUM; i++) {
+                int rand = random.nextInt(3) + 6;
+                res[i] = rand;
+            }
+*/
+        } else {
+            while (resSize == 0) {
+                for (int i = 0; i < RESOURCE_NUM; i++) {
+                    int rand = _randSeed.nextInt(MAX_AG_RES + 1);
+                    res[i] = rand;
+                    resSize += rand;
+                }
+            }
+            resSizeArray[resSize]++;
+        }
+    }
+
     void act() {
-        if( phase == SELECT_ROLE ) selectRole();
-        else strategy.act(this);
+//        if (strategy.getClass().getName() == "RandomStrategy") strategy.act(this, action);
+        if (phase == SELECT_ROLE) selectRole();
+        else strategy.act(this );
     }
 
     /**
@@ -84,34 +120,67 @@ public class Agent implements SetParam {
      */
     void selectRole() {
         validatedTicks = Manager.getTicks();
-        if (e_leader > e_member) {
-            role = LEADER;
-            _leader_num++;
-            this.phase = PROPOSITION;
-            candidates   = new ArrayList<>();
-            teamMembers  = new ArrayList<>();
-            allocations  = new ArrayList<>();
-            replies      = new ArrayList<>();
-            results      = new ArrayList<>();
-        } else if (e_member > e_leader) {
-            role = MEMBER;
-            _member_num++;
-            this.phase = WAITING;
-        } else {
-            int ran = _randSeed.nextInt(2);
-            if (ran == 0) {
+        if( epsilonGreedy() ){
+            if (e_leader < e_member) {
                 role = LEADER;
                 _leader_num++;
                 this.phase = PROPOSITION;
-                candidates   = new ArrayList<>();
-                teamMembers  = new ArrayList<>();
+                candidates = new ArrayList<>();
+                teamMembers = new ArrayList<>();
                 allocations = new ArrayList<>();
-                replies      = new ArrayList<>();
-                results      = new ArrayList<>();
-            } else {
+                replies = new ArrayList<>();
+                results = new ArrayList<>();
+            } else if (e_member < e_leader) {
                 role = MEMBER;
                 _member_num++;
                 this.phase = WAITING;
+            }else {
+                int ran = _randSeed.nextInt(2);
+                if (ran == 0) {
+                    role = LEADER;
+                    _leader_num++;
+                    this.phase = PROPOSITION;
+                    candidates = new ArrayList<>();
+                    teamMembers = new ArrayList<>();
+                    allocations = new ArrayList<>();
+                    replies = new ArrayList<>();
+                    results = new ArrayList<>();
+                } else {
+                    role = MEMBER;
+                    _member_num++;
+                    this.phase = WAITING;
+                }
+            }
+        }else{
+            if (e_leader > e_member) {
+                role = LEADER;
+                _leader_num++;
+                this.phase = PROPOSITION;
+                candidates = new ArrayList<>();
+                teamMembers = new ArrayList<>();
+                allocations = new ArrayList<>();
+                replies = new ArrayList<>();
+                results = new ArrayList<>();
+            } else if (e_member > e_leader) {
+                role = MEMBER;
+                _member_num++;
+                this.phase = WAITING;
+            } else {
+                int ran = _randSeed.nextInt(2);
+                if (ran == 0) {
+                    role = LEADER;
+                    _leader_num++;
+                    this.phase = PROPOSITION;
+                    candidates = new ArrayList<>();
+                    teamMembers = new ArrayList<>();
+                    allocations = new ArrayList<>();
+                    replies = new ArrayList<>();
+                    results = new ArrayList<>();
+                } else {
+                    role = MEMBER;
+                    _member_num++;
+                    this.phase = WAITING;
+                }
             }
         }
     }
@@ -120,11 +189,19 @@ public class Agent implements SetParam {
      * inactiveメソッド
      * チームが解散になったときに待機状態になる.
      */
-    void inactivate(int success, int rol) {
-        if (rol == LEADER) _leader_num--;
-        else _member_num--;
-        if (success == 1) didTasks++;
-        if (rol == LEADER) {
+    void inactivate(int success) {
+        if (role == LEADER){
+            e_leader = e_leader * (1 - α) + α * success;
+        }
+        else{
+            e_member = e_member * (1 - α) + α * success;
+        }
+        if (role == LEADER) {
+            if (success == 1) {
+                didTasksAsLeader++;
+            }
+            _leader_num--;
+            if (ourTask != null) Manager.disposeTask(this);
             ourTask = null;
             candidates.clear();
             teamMembers.clear();
@@ -132,16 +209,49 @@ public class Agent implements SetParam {
             replies.clear();
             results.clear();
             restSubTask = 0;
+            replyNum = 0;
+        } else {
+            if (success == 1) didTasksAsMember++;
+            _member_num--;
         }
         joined = false;
         role = JONE_DOE;
         phase = SELECT_ROLE;
         leader = null;
         mySubTask = null;
-        index = 0;
+        executionTime = 0;
+        if (strategy.getClass().getName() != "RoundRobin") {
+            index = 0;
+        } else {
+            prevIndex = index % MAX_PROPOSITION_NUM;
+            index = prevIndex;
+        }
         this.validatedTicks = Manager.getTicks();
-        messages.clear();
-        strategy.inactivate();
+//        System.out.println("ID: " + id + " is inactivated .");
+    }
+
+    /**
+     * selectSubtaskメソッド
+     * リーダーが自分のやるサブタスクを選択するメソッド
+     * まず自分に能力的に可能なサブタスクを探し, その中からランダムで選ぶ
+     * なければ何もしない
+     */
+    void selectSubTask() {
+        List<SubTask> temp = new ArrayList<>();
+        // 自分に可能なサブタスクを抽出する
+        for (SubTask st : ourTask.subTasks) {
+            if (res[st.resType] == st.reqRes[st.resType]) temp.add(st);
+        }
+        // もし一つもなかったら仕方ないからなしでreturn
+        if (temp.size() == 0) return;
+        // 一個でもあったらどれかを選んで自分のサブタスクとする
+        else {
+            int rand = _randSeed.nextInt(temp.size());
+            mySubTask = temp.get(rand);
+            ourTask.subTasks.remove(temp.get(rand));
+            restSubTask--;
+        }
+        executionTime = 2;
     }
 
     void sendMessage(Agent from, Agent to, int type, Object o) {
@@ -152,15 +262,23 @@ public class Agent implements SetParam {
         if (type == PROPOSAL) {
             sendMessage(agent, to, REPLY, REJECT);
         } else if (type == REPLY) {
-            sendMessage(agent, to, CHARGE, null);
-        } else if (type == CHARGE) {
-            sendMessage(agent, to, RESULT, subTask);
+            sendMessage(agent, to, RESULT, null);
         } else if (type == RESULT) {
+//            sendMessage(agent, to, SUBTASK_RESULT, subTask);
         }
     }
 
+    public int calcExecutionTime(Agent agent) {
+        SubTask st;
+        st = agent.mySubTask;
+/*        System.out.println( st );
+        System.out.println( st.reqRes[st.resType] + ", " + agent.res[st.resType] );
+// */
+        return (int) Math.ceil((double) st.reqRes[st.resType] / (double) agent.res[st.resType]);
+    }
 
     // 自分がリーダーの時とか正しく拒否メッセージが送れていない
+
     /**
      * checkMessagesメソッド
      * selfに届いたメッセージcheckListの中から,
@@ -168,87 +286,56 @@ public class Agent implements SetParam {
      * それ以外はネガティブな返事をする
      */
     void checkMessages(Agent self) {
-        // リーダーでPROPOSITION or メンバでEXECUTION→ 誰からのメッセージも期待していない
-        if( self.phase == PROPOSITION || self.phase == EXECUTION ){
-            int size = messages.size();
-            Message m;
-            for( int i = 0; i < size; i++ ){
+        int size = messages.size();
+        Message m;
+        if( size == 0 ) return;
+//        System.out.println("ID: " + self.id + ", Phase: " + self.phase + " message:  "+ self.messages);
+        // リーダーでPROPOSITION or 誰でもEXECUTION → 誰からのメッセージも期待していない
+        if (self.phase == PROPOSITION || self.phase == EXECUTION) {
+            for (int i = 0; i < size; i++) {
                 m = messages.remove(0);
                 sendNegative(self, m.getFrom(), m.getMessageType(), m.getSubTask());
             }
         // メンバでWAITING → PROPOSALを期待している
-        }else if( self.phase == WAITING ){
-            int size = messages.size();
-            Message m;
-            for( int i = 0; i < size; i++ ){
+        } else if (self.phase == WAITING) {
+            for (int i = 0; i < size; i++) {
                 m = messages.remove(0);
-                // PROPOSALならmessagesに追加
-                if( m.getMessageType() == PROPOSAL ){
+                // PROPOSALで, 要求されているリソースを自分が持つならmessagesに追加
+                if (m.getMessageType() == PROPOSAL && self.res[m.getResType()] != 0) {
                     messages.add(m);
-                // 違かったらsendNegative
-                }else sendNegative(self, m.getFrom(), m.getMessageType(), m.getSubTask());
+                    // 違かったらsendNegative
+                } else sendNegative(self, m.getFrom(), m.getMessageType(), m.getSubTask());
             }
-        // メンバでRECEPTION → リーダーからのCHARGE(サブタスク割り当て)を期待している
-        }else if( self.phase == RECEPTION ){
-            int size = messages.size();
-            Message m;
-            for( int i = 0; i < size; i++ ){
-                m = messages.remove(0);
-                if( m.getMessageType() == CHARGE && m.getFrom()== self.leader ){
-                    messages.add(m);
-                // 違かったらsendNegative
-                }else sendNegative(self, m.getFrom(), m.getMessageType(), m.getSubTask());
-            }
-        // リーダーでREPORT → candidatesからのreply or teamMemberからのresultを期待している
-        }else if( self.phase == REPORT ){
-            int size = messages.size();
-            Message m;
-            for( int i = 0; i < size; i++ ){
+        }
+        // リーダーでREPORT → REPLYを期待している
+        else if (self.phase == REPORT) {
+            for (int i = 0; i < size; i++) {
                 m = messages.remove(0);
                 Agent from = m.getFrom();
-                if( m.getMessageType() == REPLY ){
-                    if ( inTheList(from, self.candidates) ) {
-                        replies.add(m);
-                    }else{
-                        sendNegative(self, m.getFrom(), m.getMessageType(), m.getSubTask());
-                    }
-                }else if(  m.getMessageType() == RESULT){
-                    if ( inTheList(from, self.teamMembers) ) {
-                        results.add(m);
-                    }else{
-                        sendNegative(self, m.getFrom(), m.getMessageType(), m.getSubTask());
-                    }
-                }else{
-                    sendNegative(self, m.getFrom(), m.getMessageType(), m.getSubTask());
-                }
+                if (m.getMessageType() == REPLY && inTheList(from, self.candidates) > -1 ) replies.add(m);
+                else sendNegative(self, m.getFrom(), m.getMessageType(), m.getSubTask());
+            }
+        // メンバでRECEPTION → リーダーからのRESULT(サブタスク割り当て)を期待している
+        } else if (self.phase == RECEPTION) {
+            for (int i = 0; i < size; i++) {
+                m = messages.remove(0);
+                if (m.getMessageType() == RESULT && m.getFrom() == self.leader) {
+                    messages.add(m);
+                    // 違かったらsendNegative
+                } else sendNegative(self, m.getFrom(), m.getMessageType(), m.getSubTask());
             }
         }
     }
 
     /**
      * inTheListメソッド
-     * 引数のエージェントが引数のリスト内にあればtrueを, いなければfalseを返す
+     * 引数のエージェントが引数のリスト内にあればその索引を, いなければ-1を返す
      */
-    boolean inTheList(Agent a ,List<Agent> agents){
-        for( int i = 0; i < agents.size(); i++ ){
-            if( a == agents.get(i) ) return true;
+    protected int inTheList(Agent a, List<Agent> agents) {
+        for (int i = 0; i < agents.size(); i++) {
+            if (a == agents.get(i)) return i;
         }
-        return false;
-    }
-
-    /**
-     * checkSentメソッド
-     * 引数のエージェントにすでにサブタスクを割り当てていたか調べる
-     * すでに割り当てていた場合は重複を避けるためにfalseを返す
-     * まだ割りあてていなければtrueを返す
-     * @param candidate
-     * @return
-     */
-    boolean checkDup(Agent candidate, List<Agent> list){
-        for( Agent agent : list ){
-            if( candidate == agent ) return false;
-        }
-        return true;
+        return -1;
     }
 
     /**
@@ -256,11 +343,11 @@ public class Agent implements SetParam {
      * 引数のエージェントに割り当てるサブタスクを返す
      * 割り当て情報は保持
      */
-    SubTask getAllocation(Agent agent) {
+    protected Allocation getAllocation(Agent agent) {
         int size = allocations.size();
         for (int i = 0; i < size; i++) {
             if (agent == allocations.get(i).getCandidate()) {
-                return allocations.get(i).getSubtask();
+                return allocations.get(i);
             }
         }
         return null;
@@ -270,7 +357,7 @@ public class Agent implements SetParam {
      * removeAllocationメソッド
      * 引数のエージェントへの割り当て情報を消す
      */
-    void removeAllocation(Agent agent) {
+    protected void removeAllocation(Agent agent) {
         int size = allocations.size();
         for (int i = 0; i < size; i++) {
             if (agent == allocations.get(i).getCandidate()) {
@@ -284,14 +371,22 @@ public class Agent implements SetParam {
      * removeTeamMemberメソッド
      * 引数のエージェントへの割り当て情報を消す
      */
-    void removeTeamMember(Agent agent) {
+    protected void removeTeamMember(Agent agent) {
         int size = teamMembers.size();
         for (int i = 0; i < size; i++) {
-            if (agent == teamMembers.get(i) ) {
+            if (agent == teamMembers.get(i)) {
                 teamMembers.remove(i);
                 return;
             }
         }
+    }
+
+    protected boolean epsilonGreedy() {
+        double random = _randSeed.nextDouble();
+        if (random < ε) {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -299,14 +394,21 @@ public class Agent implements SetParam {
      * phaseの変更をする
      * 同時にvalidTimeを更新する
      */
-    void nextPhase() {
-        if( this.phase == PROPOSITION ) this.phase = REPORT;
-        else if( this.phase == WAITING     ) this.phase = RECEPTION;
-        else if( this.phase == RECEPTION   ) this.phase = EXECUTION;
+    protected void nextPhase() {
+        if (this.phase == PROPOSITION) this.phase = REPORT;
+        else if (this.phase == WAITING) this.phase = RECEPTION;
+        else if (this.phase == REPORT ) this.phase = EXECUTION;
+        else if (this.phase == RECEPTION) this.phase = EXECUTION;
+//        System.out.println(" phase : " + phase);
         this.validatedTicks = Manager.getTicks();
     }
 
-    static void setSeed(long seed) {
+    protected boolean canDo(Agent agent, SubTask st){
+        if ( agent.res[st.resType] == st.reqRes[st.resType]) return true;
+        else return false;
+    }
+
+    private static void setSeed(long seed) {
         _seed = seed;
         _randSeed = new Random(_seed);
     }
@@ -315,20 +417,47 @@ public class Agent implements SetParam {
         _id = 0;
         _leader_num = 0;
         _member_num = 0;
+        for (int i = 0; i < RESOURCE_NUM; i++) resSizeArray[i] = 0;
     }
 
     @Override
     public String toString() {
         String sep = System.getProperty("line.separator");
-//        StringBuilder str = new StringBuilder("ID:" + String.format("%3d", id) + ", " + "x: " + x + ", y: " + y + ", ");
-        StringBuilder str = new StringBuilder("ID:" + String.format("%3d", id) + "  " + messages );
-//        StringBuilder str = new StringBuilder("ID: " + String.format("%3d", id) + ", " + String.format("%.3f", e_leader) + ", " + String.format("%.3f", e_member) + String.format("%5d", didTasks) );
+        StringBuilder str;
+        str = new StringBuilder("ID:" + String.format("%3d", id));
+//        str = new StringBuilder("ID:" + String.format("%3d", id) + ", " + "x: " + x + ", y: " + y + ", ");
+//        str = new StringBuilder("ID:" + String.format("%3d", id) + "  " + messages );
+//        str = new StringBuilder("ID: " + String.format("%3d", id) + ", " + String.format("%.3f", e_leader) + ", " + String.format("%.3f", e_member)  );
+//        str = new StringBuilder("ID:" + String.format("%3d", id) + ", Resources: " + resSize + ", " + String.format("%3d", didTasksAsMember)  );
 
-//        str.append("e_leader: " + e_leader + ", e_member: " + e_member);
+        str.append(", The most reliable agent: " + relRanking.get(0).id + "← reliability: " + reliabilities[relRanking.get(0).id]);
+
+        /*
+        str.append("[");
+        for (int i = 0; i < RESOURCE_NUM; i++) str.append(res[i] + ",");
+        str.append("]");
+
+        /*
+        if( role == LEADER ) {
+            List<Agent> temp = new ArrayList<>();
+            temp.addAll(candidates);
+            temp.addAll(teamMembers);
+            str.append( " Waiting: " );
+            for( Agent ag: temp ) str.append( String.format("%3d", ag.id ) + ", ");
+        }
+// */
+/*        if (role == MEMBER) str.append(", member: ");
+        else if (role == LEADER) str.append(", leader: ");
+        else if (role == JONE_DOE) str.append(", free: ");
+//        str.append(String.format(", %.3f", e_leader) + ", " + String.format("%.3f", e_member) + sep);
+
+//        for( int i = 0; i < AGENT_NUM; i++ ) str.append( i + ": " + String.format("%.3f", reliabilities[i] ) + ",  " );
+// */
+/*        str.append("e_leader: " + e_leader + ", e_member: " + e_member);
         if( role == MEMBER ) str.append(", member: ");
         else if( role == LEADER ) str.append(", leader: " );
         else if( role == JONE_DOE ) str.append(", free: ");
-
+/*
         if( phase == REPORT ){
             str.append(" allocations: " + allocations  );
 //            str.append(" teamMembers: " + teamMembers );
@@ -338,14 +467,25 @@ public class Agent implements SetParam {
 
 //        if (role == LEADER) str.append(", I'm a leader. ");
 //        else str.append("I'm a member. ");
+// */
+/*
+        if (relAgents.size() != 0) {
+            int temp;
+            str.append(sep + "   Reliable Agents:");
+            for (int i = 0; i < relAgents.size(); i++) {
+                temp = relAgents.get(i).id;
+                str.append(String.format("%3d", temp));
+            }
+        }
+// */
 
-        int temp;
-/*        str.append(",  Reliable Agents:");
-        for (int i = 0; i < MAX_REL_AGENTS; i++) {
-            temp = relAgents.get(i).id;
+ /*        str.append( sep + "   Reliability Ranking:");
+        for( int i = 0; i < AGENT_NUM - 1; i++ ){
+            temp = relRanking.get(i).id;
             str.append(String.format("%3d", temp));
         }
-*/
+// */
+// */
         /*
         if( role == MEMBER ) {
             str.append(",  Reliable Agents:");
@@ -354,7 +494,7 @@ public class Agent implements SetParam {
                 str.append(String.format("%3d", temp));
             }
         }
-        */
+//        */
         return str.toString();
     }
 }

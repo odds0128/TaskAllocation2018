@@ -5,4 +5,12 @@ public class Leader implements Role {
         return leader;
     }
 
+    public void act1(){
+
+    }
+
+    public void act2(){
+
+    }
+
 }

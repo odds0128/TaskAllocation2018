@@ -70,6 +70,12 @@ public class Task implements SetParam{
 
     @Override
     public String toString(){
-        return "Task " + task_id + ", Subtasks :" + subTaskNum;
+        String sep = System.getProperty("line.separator");
+
+        StringBuilder str = new StringBuilder();
+        str.append("Task " + task_id + "(Subtasks :" + subTaskNum +" [");
+        for( int i = 0 ; i < subTasks.size() ; i++ ) str.append(subTasks.get(i));
+        str.append("] ) ");
+        return str.toString();
     }
 }

@@ -1,16 +1,9 @@
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * ProximityOrientedクラス(距離志向戦略)
- * 近いエージェントを優先するエージェント
- * リーダーは信頼エージェント(通信可能範囲)から選ぶ.
- * メンバは信頼エージェントであるリーダーの要請を受ける
- */
-public class ProximityOriented implements Strategy, SetParam {
+public class RoundRobin implements Strategy, SetParam {
     public void act(Agent agent) {
         if ((Manager.getTicks() - agent.validatedTicks) > RENEW_ROLE_TICKS ) agent.inactivate(0);
-
         else
 // */
             if (agent.role == LEADER && agent.phase == PROPOSITION) proposeAsL(agent);
@@ -78,13 +71,13 @@ public class ProximityOriented implements Strategy, SetParam {
         // 残存サブタスク数が0になればタスク終了とみなす
         if (leader.restSubTask == 0) {
             Manager.finishTask(leader);
+            leader.prevIndex = leader.index;
             leader.inactivate(1);
         }
 
         // 再検討するサブタスクがあれば再送する. ただし, 全信頼エージェントに送っているんだったらもう諦める
-        // 諦めない!
         if (resendants.size() > 0) {
-            if (MAX_PROPOSITION_NUM - leader.index < resendants.size()) {
+            if ( leader.index - leader.prevIndex + resendants.size() > MAX_PROPOSITION_NUM ) {
                 Manager.disposeTask(leader);
                 leader.inactivate(0);
             } else {
@@ -135,7 +128,7 @@ public class ProximityOriented implements Strategy, SetParam {
         Agent candidate;
         SubTask subtask;
         for (int i = 0; i < subtasks.size(); i++) {
-            candidate = leader.relRanking.get(leader.index++ );
+            candidate = leader.relRanking.get(leader.index++ % MAX_PROPOSITION_NUM);
             subtask = subtasks.get(i);
             leader.allocations.add(new Allocation(candidate, subtask));
             temp.add(candidate);
@@ -170,7 +163,7 @@ public class ProximityOriented implements Strategy, SetParam {
         return myLeader;
     }
 
-
     public void inactivate() {
     }
 }
+

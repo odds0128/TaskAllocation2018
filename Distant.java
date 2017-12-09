@@ -2,22 +2,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * ProximityOrientedクラス(距離志向戦略)
- * 近いエージェントを優先するエージェント
+ * Distanceクラス
+ * 遠いエージェントを優先するエージェント
  * リーダーは信頼エージェント(通信可能範囲)から選ぶ.
  * メンバは信頼エージェントであるリーダーの要請を受ける
  */
-public class ProximityOriented implements Strategy, SetParam {
+public class Distant implements Strategy, SetParam {
     public void act(Agent agent) {
-        if ((Manager.getTicks() - agent.validatedTicks) > RENEW_ROLE_TICKS ) agent.inactivate(0);
-
-        else
-// */
-            if (agent.role == LEADER && agent.phase == PROPOSITION) proposeAsL(agent);
-            else if (agent.role == MEMBER && agent.phase == WAITING) replyAsM(agent);
-            else if (agent.role == LEADER && agent.phase == REPORT) reportAsL(agent);
-            else if (agent.role == MEMBER && agent.phase == RECEPTION) receiveAsM(agent);
-            else if (agent.role == MEMBER && agent.phase == EXECUTION) executeAsM(agent);
+        if (agent.role == LEADER && agent.phase == PROPOSITION) proposeAsL(agent);
+        else if (agent.role == MEMBER && agent.phase == WAITING) replyAsM(agent);
+        else if (agent.role == LEADER && agent.phase == REPORT) reportAsL(agent);
+        else if (agent.role == MEMBER && agent.phase == RECEPTION) receiveAsM(agent);
+        else if (agent.role == MEMBER && agent.phase == EXECUTION) executeAsM(agent);
     }
 
     private void proposeAsL(Agent leader) {
@@ -60,12 +56,14 @@ public class ProximityOriented implements Strategy, SetParam {
             candidate = reply.getFrom();
             // 受諾ならteamMemberに追加してサブタスクを送る
             if (reply.getReply() == ACCEPT) {
+                renewRel(leader, candidate, 1);
                 leader.candidates.remove(candidate);
                 leader.teamMembers.add(candidate);
                 leader.sendMessage(leader, candidate, RESULT, leader.getAllocation(candidate).getSubtask());
             }
             // 拒否なら送るはずだったサブタスクを再検討リストに入れ, 割り当てを消去する
             else {
+                renewRel(leader, candidate, 0);
                 SubTask resendant = leader.getAllocation(candidate).getSubtask();
                 if (resendant == null) {
                     leader.removeAllocation(candidate);
@@ -82,7 +80,6 @@ public class ProximityOriented implements Strategy, SetParam {
         }
 
         // 再検討するサブタスクがあれば再送する. ただし, 全信頼エージェントに送っているんだったらもう諦める
-        // 諦めない!
         if (resendants.size() > 0) {
             if (MAX_PROPOSITION_NUM - leader.index < resendants.size()) {
                 Manager.disposeTask(leader);
@@ -91,7 +88,7 @@ public class ProximityOriented implements Strategy, SetParam {
                 leader.candidates.addAll(selectMembers(leader, resendants));
             }
 // */        leader.candidates.addAll(selectMembers(leader, resendants));
-        }
+    }
         leader.replies.clear();
         leader.results.clear();
         leader.validatedTicks = Manager.getTicks();
@@ -106,9 +103,11 @@ public class ProximityOriented implements Strategy, SetParam {
         member.mySubTask = message.getSubTask();
         // サブタスクがもらえたなら実行フェイズへ移る. さもなくばinactive
         if (member.mySubTask != null) {
+            renewRel(member, member.leader, 1);
             member.executionTime = member.calcExecutionTime(member);
             member.nextPhase();
         } else {
+            renewRel(member, member.leader, 0);
             member.inactivate(0);
         }
     }
@@ -135,7 +134,7 @@ public class ProximityOriented implements Strategy, SetParam {
         Agent candidate;
         SubTask subtask;
         for (int i = 0; i < subtasks.size(); i++) {
-            candidate = leader.relRanking.get(leader.index++ );
+            candidate = leader.relRanking.get(AGENT_NUM - ++leader.index );
             subtask = subtasks.get(i);
             leader.allocations.add(new Allocation(candidate, subtask));
             temp.add(candidate);
@@ -170,6 +169,17 @@ public class ProximityOriented implements Strategy, SetParam {
         return myLeader;
     }
 
+    private void renewRel(Agent agent, Agent target, int evaluation) {
+        assert !agent.equals(target) : "alert4";
+        double temp = agent.reliabilities[target.id];
+
+        // 信頼度の更新式
+        if (agent.role == LEADER) {
+            agent.reliabilities[target.id] = temp * (1 - α) + evaluation * α;
+        } else {
+            agent.reliabilities[target.id] = temp * (1 - α) + evaluation * α;
+        }
+    }
 
     public void inactivate() {
     }
