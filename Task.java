@@ -12,6 +12,8 @@ public class Task implements SetParam{
     private static long _seed;
     private static Random _randSeed ;
     private int task_id;
+    static int totalSubTasks = 0;
+    static int totalSubtaskNum = 0;
     boolean flag = false;
     List<SubTask> subTasks = new ArrayList<>();
     public int subTaskNum ;
@@ -28,6 +30,8 @@ public class Task implements SetParam{
         _task_id++;
         setSeed(seed);
         this.subTaskNum = _randSeed.nextInt(4) + 3;
+        totalSubtaskNum += subTaskNum;
+        totalSubTasks++;
         setSubTasks(seed);
     }
     /**
@@ -48,6 +52,8 @@ public class Task implements SetParam{
         this.task_id = _task_id;
         _task_id++;
         this.subTaskNum = _randSeed.nextInt(4) + 3;
+        totalSubtaskNum += subTaskNum;
+        totalSubTasks++;
         setSubTasks();
     }
     /**

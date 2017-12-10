@@ -12,11 +12,13 @@ import java.util.*;
 public class Manager implements SetParam {
 //    private static Strategy strategy = new ProposedMethod();
 //    private static Strategy strategy = new ProposedMethod2();
-    private static Strategy strategy = new ReliabilityOriented();
+// private static Strategy strategy = new ReliabilityOriented();
+    private static Strategy strategy = new ReliabilityOriented2();
 //    private static Strategy strategy = new ProximityOriented();
 //    private static Strategy strategy = new RoundRobin();
 //    private static Strategy strategy = new Distant();
 //    private static Strategy strategy = new RandomStrategy();
+
 
     static private OutPut outPut = new OutPut();
 
@@ -51,6 +53,7 @@ public class Manager implements SetParam {
         assert AGENT_NUM <= ROW * COLUMN : "alert2";
         assert MAX_PROPOSITION_NUM >= 6 : "alert6";
         assert MAX_PROPOSITION_NUM < AGENT_NUM : "alert";
+        assert LAST_PERIOD < TURN_NUM : "a";
 
         try {
             // seedの読み込み
@@ -58,6 +61,7 @@ public class Manager implements SetParam {
             BufferedReader br = new BufferedReader(fr);
             String line;
             StringTokenizer token;
+
             int num = 0;
             long seed;
             System.out.println(strategy.getClass().getName());
@@ -148,6 +152,7 @@ public class Manager implements SetParam {
             }
 //            outPut.showGraph(agents);
             OutPut.writeResults(turn, agents);
+            OutPut.writeExcels(agents);
             // ↑ 全実験の終了
             finishedTasks = 0;
             for (int temp : finishedTasksArray) { finishedTasks += temp; }
@@ -158,7 +163,8 @@ public class Manager implements SetParam {
                     + ", MeanRationalists: " + meanRational/EXECUTE_NUM
                     + ", MeanReciplocalists: " + meanReciprocal/EXECUTE_NUM
                     + ", MeanLeaders: " + meanLeader/EXECUTE_NUM
-                    + ", MeanMembers: " + meanMember/EXECUTE_NUM);
+                    + ", MeanMembers: " + meanMember/EXECUTE_NUM
+                    + ", meanSubTasks: " + (double)Task.totalSubtaskNum/(double)Task.totalSubTasks);
 //            outPut.showMeanings();
             outPut.fileClose();
 // */

@@ -26,7 +26,8 @@ public class Agent implements SetParam {
     int res[] = new int[RESOURCE_NUM];
     int didTasksAsLeader = 0;
     int didTasksAsMember = 0;
-    int[] workWith = new int[AGENT_NUM];
+    int[] workWithAsL = new int[AGENT_NUM];
+    int[] workWithAsM = new int[AGENT_NUM];
     int validatedTicks = 0;
     boolean joined = false;
     double e_leader = INITIAL_VALUE_OF_DSL, e_member = INITIAL_VALUE_OF_DSM;
@@ -243,15 +244,19 @@ public class Agent implements SetParam {
             if (res[st.resType] == st.reqRes[st.resType]) temp.add(st);
         }
         // もし一つもなかったら仕方ないからなしでreturn
-        if (temp.size() == 0) return;
+        if (temp.size() == 0) {
+            temp = null;
+            executionTime = 1;
+            return;
+        }
         // 一個でもあったらどれかを選んで自分のサブタスクとする
         else {
             int rand = _randSeed.nextInt(temp.size());
             mySubTask = temp.get(rand);
             ourTask.subTasks.remove(temp.get(rand));
             restSubTask--;
+            executionTime = 1;
         }
-        executionTime = 2;
     }
 
     void sendMessage(Agent from, Agent to, int type, Object o) {
