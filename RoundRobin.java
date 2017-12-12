@@ -1,98 +1,198 @@
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * ProximityOrientedクラス(距離志向戦略)
+ * 近いエージェントを優先するエージェント
+ * リーダーは信頼エージェント(通信可能範囲)から選ぶ.
+ * メンバは信頼エージェントであるリーダーの要請を受ける
+ */
 public class RoundRobin implements Strategy, SetParam {
     public void act(Agent agent) {
-        if ((Manager.getTicks() - agent.validatedTicks) > RENEW_ROLE_TICKS ) agent.inactivate(0);
+        if ((Manager.getTicks() - agent.validatedTicks) > RENEW_ROLE_TICKS) agent.inactivateWithNoLearning(0);
+
         else
 // */
-            if (agent.role == LEADER && agent.phase == PROPOSITION) proposeAsL(agent);
-            else if (agent.role == MEMBER && agent.phase == WAITING) replyAsM(agent);
-            else if (agent.role == LEADER && agent.phase == REPORT) reportAsL(agent);
-            else if (agent.role == MEMBER && agent.phase == RECEPTION) receiveAsM(agent);
-            else if (agent.role == MEMBER && agent.phase == EXECUTION) executeAsM(agent);
+            if (agent.phase == PROPOSITION) proposeAsL(agent);
+            else if (agent.phase == WAITING) replyAsM(agent);
+            else if (agent.phase == REPORT) reportAsL(agent);
+            else if (agent.phase == RECEPTION) receiveAsM(agent);
+            else if (agent.phase == EXECUTION) execute(agent);
     }
 
     private void proposeAsL(Agent leader) {
-        leader.checkMessages(leader);
         leader.ourTask = Manager.getTask();
-        if (leader.ourTask == null) return;
+        if (leader.ourTask == null) {
+            Agent._leader_num--;
+            leader.candidates.clear();
+            leader.teamMembers.clear();
+            leader.allocations.clear();
+            leader.replies.clear();
+            leader.results.clear();
+            leader.restSubTask = 0;
+            leader.replyNum = 0;
+            leader.joined = false;
+            leader.role = JONE_DOE;
+            leader.phase = SELECT_ROLE;
+            return;
+        }
         leader.restSubTask = leader.ourTask.subTaskNum;                       // 残りサブタスク数を設定
         leader.selectSubTask();
         leader.candidates = selectMembers(leader, leader.ourTask.subTasks);   // メッセージ送信
+        if (leader.candidates == null) {
+            Agent._leader_num--;
+            leader.teamMembers.clear();
+            leader.allocations.clear();
+            leader.replies.clear();
+            leader.results.clear();
+            leader.restSubTask = 0;
+            leader.replyNum = 0;
+            leader.joined = false;
+            leader.role = JONE_DOE;
+            leader.phase = SELECT_ROLE;
+            return;
+        }
+
         leader.nextPhase();  // 次のフェイズへ
     }
 
     private void replyAsM(Agent member) {
-        member.checkMessages(member);
         if (member.messages.size() == 0) return;     // メッセージをチェック
         member.leader = selectLeader(member, member.messages);
-        // どのリーダーからの要請も受けないのならinactivate
+        if (member.leader != null) {
+            member.joined = true;
+            member.sendMessage(member, member.leader, REPLY, ACCEPT);
+        }
+        // どのリーダーからの要請も受けないのならinactivateWithNoLearning
         // どっかには参加するのなら交渉2フェイズへ
         if (member.joined) {
             member.nextPhase();
         }
-/*        else if (member.index++ > MAX_REL_AGENTS) {
-            member.inactivate(0);
-        }
-// */
     }
 
     private void reportAsL(Agent leader) {
-//        System.out.println(" ID: " +leader.id + ", messages: " + leader.messages.size() );
-        leader.checkMessages(leader);
         // 有効なReplyメッセージもResultメッセージもなければreturn
         if (leader.replies.size() == 0 && leader.results.size() == 0) return;
-//        System.out.println(" ID: " +leader.id + ", leader.replies: " + leader.replies.size() + ", leader.results: "+ leader.results.size());
-        // 2017/10/21 逐次メンバに返事してサブタスクを渡して行くことに. Rejectされたら再送
-        // メッセージを順次確認. すでにサブタスクを託したメンバから終了の通知が来る可能性があることに注意
-        Agent candidate, member;
-        List<SubTask> resendants = new ArrayList<>();
-        // leader.repliesに関して
+
+        Agent candidate;
         for (Message reply : leader.replies) {
+            leader.replyNum++;
             candidate = reply.getFrom();
-            // 受諾ならteamMemberに追加してサブタスクを送る
+            // 受諾なら今は何もしない
             if (reply.getReply() == ACCEPT) {
-                leader.candidates.remove(candidate);
-                leader.teamMembers.add(candidate);
-                leader.sendMessage(leader, candidate, RESULT, leader.getAllocation(candidate).getSubtask());
+                continue;
             }
-            // 拒否なら送るはずだったサブタスクを再検討リストに入れ, 割り当てを消去する
+            // 拒否ならそのエージェントを候補リストから外す
             else {
-                SubTask resendant = leader.getAllocation(candidate).getSubtask();
-                if (resendant == null) {
-                    leader.removeAllocation(candidate);
-                } else {
-                    resendants.add(leader.getAllocation(candidate).getSubtask());
-                    leader.removeAllocation(candidate);
-                }
+                int i = leader.inTheList(candidate, leader.candidates);
+                if (i > 0) leader.candidates.set(i, null);
             }
-        }
-        // 残存サブタスク数が0になればタスク終了とみなす
-        if (leader.restSubTask == 0) {
-            Manager.finishTask(leader);
-            leader.prevIndex = leader.index;
-            leader.inactivate(1);
         }
 
-        // 再検討するサブタスクがあれば再送する. ただし, 全信頼エージェントに送っているんだったらもう諦める
-        if (resendants.size() > 0) {
-            if ( leader.index - leader.prevIndex + resendants.size() > MAX_PROPOSITION_NUM ) {
-                Manager.disposeTask(leader);
-                leader.inactivate(0);
-            } else {
-                leader.candidates.addAll(selectMembers(leader, resendants));
+        int index;
+        Agent A, B;
+        List<Agent> losers = new ArrayList<>();
+        List<SubTask> reallocations = new ArrayList<>();
+
+        // if 全candidatesから返信が返ってきてタスクが実行可能なら割り当てを考えていく
+        if (leader.replyNum == leader.candidates.size()) {
+            for (int i = 0; i < leader.restSubTask; i++) {
+                index = 2 * i;
+                A = leader.candidates.get(index);
+                B = leader.candidates.get(index + 1);
+                // 両方ダメだったら再割り当てを考える
+                if (A == null && B == null) {
+                    reallocations.add(leader.ourTask.subTasks.get(i));
+                    continue;
+                }
+                // もし両方から受理が返ってきたら, (どっちも多分同じ距離にいるだろうから)ランダムに割り当てる
+                else if (A != null && B != null) {
+                    // Bに割り当てる
+                    int rand = leader._randSeed.nextInt(2);
+                    if (rand == 0) {
+                        leader.candidates.set(index + 1, null);
+                        losers.add(A);
+                        leader.allocations.add(new Allocation(B, leader.ourTask.subTasks.get(i)));
+                        leader.teamMembers.add(B);
+                    } else {
+                        leader.candidates.set(index, null);
+                        losers.add(B);
+                        leader.allocations.add(new Allocation(A, leader.ourTask.subTasks.get(i)));
+                        leader.teamMembers.add(A);
+                    }
+                }
+                // もし片っぽしか受理しなければそいつがチームメンバーとなる
+                else {
+                    // Bだけ受理してくれた
+                    if (A == null) {
+                        leader.candidates.set(index + 1, null);
+                        leader.allocations.add(new Allocation(B, leader.ourTask.subTasks.get(i)));
+                        leader.teamMembers.add(B);
+                    }
+                    // Aだけ受理してくれた
+                    else {
+                        leader.candidates.set(index, null);
+                        leader.allocations.add(new Allocation(A, leader.ourTask.subTasks.get(i)));
+                        leader.teamMembers.add(A);
+                    }
+                }
             }
-// */        leader.candidates.addAll(selectMembers(leader, resendants));
+            // 未割り当てのサブタスクがあっても最後のチャンス
+            SubTask st;
+            Agent lo;
+            int flag;
+            if (reallocations.size() > 0 && losers.size() > 0) {
+                // 未割り当てのサブタスクひとつひとつに対して
+                for (int i = 0; i < reallocations.size(); i++) {
+                    st = reallocations.remove(0);
+                    flag = 0;
+                    // 受理を返したのに競合のせいでサブタスクが割り当てられなかったいい奴らの中から割り当てを探す
+                    for (int j = 0; j < losers.size(); j++) {
+                        lo = losers.remove(0);
+                        if (leader.canDo(lo, st)) {
+                            leader.restSubTask--;
+                            leader.allocations.add(new Allocation(lo, st));
+                            leader.teamMembers.add(lo);
+                            flag++;
+                            break;
+                        } else {
+                            losers.add(lo);
+                        }
+                    }
+                    // 誰にもできなかったら
+                    if (flag == 0) reallocations.add(st);
+                }
+            }
+
+            // 未割り当てが残っていないのならば負け犬どもに引導を渡して実行へ
+            if (reallocations.size() == 0) {
+                for (Agent tm : leader.teamMembers) {
+                    leader.sendMessage(leader, tm, RESULT, leader.getAllocation(tm).getSubtask());
+                }
+                for (Agent ls : losers) {
+                    leader.sendMessage(leader, ls, RESULT, null);
+                }
+                Manager.finishTask(leader);
+                leader.nextPhase();
+            }
+            // 未割り当てのサブタスクが残っているにもかかわらず再割当先の候補がなければ失敗
+            else {
+                for (Agent tm : leader.teamMembers) {
+                    leader.sendMessage(leader, tm, RESULT, null);
+                }
+                for (Agent ls : losers) {
+                    leader.sendMessage(leader, ls, RESULT, null);
+                }
+                Manager.disposeTask(leader);
+                leader.inactivateWithNoLearning(0);
+                return;
+            }
         }
         leader.replies.clear();
-        leader.results.clear();
-        leader.validatedTicks = Manager.getTicks();
     }
 
     private void receiveAsM(Agent member) {
         // リーダーからの返事が来るまで待つ
-        member.checkMessages(member);
         if (member.messages.size() == 0) return;
         Message message;
         message = member.messages.remove(0);
@@ -102,18 +202,21 @@ public class RoundRobin implements Strategy, SetParam {
             member.executionTime = member.calcExecutionTime(member);
             member.nextPhase();
         } else {
-            member.inactivate(0);
+            member.inactivateWithNoLearning(0);
         }
     }
 
-    private void executeAsM(Agent member) {
-        member.checkMessages(member);
-        member.executionTime--;
-        if (member.executionTime == 0) {
-            // 自分のサブタスクが終わったら
-            // リーダーに終了を通知して非活性に
-//            System.out.println("ID: " + member.id + ", leader: " + member.leader.id + ", success, subtask " + member.mySubTask );
-            member.inactivate(1);
+    private void execute(Agent agent) {
+        agent.executionTime--;
+        if (agent.executionTime == 0) {
+            if (agent.role == LEADER) {
+                if (TURN_NUM - Manager.getTicks() < LAST_PERIOD)
+                    for (Agent ag : agent.teamMembers) agent.workWithAsL[ag.id]++;
+            } else {
+                if (TURN_NUM - Manager.getTicks() < LAST_PERIOD) agent.workWithAsM[agent.leader.id]++;
+            }
+            // 自分のサブタスクが終わったら役割適応度を1で更新して非活性状態へ
+            agent.inactivateWithNoLearning(1);
         }
     }
 
@@ -127,12 +230,30 @@ public class RoundRobin implements Strategy, SetParam {
         List<Agent> temp = new ArrayList<>();
         Agent candidate;
         SubTask subtask;
-        for (int i = 0; i < subtasks.size(); i++) {
-            candidate = leader.relRanking.get(leader.index++ % MAX_PROPOSITION_NUM);
-            subtask = subtasks.get(i);
-            leader.allocations.add(new Allocation(candidate, subtask));
+        int prevIndex = leader.index;
+        for (int i = 0; i < subtasks.size() * RESEND_TIMES; i++) {
+            subtask = subtasks.get(i / RESEND_TIMES);
+            while (true) {
+                candidate = leader.relAgents.get(leader.index++ % leader.relAgents.size() );
+                // そいつがまだ候補に入っていなくてさらにそのサブタスクをこなせそうなら
+                if (leader.inTheList(candidate, temp) < 0 && leader.canDo(candidate, subtask)) break;
+                // 走査が一周した, すなわち誰もこなせないのなら候補者なしとしてbreak
+                if( leader.index - leader.relAgents.size() == prevIndex ){
+                    candidate = null;
+                    break;
+                }
+            }
+            // 候補者が見つからなかったなら何もせずnullを返す
+            if( candidate == null ) {
+                return null;
+            }
+            prevIndex = leader.index;
             temp.add(candidate);
-            leader.sendMessage(leader, candidate, PROPOSAL, subtask.resType);
+        }
+        // 無事割り当て予定が出揃ったら参加要請送信
+        for( int i = 0; i < subtasks.size() * RESEND_TIMES; i++ ) {
+            subtask = subtasks.get(i / RESEND_TIMES);
+            leader.sendMessage(leader, temp.get(i), PROPOSAL, subtask.resType);
         }
         return temp;
     }
@@ -152,8 +273,6 @@ public class RoundRobin implements Strategy, SetParam {
             // まだどこにも参加していないかを確認する
             if (!member.joined) {
                 // リーダーに受理を伝えてフラグを更新
-                member.sendMessage(member, from, REPLY, ACCEPT);
-                member.joined = true;
                 myLeader = from;
                 // すでにどこかに参加する予定なら残り全て拒否
             } else {
@@ -163,7 +282,7 @@ public class RoundRobin implements Strategy, SetParam {
         return myLeader;
     }
 
-    public void inactivate() {
+    public void inactivateWithNoLearning() {
     }
 }
 

@@ -10,10 +10,10 @@ import java.io.IOException;
 import java.util.*;
 
 public class Manager implements SetParam {
-//    private static Strategy strategy = new ProposedMethod();
+    private static Strategy strategy = new ProposedMethod();
 //    private static Strategy strategy = new ProposedMethod2();
 // private static Strategy strategy = new ReliabilityOriented();
-    private static Strategy strategy = new ReliabilityOriented2();
+//    private static Strategy strategy = new ReliabilityOriented2();
 //    private static Strategy strategy = new ProximityOriented();
 //    private static Strategy strategy = new RoundRobin();
 //    private static Strategy strategy = new Distant();
@@ -38,12 +38,12 @@ public class Manager implements SetParam {
     static int meanMessages = 0;
     static int processingTasks = 0;
     static double meanFinishedTasks = 0;
-    static int[] meanFinishedTasksArray = new int[WRITE_NUM+1];
+    static int[] meanFinishedTasksArray = new int[WRITE_NUM + 1];
     static int[] meanMessagesArray = new int[WRITE_NUM];
     static int meanReciprocal = 0;
     static int meanRational = 0;
-    static int meanLeader  = 0;
-    static int meanMember  = 0;
+    static int meanLeader = 0;
+    static int meanMember = 0;
     static double variance = 0;
     private static Random randSeed;
 
@@ -51,8 +51,6 @@ public class Manager implements SetParam {
         assert MAX_REL_AGENTS < AGENT_NUM : "alert0";
         assert INITIAL_TASK_NUM <= TASK_QUEUE_SIZE : "alert1";
         assert AGENT_NUM <= ROW * COLUMN : "alert2";
-        assert MAX_PROPOSITION_NUM >= 6 : "alert6";
-        assert MAX_PROPOSITION_NUM < AGENT_NUM : "alert";
         assert LAST_PERIOD < TURN_NUM : "a";
 
         try {
@@ -94,16 +92,15 @@ public class Manager implements SetParam {
                     // 数ターン毎にタスクを追加する(タスクキューがいっぱいなら, 破棄とする)
                     if (turn % TASK_ADD_TURN == 0) {
                         if (taskQueue.size() + TASK_ADD_NUM > TASK_QUEUE_SIZE) {
-                            int i ;
-                            for( i = 0; i < TASK_QUEUE_SIZE - taskQueue.size(); i++ ) taskQueue.add(new Task());
-                            overflowTasks += TASK_ADD_NUM - i ;
-                        }
-                        else {
+                            int i;
+                            for (i = 0; i < TASK_QUEUE_SIZE - taskQueue.size(); i++) taskQueue.add(new Task());
+                            overflowTasks += TASK_ADD_NUM - i;
+                        } else {
                             for (int i = 0; i < TASK_ADD_NUM; i++) taskQueue.add(new Task());
                         }
                     }
                     // 結果書き込み, 表示の部分
-                    if ( (turn+1) % ( TURN_NUM/ WRITE_NUM) == 0 ) {
+                    if ((turn + 1) % (TURN_NUM / WRITE_NUM) == 0) {
                         int temp = w % WRITE_NUM;
                         meanFinishedTasksArray[temp] += finishedTasks;
                         meanMessagesArray[temp] += TransmissionPath.messageNum;
@@ -115,10 +112,11 @@ public class Manager implements SetParam {
                     freelancer = getRoleList(agents, JONE_DOE);
                     actRandom(freelancer);
 
-                    leaders = getRoleList(agents, LEADER) ;
-                    members = getRoleList(agents, MEMBER) ;
+                    leaders = getRoleList(agents, LEADER);
+                    members = getRoleList(agents, MEMBER);
 
-                    TransmissionPath.transmitWithNoDelay();   // 返事の送信
+                    TransmissionPath.transmit();                // 通信遅延あり
+//                    TransmissionPath.transmitWithNoDelay();   // 通信遅延なし
                     checkMessage(agents);          // 要請の確認, 無効なメッセージに対する返信
 
                     actRandom(leaders);            // メンバの選定,　要請の送信
@@ -126,18 +124,16 @@ public class Manager implements SetParam {
                 }
                 int temp = OutPut.countReciplocalist(agents);
                 meanReciprocal += temp;
-                meanRational   += AGENT_NUM - temp;
-                for( Agent ag: agents ) {
-                    if( ag.e_leader > ag.e_member ) meanLeader++;
+                meanRational += AGENT_NUM - temp;
+                for (Agent ag : agents) {
+                    if (ag.e_leader > ag.e_member) meanLeader++;
                     else meanMember++;
                 }
 //                outPut.checkAgent(agents);
                 // ↑ 一回の実験の終了
                 processingTasks = countProcessing();
                 OutPut.showResults(turn, agents);
-                OutPut.showExecutionTimeTable(strategy, agents);
-                OutPut.writeCoalitions(agents);
-//                OutPut.writeResults(turn, agents);
+//                OutPut.writeCoalitions(agents);
 //                OutPut.showFrequency(agents);
 //                OutPut.checkGrids(grids);
 //                OutPut.checkAgent(agents);
@@ -147,7 +143,7 @@ public class Manager implements SetParam {
 // */
                 meanMessages += TransmissionPath.messageNum;
                 finishedTasksArray.add(finishedTasks);
-                if( num == EXECUTE_NUM ) break;
+                if (num == EXECUTE_NUM) break;
                 clearAll();
             }
 //            outPut.showGraph(agents);
@@ -155,16 +151,18 @@ public class Manager implements SetParam {
             OutPut.writeExcels(agents);
             // ↑ 全実験の終了
             finishedTasks = 0;
-            for (int temp : finishedTasksArray) { finishedTasks += temp; }
-            meanFinishedTasks = (double)finishedTasks / (double)EXECUTE_NUM;
+            for (int temp : finishedTasksArray) {
+                finishedTasks += temp;
+            }
+            meanFinishedTasks = (double) finishedTasks / (double) EXECUTE_NUM;
             System.out.println("Average finished tasks: " + meanFinishedTasks
-                    + ", Standard Deviation: " + String.format("%.2f", calcSTDEV() )
+                    + ", Standard Deviation: " + String.format("%.2f", calcSTDEV())
                     + ", MeanMessages: " + meanMessages / EXECUTE_NUM
-                    + ", MeanRationalists: " + meanRational/EXECUTE_NUM
-                    + ", MeanReciplocalists: " + meanReciprocal/EXECUTE_NUM
-                    + ", MeanLeaders: " + meanLeader/EXECUTE_NUM
-                    + ", MeanMembers: " + meanMember/EXECUTE_NUM
-                    + ", meanSubTasks: " + (double)Task.totalSubtaskNum/(double)Task.totalSubTasks);
+                    + ", MeanRationalists: " + meanRational / EXECUTE_NUM
+                    + ", MeanReciplocalists: " + meanReciprocal / EXECUTE_NUM
+                    + ", MeanLeaders: " + meanLeader / EXECUTE_NUM
+                    + ", MeanMembers: " + meanMember / EXECUTE_NUM
+                    + ", meanSubTasks: " + (double) Task.totalSubtaskNum / (double) Task.totalSubTasks);
 //            outPut.showMeanings();
             outPut.fileClose();
 // */
@@ -227,8 +225,6 @@ public class Manager implements SetParam {
             }
         }
 
-//        outPut.checkGrids(grids);
-//        outPut.checkAgent(agents);
         // 信頼エージェントの初期化
         // ランダム手法の場合
         if (strategy.getClass().getName() == "RandomStrategy") {
@@ -237,17 +233,17 @@ public class Manager implements SetParam {
                 agent = agents.get(i);
                 Agent candidate;
                 // ランダムで信頼エージェントとする
-                for (int j = 0; j < MAX_REL_AGENTS;){
+                for (int j = 0; j < MAX_REL_AGENTS; ) {
                     candidate = getAgentRandomly(agent, agent.relAgents);
-                    if( inTheList(candidate, agent.relAgents) < 0 ){
+                    if (inTheList(candidate, agent.relAgents) < 0) {
                         agent.relAgents.add(candidate);
                         j++;
                     }
                 }
             }
         }
-        // ランダム手法ではない場合
-/*        else {
+        // 学習なし手法で距離依存の場合(学習なしでは信頼度は使わないが便宜上定義する)
+        else if (strategy.getClass().getName() == "RoundRobin" || strategy.getClass().getName() == "ProximityOriented") {
             Agent agent;
             for (int i = 0; i < AGENT_NUM; ) {
                 agent = agents.get(i);
@@ -261,23 +257,19 @@ public class Manager implements SetParam {
                     }
                 }
                 agent.relRanking.addAll(tempList);
-//            System.out.println("ID: " + i + "  " + agent.relRanking + ", ");
+                // 距離が1のエージェントだけを信頼エージェントとする
+                if( dist == 1 ) agent.relAgents.addAll(tempList);
                 tempList.clear();
                 if (agent.relRanking.size() == AGENT_NUM - 1) {
-                    // 戦略が"遠い優先"だったら遠くのやつを信頼エージェントにする
-                    if (strategy.getClass().getName() == "Distant") for (int j = 0; j < MAX_REL_AGENTS; j++)
-                        agent.relAgents.add(agent.relRanking.get(AGENT_NUM - j - 2));
-                        // 他の戦略なら単純に近いやつを信頼エージェントにする
-                    else for (int j = 0; j < MAX_REL_AGENTS; j++) agent.relAgents.add(agent.relRanking.get(j));
                     i++;
                     dist = 0;
                 }
             }
         }
- // */
+        // 学習手法の場合
         else {
             Agent agent;
-            for(int i = 0; i < AGENT_NUM; i++){
+            for (int i = 0; i < AGENT_NUM; i++) {
                 List<Agent> temp = new ArrayList<>(agents);
                 int rand;
                 Agent ag;
@@ -285,7 +277,7 @@ public class Manager implements SetParam {
                 while (temp.size() != 0) {
                     rand = randSeed.nextInt(temp.size());
                     ag = temp.remove(rand);
-                    if( !ag.equals(agent) ) agent.relRanking.add(ag);
+                    if (!ag.equals(agent)) agent.relRanking.add(ag);
                 }
             }
         }
@@ -355,10 +347,10 @@ public class Manager implements SetParam {
         Manager.finishedTasks++;
     }
 
-    static List<Agent> getRoleList(List<Agent> agents, int role){
+    static List<Agent> getRoleList(List<Agent> agents, int role) {
         List<Agent> temp = new ArrayList<>();
-        for( Agent ag: agents ){
-            if( ag.role == role ) temp.add(ag);
+        for (Agent ag : agents) {
+            if (ag.role == role) temp.add(ag);
         }
         return temp;
     }
@@ -374,8 +366,8 @@ public class Manager implements SetParam {
         temp.clear();
     }
 
-    private static void checkMessage(List<Agent> agents){
-        for( Agent ag: agents ) ag.checkMessages(ag);
+    private static void checkMessage(List<Agent> agents) {
+        for (Agent ag : agents) ag.checkMessages(ag);
     }
 
     // 次のタームに行く前にあらゆるパラメータを初期化する部分
@@ -405,7 +397,9 @@ public class Manager implements SetParam {
     // 実験結果の標準偏差をとる
     private static double calcSTDEV() {
         double temp = 0;
-        if (finishedTasksArray.size() != EXECUTE_NUM) { return -1; }
+        if (finishedTasksArray.size() != EXECUTE_NUM) {
+            return -1;
+        }
         for (int i = 0; i < EXECUTE_NUM; i++) {
             temp += (finishedTasksArray.get(i) - meanFinishedTasks) * (finishedTasksArray.get(i) - meanFinishedTasks);
         }

@@ -107,7 +107,7 @@ public class OutPut extends ShowGraph implements SetParam {
     static void checkAgent(List<Agent> agents) {
         List<Agent> temp = new ArrayList<>(agents);
         System.out.println("Total Agents is " + Agent._id);
-        System.out.print("Leaders is " + Agent._leader_num + ", Members is " + Agent._member_num + ", Resources : ");
+        System.out.println("Leaders is " + Agent._leader_num + ", Members is " + Agent._member_num + ", Resources : ");
 
 /*        for( int i = 0; i < RESOURCE_NUM; i++ ) System.out.print( Agent.resSizeArray[i] + ", " );
         System.out.println();
@@ -161,7 +161,6 @@ public class OutPut extends ShowGraph implements SetParam {
         if (strategy.getClass().getName() != "ProposedMethod2") return;
         else {
             for (int i = 0; i < AGENT_NUM; i++) {
-                if (agents.get(i).role == LEADER) System.out.println(ProposedMethod2.etTable[i]);
             }
         }
 
@@ -280,6 +279,28 @@ public class OutPut extends ShowGraph implements SetParam {
                 else if( i == 1 ) cell.setCellValue("Target Node id");
                 else cell.setCellValue("Target Node id");
 
+                if( i == 0 ) {
+                    cell = row.createCell(colNumber++);
+                    cell.setCellStyle(style_header);
+                    cell.setCellType(CellType.STRING);
+                    cell.setCellValue(" x-coordinate ");
+
+                    cell = row.createCell(colNumber++);
+                    cell.setCellStyle(style_header);
+                    cell.setCellType(CellType.STRING);
+                    cell.setCellValue(" y-coordinate ");
+
+                    cell = row.createCell(colNumber++);
+                    cell.setCellStyle(style_header);
+                    cell.setCellType(CellType.STRING);
+                    cell.setCellValue(" leader id");
+
+                    cell = row.createCell(colNumber++);
+                    cell.setCellStyle(style_header);
+                    cell.setCellType(CellType.STRING);
+                    cell.setCellValue(" distance to leader ");
+                }
+
                 //ウィンドウ枠の固定
                 sheet.createFreezePane(1, 1);
 
@@ -291,8 +312,9 @@ public class OutPut extends ShowGraph implements SetParam {
                     sheet.autoSizeColumn(j, true);
                 }
 
-                //データ行の生成
+                //nodeシートへの書き込み
                 if (i == 0) {
+                    int j = 0;
                     for (Agent agent : agents) {
                         rowNumber++;
                         colNumber = 0;
@@ -315,6 +337,28 @@ public class OutPut extends ShowGraph implements SetParam {
                         if( agent.e_leader > agent.e_member)     cell.setCellValue("Circle");
                         else if( agent.principle == RATIONAL )   cell.setCellValue("Square");
                         else if( agent.principle == RECIPROCAL ) cell.setCellValue("Triangle");
+
+                        cell = row.createCell(colNumber++);
+                        cell.setCellStyle(style_string);
+                        cell.setCellType(CellType.NUMERIC);
+                        cell.setCellValue(agent.x * 10);
+
+                        cell = row.createCell(colNumber++);
+                        cell.setCellStyle(style_string);
+                        cell.setCellType(CellType.NUMERIC);
+                        cell.setCellValue(agent.y * 10);
+
+                        cell = row.createCell(colNumber++);
+                        cell.setCellStyle(style_string);
+                        cell.setCellType(CellType.NUMERIC);
+                        if( agent.e_leader > agent.e_member ) cell.setCellValue(agent.id * 3);
+                        else if( agent.leader != null ) cell.setCellValue(agent.leader.id * 3);
+
+                        cell = row.createCell(colNumber++);
+                        cell.setCellStyle(style_string);
+                        cell.setCellType(CellType.NUMERIC);
+                        if( agent.e_leader > agent.e_member ) cell.setCellValue(0);
+                        else if( agent.leader != null ) cell.setCellValue(Manager.distance[agent.id][agent.leader.id]*10);
 
                         //列幅の自動調整
                         for (int k = 0; k <= colNumber; k++) {

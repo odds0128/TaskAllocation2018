@@ -81,7 +81,7 @@ public class Distant implements Strategy, SetParam {
 
         // 再検討するサブタスクがあれば再送する. ただし, 全信頼エージェントに送っているんだったらもう諦める
         if (resendants.size() > 0) {
-            if (MAX_PROPOSITION_NUM - leader.index < resendants.size()) {
+            if (leader.relAgents.size() - leader.index < resendants.size()) {
                 Manager.disposeTask(leader);
                 leader.inactivate(0);
             } else {

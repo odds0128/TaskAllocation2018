@@ -14,7 +14,7 @@ public class ReliabilityOriented2 implements SetParam, Strategy {
     public void act(Agent agent) {
         assert agent.relAgents.size() <= MAX_REL_AGENTS : "alert3";
         // if( agent.id == 3 ) System.out.println( "Turn: " + Manager.getTicks() + ", ID: " + agent.id + " , role: " + agent.role + ", e_l: " + String.format("%.2f",agent.e_leader) + ", e_m: " + String.format("%.2f",agent.e_member) + ", rel: "  + String.format("%.2f",agent.reliabilities[0]));
-        if ((Manager.getTicks() - agent.validatedTicks) > RENEW_ROLE_TICKS) agent.inactivate(0);
+/*        if ((Manager.getTicks() - agent.validatedTicks) > RENEW_ROLE_TICKS) agent.inactivate(0);
         else {
 // */
             setPrinciple(agent);
@@ -26,7 +26,6 @@ public class ReliabilityOriented2 implements SetParam, Strategy {
 //            else if (action == EVAPORATION) agent.relAgents = decreaseDEC(agent);
             agent.relAgents = decreaseDEC(agent);
         }
-    }
 
     private void proposeAsL(Agent leader) {
         leader.ourTask = Manager.getTask();
@@ -138,10 +137,11 @@ public class ReliabilityOriented2 implements SetParam, Strategy {
             // 未割り当てのサブタスクがあっても最後のチャンス
             SubTask st;
             Agent   lo;
-            int flag = 0;
+            int flag ;
             if (reallocations.size() > 0 && losers.size() > 0) {
                 // 未割り当てのサブタスクひとつひとつに対して
                 for ( int i = 0; i < reallocations.size(); i++ ) {
+                    flag = 0;
                     st = reallocations.remove(0);
                     // 受理を返したのに競合のせいでサブタスクが割り当てられなかったいい奴らの中から割り当てを探す
                     for ( int j = 0; j < losers.size(); j++ ) {
@@ -241,7 +241,7 @@ public class ReliabilityOriented2 implements SetParam, Strategy {
             else {
                 int j = 0;
                 while (true) {
-                    // エージェント1から全走査
+                    // 信頼度ランキング1位から全走査
                     candidate = leader.relRanking.get(j++);
                     // そいつがまだ候補に入っていなくてさらにそのサブタスクをこなせそうなら
                     if (leader.inTheList(candidate, temp) < 0 && leader.canDo(candidate, subtask)) break;
