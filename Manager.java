@@ -10,8 +10,8 @@ import java.io.IOException;
 import java.util.*;
 
 public class Manager implements SetParam {
-    private static Strategy strategy = new ProposedMethod();
-//    private static Strategy strategy = new ProposedMethod2();
+//    private static Strategy strategy = new ProposedMethod();
+    private static Strategy strategy = new ProposedMethod2();
 // private static Strategy strategy = new ReliabilityOriented();
 //    private static Strategy strategy = new ReliabilityOriented2();
 //    private static Strategy strategy = new ProximityOriented();
@@ -63,6 +63,7 @@ public class Manager implements SetParam {
             int num = 0;
             long seed;
             System.out.println(strategy.getClass().getName());
+
             // num回実験
             while ((line = br.readLine()) != null) {
                 int w = 0;
@@ -80,6 +81,7 @@ public class Manager implements SetParam {
                 setRelAg(agents);
 
 //                OutPut.checkGrids(grids);
+//                OutPut.checkDistance(distance);
 //                OutPut.checkAgent(agents);
 //                OutPut.checkTask(taskQueue);
 
@@ -132,7 +134,7 @@ public class Manager implements SetParam {
 //                outPut.checkAgent(agents);
                 // ↑ 一回の実験の終了
                 processingTasks = countProcessing();
-                OutPut.showResults(turn, agents);
+//                OutPut.showResults(turn, agents);
 //                OutPut.writeCoalitions(agents);
 //                OutPut.showFrequency(agents);
 //                OutPut.checkGrids(grids);
@@ -146,9 +148,12 @@ public class Manager implements SetParam {
                 if (num == EXECUTE_NUM) break;
                 clearAll();
             }
+            if( strategy.getClass().getName() == "ProposedMethod2" ){
+                ProposedMethod2.showLearnedDistance();
+            }
 //            outPut.showGraph(agents);
-            OutPut.writeResults(turn, agents);
-            OutPut.writeExcels(agents);
+//            OutPut.writeResults(turn, agents);
+//            OutPut.writeExcels(agents);
             // ↑ 全実験の終了
             finishedTasks = 0;
             for (int temp : finishedTasksArray) {

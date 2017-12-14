@@ -117,6 +117,7 @@ public class Agent implements SetParam {
     }
 
     void act() {
+
 //        if (strategy.getClass().getName() == "RandomStrategy") strategy.act(this, action);
         if (phase == SELECT_ROLE) selectRole();
         else strategy.act(this);
@@ -529,7 +530,7 @@ public class Agent implements SetParam {
             for( Agent ag: temp ) str.append( String.format("%3d", ag.id ) + ", ");
         }
 // */
-       if (e_member > e_leader) str.append(", member: ");
+/*       if (e_member > e_leader) str.append(", member: ");
         else if (e_leader > e_member) str.append(", leader: ");
         else if (role == JONE_DOE) str.append(", free: ");
 //        str.append(String.format(", %.3f", e_leader) + ", " + String.format("%.3f", e_member) + sep);
@@ -561,7 +562,7 @@ public class Agent implements SetParam {
             }
         }
 // */
-
+/*
         int temp;
         str.append( sep + "   Reliability Ranking:");
         for( int i = 0; i < 5; i++ ){
@@ -580,6 +581,7 @@ public class Agent implements SetParam {
             }
         }
 //        */
+
         return str.toString();
     }
 }

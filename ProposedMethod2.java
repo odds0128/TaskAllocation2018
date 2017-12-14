@@ -2,17 +2,35 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * ProposedMethodクラス
- * 信頼度更新式をちょっといじったやつ
+ * ProposedMethod2クラス
+ * ターンアラウンドタイムを学習(単純に記憶)し, 短いやつから割り当てを考える
+ * 同じ時間のやつがいたら信頼度順にいく
  */
-public class ProposedMethod implements SetParam, Strategy {
+public class ProposedMethod2 implements SetParam, Strategy {
     static final double γ = γ_r;
 
+    static List<LearnedDistance>[] dLearned = new ArrayList[AGENT_NUM];
 
+    ProposedMethod2() {
+        for (int i = 0; i < dLearned.length; i++) {
+            dLearned[i] = new ArrayList<>();
+        }
+    }
+
+    static void showLearnedDistance() {
+        for (int i = 0; i < AGENT_NUM; i++) {
+            System.out.print(" ID: " + i + " ... ");
+            for (LearnedDistance temp : dLearned[i]) {
+                System.out.print(temp);
+            }
+            System.out.println();
+        }
+    }
 
     public void act(Agent agent) {
         assert agent.relAgents.size() <= MAX_REL_AGENTS : "alert3";
         setPrinciple(agent);
+
         if (agent.phase == PROPOSITION) proposeAsL(agent);
         else if (agent.phase == REPLY) replyAsM(agent);
         else if (agent.phase == REPORT) reportAsL(agent);
@@ -63,26 +81,20 @@ public class ProposedMethod implements SetParam, Strategy {
     }
 
     private void reportAsL(Agent leader) {
+
         // 有効なReplyメッセージがなければreturn
         if (leader.replies.size() == 0) return;
         // 2017/12/06 ICARRTに揃えるために, チーム編成が成功してからサブタスクの実行指示をだすことに
-
+        int rt = Manager.getTicks() - leader.start;             // 応答時間
         Agent candidate;
         for (Message reply : leader.replies) {
             leader.replyNum++;
             candidate = reply.getFrom();
+            new LearnedDistance(candidate, rt, dLearned[leader.id]);
             int i = leader.inTheList(candidate, leader.candidates);
             // 受諾なら信頼度をプラスに更新する
             if (reply.getReply() == ACCEPT) {
-                int rt = Manager.getTicks() - leader.start;             // 応答時間
-                leader.acceptances++;
-                leader.untilAcceptances += rt;
-                //                if(leader.id == 3  ) System.out.println(" execution time: " + executionTime + ", distance: " + Manager.distance[leader.id][member.id]);
-                leader.meanUA = (double) leader.untilAcceptances / (double) leader.acceptances;
-//                if( Manager.getTicks() % 100 == 0 ) System.out.println( "before: " + leader.reliabilities[candidate.id] );
-                leader.relAgents = renewRel(leader, candidate, leader.meanUA/(double) rt );
-  //              if( Manager.getTicks() % 100 == 0 ) System.out.println( leader.meanUA + ", " + rt + ", " + leader.meanUA/(double) rt );
-    //            if( Manager.getTicks() % 100 == 0 ) System.out.println( "after: " + leader.reliabilities[candidate.id] );
+                leader.relAgents = renewRel(leader, candidate, 1);
             }
             // 拒否ならそのエージェントを候補リストから外し, 信頼度を0で更新する
             else {
@@ -103,7 +115,7 @@ public class ProposedMethod implements SetParam, Strategy {
                 A = leader.candidates.get(index);
                 B = leader.candidates.get(index + 1);
                 // 両方ダメだったら再割り当てを考える
-                if( A == null && B == null ) {
+                if (A == null && B == null) {
                     reallocations.add(leader.ourTask.subTasks.get(i));
                     continue;
                 }
@@ -128,7 +140,7 @@ public class ProposedMethod implements SetParam, Strategy {
                 else {
                     // Bだけ受理してくれた
                     if (A == null) {
-                        leader.candidates.set(index+1, null);
+                        leader.candidates.set(index + 1, null);
                         leader.allocations.add(new Allocation(B, leader.ourTask.subTasks.get(i)));
                         leader.teamMembers.add(B);
                     }
@@ -142,37 +154,37 @@ public class ProposedMethod implements SetParam, Strategy {
             }
             // 未割り当てのサブタスクがあっても最後のチャンス
             SubTask st;
-            Agent   lo;
-            int flag ;
+            Agent lo;
+            int flag;
             if (reallocations.size() > 0 && losers.size() > 0) {
                 // 未割り当てのサブタスクひとつひとつに対して
-                for ( int i = 0; i < reallocations.size(); i++ ) {
+                for (int i = 0; i < reallocations.size(); i++) {
                     flag = 0;
                     st = reallocations.remove(0);
                     // 受理を返したのに競合のせいでサブタスクが割り当てられなかったいい奴らの中から割り当てを探す
-                    for ( int j = 0; j < losers.size(); j++ ) {
+                    for (int j = 0; j < losers.size(); j++) {
                         lo = losers.remove(0);
-                        if (leader.canDo(lo,st)) {
+                        if (leader.canDo(lo, st)) {
                             leader.restSubTask--;
-                            leader.allocations.add(new Allocation(lo, st) );
+                            leader.allocations.add(new Allocation(lo, st));
                             leader.teamMembers.add(lo);
-                            flag ++;
+                            flag++;
                             break;
-                        }else{
+                        } else {
                             losers.add(lo);
                         }
                     }
                     // 誰にもできなかったら
-                    if( flag == 0 ) reallocations.add(st);
+                    if (flag == 0) reallocations.add(st);
                 }
             }
 
             // 未割り当てが残っていないのならば負け犬どもに引導を渡して実行へ
-            if( reallocations.size() == 0 ){
+            if (reallocations.size() == 0) {
                 for (Agent tm : leader.teamMembers) {
                     leader.sendMessage(leader, tm, RESULT, leader.getAllocation(tm).getSubtask());
                 }
-                for( Agent ls : losers ){
+                for (Agent ls : losers) {
                     leader.sendMessage(leader, ls, RESULT, null);
                 }
                 Manager.finishTask(leader);
@@ -183,7 +195,7 @@ public class ProposedMethod implements SetParam, Strategy {
                 for (Agent tm : leader.teamMembers) {
                     leader.sendMessage(leader, tm, RESULT, null);
                 }
-                for( Agent ls : losers ){
+                for (Agent ls : losers) {
                     leader.sendMessage(leader, ls, RESULT, null);
                 }
                 Manager.disposeTask(leader);
@@ -202,8 +214,9 @@ public class ProposedMethod implements SetParam, Strategy {
         member.mySubTask = message.getSubTask();
 
         int rt = Manager.getTicks() - member.start;
+        new LearnedDistance(member.leader, rt, dLearned[member.id]);
         member.totalResponseTicks += rt;
-        member.meanRT = (double)member.totalResponseTicks/(double)member.totalOffers;
+        member.meanRT = (double) member.totalResponseTicks / (double) member.totalOffers;
 
         // サブタスクがもらえたなら信頼度をプラスに更新し, 実行フェイズへ移る.
         if (member.mySubTask != null) {
@@ -214,7 +227,7 @@ public class ProposedMethod implements SetParam, Strategy {
         // サブタスクが割り当てられなかったら信頼度を0で更新し, inactivate
         else {
             //       System.out.println(" ID: " + member.id + ", " + member.leader + " is unreliable");
-            member.relAgents = renewRel(member, member.leader, -(double)rt/member.meanRT);
+            member.relAgents = renewRel(member, member.leader, -(double) rt / member.meanRT);
             member.inactivate(0);
         }
     }
@@ -244,6 +257,7 @@ public class ProposedMethod implements SetParam, Strategy {
         List<Agent> temp = new ArrayList<>();
         Agent candidate;
         SubTask subtask;
+        List<Integer> ags = new ArrayList<>();
 
         for (int i = 0; i / RESEND_TIMES < subtasks.size(); i++) {
             subtask = subtasks.get(i / RESEND_TIMES);
@@ -251,10 +265,12 @@ public class ProposedMethod implements SetParam, Strategy {
             else {
                 int j = 0;
                 while (true) {
-                    // エージェント1から全走査
-                    candidate = leader.relRanking.get(j++);
-                    // そいつがまだ候補に入っていなくてさらにそのサブタスクをこなせそうなら
-                    if (leader.inTheList(candidate, temp) < 0 && leader.canDo(candidate, subtask)) break;
+                    for (int k = 0; k < dLearned[leader.id].size(); k++) {
+
+                        candidate = leader.relRanking.get(j++);
+                        // そいつがまだ候補に入っていなくてさらにそのサブタスクをこなせそうなら
+                        if (leader.inTheList(candidate, temp) < 0 && leader.canDo(candidate, subtask)) break;
+                    }
                 }
             }
             temp.add(candidate);
@@ -329,7 +345,7 @@ public class ProposedMethod implements SetParam, Strategy {
         if (agent.role == LEADER) {
             agent.reliabilities[target.id] = temp * (1.0 - α) + α * evaluation;
         } else {
-            if( evaluation >= 0 ) agent.reliabilities[target.id] = temp * (1.0 - α) + α * evaluation;
+            if (evaluation >= 0) agent.reliabilities[target.id] = temp * (1.0 - α) + α * evaluation;
             else agent.reliabilities[target.id] = temp * (1.0 - α * evaluation);
         }
 
@@ -411,6 +427,7 @@ public class ProposedMethod implements SetParam, Strategy {
 // */
         return tmp;
     }
+
 
     private void setPrinciple(Agent agent) {
         if (agent.role == MEMBER) {

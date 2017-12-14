@@ -5,17 +5,17 @@
 
 interface SetParam {
     // 環境の設定( 変更していく部分 )
-    int EXECUTE_NUM = 10;            // 実験の回数
-    int TURN_NUM    = 100000;           // 一回の実験のターン数
-    int WRITE_NUM   = 1000;          // データのファイルへの出力回数
-    int LAST_PERIOD = 5000;         // 協調関係ができているか確認するための最後の方のターム
+    int EXECUTE_NUM = 1;            // 実験の回数
+    int TURN_NUM    = 100;           // 一回の実験のターン数
+    int WRITE_NUM   = 1;          // データのファイルへの出力回数
+    int LAST_PERIOD = 5;         // 協調関係ができているか確認するための最後の方のターム
     double THRESHOLD_TASK_SUCCESSES = 20;
 
     int INITIAL_TASK_NUM = 0;      // 最初のタスク数
     int TASK_QUEUE_SIZE  = 500;      // タスクキューのサイズ. だけど現状だと意味がない
-    int AGENT_NUM = 500;             // エージェントの数
-    int ROW    = 100;                // 行数
-    int COLUMN = 100;                // 列数
+    int AGENT_NUM = 30;             // エージェントの数
+    int ROW    = 10;                // 行数
+    int COLUMN = 10;                // 列数
 
     int TASK_ADD_TURN = 1;          // タスクキューにタスクを追加するスパン
     int TASK_ADD_NUM  = 5;          // タスクを追加するタイミングで, タスクキューに追加するタスクの個数

@@ -99,6 +99,16 @@ public class OutPut extends ShowGraph implements SetParam {
         }
     }
 
+    static void checkDistance(int[][] distances) {
+        for (int i = 0; i < AGENT_NUM; i++) {
+            System.out.print("ID: " + i + "...");
+            for (int j = 0; j < AGENT_NUM; j++) {
+                System.out.print(distances[i][j] + ", ");
+            }
+            System.out.println();
+        }
+    }
+
     /**
      * checkAgentメソッド
      *
@@ -249,8 +259,8 @@ public class OutPut extends ShowGraph implements SetParam {
                     ((SXSSFSheet) sheet).trackAllColumnsForAutoSizing();
                 }
                 //シート名称の設定
-                if (i == 0)       book.setSheetName(i, "nodes");
-                else if( i == 1 ) book.setSheetName(i, "edges");
+                if (i == 0) book.setSheetName(i, "nodes");
+                else if (i == 1) book.setSheetName(i, "edges");
                 else book.setSheetName(i, "reciprocalEdges");
 
                 //ヘッダ行の作成
@@ -262,24 +272,24 @@ public class OutPut extends ShowGraph implements SetParam {
                 cell.setCellStyle(style_header);
                 cell.setCellType(CellType.STRING);
                 if (i == 0) cell.setCellValue("Node id");
-                else if( i == 1 ) cell.setCellValue("Edge id");
+                else if (i == 1) cell.setCellValue("Edge id");
                 else cell.setCellValue("Edge id");
 
                 cell = row.createCell(colNumber++);
                 cell.setCellStyle(style_header);
                 cell.setCellType(CellType.STRING);
                 if (i == 0) cell.setCellValue("Node color");
-                else if( i == 1 ) cell.setCellValue("Source Node id");
+                else if (i == 1) cell.setCellValue("Source Node id");
                 else cell.setCellValue("Source Node id");
 
                 cell = row.createCell(colNumber++);
                 cell.setCellStyle(style_header);
                 cell.setCellType(CellType.STRING);
                 if (i == 0) cell.setCellValue("Node shape");
-                else if( i == 1 ) cell.setCellValue("Target Node id");
+                else if (i == 1) cell.setCellValue("Target Node id");
                 else cell.setCellValue("Target Node id");
 
-                if( i == 0 ) {
+                if (i == 0) {
                     cell = row.createCell(colNumber++);
                     cell.setCellStyle(style_header);
                     cell.setCellType(CellType.STRING);
@@ -327,16 +337,16 @@ public class OutPut extends ShowGraph implements SetParam {
                         cell = row.createCell(colNumber++);
                         cell.setCellStyle(style_string);
                         cell.setCellType(CellType.STRING);
-                        if( agent.e_leader > agent.e_member)     cell.setCellValue("Red");
-                        else if( agent.principle == RATIONAL )   cell.setCellValue("Green");
-                        else if( agent.principle == RECIPROCAL ) cell.setCellValue("Blue");
+                        if (agent.e_leader > agent.e_member) cell.setCellValue("Red");
+                        else if (agent.principle == RATIONAL) cell.setCellValue("Green");
+                        else if (agent.principle == RECIPROCAL) cell.setCellValue("Blue");
 
                         cell = row.createCell(colNumber++);
                         cell.setCellStyle(style_string_wrap);
                         cell.setCellType(CellType.STRING);
-                        if( agent.e_leader > agent.e_member)     cell.setCellValue("Circle");
-                        else if( agent.principle == RATIONAL )   cell.setCellValue("Square");
-                        else if( agent.principle == RECIPROCAL ) cell.setCellValue("Triangle");
+                        if (agent.e_leader > agent.e_member) cell.setCellValue("Circle");
+                        else if (agent.principle == RATIONAL) cell.setCellValue("Square");
+                        else if (agent.principle == RECIPROCAL) cell.setCellValue("Triangle");
 
                         cell = row.createCell(colNumber++);
                         cell.setCellStyle(style_string);
@@ -351,14 +361,15 @@ public class OutPut extends ShowGraph implements SetParam {
                         cell = row.createCell(colNumber++);
                         cell.setCellStyle(style_string);
                         cell.setCellType(CellType.NUMERIC);
-                        if( agent.e_leader > agent.e_member ) cell.setCellValue(agent.id * 3);
-                        else if( agent.leader != null ) cell.setCellValue(agent.leader.id * 3);
+                        if (agent.e_leader > agent.e_member) cell.setCellValue(agent.id * 3);
+                        else if (agent.leader != null) cell.setCellValue(agent.leader.id * 3);
 
                         cell = row.createCell(colNumber++);
                         cell.setCellStyle(style_string);
                         cell.setCellType(CellType.NUMERIC);
-                        if( agent.e_leader > agent.e_member ) cell.setCellValue(0);
-                        else if( agent.leader != null ) cell.setCellValue(Manager.distance[agent.id][agent.leader.id]*10);
+                        if (agent.e_leader > agent.e_member) cell.setCellValue(0);
+                        else if (agent.leader != null)
+                            cell.setCellValue(Manager.distance[agent.id][agent.leader.id] * 10);
 
                         //列幅の自動調整
                         for (int k = 0; k <= colNumber; k++) {
@@ -367,7 +378,7 @@ public class OutPut extends ShowGraph implements SetParam {
                     }
                 }
                 // edgeシートへの書き込み
-                else if( i == 1 ){
+                else if (i == 1) {
                     for (int j = 0; j < Edge.from_id.size(); j++) {
                         rowNumber++;
                         colNumber = 0;
@@ -392,9 +403,9 @@ public class OutPut extends ShowGraph implements SetParam {
                             sheet.autoSizeColumn(k, true);
                         }
                     }
-                }else{
+                } else {
                     for (int j = 0; j < Edge.from_id.size(); j++) {
-                        if( Edge.isRecipro.get(j) != true ) continue;
+                        if (Edge.isRecipro.get(j) != true) continue;
                         rowNumber++;
                         colNumber = 0;
                         row = sheet.createRow(rowNumber);
@@ -486,7 +497,8 @@ public class OutPut extends ShowGraph implements SetParam {
         pw.println();
         for (Agent ag : agents) {
             pw.print(ag.id + ", ");
-            if (ag.e_leader > ag.e_member) for (int i = 0; i < AGENT_NUM; i++) pw.print( (-1) * ag.workWithAsL[i] + ", ");
+            if (ag.e_leader > ag.e_member)
+                for (int i = 0; i < AGENT_NUM; i++) pw.print((-1) * ag.workWithAsL[i] + ", ");
             else for (int i = 0; i < AGENT_NUM; i++) pw.print(ag.workWithAsM[i] + ", ");
             pw.println();
         }
@@ -601,7 +613,7 @@ public class OutPut extends ShowGraph implements SetParam {
         }
 // */
         for (Agent agent : agents) {
-            if (agent.reliabilities[agent.relRanking.get(0).id] > THRESHOLD_DEPENDABILITY && agent.e_member > THRESHOLD_RECIPROCITY && agent.e_member > agent.e_leader )
+            if (agent.reliabilities[agent.relRanking.get(0).id] > THRESHOLD_DEPENDABILITY && agent.e_member > THRESHOLD_RECIPROCITY && agent.e_member > agent.e_leader)
                 temp++;
         }
         return temp;
