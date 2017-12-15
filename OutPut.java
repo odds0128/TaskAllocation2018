@@ -132,8 +132,14 @@ public class OutPut extends ShowGraph implements SetParam {
         }
 // */
         Collections.sort(temp, new AgentComparator());
+        /*
         for (int i = 0; i < AGENT_NUM; i++) {
-            System.out.println(temp.get(i));
+            System.out.print(temp.get(i).id +", means: " + ProposedMethod2.dlMean[i] + " ... ");
+            for( LearnedDistance ld: ProposedMethod2.dLearned[i] ){
+                if( ld.getDistance() > 2 ) break;
+                System.out.print(ld);
+            }
+            System.out.println();
         }
 // */
     }
@@ -465,7 +471,7 @@ public class OutPut extends ShowGraph implements SetParam {
         for (int i = 1; i <= WRITE_NUM; i++) {
             pw.print(i * (TURN_NUM / WRITE_NUM) + ", " + Manager.meanFinishedTasksArray[i - 1] / EXECUTE_NUM + ", ");
             pw.print((Manager.meanFinishedTasksArray[i] - Manager.meanFinishedTasksArray[i - 1]) / EXECUTE_NUM + ", ");
-            pw.print(Manager.meanMessagesArray[i - 1] / EXECUTE_NUM);
+            pw.print( Manager.meanCommunicationTime[i-1] / (double) EXECUTE_NUM );
 /*            pw.print(Agent._leader_num + ", " + Agent._member_num + ", ");
 
 // */

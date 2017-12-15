@@ -10,10 +10,15 @@ public class ProposedMethod2 implements SetParam, Strategy {
     static final double γ = γ_r;
 
     static List<LearnedDistance>[] dLearned = new ArrayList[AGENT_NUM];
+    static int[] dlMean  = new int[AGENT_NUM];
+    static int[] dlTotal = new int[AGENT_NUM];
+    static int[] dlSize  = new int[AGENT_NUM];
 
     ProposedMethod2() {
         for (int i = 0; i < dLearned.length; i++) {
             dLearned[i] = new ArrayList<>();
+            dlTotal[i]  = 0;
+            dlSize[i]   = 0;
         }
     }
 
@@ -81,7 +86,6 @@ public class ProposedMethod2 implements SetParam, Strategy {
     }
 
     private void reportAsL(Agent leader) {
-
         // 有効なReplyメッセージがなければreturn
         if (leader.replies.size() == 0) return;
         // 2017/12/06 ICARRTに揃えるために, チーム編成が成功してからサブタスクの実行指示をだすことに
@@ -90,7 +94,10 @@ public class ProposedMethod2 implements SetParam, Strategy {
         for (Message reply : leader.replies) {
             leader.replyNum++;
             candidate = reply.getFrom();
-            new LearnedDistance(candidate, rt, dLearned[leader.id]);
+            dlSize[leader.id] ++;
+            dlTotal[leader.id] += rt;
+            dlMean[leader.id]  =  dlTotal[leader.id]/dlSize[leader.id];
+            new LearnedDistance(candidate, rt, leader, dLearned[leader.id]);
             int i = leader.inTheList(candidate, leader.candidates);
             // 受諾なら信頼度をプラスに更新する
             if (reply.getReply() == ACCEPT) {
@@ -214,7 +221,12 @@ public class ProposedMethod2 implements SetParam, Strategy {
         member.mySubTask = message.getSubTask();
 
         int rt = Manager.getTicks() - member.start;
-        new LearnedDistance(member.leader, rt, dLearned[member.id]);
+        dlSize[member.id] ++;
+        dlTotal[member.id] += rt;
+        dlMean[member.id]  =  dlTotal[member.id]/dlSize[member.id];
+        new LearnedDistance(member.leader, rt, member, dLearned[member.id]);
+        if( dlMean[member.id] == 0 ) System.out.println(dlMean[member.id]);
+
         member.totalResponseTicks += rt;
         member.meanRT = (double) member.totalResponseTicks / (double) member.totalOffers;
 
@@ -248,6 +260,9 @@ public class ProposedMethod2 implements SetParam, Strategy {
 
     /**
      * selectMembersメソッド
+     * 近いエージェント(平均より距離が近い)から見て行く
+     * 合理なら信頼度に関係なく送るが, 互恵なら信頼度が閾値より高いやつにしか送らない
+     * また, "近い"エージェントがいなくなったら単に信頼度の上から探す.
      * 優先度の高いエージェントから(すなわち添字の若い信頼エージェントから)選択する
      * ε-greedyを導入
      *
@@ -257,26 +272,66 @@ public class ProposedMethod2 implements SetParam, Strategy {
         List<Agent> temp = new ArrayList<>();
         Agent candidate;
         SubTask subtask;
-        List<Integer> ags = new ArrayList<>();
 
         for (int i = 0; i / RESEND_TIMES < subtasks.size(); i++) {
             subtask = subtasks.get(i / RESEND_TIMES);
-            if (leader.epsilonGreedy()) candidate = Manager.getAgentRandomly(leader, temp);
-            else {
-                int j = 0;
-                while (true) {
-                    for (int k = 0; k < dLearned[leader.id].size(); k++) {
-
-                        candidate = leader.relRanking.get(j++);
-                        // そいつがまだ候補に入っていなくてさらにそのサブタスクをこなせそうなら
-                        if (leader.inTheList(candidate, temp) < 0 && leader.canDo(candidate, subtask)) break;
-                    }
-                }
+            if (leader.epsilonGreedy()) {
+                candidate = Manager.getAgentRandomly(leader, temp);
+            }else {
+                candidate = selectMemberOnDistance(leader, subtask, temp);
+                if( candidate == null ) candidate = selectMemberOnReliability(leader, subtask, temp);
             }
             temp.add(candidate);
             leader.sendMessage(leader, candidate, PROPOSAL, subtask.resType);
         }
         return temp;
+    }
+
+    /**
+     * selectMemberOnDistanceメソッド
+     * 距離を元にメンバを選定する
+     * @param leader
+     * @param exceptions
+     * @return
+     */
+    private Agent selectMemberOnDistance(Agent leader, SubTask st, List<Agent> exceptions){
+        if( dLearned[leader.id] == null ) return null;
+        Agent tg;
+        for( LearnedDistance ld: dLearned[leader.id] ){
+            // まず距離がある程度近いこと前提
+            if( ld.getDistance() <= dlMean[leader.id] ) {
+                tg = ld.getTarget();
+                if (leader.inTheList(tg, exceptions) < 0 && leader.canDo(tg, st) ) return tg;
+/*
+                // 互恵主義だったら, 近くて能力的に可能でかつ, 信頼度がある程度高いやつを優先する
+                if (leader.principle == RECIPROCAL) {
+                    if (leader.inTheList(tg, exceptions) < 0 && leader.canDo(tg, st) && leader.reliabilities[tg.id] > THRESHOLD_RECIPROCITY) return tg;
+                }
+                // 合理だったら, 近くて能力的に可能なやつ片っ端からメンバ候補とする
+                else {
+                    if (leader.inTheList(tg, exceptions) < 0 && leader.canDo(tg, st) ) return tg;
+                }
+// */
+            }
+            // 距離が平均より遠いようならもう優先する必要はないと判断しループを抜け候補者なしを返す
+            else {
+                break;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * selectMemberOnReliabilityメソッド
+     * 信頼度を元にメンバを選定する(信頼度優先手法と同じ)
+     */
+    private Agent selectMemberOnReliability(Agent leader, SubTask st, List<Agent> exceptions){
+        for( int i = 0; i < AGENT_NUM; i++ ){
+            if( leader.inTheList(leader.relRanking.get(i), exceptions) < 0 && leader.canDo( leader.relRanking.get(i), st) ){
+                return leader.relRanking.get(i);
+            }
+        }
+        return null;
     }
 
     /**
@@ -340,7 +395,6 @@ public class ProposedMethod2 implements SetParam, Strategy {
     private List<Agent> renewRel(Agent agent, Agent target, double evaluation) {
         assert !agent.equals(target) : "alert4";
         double temp = agent.reliabilities[target.id];
-//        if( Manager.getTicks() % 10000 == 0 ) System.out.println( evaluation );
         // 信頼度の更新式
         if (agent.role == LEADER) {
             agent.reliabilities[target.id] = temp * (1.0 - α) + α * evaluation;
@@ -408,7 +462,7 @@ public class ProposedMethod2 implements SetParam, Strategy {
     private List<Agent> decreaseDEC(Agent agent) {
         double temp;
         for (int i = 0; i < AGENT_NUM; i++) {
-            temp = agent.reliabilities[i] - γ;
+            temp = agent.reliabilities[i] * (1.0 - γ);
             if (temp < 0) agent.reliabilities[i] = 0;
             else agent.reliabilities[i] = temp;
         }
@@ -428,7 +482,6 @@ public class ProposedMethod2 implements SetParam, Strategy {
         return tmp;
     }
 
-
     private void setPrinciple(Agent agent) {
         if (agent.role == MEMBER) {
             if (agent.relAgents.size() > 0 && agent.e_member > THRESHOLD_RECIPROCITY) agent.principle = RECIPROCAL;
@@ -441,5 +494,13 @@ public class ProposedMethod2 implements SetParam, Strategy {
     }
 
     public void inactivate() {
+    }
+
+    static public void clearPM2(){
+        for( int i = 0; i < AGENT_NUM; i++ ){
+            dLearned[i].clear();
+            dlTotal[i]  = 0;
+            dlSize[i]   = 0;
+        }
     }
 }

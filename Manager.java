@@ -11,14 +11,13 @@ import java.util.*;
 
 public class Manager implements SetParam {
 //    private static Strategy strategy = new ProposedMethod();
-    private static Strategy strategy = new ProposedMethod2();
-// private static Strategy strategy = new ReliabilityOriented();
-//    private static Strategy strategy = new ReliabilityOriented2();
+//    private static Strategy strategy = new ProposedMethod2();
+//    private static Strategy strategy = new ReliabilityOriented();
+    private static Strategy strategy = new ReliabilityOriented2();
 //    private static Strategy strategy = new ProximityOriented();
 //    private static Strategy strategy = new RoundRobin();
 //    private static Strategy strategy = new Distant();
 //    private static Strategy strategy = new RandomStrategy();
-
 
     static private OutPut outPut = new OutPut();
 
@@ -39,7 +38,8 @@ public class Manager implements SetParam {
     static int processingTasks = 0;
     static double meanFinishedTasks = 0;
     static int[] meanFinishedTasksArray = new int[WRITE_NUM + 1];
-    static int[] meanMessagesArray = new int[WRITE_NUM];
+    static int[] meanMessagesArray = new int[WRITE_NUM + 1];
+    static double[] meanCommunicationTime = new double[WRITE_NUM + 1];
     static int meanReciprocal = 0;
     static int meanRational = 0;
     static int meanLeader = 0;
@@ -106,11 +106,11 @@ public class Manager implements SetParam {
                         int temp = w % WRITE_NUM;
                         meanFinishedTasksArray[temp] += finishedTasks;
                         meanMessagesArray[temp] += TransmissionPath.messageNum;
+                        meanCommunicationTime[temp] += (double) TransmissionPath.transmitTime / (double) TransmissionPath.messageNum;
                         w++;
                     }
 // */
-
-                    //まず役割のない奴が役割を決めてからスタート
+                    // まず役割のない奴が役割を決めてからスタート
                     freelancer = getRoleList(agents, JONE_DOE);
                     actRandom(freelancer);
 
@@ -134,7 +134,7 @@ public class Manager implements SetParam {
 //                outPut.checkAgent(agents);
                 // ↑ 一回の実験の終了
                 processingTasks = countProcessing();
-//                OutPut.showResults(turn, agents);
+                OutPut.showResults(turn, agents);
 //                OutPut.writeCoalitions(agents);
 //                OutPut.showFrequency(agents);
 //                OutPut.checkGrids(grids);
@@ -149,11 +149,11 @@ public class Manager implements SetParam {
                 clearAll();
             }
             if( strategy.getClass().getName() == "ProposedMethod2" ){
-                ProposedMethod2.showLearnedDistance();
+//                ProposedMethod2.showLearnedDistance();
             }
 //            outPut.showGraph(agents);
-//            OutPut.writeResults(turn, agents);
-//            OutPut.writeExcels(agents);
+            OutPut.writeResults(turn, agents);
+            OutPut.writeExcels(agents);
             // ↑ 全実験の終了
             finishedTasks = 0;
             for (int temp : finishedTasksArray) {
@@ -397,6 +397,7 @@ public class Manager implements SetParam {
         SubTask.clearST();
         Task.clearT();
         Agent.clearA();
+        if( strategy.getClass().getName() == "ProposedMethod2" ) ProposedMethod2.clearPM2();
     }
 
     // 実験結果の標準偏差をとる
