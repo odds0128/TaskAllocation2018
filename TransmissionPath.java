@@ -6,8 +6,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 class TransmissionPath implements SetParam {
+    static double[] meanCT = new double[WRITE_NUM + 1];
+
     static int messageNum = 0;
-    static int transmitTime = 0;
+    static int communicationTime = 0;
     static int proposals = 0;
     static int replies = 0;
     static int acceptances = 0;
@@ -37,8 +39,7 @@ class TransmissionPath implements SetParam {
         messageQueue.add(message);
         int temp = Manager.distance[message.getFrom().id][message.getTo().id];
         delay.add(temp);
-        transmitTime += temp;
-        messageNum++;
+        calcCT(temp);
         if (message.getMessageType() == PROPOSAL) proposals++;
         if (message.getMessageType() == REPLY) {
             replies++;
@@ -71,22 +72,23 @@ class TransmissionPath implements SetParam {
         }
     }
 
-    static int calcTicks(Message message) {
-        return Math.abs(message.getFrom().x - message.getTo().x) + Math.abs(message.getFrom().y - message.getTo().y);
+    /**
+     * calcCT(communication time) メソッド
+     * あるセクションでの平均通信所要時間を計算する.
+     * セクション = (総Tick数 ÷ 書き込み回数) とする.
+     * 例えば合計10000ticksの施行でexcelへの書き込み回数を1000とするなら, その幅10ticks内の平均を調べる
+     * @param ct
+     */
+    static private void calcCT(int ct){
+        communicationTime += ct;
+        messageNum++;
     }
 
-    static void clearTP() {
-        messageQueue.clear();
-        delay.clear();
+    static public double getCT(){
+        int ct = communicationTime, mn = messageNum;
+        communicationTime = 0;
         messageNum = 0;
-        transmitTime = 0;
-        proposals = 0;
-        replies = 0;
-        acceptances = 0;
-        rejects = 0;
-        results = 0;
-        finished = 0;
-        failed = 0;
+        return (double)ct/(double) mn;
     }
 
     /**
@@ -102,6 +104,20 @@ class TransmissionPath implements SetParam {
             m.getTo().messages.add(m);
         }
         assert delay.size() == 0 && messageQueue.size() == 0 : "transmitAlert";
+    }
+
+    static void clearTP() {
+        messageQueue.clear();
+        delay.clear();
+        messageNum = 0;
+        communicationTime = 0;
+        proposals = 0;
+        replies = 0;
+        acceptances = 0;
+        rejects = 0;
+        results = 0;
+        finished = 0;
+        failed = 0;
     }
 
     @Override

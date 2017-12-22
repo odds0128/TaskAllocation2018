@@ -8,13 +8,17 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-public class Agent implements SetParam {
+public class Agent implements SetParam , Cloneable{
     static int _id = 0;
     static int _leader_num = 0;
     static int _member_num = 0;
+    static int _recipro_num = 0;
+    static int _rational_num = AGENT_NUM;
     static long _seed;
     static Random _randSeed;
     static int[] resSizeArray = new int[RESOURCE_NUM + 1];
+
+    static int elDown = 0 , elUp = 0, emDown = 0, emUp = 0;
 
     // リーダーもメンバも持つパラメータ
     int id;
@@ -58,7 +62,7 @@ public class Agent implements SetParam {
     Agent leader;
     int totalOffers = 0;            // 今まで自分が受理して来たオファー数
     int totalResponseTicks = 0;     // 受理応答からの待ち時間の合計
-    double meanRT          = 0;     // 受理応答からの待ち時間の平均
+    double meanRT = 0;     // 受理応答からの待ち時間の平均
 
     // seedが変わった(各タームの最初の)エージェントの生成
     Agent(long seed, int x, int y, Strategy strategy) {
@@ -117,7 +121,6 @@ public class Agent implements SetParam {
     }
 
     void act() {
-
 //        if (strategy.getClass().getName() == "RandomStrategy") strategy.act(this, action);
         if (phase == SELECT_ROLE) selectRole();
         else strategy.act(this);
@@ -144,6 +147,7 @@ public class Agent implements SetParam {
                 _member_num++;
                 this.phase = WAITING;
             } else {
+// */
                 int ran = _randSeed.nextInt(2);
                 if (ran == 0) {
                     role = LEADER;
@@ -223,8 +227,14 @@ public class Agent implements SetParam {
     void inactivate(int success) {
         if (role == LEADER) {
             e_leader = e_leader * (1 - α) + α * success;
+            assert e_leader <= 1 && e_leader >= 0 : "Illegal adaption to role";
+            if( success == 1 ) elUp++;
+            else elDown++;
         } else {
             e_member = e_member * (1 - α) + α * success;
+            assert e_member <= 1 && e_member >= 0 : "Illegal adaption to role";
+            if( success == 1 ) emUp++;
+            else emDown++;
         }
         if (role == LEADER) {
             if (success == 1) {
@@ -232,7 +242,6 @@ public class Agent implements SetParam {
             }
             _leader_num--;
             if (ourTask != null) Manager.disposeTask(this);
-            ourTask = null;
             candidates.clear();
             teamMembers.clear();
             allocations.clear();
@@ -270,7 +279,6 @@ public class Agent implements SetParam {
                 didTasksAsLeader++;
             }
             if (ourTask != null) Manager.disposeTask(this);
-            ourTask = null;
             candidates.clear();
             teamMembers.clear();
             allocations.clear();
@@ -496,10 +504,23 @@ public class Agent implements SetParam {
         _id = 0;
         _leader_num = 0;
         _member_num = 0;
+        _rational_num = AGENT_NUM;
+        _recipro_num = 0;
         for (int i = 0; i < RESOURCE_NUM; i++) resSizeArray[i] = 0;
     }
 
-    static int dist = 0;
+    @Override
+    public Agent clone() { //基本的にはpublic修飾子を付け、自分自身の型を返り値とする
+        Agent b = null;
+
+       try {
+            b=(Agent)super.clone(); //親クラスのcloneメソッドを呼び出す(親クラスの型で返ってくるので、自分自身の型でのキャストを忘れないようにする)
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return b;
+    }
+// */
 
     @Override
     public String toString() {

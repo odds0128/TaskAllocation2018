@@ -8,18 +8,36 @@ import java.util.List;
 public class ProposedMethod implements SetParam, Strategy {
     static final double γ = γ_r;
 
+    static List<Integer>[] histories = new ArrayList[AGENT_NUM];
+    static int[] dlMean = new int[AGENT_NUM];
+    static int[] dlTotal = new int[AGENT_NUM];
 
+    static int[] min = new int[AGENT_NUM];
+
+    ProposedMethod() {
+        for (int i = 0; i < histories.length; i++) {
+            histories[i] = new ArrayList<>();
+            dlMean[i] = 0;
+            dlTotal[i] = 0;
+            min[i] = Integer.MAX_VALUE;
+        }
+    }
 
     public void act(Agent agent) {
         assert agent.relAgents.size() <= MAX_REL_AGENTS : "alert3";
         setPrinciple(agent);
-        if (agent.phase == PROPOSITION) proposeAsL(agent);
-        else if (agent.phase == REPLY) replyAsM(agent);
-        else if (agent.phase == REPORT) reportAsL(agent);
-        else if (agent.phase == RECEPTION) receiveAsM(agent);
-        else if (agent.phase == EXECUTION) execute(agent);
+        if ((Manager.getTicks() - agent.validatedTicks) > RENEW_ROLE_TICKS) agent.inactivate(0);
+        else {
+// */
+            if (agent.phase == PROPOSITION) proposeAsL(agent);
+            else if (agent.phase == REPLY) replyAsM(agent);
+            else if (agent.phase == REPORT) reportAsL(agent);
+            else if (agent.phase == RECEPTION) receiveAsM(agent);
+            else if (agent.phase == EXECUTION) execute(agent);
 //            else if (action == EVAPORATION) agent.relAgents = decreaseDEC(agent);
-        agent.relAgents = decreaseDEC(agent);
+//        agent.relAgents = decreaseDEC(agent);
+//        }
+        }
     }
 
     private void proposeAsL(Agent leader) {
@@ -60,6 +78,11 @@ public class ProposedMethod implements SetParam, Strategy {
             member.start = Manager.getTicks();
             member.nextPhase();
         }
+        // どこにも参加しないのであれば, 役割適正値を更新するようにする
+        else{
+            member.inactivate(0);
+        }
+// */
     }
 
     private void reportAsL(Agent leader) {
@@ -75,14 +98,9 @@ public class ProposedMethod implements SetParam, Strategy {
             // 受諾なら信頼度をプラスに更新する
             if (reply.getReply() == ACCEPT) {
                 int rt = Manager.getTicks() - leader.start;             // 応答時間
-                leader.acceptances++;
-                leader.untilAcceptances += rt;
-                //                if(leader.id == 3  ) System.out.println(" execution time: " + executionTime + ", distance: " + Manager.distance[leader.id][member.id]);
-                leader.meanUA = (double) leader.untilAcceptances / (double) leader.acceptances;
-//                if( Manager.getTicks() % 100 == 0 ) System.out.println( "before: " + leader.reliabilities[candidate.id] );
-                leader.relAgents = renewRel(leader, candidate, leader.meanUA/(double) rt );
-  //              if( Manager.getTicks() % 100 == 0 ) System.out.println( leader.meanUA + ", " + rt + ", " + leader.meanUA/(double) rt );
-    //            if( Manager.getTicks() % 100 == 0 ) System.out.println( "after: " + leader.reliabilities[candidate.id] );
+                if (rt < min[leader.id]) min[leader.id] = rt;
+//                renewHistory(leader, rt);
+                leader.relAgents = renewRel(leader, candidate, (double) min[leader.id] / (double) rt);
             }
             // 拒否ならそのエージェントを候補リストから外し, 信頼度を0で更新する
             else {
@@ -103,7 +121,7 @@ public class ProposedMethod implements SetParam, Strategy {
                 A = leader.candidates.get(index);
                 B = leader.candidates.get(index + 1);
                 // 両方ダメだったら再割り当てを考える
-                if( A == null && B == null ) {
+                if (A == null && B == null) {
                     reallocations.add(leader.ourTask.subTasks.get(i));
                     continue;
                 }
@@ -128,7 +146,7 @@ public class ProposedMethod implements SetParam, Strategy {
                 else {
                     // Bだけ受理してくれた
                     if (A == null) {
-                        leader.candidates.set(index+1, null);
+                        leader.candidates.set(index + 1, null);
                         leader.allocations.add(new Allocation(B, leader.ourTask.subTasks.get(i)));
                         leader.teamMembers.add(B);
                     }
@@ -142,37 +160,37 @@ public class ProposedMethod implements SetParam, Strategy {
             }
             // 未割り当てのサブタスクがあっても最後のチャンス
             SubTask st;
-            Agent   lo;
-            int flag ;
+            Agent lo;
+            int flag;
             if (reallocations.size() > 0 && losers.size() > 0) {
                 // 未割り当てのサブタスクひとつひとつに対して
-                for ( int i = 0; i < reallocations.size(); i++ ) {
+                for (int i = 0; i < reallocations.size(); i++) {
                     flag = 0;
                     st = reallocations.remove(0);
                     // 受理を返したのに競合のせいでサブタスクが割り当てられなかったいい奴らの中から割り当てを探す
-                    for ( int j = 0; j < losers.size(); j++ ) {
+                    for (int j = 0; j < losers.size(); j++) {
                         lo = losers.remove(0);
-                        if (leader.canDo(lo,st)) {
+                        if (leader.canDo(lo, st)) {
                             leader.restSubTask--;
-                            leader.allocations.add(new Allocation(lo, st) );
+                            leader.allocations.add(new Allocation(lo, st));
                             leader.teamMembers.add(lo);
-                            flag ++;
+                            flag++;
                             break;
-                        }else{
+                        } else {
                             losers.add(lo);
                         }
                     }
                     // 誰にもできなかったら
-                    if( flag == 0 ) reallocations.add(st);
+                    if (flag == 0) reallocations.add(st);
                 }
             }
 
             // 未割り当てが残っていないのならば負け犬どもに引導を渡して実行へ
-            if( reallocations.size() == 0 ){
+            if (reallocations.size() == 0) {
                 for (Agent tm : leader.teamMembers) {
                     leader.sendMessage(leader, tm, RESULT, leader.getAllocation(tm).getSubtask());
                 }
-                for( Agent ls : losers ){
+                for (Agent ls : losers) {
                     leader.sendMessage(leader, ls, RESULT, null);
                 }
                 Manager.finishTask(leader);
@@ -183,7 +201,7 @@ public class ProposedMethod implements SetParam, Strategy {
                 for (Agent tm : leader.teamMembers) {
                     leader.sendMessage(leader, tm, RESULT, null);
                 }
-                for( Agent ls : losers ){
+                for (Agent ls : losers) {
                     leader.sendMessage(leader, ls, RESULT, null);
                 }
                 Manager.disposeTask(leader);
@@ -202,9 +220,11 @@ public class ProposedMethod implements SetParam, Strategy {
         member.mySubTask = message.getSubTask();
 
         int rt = Manager.getTicks() - member.start;
+        if (rt < min[member.id]) min[member.id] = rt;
+/*
         member.totalResponseTicks += rt;
         member.meanRT = (double)member.totalResponseTicks/(double)member.totalOffers;
-
+// */
         // サブタスクがもらえたなら信頼度をプラスに更新し, 実行フェイズへ移る.
         if (member.mySubTask != null) {
             member.relAgents = renewRel(member, member.leader, 1);
@@ -214,7 +234,7 @@ public class ProposedMethod implements SetParam, Strategy {
         // サブタスクが割り当てられなかったら信頼度を0で更新し, inactivate
         else {
             //       System.out.println(" ID: " + member.id + ", " + member.leader + " is unreliable");
-            member.relAgents = renewRel(member, member.leader, -(double)rt/member.meanRT);
+            member.relAgents = renewRel(member, member.leader, -(double) rt / (double) min[member.id]);
             member.inactivate(0);
         }
     }
@@ -318,10 +338,13 @@ public class ProposedMethod implements SetParam, Strategy {
      * renewRelメソッド
      * 信頼度を更新し, 同時に信頼エージェントも更新する
      * agentのtargetに対する信頼度をevaluationによって更新し, 同時に信頼エージェントを更新する
+     * evaluationは正(プラスへの信頼度更新)と0(普通にマイナスに更新)と負(ペナルティを課して更新)がある.
+     * よって, この式の中で政府をいじる必要はないことに注意
      *
      * @param agent
      */
     private List<Agent> renewRel(Agent agent, Agent target, double evaluation) {
+        assert evaluation <= 1 : "evaluation too big";
         assert !agent.equals(target) : "alert4";
         double temp = agent.reliabilities[target.id];
 //        if( Manager.getTicks() % 10000 == 0 ) System.out.println( evaluation );
@@ -329,9 +352,11 @@ public class ProposedMethod implements SetParam, Strategy {
         if (agent.role == LEADER) {
             agent.reliabilities[target.id] = temp * (1.0 - α) + α * evaluation;
         } else {
-            if( evaluation >= 0 ) agent.reliabilities[target.id] = temp * (1.0 - α) + α * evaluation;
-            else agent.reliabilities[target.id] = temp * (1.0 - α * evaluation);
+            if (evaluation >= 0) agent.reliabilities[target.id] = temp * (1.0 - α) + α * evaluation;
+            else agent.reliabilities[target.id] = temp * (1.0 + α * evaluation);
         }
+
+        assert agent.reliabilities[target.id] <= 1.0 : "Illegal reliability renewal ... Turn: " + Manager.getTicks() + ", ID: " + agent.id + ", target: " + target.id + ", change: " + temp + " → " + agent.reliabilities[target.id];
 
         /*
          信頼エージェントの更新
@@ -414,15 +439,62 @@ public class ProposedMethod implements SetParam, Strategy {
 
     private void setPrinciple(Agent agent) {
         if (agent.role == MEMBER) {
-            if (agent.relAgents.size() > 0 && agent.e_member > THRESHOLD_RECIPROCITY) agent.principle = RECIPROCAL;
-            else agent.principle = RATIONAL;
+            if (agent.relAgents.size() > 0 && agent.e_member > THRESHOLD_RECIPROCITY) {
+                if (agent.principle == RATIONAL) {
+                    Agent._recipro_num++;
+                    Agent._rational_num--;
+                }
+                agent.principle = RECIPROCAL;
+            } else {
+                if (agent.principle == RECIPROCAL) {
+                    Agent._recipro_num--;
+                    Agent._rational_num++;
+                }
+                agent.principle = RATIONAL;
+            }
         } else if (agent.role == LEADER) {
-            if (agent.relAgents.size() > 0 && agent.e_leader > THRESHOLD_RECIPROCITY) agent.principle = RECIPROCAL;
-            else agent.principle = RATIONAL;
+            if (agent.relAgents.size() > 0 && agent.e_leader > THRESHOLD_RECIPROCITY) {
+                if (agent.principle == RATIONAL) {
+                    Agent._recipro_num++;
+                    Agent._rational_num--;
+                }
+                agent.principle = RECIPROCAL;
+            } else {
+                if (agent.principle == RECIPROCAL) {
+                    Agent._recipro_num--;
+                    Agent._rational_num++;
+                }
+                agent.principle = RATIONAL;
+            }
         }
 
     }
 
-    public void inactivate() {
+    /**
+     * renewHistoryメソッド
+     * 通信履歴を更新する.
+     * HISTORY_SIZEを超えられないよう, リストのサイズがそれに達したら先頭の要素を破棄して末尾に新しいのを入れる
+     * そして平均通信所要時間を再計算する
+     *
+     * @param ag
+     * @param ct
+     */
+    private void renewHistory(Agent ag, int ct) {
+        int temp = 0;
+        if (histories[ag.id].size() == HISTORY_SIZE) {
+            temp = histories[ag.id].remove(0);
+        }
+        histories[ag.id].add(ct);
+        dlTotal[ag.id] = dlTotal[ag.id] - temp + ct;
+        dlMean[ag.id] = dlTotal[ag.id] / histories[ag.id].size();
     }
+
+    static public void clearPM() {
+        for (int i = 0; i < AGENT_NUM; i++) {
+            histories[i].clear();
+            dlTotal[i] = 0;
+            dlMean[i] = 0;
+        }
+    }
+
 }

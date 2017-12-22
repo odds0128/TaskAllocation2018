@@ -10,14 +10,16 @@ import java.io.IOException;
 import java.util.*;
 
 public class Manager implements SetParam {
-//    private static Strategy strategy = new ProposedMethod();
+    private static Strategy strategy = new ProposedMethod();
 //    private static Strategy strategy = new ProposedMethod2();
 //    private static Strategy strategy = new ReliabilityOriented();
-    private static Strategy strategy = new ReliabilityOriented2();
+//    private static Strategy strategy = new ReliabilityOriented2();
 //    private static Strategy strategy = new ProximityOriented();
 //    private static Strategy strategy = new RoundRobin();
 //    private static Strategy strategy = new Distant();
 //    private static Strategy strategy = new RandomStrategy();
+//    private static Strategy strategy = new RO_Rational();
+//    private static Strategy strategy = new PM_Rational();
 
     static private OutPut outPut = new OutPut();
 
@@ -36,16 +38,23 @@ public class Manager implements SetParam {
     static List<Integer> finishedTasksArray = new ArrayList<>();
     static int meanMessages = 0;
     static int processingTasks = 0;
-    static double meanFinishedTasks = 0;
+    static int meanFinishedTasks = 0;
     static int[] meanFinishedTasksArray = new int[WRITE_NUM + 1];
+    static int[] meanDisposedTasksArray = new int[WRITE_NUM + 1];
+    static int[] meanOverflownTasksArray = new int[WRITE_NUM + 1];
     static int[] meanMessagesArray = new int[WRITE_NUM + 1];
     static double[] meanCommunicationTime = new double[WRITE_NUM + 1];
-    static int meanReciprocal = 0;
-    static int meanRational = 0;
-    static int meanLeader = 0;
-    static int meanMember = 0;
+    static int[] meanLeader = new int[WRITE_NUM + 1];
+    static int[] meanMember = new int[WRITE_NUM + 1];
+    static int[] meanReciprocal = new int[WRITE_NUM + 1];
+    static int[] meanRational = new int[WRITE_NUM + 1];
+    static int[] meanElUp = new int[WRITE_NUM + 1];
+    static int[] meanElDown = new int[WRITE_NUM + 1];
+    static int[] meanEmUp = new int[WRITE_NUM + 1];
+    static int[] meanEmDown = new int[WRITE_NUM + 1];
     static double variance = 0;
     private static Random randSeed;
+    static List<Agent> snapshot = new ArrayList<>();
 
     public static void main(String[] args) {
         assert MAX_REL_AGENTS < AGENT_NUM : "alert0";
@@ -71,48 +80,47 @@ public class Manager implements SetParam {
                 System.out.println(++num + "回目");
                 seed = Long.parseLong(line);
                 randSeed = new Random(seed);
+
                 // タスクの生成
                 taskQueue = new LinkedList<>();
                 taskQueue.add(new Task(seed));
                 for (int i = 1; i < INITIAL_TASK_NUM; i++) taskQueue.add(new Task());
+
                 // エージェントの生成
-                // 2017/10/19 グリッド状にランダムに設置するので何か工夫を
                 agents = generateAgents(seed, strategy);
                 setRelAg(agents);
 
-//                OutPut.checkGrids(grids);
-//                OutPut.checkDistance(distance);
-//                OutPut.checkAgent(agents);
-//                OutPut.checkTask(taskQueue);
-
                 // ターンの進行
-                for (turn = 0; turn < TURN_NUM; turn++) {
+                for (turn = 1; turn <= TURN_NUM; turn++) {
 /*                    System.out.println("------------------------------------------------------------------");
                     System.out.println("Turn: " + turn);
 // */
-                    // まず各エージェントの把握
-                    // 数ターン毎にタスクを追加する(タスクキューがいっぱいなら, 破棄とする)
+                    // まずタスクキューにタスクを追加する
                     if (turn % TASK_ADD_TURN == 0) {
-                        if (taskQueue.size() + TASK_ADD_NUM > TASK_QUEUE_SIZE) {
-                            int i;
-                            for (i = 0; i < TASK_QUEUE_SIZE - taskQueue.size(); i++) taskQueue.add(new Task());
-                            overflowTasks += TASK_ADD_NUM - i;
-                        } else {
+                        int room = TASK_QUEUE_SIZE - taskQueue.size();    // タスクキューの空き
+                        // タスクキューに空きが十分にあるなら, 普通にぶち込む
+                        if ( TASK_ADD_NUM <= room ) {
                             for (int i = 0; i < TASK_ADD_NUM; i++) taskQueue.add(new Task());
                         }
-                    }
-                    // 結果書き込み, 表示の部分
-                    if ((turn + 1) % (TURN_NUM / WRITE_NUM) == 0) {
-                        int temp = w % WRITE_NUM;
-                        meanFinishedTasksArray[temp] += finishedTasks;
-                        meanMessagesArray[temp] += TransmissionPath.messageNum;
-                        meanCommunicationTime[temp] += (double) TransmissionPath.transmitTime / (double) TransmissionPath.messageNum;
-                        w++;
+                        // タスクキューからタスクがはみ出そうなら, 入れるだけ入れてはみ出る分はオーバーフローとする
+                        else{
+                            int i;
+                            for (i = 0; i < room; i++) taskQueue.add(new Task());
+                            overflowTasks += TASK_ADD_NUM - i;
+                        }
                     }
 // */
                     // まず役割のない奴が役割を決めてからスタート
                     freelancer = getRoleList(agents, JONE_DOE);
                     actRandom(freelancer);
+
+                    // フリーランサーが役割を選び終わった後で数える
+                    if (turn % (TURN_NUM / WRITE_NUM) == 0) {
+                        meanLeader[w] += Agent._leader_num;
+                        meanMember[w] += Agent._member_num;
+                    }
+
+                    if( turn == 100000 ) snapshot = snapshot(agents);
 
                     leaders = getRoleList(agents, LEADER);
                     members = getRoleList(agents, MEMBER);
@@ -123,52 +131,48 @@ public class Manager implements SetParam {
 
                     actRandom(leaders);            // メンバの選定,　要請の送信
                     actRandom(members);            // 要請があるメンバ達はそれに返事をする
+
+                    // 途中経過書き込み, 表示の部分
+                    if (turn % (TURN_NUM / WRITE_NUM) == 0) {
+                        meanFinishedTasksArray[w] += finishedTasks;
+                        meanDisposedTasksArray[w] += disposedTasks;
+                        meanOverflownTasksArray[w] += overflowTasks;
+                        meanMessagesArray[w] += TransmissionPath.messageNum;
+                        meanCommunicationTime[w] += TransmissionPath.getCT();
+                        meanReciprocal[w] += Agent._recipro_num;
+                        meanRational[w] += Agent._rational_num;
+                        countRenewTimes(w);
+                        w++;
+                    }
                 }
-                int temp = OutPut.countReciplocalist(agents);
-                meanReciprocal += temp;
-                meanRational += AGENT_NUM - temp;
-                for (Agent ag : agents) {
-                    if (ag.e_leader > ag.e_member) meanLeader++;
-                    else meanMember++;
-                }
-//                outPut.checkAgent(agents);
                 // ↑ 一回の実験の終了
+
                 processingTasks = countProcessing();
-                OutPut.showResults(turn, agents);
-//                OutPut.writeCoalitions(agents);
-//                OutPut.showFrequency(agents);
-//                OutPut.checkGrids(grids);
-//                OutPut.checkAgent(agents);
-/*                outPut.showDistributions(grids);
-                outPut.calcMeaning();
-                outPut.newLine();
-// */
                 meanMessages += TransmissionPath.messageNum;
                 finishedTasksArray.add(finishedTasks);
+
+                OutPut.showResults(turn, agents,num);
+                OutPut.showLeaderRetirement(snapshot, agents);
+
                 if (num == EXECUTE_NUM) break;
                 clearAll();
             }
-            if( strategy.getClass().getName() == "ProposedMethod2" ){
+            // ↑ 全実験の終了
+//            OutPut.checkAgent(agents);
+
+            if (strategy.getClass().getName() == "ProposedMethod2") {
 //                ProposedMethod2.showLearnedDistance();
             }
-//            outPut.showGraph(agents);
             OutPut.writeResults(turn, agents);
             OutPut.writeExcels(agents);
-            // ↑ 全実験の終了
+
             finishedTasks = 0;
             for (int temp : finishedTasksArray) {
                 finishedTasks += temp;
             }
-            meanFinishedTasks = (double) finishedTasks / (double) EXECUTE_NUM;
+            meanFinishedTasks = finishedTasks / EXECUTE_NUM;
             System.out.println("Average finished tasks: " + meanFinishedTasks
-                    + ", Standard Deviation: " + String.format("%.2f", calcSTDEV())
-                    + ", MeanMessages: " + meanMessages / EXECUTE_NUM
-                    + ", MeanRationalists: " + meanRational / EXECUTE_NUM
-                    + ", MeanReciplocalists: " + meanReciprocal / EXECUTE_NUM
-                    + ", MeanLeaders: " + meanLeader / EXECUTE_NUM
-                    + ", MeanMembers: " + meanMember / EXECUTE_NUM
-                    + ", meanSubTasks: " + (double) Task.totalSubtaskNum / (double) Task.totalSubTasks);
-//            outPut.showMeanings();
+                    + ", Standard Deviation: " + String.format("%.2f", calcSTDEV()));
             outPut.fileClose();
 // */
             br.close();
@@ -263,7 +267,7 @@ public class Manager implements SetParam {
                 }
                 agent.relRanking.addAll(tempList);
                 // 距離が1のエージェントだけを信頼エージェントとする
-                if( dist == 1 ) agent.relAgents.addAll(tempList);
+                if (dist == 1) agent.relAgents.addAll(tempList);
                 tempList.clear();
                 if (agent.relRanking.size() == AGENT_NUM - 1) {
                     i++;
@@ -336,13 +340,11 @@ public class Manager implements SetParam {
      * 2017/11/25 再び破棄する方式に. 今後その方針を変える必要はおそらくない
      */
     static void disposeTask(Agent leader) {
-        leader.ourTask.flag = false;
-        redoSubtasks += leader.ourTask.subTaskNum - leader.restSubTask;
         disposedTasks++;
         leader.ourTask = null;
     }
 
-    // 引数のリーダーが持つタスクの終了通知
+    // 引数のリーダーが持つタスクの終了
     static void finishTask(Agent leader) {
 /*        System.out.println("turn: " + turn + ", ID: " + leader.id + " did " + leader.ourTask + ", and I(" + leader + ") did " + leader.mySubTask);
         System.out.println( " Members: " + leader.teamMembers + " very good team!");
@@ -379,6 +381,7 @@ public class Manager implements SetParam {
     private static void clearAll() {
         taskQueue.clear();
         agents = null;
+        snapshot = null;
         disposedTasks = 0;
         finishedTasks = 0;
         overflowTasks = 0;
@@ -397,7 +400,38 @@ public class Manager implements SetParam {
         SubTask.clearST();
         Task.clearT();
         Agent.clearA();
-        if( strategy.getClass().getName() == "ProposedMethod2" ) ProposedMethod2.clearPM2();
+        if (strategy.getClass().getName() == "ProposedMethod2") ProposedMethod2.clearPM2();
+        if (strategy.getClass().getName() == "ProposedMethod") ProposedMethod.clearPM();
+    }
+
+    static private List<Agent> snapshot(List<Agent> agents){
+        List<Agent> temp = new ArrayList<>();
+        // この時点でのリーダーエージェントをsnapshotとして残しておく
+        int size = agents.size();
+        Agent ag;
+
+        for( Agent a : agents ){
+            temp.add( a.clone() );
+        }
+
+        for( int i = 0; i < size; i++ ){
+            ag = temp.remove(0);
+            if( ag.e_leader > ag.e_member ) temp.add(ag);
+        }
+        System.out.println("turn 100000 ,  Leaders: " + temp.size());
+        assert size == agents.size() : "Deep copy failed";
+        return temp;
+    }
+
+    static void countRenewTimes( int index ){
+        meanElUp[index]   = Agent.elUp   ;
+        meanElDown[index] = Agent.elDown ;
+        meanEmUp[index]   = Agent.emUp   ;
+        meanEmDown[index] = Agent.emDown ;
+        Agent.elUp   = 0;
+        Agent.elDown = 0;
+        Agent.emUp   = 0;
+        Agent.emDown = 0;
     }
 
     // 実験結果の標準偏差をとる

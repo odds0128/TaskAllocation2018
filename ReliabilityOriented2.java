@@ -14,7 +14,7 @@ public class ReliabilityOriented2 implements SetParam, Strategy {
     public void act(Agent agent) {
         assert agent.relAgents.size() <= MAX_REL_AGENTS : "alert3";
         // if( agent.id == 3 ) System.out.println( "Turn: " + Manager.getTicks() + ", ID: " + agent.id + " , role: " + agent.role + ", e_l: " + String.format("%.2f",agent.e_leader) + ", e_m: " + String.format("%.2f",agent.e_member) + ", rel: "  + String.format("%.2f",agent.reliabilities[0]));
-/*        if ((Manager.getTicks() - agent.validatedTicks) > RENEW_ROLE_TICKS) agent.inactivate(0);
+        if ((Manager.getTicks() - agent.validatedTicks) > RENEW_ROLE_TICKS) agent.inactivate(0);
         else {
 // */
             setPrinciple(agent);
@@ -24,8 +24,9 @@ public class ReliabilityOriented2 implements SetParam, Strategy {
             else if (agent.phase == RECEPTION) receiveAsM(agent);
             else if (agent.phase == EXECUTION) execute(agent);
 //            else if (action == EVAPORATION) agent.relAgents = decreaseDEC(agent);
-            agent.relAgents = decreaseDEC(agent);
+//            agent.relAgents = decreaseDEC(agent);
         }
+    }
 
     private void proposeAsL(Agent leader) {
         leader.ourTask = Manager.getTask();
@@ -97,7 +98,7 @@ public class ReliabilityOriented2 implements SetParam, Strategy {
                 A = leader.candidates.get(index);
                 B = leader.candidates.get(index + 1);
                 // 両方ダメだったら再割り当てを考える
-                if( A == null && B == null ) {
+                if (A == null && B == null) {
                     reallocations.add(leader.ourTask.subTasks.get(i));
                     continue;
                 }
@@ -122,7 +123,7 @@ public class ReliabilityOriented2 implements SetParam, Strategy {
                 else {
                     // Bだけ受理してくれた
                     if (A == null) {
-                        leader.candidates.set(index+1, null);
+                        leader.candidates.set(index + 1, null);
                         leader.allocations.add(new Allocation(B, leader.ourTask.subTasks.get(i)));
                         leader.teamMembers.add(B);
                     }
@@ -136,37 +137,37 @@ public class ReliabilityOriented2 implements SetParam, Strategy {
             }
             // 未割り当てのサブタスクがあっても最後のチャンス
             SubTask st;
-            Agent   lo;
-            int flag ;
+            Agent lo;
+            int flag;
             if (reallocations.size() > 0 && losers.size() > 0) {
                 // 未割り当てのサブタスクひとつひとつに対して
-                for ( int i = 0; i < reallocations.size(); i++ ) {
+                for (int i = 0; i < reallocations.size(); i++) {
                     flag = 0;
                     st = reallocations.remove(0);
                     // 受理を返したのに競合のせいでサブタスクが割り当てられなかったいい奴らの中から割り当てを探す
-                    for ( int j = 0; j < losers.size(); j++ ) {
+                    for (int j = 0; j < losers.size(); j++) {
                         lo = losers.remove(0);
-                        if (leader.canDo(lo,st)) {
+                        if (leader.canDo(lo, st)) {
                             leader.restSubTask--;
-                            leader.allocations.add(new Allocation(lo, st) );
+                            leader.allocations.add(new Allocation(lo, st));
                             leader.teamMembers.add(lo);
-                            flag ++;
+                            flag++;
                             break;
-                        }else{
+                        } else {
                             losers.add(lo);
                         }
                     }
                     // 誰にもできなかったら
-                    if( flag == 0 ) reallocations.add(st);
+                    if (flag == 0) reallocations.add(st);
                 }
             }
 
             // 未割り当てが残っていないのならば負け犬どもに引導を渡して実行へ
-            if( reallocations.size() == 0 ){
+            if (reallocations.size() == 0) {
                 for (Agent tm : leader.teamMembers) {
                     leader.sendMessage(leader, tm, RESULT, leader.getAllocation(tm).getSubtask());
                 }
-                for( Agent ls : losers ){
+                for (Agent ls : losers) {
                     leader.sendMessage(leader, ls, RESULT, null);
                 }
                 Manager.finishTask(leader);
@@ -177,7 +178,7 @@ public class ReliabilityOriented2 implements SetParam, Strategy {
                 for (Agent tm : leader.teamMembers) {
                     leader.sendMessage(leader, tm, RESULT, null);
                 }
-                for( Agent ls : losers ){
+                for (Agent ls : losers) {
                     leader.sendMessage(leader, ls, RESULT, null);
                 }
                 Manager.disposeTask(leader);
@@ -321,6 +322,7 @@ public class ReliabilityOriented2 implements SetParam, Strategy {
         } else {
             agent.reliabilities[target.id] = temp * (1.0 - α) + α * (double) evaluation;
         }
+        assert agent.reliabilities[target.id] <= 1.0 : "Illegal reliability renewal ... Turn: " + Manager.getTicks() + ", ID: " + agent.id + ", target: " + target.id + ", change: " + temp + " → " + agent.reliabilities[target.id];
 
         /*
          信頼エージェントの更新
@@ -403,11 +405,33 @@ public class ReliabilityOriented2 implements SetParam, Strategy {
 
     private void setPrinciple(Agent agent) {
         if (agent.role == MEMBER) {
-            if (agent.relAgents.size() > 0 && agent.e_member > THRESHOLD_RECIPROCITY) agent.principle = RECIPROCAL;
-            else agent.principle = RATIONAL;
+            if (agent.relAgents.size() > 0 && agent.e_member > THRESHOLD_RECIPROCITY) {
+                if (agent.principle == RATIONAL) {
+                    Agent._recipro_num++;
+                    Agent._rational_num--;
+                }
+                agent.principle = RECIPROCAL;
+            } else {
+                if (agent.principle == RECIPROCAL) {
+                    Agent._recipro_num--;
+                    Agent._rational_num++;
+                }
+                agent.principle = RATIONAL;
+            }
         } else if (agent.role == LEADER) {
-            if (agent.relAgents.size() > 0 && agent.e_leader > THRESHOLD_RECIPROCITY) agent.principle = RECIPROCAL;
-            else agent.principle = RATIONAL;
+            if (agent.relAgents.size() > 0 && agent.e_leader > THRESHOLD_RECIPROCITY) {
+                if (agent.principle == RATIONAL) {
+                    Agent._recipro_num++;
+                    Agent._rational_num--;
+                }
+                agent.principle = RECIPROCAL;
+            } else {
+                if (agent.principle == RECIPROCAL) {
+                    Agent._recipro_num--;
+                    Agent._rational_num++;
+                }
+                agent.principle = RATIONAL;
+            }
         }
 
     }

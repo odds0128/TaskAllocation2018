@@ -25,7 +25,6 @@ public class OutPut extends ShowGraph implements SetParam {
     static Workbook book = null;
     static FileOutputStream fout = null;
 
-
 /*
     public OutPut getInstance(){
         return singleton;
@@ -37,7 +36,9 @@ public class OutPut extends ShowGraph implements SetParam {
             fw = new FileWriter("/Users/r.funato/IdeaProjects/TaskAllocation/src/output" + i + ".csv", false);
             bw = new BufferedWriter(fw);
             pw = new PrintWriter(bw);
-            pw.println("turn" + ", " + " " + "FinishedTasks" + "," + "Differences" + ", " + "Messages" + ", " + "Reciprocal" + ", " + "Rational" + ", " + "Leader" + ", " + "Member");
+            pw.println("turn" + ", " + "FinishedTasks" + "," + "DisposedTasks" + ", " + "OverflownTasks" + ", "
+                    + "CommunicationTime" + ", " + "Leader" + ", " + "Member" + ", " + "Reciprocal" + ", " + "Rational" + ", "
+                    + "elup" + ", " + "eldown" + ", " + "emup" + ", " + "emdown" );
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e2) {
@@ -61,26 +62,6 @@ public class OutPut extends ShowGraph implements SetParam {
             taskQueue.add(temp);
         }
         System.out.println("  Remains: " + taskQueue.size());
-    }
-
-    /**
-     * checkAgentメソッド
-     *
-     * @param agents
-     */
-    static void checkAgent(Agent[] agents) {
-        int tempL = 0, tempM = 0;
-        System.out.println("Total Agents is " + Agent._id);
-        for (Agent ag : agents) {
-            if (ag.e_leader > ag.e_member) tempL++;
-            else tempM++;
-        }
-        System.out.println("Leaders is " + tempL + ", Members is " + tempM);
-        List<Agent> list = Arrays.asList(agents);
-        Collections.sort(list, new AgentComparator());
-        for (int i = 0; i < AGENT_NUM; i++) {
-            System.out.println(agents[i]);
-        }
     }
 
     /**
@@ -119,9 +100,12 @@ public class OutPut extends ShowGraph implements SetParam {
         System.out.println("Total Agents is " + Agent._id);
         System.out.println("Leaders is " + Agent._leader_num + ", Members is " + Agent._member_num + ", Resources : ");
 
-/*        for( int i = 0; i < RESOURCE_NUM; i++ ) System.out.print( Agent.resSizeArray[i] + ", " );
+/*
+        for( int i = 0; i < RESOURCE_NUM; i++ ) System.out.print( Agent.resSizeArray[i] + ", " );
         System.out.println();
-        // */
+
+// */
+
 /*
         for (int i = 0; i < AGENT_NUM; i++) {
             System.out.print("ID : " + i + ", ");
@@ -131,8 +115,10 @@ public class OutPut extends ShowGraph implements SetParam {
             System.out.println();
         }
 // */
+
         Collections.sort(temp, new AgentComparator());
-        /*
+
+/*
         for (int i = 0; i < AGENT_NUM; i++) {
             System.out.print(temp.get(i).id +", means: " + ProposedMethod2.dlMean[i] + " ... ");
             for( LearnedDistance ld: ProposedMethod2.dLearned[i] ){
@@ -142,27 +128,42 @@ public class OutPut extends ShowGraph implements SetParam {
             System.out.println();
         }
 // */
+        for (Agent agent : agents) {
+            System.out.print("ID " + agent.id + ", e_l " + String.format("%.2f", agent.e_leader));
+            System.out.print(", e_m " + String.format("%.2f", agent.e_member));
+            System.out.println();
+        }
+// */
     }
-
     // ある時点でのパラメータを表示するメソッド
-    static void showResults(int turn, List<Agent> agents) {
+    static void showResults(int turn, List<Agent> agents, int num) {
         int tempL = 0, tempM = 0;
-
+        int neetL = 0, neetM = 0;
         zeroAgents = countZeroAgent(agents);
         System.out.println(" Turn: " + turn);
         System.out.println("  Total Agents is " + Agent._id);
         int temp = countReciplocalist(agents);
         for (Agent ag : agents) {
-            if (ag.e_leader > ag.e_member) tempL++;
-            else tempM++;
+            if (ag.e_leader > ag.e_member){
+                tempL++;
+                // 最後に活動したのがだいぶ前のことであるならば
+                if( TURN_NUM - ag.validatedTicks > THRESHOLD_NEET ) neetL++;
+            }
+            else if( ag.e_member > ag.e_leader ){
+                tempM++;
+                if( TURN_NUM - ag.validatedTicks > THRESHOLD_NEET ){
+                    neetM++;
+                    System.out.println(ag.validatedTicks + ", " + ag.e_leader +", " + ag.e_member );
+                }
+            }
         }
         System.out.println("Leaders is " + tempL + ", Members is " + tempM);
         System.out.println("  Leaders is " + tempL + ", Members is " + tempM
                 + " (Rationalists: " + (AGENT_NUM - temp) + ", Reciprocalists: " + (temp) + "), "
                 + " (Reciplocal member: " + countReciplocalMembers(agents) + " )"
-                + "ZeroAgents: " + zeroAgents);
+                + "NEET l: " + neetL + ", m: "+ neetM);
         System.out.println("  Messages  : " + TransmissionPath.messageNum
-                + ", Mean TransmitTime: " + String.format("%.2f", (double) TransmissionPath.transmitTime / (double) TransmissionPath.messageNum)
+                + ", Mean TransmitTime: " + String.format("%.2f", Manager.meanCommunicationTime[WRITE_NUM-1]/num)
                 + ", Proposals: " + TransmissionPath.proposals + ", Replies: " + TransmissionPath.replies
                 + ", Acceptances: " + TransmissionPath.acceptances + ", Rejects: " + TransmissionPath.rejects);
         System.out.println("   , Results: " + TransmissionPath.results
@@ -267,7 +268,7 @@ public class OutPut extends ShowGraph implements SetParam {
                 //シート名称の設定
                 if (i == 0) book.setSheetName(i, "nodes");
                 else if (i == 1) book.setSheetName(i, "edges");
-                else book.setSheetName(i, "reciprocalEdges");
+                else if (i == 2) book.setSheetName(i, "reciprocalEdges");
 
                 //ヘッダ行の作成
                 rowNumber = 0;
@@ -278,21 +279,18 @@ public class OutPut extends ShowGraph implements SetParam {
                 cell.setCellStyle(style_header);
                 cell.setCellType(CellType.STRING);
                 if (i == 0) cell.setCellValue("Node id");
-                else if (i == 1) cell.setCellValue("Edge id");
                 else cell.setCellValue("Edge id");
 
                 cell = row.createCell(colNumber++);
                 cell.setCellStyle(style_header);
                 cell.setCellType(CellType.STRING);
                 if (i == 0) cell.setCellValue("Node color");
-                else if (i == 1) cell.setCellValue("Source Node id");
                 else cell.setCellValue("Source Node id");
 
                 cell = row.createCell(colNumber++);
                 cell.setCellStyle(style_header);
                 cell.setCellType(CellType.STRING);
                 if (i == 0) cell.setCellValue("Node shape");
-                else if (i == 1) cell.setCellValue("Target Node id");
                 else cell.setCellValue("Target Node id");
 
                 if (i == 0) {
@@ -315,6 +313,11 @@ public class OutPut extends ShowGraph implements SetParam {
                     cell.setCellStyle(style_header);
                     cell.setCellType(CellType.STRING);
                     cell.setCellValue(" distance to leader ");
+                }else{
+                    cell = row.createCell(colNumber++);
+                    cell.setCellStyle(style_header);
+                    cell.setCellType(CellType.STRING);
+                    cell.setCellValue(" length ");
                 }
 
                 //ウィンドウ枠の固定
@@ -404,12 +407,17 @@ public class OutPut extends ShowGraph implements SetParam {
                         cell.setCellType(CellType.NUMERIC);
                         cell.setCellValue(Edge.to_id.get(j));
 
+                        cell = row.createCell(colNumber++);
+                        cell.setCellStyle(style_string_wrap);
+                        cell.setCellType(CellType.NUMERIC);
+                        cell.setCellValue(Edge.distance.get(j));
+
                         //列幅の自動調整
                         for (int k = 0; k <= colNumber; k++) {
                             sheet.autoSizeColumn(k, true);
                         }
                     }
-                } else {
+                } else if( i == 2 ){
                     for (int j = 0; j < Edge.from_id.size(); j++) {
                         if (Edge.isRecipro.get(j) != true) continue;
                         rowNumber++;
@@ -429,6 +437,11 @@ public class OutPut extends ShowGraph implements SetParam {
                         cell.setCellStyle(style_string_wrap);
                         cell.setCellType(CellType.NUMERIC);
                         cell.setCellValue(Edge.to_id.get(j));
+
+                        cell = row.createCell(colNumber++);
+                        cell.setCellStyle(style_string_wrap);
+                        cell.setCellType(CellType.NUMERIC);
+                        cell.setCellValue(Edge.distance.get(j));
 
                         //列幅の自動調整
                         for (int k = 0; k <= colNumber; k++) {
@@ -469,28 +482,37 @@ public class OutPut extends ShowGraph implements SetParam {
      */
     static void writeResults(int turn, List<Agent> agents) {
         for (int i = 1; i <= WRITE_NUM; i++) {
-            pw.print(i * (TURN_NUM / WRITE_NUM) + ", " + Manager.meanFinishedTasksArray[i - 1] / EXECUTE_NUM + ", ");
+            pw.print(i * (TURN_NUM / WRITE_NUM) + ", ");
             pw.print((Manager.meanFinishedTasksArray[i] - Manager.meanFinishedTasksArray[i - 1]) / EXECUTE_NUM + ", ");
-            pw.print( Manager.meanCommunicationTime[i-1] / (double) EXECUTE_NUM );
-/*            pw.print(Agent._leader_num + ", " + Agent._member_num + ", ");
-
-// */
-            pw.println();
+            pw.print((Manager.meanDisposedTasksArray[i] - Manager.meanDisposedTasksArray[i - 1]) / EXECUTE_NUM + ", ");
+            pw.print((Manager.meanOverflownTasksArray[i] - Manager.meanOverflownTasksArray[i - 1]) / EXECUTE_NUM + ", ");
+            pw.print( Manager.meanCommunicationTime[i-1] / (double) EXECUTE_NUM + ", ");
+            pw.print(Manager.meanLeader[i-1] / EXECUTE_NUM + ", " + Manager.meanMember[i-1] / EXECUTE_NUM + ", ");
+            pw.print(Manager.meanReciprocal[i-1] / EXECUTE_NUM + ", " + Manager.meanRational[i-1] / EXECUTE_NUM + ", ");
+            pw.println(Manager.meanElUp[i-1] / EXECUTE_NUM + ", " + Manager.meanElDown[i-1] / EXECUTE_NUM + ", "
+                    + Manager.meanEmUp[i-1] / EXECUTE_NUM + ", " + Manager.meanEmDown[i-1] / EXECUTE_NUM );
         }
-        pw.println(Manager.meanReciprocal / EXECUTE_NUM + ", " + Manager.meanRational / EXECUTE_NUM);
-        pw.println(Manager.meanLeader / EXECUTE_NUM + ", " + Manager.meanMember / EXECUTE_NUM);
     }
 
-    static void writeReliabilities(List<Agent> agents) {
-        for (int i = 0; i < AGENT_NUM; i++) pw.print(", " + i);
-        pw.println();
-        for (Agent ag : agents) {
-            if (ag.id != 3) continue;
-            pw.print(ag.id + ", ");
+    static void writeReliabilities(int turn, List<Agent> agents) {
+        pw.print("turn " + turn + ", ");
+//        for (int i = 0; i < AGENT_NUM; i++) pw.print(", " + i);
+//        pw.println();
+/*        for (Agent ag : agents) {
+            if ( ag.id == 4 && ag.role != LEADER) {
+                continue;
+            }
+            pw.print("I'm " +ag.id + ", ");
             for (int i = 0; i < AGENT_NUM; i++) pw.print(ag.reliabilities[i] + ", ");
             pw.println();
+            break;
         }
+// */
+
+        pw.print("I'm 4 "+ ", ");
+        for (int i = 0; i < AGENT_NUM; i++) pw.print(agents.get(4).reliabilities[i] + ", ");
         pw.println();
+//        pw.println();
     }
 
     /**
@@ -509,6 +531,28 @@ public class OutPut extends ShowGraph implements SetParam {
             pw.println();
         }
         pw.println();
+    }
+
+    static void showLeaderRetirement(List<Agent> snapshot, List<Agent> agents){
+        int change = 0, ln = 0, mp = 0;
+        for( Agent ss: snapshot ){
+            // まず, メンバになったのかどうか確認. なっていたら, その理由を究明
+            if( agents.get(ss.id).e_leader < agents.get(ss.id).e_member ){
+                change ++;
+                // e_leaderが下がっていたら(リーダー適正値が低いがためにリーダーをやめた)
+                if( agents.get(ss.id).e_leader < ss.e_leader ) {
+                    ln++;
+                }
+                // e_memberが上がっていたら(メンバ適正値が高いがためにメンバになった)
+                if( agents.get(ss.id).e_member > ss.e_member ){
+                    mp++;
+                }
+                System.out.println( "ID: " + ss.id + ", el: " + ss.e_leader + " → " + agents.get(ss.id).e_leader
+                + ", em: " + ss.e_member + " → " + agents.get(ss.id).e_member
+                + " from: " + agents.get(ss.id).validatedTicks);
+            }
+        }
+        System.out.println("Leader to member: " + change + ", Negative Leader: " + ln + ", Positive Member: " + mp);
     }
 
     // 座標上でどういう風に信頼関係ができているかをみるメソッド

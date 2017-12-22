@@ -18,6 +18,7 @@ public class ProposedMethod2 implements SetParam, Strategy {
         for (int i = 0; i < dLearned.length; i++) {
             dLearned[i] = new ArrayList<>();
             dlTotal[i]  = 0;
+            dlMean[i]   = 0;
             dlSize[i]   = 0;
         }
     }
@@ -484,11 +485,35 @@ public class ProposedMethod2 implements SetParam, Strategy {
 
     private void setPrinciple(Agent agent) {
         if (agent.role == MEMBER) {
-            if (agent.relAgents.size() > 0 && agent.e_member > THRESHOLD_RECIPROCITY) agent.principle = RECIPROCAL;
-            else agent.principle = RATIONAL;
+            if (agent.relAgents.size() > 0 && agent.e_member > THRESHOLD_RECIPROCITY){
+                if( agent.principle == RATIONAL ){
+                    Agent._recipro_num++;
+                    Agent._rational_num--;
+                }
+                agent.principle = RECIPROCAL;
+            }
+            else {
+                if( agent.principle == RECIPROCAL ){
+                    Agent._recipro_num--;
+                    Agent._rational_num++;
+                }
+                agent.principle = RATIONAL;
+            }
         } else if (agent.role == LEADER) {
-            if (agent.relAgents.size() > 0 && agent.e_leader > THRESHOLD_RECIPROCITY) agent.principle = RECIPROCAL;
-            else agent.principle = RATIONAL;
+            if (agent.relAgents.size() > 0 && agent.e_leader > THRESHOLD_RECIPROCITY){
+                if( agent.principle == RATIONAL ){
+                    Agent._recipro_num++;
+                    Agent._rational_num--;
+                }
+                agent.principle = RECIPROCAL;
+            }
+            else {
+                if( agent.principle == RECIPROCAL ){
+                    Agent._recipro_num--;
+                    Agent._rational_num++;
+                }
+                agent.principle = RATIONAL;
+            }
         }
 
     }
