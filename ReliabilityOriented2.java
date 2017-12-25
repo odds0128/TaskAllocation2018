@@ -14,18 +14,17 @@ public class ReliabilityOriented2 implements SetParam, Strategy {
     public void act(Agent agent) {
         assert agent.relAgents.size() <= MAX_REL_AGENTS : "alert3";
         // if( agent.id == 3 ) System.out.println( "Turn: " + Manager.getTicks() + ", ID: " + agent.id + " , role: " + agent.role + ", e_l: " + String.format("%.2f",agent.e_leader) + ", e_m: " + String.format("%.2f",agent.e_member) + ", rel: "  + String.format("%.2f",agent.reliabilities[0]));
-        if ((Manager.getTicks() - agent.validatedTicks) > RENEW_ROLE_TICKS) agent.inactivate(0);
+/*        if ((Manager.getTicks() - agent.validatedTicks) > RENEW_ROLE_TICKS) agent.inactivate(0);
         else {
 // */
-            setPrinciple(agent);
-            if (agent.phase == PROPOSITION) proposeAsL(agent);
-            else if (agent.phase == REPLY) replyAsM(agent);
-            else if (agent.phase == REPORT) reportAsL(agent);
-            else if (agent.phase == RECEPTION) receiveAsM(agent);
-            else if (agent.phase == EXECUTION) execute(agent);
+        setPrinciple(agent);
+        if (agent.phase == PROPOSITION) proposeAsL(agent);
+        else if (agent.phase == REPLY) replyAsM(agent);
+        else if (agent.phase == REPORT) reportAsL(agent);
+        else if (agent.phase == RECEPTION) receiveAsM(agent);
+        else if (agent.phase == EXECUTION) execute(agent);
 //            else if (action == EVAPORATION) agent.relAgents = decreaseDEC(agent);
-//            agent.relAgents = decreaseDEC(agent);
-        }
+        agent.relAgents = decreaseDEC(agent);
     }
 
     private void proposeAsL(Agent leader) {
@@ -383,7 +382,7 @@ public class ReliabilityOriented2 implements SetParam, Strategy {
     private List<Agent> decreaseDEC(Agent agent) {
         double temp;
         for (int i = 0; i < AGENT_NUM; i++) {
-            temp = agent.reliabilities[i] - γ;
+            temp = agent.reliabilities[i]*(1-γ);
             if (temp < 0) agent.reliabilities[i] = 0;
             else agent.reliabilities[i] = temp;
         }

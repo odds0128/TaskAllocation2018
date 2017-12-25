@@ -26,7 +26,7 @@ public class ProposedMethod implements SetParam, Strategy {
     public void act(Agent agent) {
         assert agent.relAgents.size() <= MAX_REL_AGENTS : "alert3";
         setPrinciple(agent);
-        if ((Manager.getTicks() - agent.validatedTicks) > RENEW_ROLE_TICKS) agent.inactivate(0);
+/*        if ((Manager.getTicks() - agent.validatedTicks) > RENEW_ROLE_TICKS) agent.inactivate(0);
         else {
 // */
             if (agent.phase == PROPOSITION) proposeAsL(agent);
@@ -35,9 +35,8 @@ public class ProposedMethod implements SetParam, Strategy {
             else if (agent.phase == RECEPTION) receiveAsM(agent);
             else if (agent.phase == EXECUTION) execute(agent);
 //            else if (action == EVAPORATION) agent.relAgents = decreaseDEC(agent);
-//        agent.relAgents = decreaseDEC(agent);
+        agent.relAgents = decreaseDEC(agent);
 //        }
-        }
     }
 
     private void proposeAsL(Agent leader) {
@@ -417,7 +416,7 @@ public class ProposedMethod implements SetParam, Strategy {
     private List<Agent> decreaseDEC(Agent agent) {
         double temp;
         for (int i = 0; i < AGENT_NUM; i++) {
-            temp = agent.reliabilities[i] - γ;
+            temp = agent.reliabilities[i] * ( 1 - γ );
             if (temp < 0) agent.reliabilities[i] = 0;
             else agent.reliabilities[i] = temp;
         }

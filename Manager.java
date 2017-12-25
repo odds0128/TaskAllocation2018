@@ -10,10 +10,10 @@ import java.io.IOException;
 import java.util.*;
 
 public class Manager implements SetParam {
-    private static Strategy strategy = new ProposedMethod();
+//    private static Strategy strategy = new ProposedMethod();
 //    private static Strategy strategy = new ProposedMethod2();
 //    private static Strategy strategy = new ReliabilityOriented();
-//    private static Strategy strategy = new ReliabilityOriented2();
+    private static Strategy strategy = new ReliabilityOriented2();
 //    private static Strategy strategy = new ProximityOriented();
 //    private static Strategy strategy = new RoundRobin();
 //    private static Strategy strategy = new Distant();
