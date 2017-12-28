@@ -9,7 +9,7 @@ import java.util.List;
  */
 public class ProximityOriented implements Strategy, SetParam {
     public void act(Agent agent) {
-        if ((Manager.getTicks() - agent.validatedTicks) > RENEW_ROLE_TICKS ) agent.inactivateWithNoLearning(0);
+/*        if ((Manager.getTicks() - agent.validatedTicks) > RENEW_ROLE_TICKS ) agent.inactivateWithNoLearning(0);
 
         else
 // */
@@ -23,21 +23,12 @@ public class ProximityOriented implements Strategy, SetParam {
     private void proposeAsL(Agent leader) {
         leader.ourTask = Manager.getTask();
         if (leader.ourTask == null) {
-            leader.candidates.clear();
-            leader.teamMembers.clear();
-            leader.allocations.clear();
-            leader.replies.clear();
-            leader.results.clear();
-            leader.restSubTask = 0;
-            leader.replyNum = 0;
-            leader.joined = false;
-            leader.role  = LEADER ;
-            leader.phase = PROPOSITION;
             return;
         }
         leader.restSubTask = leader.ourTask.subTaskNum;                       // 残りサブタスク数を設定
         leader.selectSubTask();
         leader.candidates = selectMembers(leader, leader.ourTask.subTasks);   // メッセージ送信
+
         leader.nextPhase();  // 次のフェイズへ
     }
 
@@ -194,12 +185,6 @@ public class ProximityOriented implements Strategy, SetParam {
     private void execute(Agent agent) {
         agent.executionTime--;
         if (agent.executionTime == 0) {
-            if (agent.role == LEADER) {
-                if (TURN_NUM - Manager.getTicks() < LAST_PERIOD)
-                    for (Agent ag : agent.teamMembers) agent.workWithAsL[ag.id]++;
-            } else {
-                if (TURN_NUM - Manager.getTicks() < LAST_PERIOD) agent.workWithAsM[agent.leader.id]++;
-            }
             // 自分のサブタスクが終わったら役割適応度を1で更新して非活性状態へ
             agent.inactivateWithNoLearning(1);
         }
@@ -254,6 +239,4 @@ public class ProximityOriented implements Strategy, SetParam {
         return myLeader;
     }
 
-    public void inactivateWithNoLearning() {
-    }
 }

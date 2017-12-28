@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 class TransmissionPath implements SetParam {
-    static double[] meanCT = new double[WRITE_NUM + 1];
+    static double[] meanCT = new double[WRITING_TIMES + 1];
 
     static int messageNum = 0;
     static int communicationTime = 0;

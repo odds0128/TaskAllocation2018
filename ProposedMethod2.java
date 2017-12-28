@@ -34,7 +34,7 @@ public class ProposedMethod2 implements SetParam, Strategy {
     }
 
     public void act(Agent agent) {
-        assert agent.relAgents.size() <= MAX_REL_AGENTS : "alert3";
+        assert agent.relAgents.size() <= MAX_RELIABLE_AGENTS : "alert3";
         setPrinciple(agent);
 
         if (agent.phase == PROPOSITION) proposeAsL(agent);
@@ -249,10 +249,10 @@ public class ProposedMethod2 implements SetParam, Strategy {
         agent.executionTime--;
         if (agent.executionTime == 0) {
             if (agent.role == LEADER) {
-                if (TURN_NUM - Manager.getTicks() < LAST_PERIOD)
+                if (MAX_TURN_NUM - Manager.getTicks() < FINAL_TERM)
                     for (Agent ag : agent.teamMembers) agent.workWithAsL[ag.id]++;
             } else {
-                if (TURN_NUM - Manager.getTicks() < LAST_PERIOD) agent.workWithAsM[agent.leader.id]++;
+                if (MAX_TURN_NUM - Manager.getTicks() < FINAL_TERM) agent.workWithAsM[agent.leader.id]++;
             }
             // 自分のサブタスクが終わったら役割適応度を1で更新して非活性状態へ
             agent.inactivate(1);
@@ -306,7 +306,7 @@ public class ProposedMethod2 implements SetParam, Strategy {
 /*
                 // 互恵主義だったら, 近くて能力的に可能でかつ, 信頼度がある程度高いやつを優先する
                 if (leader.principle == RECIPROCAL) {
-                    if (leader.inTheList(tg, exceptions) < 0 && leader.canDo(tg, st) && leader.reliabilities[tg.id] > THRESHOLD_RECIPROCITY) return tg;
+                    if (leader.inTheList(tg, exceptions) < 0 && leader.canDo(tg, st) && leader.reliabilities[tg.id] > THRESHOLD_FOR_RECIPROCITY) return tg;
                 }
                 // 合理だったら, 近くて能力的に可能なやつ片っ端からメンバ候補とする
                 else {
@@ -441,9 +441,9 @@ public class ProposedMethod2 implements SetParam, Strategy {
         }
         List<Agent> tmp = new ArrayList<>();
         Agent ag;
-        for (int j = 0; j < MAX_REL_AGENTS; j++) {
+        for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
             ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > THRESHOLD_DEPENDABILITY) {
+            if (agent.reliabilities[ag.id] > THRESHOLD_FOR_DEPENDABILITY) {
                 tmp.add(ag);
             } else {
                 break;
@@ -469,15 +469,15 @@ public class ProposedMethod2 implements SetParam, Strategy {
         }
         List<Agent> tmp = new ArrayList<>();
         Agent ag;
-        for (int j = 0; j < MAX_REL_AGENTS; j++) {
+        for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
             ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > THRESHOLD_DEPENDABILITY) {
+            if (agent.reliabilities[ag.id] > THRESHOLD_FOR_DEPENDABILITY) {
                 tmp.add(ag);
             } else {
                 break;
             }
         }
-/*        if (tmp.size() == 0 || agent.e_member < THRESHOLD_RECIPROCITY) agent.principle = RATIONAL;
+/*        if (tmp.size() == 0 || agent.e_member < THRESHOLD_FOR_RECIPROCITY) agent.principle = RATIONAL;
         else agent.principle = RECIPROCAL;
 // */
         return tmp;
@@ -485,7 +485,7 @@ public class ProposedMethod2 implements SetParam, Strategy {
 
     private void setPrinciple(Agent agent) {
         if (agent.role == MEMBER) {
-            if (agent.relAgents.size() > 0 && agent.e_member > THRESHOLD_RECIPROCITY){
+            if (agent.relAgents.size() > 0 && agent.e_member > THRESHOLD_FOR_RECIPROCITY){
                 if( agent.principle == RATIONAL ){
                     Agent._recipro_num++;
                     Agent._rational_num--;
@@ -500,7 +500,7 @@ public class ProposedMethod2 implements SetParam, Strategy {
                 agent.principle = RATIONAL;
             }
         } else if (agent.role == LEADER) {
-            if (agent.relAgents.size() > 0 && agent.e_leader > THRESHOLD_RECIPROCITY){
+            if (agent.relAgents.size() > 0 && agent.e_leader > THRESHOLD_FOR_RECIPROCITY){
                 if( agent.principle == RATIONAL ){
                     Agent._recipro_num++;
                     Agent._rational_num--;

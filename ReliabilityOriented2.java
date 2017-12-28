@@ -7,24 +7,22 @@ import java.util.List;
  * それによってメンバの選定並びにリーダーからの要請を受諾するかどうか決定する
  * RO1との違いはリーダーがチーム編成の成功可否を判断する際に,
  * 割り当てをいじるかどうか
+ * 禁じ手を使う方
  */
 public class ReliabilityOriented2 implements SetParam, Strategy {
     static final double γ = γ_r;
 
     public void act(Agent agent) {
-        assert agent.relAgents.size() <= MAX_REL_AGENTS : "alert3";
-        // if( agent.id == 3 ) System.out.println( "Turn: " + Manager.getTicks() + ", ID: " + agent.id + " , role: " + agent.role + ", e_l: " + String.format("%.2f",agent.e_leader) + ", e_m: " + String.format("%.2f",agent.e_member) + ", rel: "  + String.format("%.2f",agent.reliabilities[0]));
-/*        if ((Manager.getTicks() - agent.validatedTicks) > RENEW_ROLE_TICKS) agent.inactivate(0);
+        assert agent.relAgents.size() <= MAX_RELIABLE_AGENTS : "alert3";
+        if ((Manager.getTicks() - agent.validatedTicks) > ROLE_RENEWAL_TICKS) agent.inactivate(0);
         else {
-// */
-        setPrinciple(agent);
-        if (agent.phase == PROPOSITION) proposeAsL(agent);
-        else if (agent.phase == REPLY) replyAsM(agent);
-        else if (agent.phase == REPORT) reportAsL(agent);
-        else if (agent.phase == RECEPTION) receiveAsM(agent);
-        else if (agent.phase == EXECUTION) execute(agent);
-//            else if (action == EVAPORATION) agent.relAgents = decreaseDEC(agent);
-        agent.relAgents = decreaseDEC(agent);
+            setPrinciple(agent);
+            if (agent.phase == PROPOSITION) proposeAsL(agent);
+            else if (agent.phase == REPLY) replyAsM(agent);
+            else if (agent.phase == REPORT) reportAsL(agent);
+            else if (agent.phase == RECEPTION) receiveAsM(agent);
+            else if (agent.phase == EXECUTION) execute(agent);
+        }
     }
 
     private void proposeAsL(Agent leader) {
@@ -213,10 +211,10 @@ public class ReliabilityOriented2 implements SetParam, Strategy {
         agent.executionTime--;
         if (agent.executionTime == 0) {
             if (agent.role == LEADER) {
-                if (TURN_NUM - Manager.getTicks() < LAST_PERIOD)
+                if (MAX_TURN_NUM - Manager.getTicks() < FINAL_TERM)
                     for (Agent ag : agent.teamMembers) agent.workWithAsL[ag.id]++;
             } else {
-                if (TURN_NUM - Manager.getTicks() < LAST_PERIOD) agent.workWithAsM[agent.leader.id]++;
+                if (MAX_TURN_NUM - Manager.getTicks() < FINAL_TERM) agent.workWithAsM[agent.leader.id]++;
             }
             // 自分のサブタスクが終わったら役割適応度を1で更新して非活性状態へ
             agent.inactivate(1);
@@ -360,9 +358,9 @@ public class ReliabilityOriented2 implements SetParam, Strategy {
         }
         List<Agent> tmp = new ArrayList<>();
         Agent ag;
-        for (int j = 0; j < MAX_REL_AGENTS; j++) {
+        for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
             ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > THRESHOLD_DEPENDABILITY) {
+            if (agent.reliabilities[ag.id] > THRESHOLD_FOR_DEPENDABILITY) {
                 tmp.add(ag);
             } else {
                 break;
@@ -382,15 +380,15 @@ public class ReliabilityOriented2 implements SetParam, Strategy {
     private List<Agent> decreaseDEC(Agent agent) {
         double temp;
         for (int i = 0; i < AGENT_NUM; i++) {
-            temp = agent.reliabilities[i]*(1-γ);
+            temp = agent.reliabilities[i] - γ;
             if (temp < 0) agent.reliabilities[i] = 0;
             else agent.reliabilities[i] = temp;
         }
         List<Agent> tmp = new ArrayList<>();
         Agent ag;
-        for (int j = 0; j < MAX_REL_AGENTS; j++) {
+        for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
             ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > THRESHOLD_DEPENDABILITY) {
+            if (agent.reliabilities[ag.id] > THRESHOLD_FOR_DEPENDABILITY) {
                 tmp.add(ag);
             } else {
                 break;
@@ -404,7 +402,7 @@ public class ReliabilityOriented2 implements SetParam, Strategy {
 
     private void setPrinciple(Agent agent) {
         if (agent.role == MEMBER) {
-            if (agent.relAgents.size() > 0 && agent.e_member > THRESHOLD_RECIPROCITY) {
+            if (agent.relAgents.size() > 0 && agent.e_member > THRESHOLD_FOR_RECIPROCITY) {
                 if (agent.principle == RATIONAL) {
                     Agent._recipro_num++;
                     Agent._rational_num--;
@@ -418,7 +416,7 @@ public class ReliabilityOriented2 implements SetParam, Strategy {
                 agent.principle = RATIONAL;
             }
         } else if (agent.role == LEADER) {
-            if (agent.relAgents.size() > 0 && agent.e_leader > THRESHOLD_RECIPROCITY) {
+            if (agent.relAgents.size() > 0 && agent.e_leader > THRESHOLD_FOR_RECIPROCITY) {
                 if (agent.principle == RATIONAL) {
                     Agent._recipro_num++;
                     Agent._rational_num--;

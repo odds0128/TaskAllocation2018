@@ -16,9 +16,7 @@ public class Agent implements SetParam , Cloneable{
     static int _rational_num = AGENT_NUM;
     static long _seed;
     static Random _randSeed;
-    static int[] resSizeArray = new int[RESOURCE_NUM + 1];
-
-    static int elDown = 0 , elUp = 0, emDown = 0, emUp = 0;
+    static int[] resSizeArray = new int[RESOURCE_TYPES + 1];
 
     // リーダーもメンバも持つパラメータ
     int id;
@@ -27,7 +25,7 @@ public class Agent implements SetParam , Cloneable{
     int phase = SELECT_ROLE;
     Strategy strategy;
     int resSize = 0;
-    int res[] = new int[RESOURCE_NUM];
+    int res[] = new int[RESOURCE_TYPES];
     int didTasksAsLeader = 0;
     int didTasksAsMember = 0;
     int[] workWithAsL = new int[AGENT_NUM];
@@ -110,8 +108,8 @@ public class Agent implements SetParam , Cloneable{
 */
         } else {
             while (resSize == 0) {
-                for (int i = 0; i < RESOURCE_NUM; i++) {
-                    int rand = _randSeed.nextInt(MAX_AG_RES + 1);
+                for (int i = 0; i < RESOURCE_TYPES; i++) {
+                    int rand = _randSeed.nextInt(MAX_AGENT_RESOURCE_SIZE + 1);
                     res[i] = rand;
                     resSize += rand;
                 }
@@ -228,13 +226,9 @@ public class Agent implements SetParam , Cloneable{
         if (role == LEADER) {
             e_leader = e_leader * (1 - α) + α * success;
             assert e_leader <= 1 && e_leader >= 0 : "Illegal adaption to role";
-            if( success == 1 ) elUp++;
-            else elDown++;
         } else {
             e_member = e_member * (1 - α) + α * success;
             assert e_member <= 1 && e_member >= 0 : "Illegal adaption to role";
-            if( success == 1 ) emUp++;
-            else emDown++;
         }
         if (role == LEADER) {
             if (success == 1) {
@@ -506,7 +500,7 @@ public class Agent implements SetParam , Cloneable{
         _member_num = 0;
         _rational_num = AGENT_NUM;
         _recipro_num = 0;
-        for (int i = 0; i < RESOURCE_NUM; i++) resSizeArray[i] = 0;
+        for (int i = 0; i < RESOURCE_TYPES; i++) resSizeArray[i] = 0;
     }
 
     @Override
@@ -604,5 +598,15 @@ public class Agent implements SetParam , Cloneable{
 //        */
 
         return str.toString();
+    }
+
+    static public int countReciprocalMember(List<Agent> agents){
+        int temp = 0;
+        for( Agent ag: agents ){
+            if( ag.e_member > ag.e_leader && ag.principle == RECIPROCAL ){
+                temp++;
+            }
+        }
+        return temp;
     }
 }

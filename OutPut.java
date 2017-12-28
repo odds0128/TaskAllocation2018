@@ -12,38 +12,62 @@ import java.util.*;
  * Singletonで実装
  * 結果の画面出力とファイル出力を管理
  */
-public class OutPut extends ShowGraph implements SetParam {
+public class OutPut implements SetParam {
     static FileWriter fw;
     static BufferedWriter bw;
     static PrintWriter pw;
-    static private OutPut singleton = new OutPut();
-    static int zeroAgents = 0;
-    static int[] means = new int[100];
-    static int n;
-    static int i = 1;
     static String outputFilePath = "src/out.xlsx";
     static Workbook book = null;
     static FileOutputStream fout = null;
 
-/*
-    public OutPut getInstance(){
-        return singleton;
-    }
-// */
+    static int index = 0;
+
+    static int[] finishedTasksArray = new int[WRITING_TIMES];
+    static int[] disposedTasksArray = new int[WRITING_TIMES];
+    static int[] overflownTasksArray = new int[WRITING_TIMES];
+    static int[] messagesArray = new int[WRITING_TIMES];
+    static double[] communicationDelayArray = new double[WRITING_TIMES];
+    static int[] leaderNumArray = new int[WRITING_TIMES];
+    static int[] memberNumArray = new int[WRITING_TIMES];
+    static int[] reciprocalistsArray = new int[WRITING_TIMES];
+    static int[] rationalistsArray = new int[WRITING_TIMES];
+    static int[] reciprocalMembersArray = new int[WRITING_TIMES];
 
     OutPut() {
         try {
-            fw = new FileWriter("/Users/r.funato/IdeaProjects/TaskAllocation/src/output" + i + ".csv", false);
+            fw = new FileWriter("/Users/r.funato/IdeaProjects/TaskAllocation/src/output1.csv", false);
             bw = new BufferedWriter(fw);
             pw = new PrintWriter(bw);
-            pw.println("turn" + ", " + "FinishedTasks" + "," + "DisposedTasks" + ", " + "OverflownTasks" + ", "
-                    + "CommunicationTime" + ", " + "Leader" + ", " + "Member" + ", " + "Reciprocal" + ", " + "Rational" + ", "
-                    + "elup" + ", " + "eldown" + ", " + "emup" + ", " + "emdown" );
+            pw.println("turn" + ", " + "FinishedTasks" + "," + "DisposedTasks" + ", "
+                    + "OverflownTasks" + ", " + "CommunicationTime"
+                    + ", " + "Leader" + ", " + "Member" + ", "
+                    + "Reciprocal" + ", " + "Rational" + ", "
+                    + "ReciprocalMembers" + ",");
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e2) {
             e2.printStackTrace();
         }
+    }
+
+    static void aggregateAgentData() {
+        leaderNumArray[index] += Agent._leader_num;
+        memberNumArray[index] += Agent._member_num;
+    }
+
+    static void aggregateData(int ft, int dt, int ot, int rm) {
+        finishedTasksArray[index] += ft;
+        disposedTasksArray[index] += dt;
+        overflownTasksArray[index] += ot;
+        messagesArray[index] += TransmissionPath.messageNum;
+        communicationDelayArray[index] += TransmissionPath.getCT();
+        reciprocalistsArray[index] += Agent._recipro_num;
+        rationalistsArray[index] += Agent._rational_num;
+        reciprocalMembersArray[index] += rm;
+    }
+
+    static void indexIncrement() {
+        index = (index + 1) % WRITING_TIMES;
     }
 
     /**
@@ -120,7 +144,7 @@ public class OutPut extends ShowGraph implements SetParam {
 
 /*
         for (int i = 0; i < AGENT_NUM; i++) {
-            System.out.print(temp.get(i).id +", means: " + ProposedMethod2.dlMean[i] + " ... ");
+            System.out.print(temp.get(i).id +", s: " + ProposedMethod2.dlMean[i] + " ... ");
             for( LearnedDistance ld: ProposedMethod2.dLearned[i] ){
                 if( ld.getDistance() > 2 ) break;
                 System.out.print(ld);
@@ -135,55 +159,62 @@ public class OutPut extends ShowGraph implements SetParam {
         }
 // */
     }
-    // ある時点でのパラメータを表示するメソッド
+
+    static void showLeaderRetirement(List<Agent> snapshot, List<Agent> agents) {
+        int change = 0, ln = 0, mp = 0;
+        for (Agent ss : snapshot) {
+            // まず, メンバになったのかどうか確認. なっていたら, その理由を究明
+            if (agents.get(ss.id).e_leader < agents.get(ss.id).e_member) {
+                change++;
+                // e_leaderが下がっていたら(リーダー適正値が低いがためにリーダーをやめた)
+                if (agents.get(ss.id).e_leader < ss.e_leader) {
+                    ln++;
+                }
+                // e_memberが上がっていたら(メンバ適正値が高いがためにメンバになった)
+                if (agents.get(ss.id).e_member > ss.e_member) {
+                    mp++;
+                }
+                System.out.println("ID: " + ss.id + ", el: " + ss.e_leader + " → " + agents.get(ss.id).e_leader
+                        + ", em: " + ss.e_member + " → " + agents.get(ss.id).e_member
+                        + " from: " + agents.get(ss.id).validatedTicks);
+            }
+        }
+        System.out.println("Leader to member: " + change + ", Negative Leader: " + ln + ", Positive Member: " + mp);
+    }
+
     static void showResults(int turn, List<Agent> agents, int num) {
         int tempL = 0, tempM = 0;
         int neetL = 0, neetM = 0;
-        zeroAgents = countZeroAgent(agents);
         System.out.println(" Turn: " + turn);
         System.out.println("  Total Agents is " + Agent._id);
         int temp = countReciplocalist(agents);
         for (Agent ag : agents) {
-            if (ag.e_leader > ag.e_member){
+            if (ag.e_leader > ag.e_member) {
                 tempL++;
                 // 最後に活動したのがだいぶ前のことであるならば
-                if( TURN_NUM - ag.validatedTicks > THRESHOLD_NEET ) neetL++;
-            }
-            else if( ag.e_member > ag.e_leader ){
+                if (MAX_TURN_NUM - ag.validatedTicks > THRESHOLD_FOR_NEET) neetL++;
+            } else if (ag.e_member > ag.e_leader) {
                 tempM++;
-                if( TURN_NUM - ag.validatedTicks > THRESHOLD_NEET ){
+                if (MAX_TURN_NUM - ag.validatedTicks > THRESHOLD_FOR_NEET) {
                     neetM++;
-                    System.out.println(ag.validatedTicks + ", " + ag.e_leader +", " + ag.e_member );
+                    System.out.println(ag.validatedTicks + ", " + ag.e_leader + ", " + ag.e_member);
                 }
             }
         }
-        System.out.println("Leaders is " + tempL + ", Members is " + tempM);
         System.out.println("  Leaders is " + tempL + ", Members is " + tempM
                 + " (Rationalists: " + (AGENT_NUM - temp) + ", Reciprocalists: " + (temp) + "), "
                 + " (Reciplocal member: " + countReciplocalMembers(agents) + " )"
-                + "NEET l: " + neetL + ", m: "+ neetM);
+                + "NEET l: " + neetL + ", m: " + neetM);
         System.out.println("  Messages  : " + TransmissionPath.messageNum
-                + ", Mean TransmitTime: " + String.format("%.2f", Manager.meanCommunicationTime[WRITE_NUM-1]/num)
+                + ", Mean TransmitTime: " + String.format("%.2f", communicationDelayArray[WRITING_TIMES - 1] / num)
                 + ", Proposals: " + TransmissionPath.proposals + ", Replies: " + TransmissionPath.replies
                 + ", Acceptances: " + TransmissionPath.acceptances + ", Rejects: " + TransmissionPath.rejects);
         System.out.println("   , Results: " + TransmissionPath.results
                 + ", Finished: " + TransmissionPath.finished + ", Failed:" + TransmissionPath.failed);
-        System.out.println("  Finished tasks: " + Manager.finishedTasks + ", Disposed tasks: " + Manager.disposedTasks
-                + ", Overflow tasks: " + Manager.overflowTasks + ", Processing tasks: " + Manager.processingTasks
-                + ", Resting tasks: " + Manager.taskQueue.size() + ", RedoSubTasks: " + Manager.redoSubtasks);
 // */
     }
 
-    static void showExecutionTimeTable(Strategy strategy, List<Agent> agents) {
-        if (strategy.getClass().getName() != "ProposedMethod2") return;
-        else {
-            for (int i = 0; i < AGENT_NUM; i++) {
-            }
-        }
-
-    }
-
-    static void writeExcels(List<Agent> agents) throws FileNotFoundException, IOException {
+    static void writeGraphInformation(List<Agent> agents) throws FileNotFoundException, IOException {
         Edge.makeEdge(agents);
         assert Edge.to_id.size() == Edge.from_id.size() : "oioi";
         try {
@@ -313,7 +344,7 @@ public class OutPut extends ShowGraph implements SetParam {
                     cell.setCellStyle(style_header);
                     cell.setCellType(CellType.STRING);
                     cell.setCellValue(" distance to leader ");
-                }else{
+                } else {
                     cell = row.createCell(colNumber++);
                     cell.setCellStyle(style_header);
                     cell.setCellType(CellType.STRING);
@@ -417,7 +448,7 @@ public class OutPut extends ShowGraph implements SetParam {
                             sheet.autoSizeColumn(k, true);
                         }
                     }
-                } else if( i == 2 ){
+                } else if (i == 2) {
                     for (int j = 0; j < Edge.from_id.size(); j++) {
                         if (Edge.isRecipro.get(j) != true) continue;
                         rowNumber++;
@@ -473,175 +504,43 @@ public class OutPut extends ShowGraph implements SetParam {
         }
     }
 
-    /**
-     * writeResultsメソッド
-     * ファイルへの結果書き込み
-     *
-     * @param turn
-     * @param agents
-     */
-    static void writeResults(int turn, List<Agent> agents) {
-        for (int i = 1; i <= WRITE_NUM; i++) {
-            pw.print(i * (TURN_NUM / WRITE_NUM) + ", ");
-            pw.print((Manager.meanFinishedTasksArray[i] - Manager.meanFinishedTasksArray[i - 1]) / EXECUTE_NUM + ", ");
-            pw.print((Manager.meanDisposedTasksArray[i] - Manager.meanDisposedTasksArray[i - 1]) / EXECUTE_NUM + ", ");
-            pw.print((Manager.meanOverflownTasksArray[i] - Manager.meanOverflownTasksArray[i - 1]) / EXECUTE_NUM + ", ");
-            pw.print( Manager.meanCommunicationTime[i-1] / (double) EXECUTE_NUM + ", ");
-            pw.print(Manager.meanLeader[i-1] / EXECUTE_NUM + ", " + Manager.meanMember[i-1] / EXECUTE_NUM + ", ");
-            pw.print(Manager.meanReciprocal[i-1] / EXECUTE_NUM + ", " + Manager.meanRational[i-1] / EXECUTE_NUM + ", ");
-            pw.println(Manager.meanElUp[i-1] / EXECUTE_NUM + ", " + Manager.meanElDown[i-1] / EXECUTE_NUM + ", "
-                    + Manager.meanEmUp[i-1] / EXECUTE_NUM + ", " + Manager.meanEmDown[i-1] / EXECUTE_NUM );
+    static void writeResults() {
+        for (int i = 0; i < WRITING_TIMES; i++) {
+            pw.println(i * (MAX_TURN_NUM / WRITING_TIMES) + ", "
+                    + finishedTasksArray[i] / EXECUTION_TIMES + ", "
+                    + disposedTasksArray[i] / EXECUTION_TIMES + ", "
+                    + overflownTasksArray[i] / EXECUTION_TIMES + ", "
+                    + communicationDelayArray[i] / (double) EXECUTION_TIMES + ", "
+                    + leaderNumArray[i] / EXECUTION_TIMES + ", "
+                    + memberNumArray[i] / EXECUTION_TIMES + ", "
+                    + reciprocalistsArray[i] / EXECUTION_TIMES + ", "
+                    + rationalistsArray[i] / EXECUTION_TIMES + ", "
+                    + reciprocalMembersArray[i] / EXECUTION_TIMES);
         }
     }
 
     static void writeReliabilities(int turn, List<Agent> agents) {
-        pw.print("turn " + turn + ", ");
 //        for (int i = 0; i < AGENT_NUM; i++) pw.print(", " + i);
 //        pw.println();
-/*        for (Agent ag : agents) {
-            if ( ag.id == 4 && ag.role != LEADER) {
-                continue;
+        for (Agent ag : agents) {
+            pw.print("I'm " + ag.id + ", ");
+            for (int i = 0; i < AGENT_NUM; i++) {
+                if (ag.e_member > ag.e_leader) {
+                    pw.print(ag.reliabilities[i] + ", ");
+                } else {
+                    pw.print("-" + ag.reliabilities[i] + ", ");
+                }
             }
-            pw.print("I'm " +ag.id + ", ");
-            for (int i = 0; i < AGENT_NUM; i++) pw.print(ag.reliabilities[i] + ", ");
             pw.println();
-            break;
         }
 // */
 
-        pw.print("I'm 4 "+ ", ");
+/*        pw.print("I'm 4 "+ ", ");
         for (int i = 0; i < AGENT_NUM; i++) pw.print(agents.get(4).reliabilities[i] + ", ");
         pw.println();
-//        pw.println();
+// */
     }
 
-    /**
-     * メソッド
-     * 過去にどのエージェントとどのエージェントが何回組んだかと, そのエージェントの役割を書き込む
-     * メンバは負, リーダーは正
-     */
-    static void writeCoalitions(List<Agent> agents) {
-        for (int i = 0; i < AGENT_NUM; i++) pw.print(", " + i);
-        pw.println();
-        for (Agent ag : agents) {
-            pw.print(ag.id + ", ");
-            if (ag.e_leader > ag.e_member)
-                for (int i = 0; i < AGENT_NUM; i++) pw.print((-1) * ag.workWithAsL[i] + ", ");
-            else for (int i = 0; i < AGENT_NUM; i++) pw.print(ag.workWithAsM[i] + ", ");
-            pw.println();
-        }
-        pw.println();
-    }
-
-    static void showLeaderRetirement(List<Agent> snapshot, List<Agent> agents){
-        int change = 0, ln = 0, mp = 0;
-        for( Agent ss: snapshot ){
-            // まず, メンバになったのかどうか確認. なっていたら, その理由を究明
-            if( agents.get(ss.id).e_leader < agents.get(ss.id).e_member ){
-                change ++;
-                // e_leaderが下がっていたら(リーダー適正値が低いがためにリーダーをやめた)
-                if( agents.get(ss.id).e_leader < ss.e_leader ) {
-                    ln++;
-                }
-                // e_memberが上がっていたら(メンバ適正値が高いがためにメンバになった)
-                if( agents.get(ss.id).e_member > ss.e_member ){
-                    mp++;
-                }
-                System.out.println( "ID: " + ss.id + ", el: " + ss.e_leader + " → " + agents.get(ss.id).e_leader
-                + ", em: " + ss.e_member + " → " + agents.get(ss.id).e_member
-                + " from: " + agents.get(ss.id).validatedTicks);
-            }
-        }
-        System.out.println("Leader to member: " + change + ", Negative Leader: " + ln + ", Positive Member: " + mp);
-    }
-
-    // 座標上でどういう風に信頼関係ができているかをみるメソッド
-    static void showDistributions(Agent[][] grids) {
-        for (int i = 0; i < ROW / 2; i++) {
-            for (int j = 0; j < COLUMN / 2; j++) {
-                if (grids[i][j] != null) {
-                    if (grids[i][j].role == LEADER) System.out.print(String.format("l%3d", grids[i][j].id));
-                    else System.out.print(String.format("%4d", grids[i][j].relAgents.get(0).id));
-                } else System.out.print("    ");
-            }
-            System.out.println();
-        }
-    }
-
-    static void calcMeaning() {
-        n = 0;
-        means[n++] += Agent._leader_num;
-        means[n++] += Agent._member_num;
-        means[n++] += TransmissionPath.messageNum;
-        means[n++] += zeroAgents;
-    }
-
-    static void showMeanings() {
-        for (int i = 0; i < n; i++) {
-            means[i] /= EXECUTE_NUM;
-        }
-        System.out.println("Averages: ");
-        System.out.print("Leaders: " + means[0] + ", Members: " + means[1] + ", Messages: " + means[2] + ", ZeroAgents: " + means[3]);
-        System.out.println();
-        pw.println();
-        pw.println("Averages" + "," + "Leaders" + ", " + "Members" + ", " + "Messages" + ", " + "ZeroAgents");
-        pw.print("," + means[0] + ", " + means[1] + ", " + means[2] + ", " + means[3]);
-    }
-
-    void showGraph(List<Agent> agents) {
-        super.show2DGraph(agents);
-    }
-
-    // 改行するだけのメソッド
-    public static void newLine() {
-        pw.println();
-    }
-
-    // こなしたタスク数によって度数分布を表示
-    static void showFrequency(List<Agent> agents) {
-        int partition = 100;
-        int range = 10;
-        int max = partition * range;
-        int zeroAgent = 0;
-        int frequenciesMembers[] = new int[partition + 1];
-        int frequenciesLeaders[] = new int[partition + 1];
-        for (Agent agent : agents) {
-            if (agent.didTasksAsMember == 0 && agent.didTasksAsLeader == 0) {
-                zeroAgent++;
-                continue;
-            }
-            if (agent.didTasksAsMember > max) frequenciesMembers[partition]++;
-            else frequenciesMembers[agent.didTasksAsMember / range]++;
-            if (agent.didTasksAsLeader > max) frequenciesLeaders[partition]++;
-            else frequenciesLeaders[agent.didTasksAsLeader / range]++;
-        }
-        System.out.println(" ZeroAgents: " + zeroAgent);
-
-        int j = 0;
-        System.out.println("AsMembers: ");
-        for (int frequency : frequenciesMembers) {
-            if (frequency == 0) continue;
-            System.out.print(String.format("%4d", j) + " ~ " + String.format("%4d", j += 10) + ": " + String.format("%4d", frequency) + ": ");
-            for (int i = 0; i < frequency / 10; i++) System.out.print("*");
-            System.out.println();
-        }
-        j = 0;
-        System.out.println("AsLeaders: ");
-        for (int frequency : frequenciesLeaders) {
-            if (frequency == 0) continue;
-            System.out.print(String.format("%4d", j) + " ~ " + String.format("%4d", j += 10) + ": " + String.format("%4d", frequency) + ": ");
-            for (int i = 0; i < frequency / 10; i++) System.out.print("*");
-            System.out.println();
-        }
-    }
-
-    static int countZeroAgent(List<Agent> agents) {
-        int temp = 0;
-        for (Agent agent : agents) {
-            if ((agent.didTasksAsMember + agent.didTasksAsLeader) == 0) temp++;
-        }
-        return temp;
-    }
 
     static int countReciplocalist(List<Agent> agents) {
         int temp = 0;
@@ -650,7 +549,7 @@ public class OutPut extends ShowGraph implements SetParam {
         }
 // */
         for (Agent agent : agents) {
-            if (agent.reliabilities[agent.relRanking.get(0).id] > THRESHOLD_DEPENDABILITY && (agent.e_member > THRESHOLD_RECIPROCITY || agent.e_leader > THRESHOLD_RECIPROCITY))
+            if (agent.reliabilities[agent.relRanking.get(0).id] > THRESHOLD_FOR_DEPENDABILITY && (agent.e_member > THRESHOLD_FOR_RECIPROCITY || agent.e_leader > THRESHOLD_FOR_RECIPROCITY))
                 temp++;
         }
         return temp;
@@ -663,12 +562,11 @@ public class OutPut extends ShowGraph implements SetParam {
         }
 // */
         for (Agent agent : agents) {
-            if (agent.reliabilities[agent.relRanking.get(0).id] > THRESHOLD_DEPENDABILITY && agent.e_member > THRESHOLD_RECIPROCITY && agent.e_member > agent.e_leader)
+            if (agent.reliabilities[agent.relRanking.get(0).id] > THRESHOLD_FOR_DEPENDABILITY && agent.e_member > THRESHOLD_FOR_RECIPROCITY && agent.e_member > agent.e_leader)
                 temp++;
         }
         return temp;
     }
-
 
     static void fileClose() {
         pw.close();

@@ -16,7 +16,7 @@ public class Edge implements SetParam {
         for (Agent ag : agents) {
             if (ag.e_member > ag.e_leader) {
                 for (int i = 0; i < AGENT_NUM; i++) {
-                    if (ag.workWithAsM[i] >= THRESHOLD_TASK_SUCCESSES) {
+                    if (ag.workWithAsM[i] >= THRESHOLD_FOR_COALITION) {
                         from_id.add(ag.id);
                         to_id.add(i);
                         distance.add( Manager.distance[ag.id][i] );
@@ -32,7 +32,7 @@ public class Edge implements SetParam {
         for (Agent ag : agents) {
             if (ag.e_member > ag.e_leader) {
                 for (int i = 0; i < AGENT_NUM; i++) {
-                    if (ag.workWithAsM[i] >= THRESHOLD_TASK_SUCCESSES) {
+                    if (ag.workWithAsM[i] >= THRESHOLD_FOR_COALITION) {
                         from_id.add(ag.id);
                         to_id.add(i);
                         if( ag.principle == RECIPROCAL  ) isRecipro.add(true);

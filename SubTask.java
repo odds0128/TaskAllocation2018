@@ -10,7 +10,7 @@ public class SubTask implements SetParam{
     static long _seed;
     static Random _randSeed;
     int subtask_id ;
-    int reqRes[] = new int[RESOURCE_NUM];
+    int reqRes[] = new int[RESOURCE_TYPES];
     int resType  ;
     int resentTimes = 0;
 
@@ -46,7 +46,7 @@ public class SubTask implements SetParam{
         // とりあえずuniformだけで
         if( taskType ==  BIAS){
         }else{
-            resType = _randSeed.nextInt(RESOURCE_NUM);
+            resType = _randSeed.nextInt(RESOURCE_TYPES);
             reqRes[resType] = 1;
         }
 
@@ -78,7 +78,7 @@ public class SubTask implements SetParam{
     @Override
     public String toString() {
         StringBuilder str = new StringBuilder( subtask_id + " needs " + resType + ":  ");
-        for( int i = 0; i < RESOURCE_NUM; i++ ) str.append( reqRes[i] + ", ");
+        for( int i = 0; i < RESOURCE_TYPES; i++ ) str.append( reqRes[i] + ", ");
         return str.toString();
     }
 }

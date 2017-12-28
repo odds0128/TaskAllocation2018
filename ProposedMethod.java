@@ -7,24 +7,16 @@ import java.util.List;
  */
 public class ProposedMethod implements SetParam, Strategy {
     static final double γ = γ_r;
-
-    static List<Integer>[] histories = new ArrayList[AGENT_NUM];
-    static int[] dlMean = new int[AGENT_NUM];
-    static int[] dlTotal = new int[AGENT_NUM];
-
     static int[] min = new int[AGENT_NUM];
 
     ProposedMethod() {
-        for (int i = 0; i < histories.length; i++) {
-            histories[i] = new ArrayList<>();
-            dlMean[i] = 0;
-            dlTotal[i] = 0;
+        for (int i = 0; i < AGENT_NUM; i++) {
             min[i] = Integer.MAX_VALUE;
         }
     }
-
+// */
     public void act(Agent agent) {
-        assert agent.relAgents.size() <= MAX_REL_AGENTS : "alert3";
+        assert agent.relAgents.size() <= MAX_RELIABLE_AGENTS : "alert3";
         setPrinciple(agent);
 /*        if ((Manager.getTicks() - agent.validatedTicks) > RENEW_ROLE_TICKS) agent.inactivate(0);
         else {
@@ -36,7 +28,6 @@ public class ProposedMethod implements SetParam, Strategy {
             else if (agent.phase == EXECUTION) execute(agent);
 //            else if (action == EVAPORATION) agent.relAgents = decreaseDEC(agent);
         agent.relAgents = decreaseDEC(agent);
-//        }
     }
 
     private void proposeAsL(Agent leader) {
@@ -242,10 +233,10 @@ public class ProposedMethod implements SetParam, Strategy {
         agent.executionTime--;
         if (agent.executionTime == 0) {
             if (agent.role == LEADER) {
-                if (TURN_NUM - Manager.getTicks() < LAST_PERIOD)
+                if (MAX_TURN_NUM - Manager.getTicks() < FINAL_TERM)
                     for (Agent ag : agent.teamMembers) agent.workWithAsL[ag.id]++;
             } else {
-                if (TURN_NUM - Manager.getTicks() < LAST_PERIOD) agent.workWithAsM[agent.leader.id]++;
+                if (MAX_TURN_NUM - Manager.getTicks() < FINAL_TERM) agent.workWithAsM[agent.leader.id]++;
             }
             // 自分のサブタスクが終わったら役割適応度を1で更新して非活性状態へ
             agent.inactivate(1);
@@ -394,9 +385,9 @@ public class ProposedMethod implements SetParam, Strategy {
         }
         List<Agent> tmp = new ArrayList<>();
         Agent ag;
-        for (int j = 0; j < MAX_REL_AGENTS; j++) {
+        for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
             ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > THRESHOLD_DEPENDABILITY) {
+            if (agent.reliabilities[ag.id] > THRESHOLD_FOR_DEPENDABILITY) {
                 tmp.add(ag);
             } else {
                 break;
@@ -416,29 +407,26 @@ public class ProposedMethod implements SetParam, Strategy {
     private List<Agent> decreaseDEC(Agent agent) {
         double temp;
         for (int i = 0; i < AGENT_NUM; i++) {
-            temp = agent.reliabilities[i] * ( 1 - γ );
+            temp = agent.reliabilities[i] - γ;
             if (temp < 0) agent.reliabilities[i] = 0;
             else agent.reliabilities[i] = temp;
         }
         List<Agent> tmp = new ArrayList<>();
         Agent ag;
-        for (int j = 0; j < MAX_REL_AGENTS; j++) {
+        for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
             ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > THRESHOLD_DEPENDABILITY) {
+            if (agent.reliabilities[ag.id] > THRESHOLD_FOR_DEPENDABILITY) {
                 tmp.add(ag);
             } else {
                 break;
             }
         }
-/*        if (tmp.size() == 0 || agent.e_member < THRESHOLD_RECIPROCITY) agent.principle = RATIONAL;
-        else agent.principle = RECIPROCAL;
-// */
         return tmp;
     }
 
     private void setPrinciple(Agent agent) {
         if (agent.role == MEMBER) {
-            if (agent.relAgents.size() > 0 && agent.e_member > THRESHOLD_RECIPROCITY) {
+            if (agent.relAgents.size() > 0 && agent.e_member > THRESHOLD_FOR_RECIPROCITY) {
                 if (agent.principle == RATIONAL) {
                     Agent._recipro_num++;
                     Agent._rational_num--;
@@ -452,7 +440,7 @@ public class ProposedMethod implements SetParam, Strategy {
                 agent.principle = RATIONAL;
             }
         } else if (agent.role == LEADER) {
-            if (agent.relAgents.size() > 0 && agent.e_leader > THRESHOLD_RECIPROCITY) {
+            if (agent.relAgents.size() > 0 && agent.e_leader > THRESHOLD_FOR_RECIPROCITY) {
                 if (agent.principle == RATIONAL) {
                     Agent._recipro_num++;
                     Agent._rational_num--;
@@ -469,30 +457,9 @@ public class ProposedMethod implements SetParam, Strategy {
 
     }
 
-    /**
-     * renewHistoryメソッド
-     * 通信履歴を更新する.
-     * HISTORY_SIZEを超えられないよう, リストのサイズがそれに達したら先頭の要素を破棄して末尾に新しいのを入れる
-     * そして平均通信所要時間を再計算する
-     *
-     * @param ag
-     * @param ct
-     */
-    private void renewHistory(Agent ag, int ct) {
-        int temp = 0;
-        if (histories[ag.id].size() == HISTORY_SIZE) {
-            temp = histories[ag.id].remove(0);
-        }
-        histories[ag.id].add(ct);
-        dlTotal[ag.id] = dlTotal[ag.id] - temp + ct;
-        dlMean[ag.id] = dlTotal[ag.id] / histories[ag.id].size();
-    }
-
     static public void clearPM() {
         for (int i = 0; i < AGENT_NUM; i++) {
-            histories[i].clear();
-            dlTotal[i] = 0;
-            dlMean[i] = 0;
+            min[i] = Integer.MAX_VALUE;
         }
     }
 
