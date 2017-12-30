@@ -16,7 +16,7 @@ public class OutPut implements SetParam {
     static FileWriter fw;
     static BufferedWriter bw;
     static PrintWriter pw;
-    static String outputFilePath = "src/out.xlsx";
+    static String outputFilePath;
     static Workbook book = null;
     static FileOutputStream fout = null;
 
@@ -214,11 +214,11 @@ public class OutPut implements SetParam {
 // */
     }
 
-    static void writeGraphInformation(List<Agent> agents) throws FileNotFoundException, IOException {
+    static void writeGraphInformation(List<Agent> agents, String fp) throws FileNotFoundException, IOException {
+        outputFilePath = "/src/" + fp + ".xlsx";
         Edge.makeEdge(agents);
         assert Edge.to_id.size() == Edge.from_id.size() : "oioi";
         try {
-
             book = new SXSSFWorkbook();
             Font font = book.createFont();
             font.setFontName("ＭＳ ゴシック");
@@ -506,7 +506,7 @@ public class OutPut implements SetParam {
 
     static void writeResults() {
         for (int i = 0; i < WRITING_TIMES; i++) {
-            pw.println(i * (MAX_TURN_NUM / WRITING_TIMES) + ", "
+            pw.println((i + 1) * (MAX_TURN_NUM / WRITING_TIMES) + ", "
                     + finishedTasksArray[i] / EXECUTION_TIMES + ", "
                     + disposedTasksArray[i] / EXECUTION_TIMES + ", "
                     + overflownTasksArray[i] / EXECUTION_TIMES + ", "

@@ -9,9 +9,10 @@ import java.io.IOException;
 import java.util.*;
 
 public class Manager implements SetParam {
-//    private static Strategy strategy = new ProposedMethod();
-        private static Strategy strategy = new ReliabilityOriented();  // 信頼度の蒸発あり
-//    private static Strategy strategy = new ReliabilityOriented2();   // 禁じ手あり
+    private static Strategy strategy = new ProposedMethod();
+//    private static Strategy strategy = new ProposedMethodWithCheating();
+//        private static Strategy strategy = new ReliabilityOriented();  // 信頼度の蒸発あり
+//    private static Strategy strategy = new ReliabilityOrientedWithCheating();
 //    private static Strategy strategy = new ProximityOriented();
 //    private static Strategy strategy = new RoundRobin();
 
@@ -94,7 +95,10 @@ public class Manager implements SetParam {
                         OutPut.aggregateAgentData();
                     }
 
-                    if( turn == SNAPSHOT_TIME ) snapshot = takeAgentsSnapshot(agents);
+                    if( turn == SNAPSHOT_TIME ){
+                        snapshot = takeAgentsSnapshot(agents);
+                        OutPut.writeGraphInformation(agents, "interim_report");
+                    }
 
                     leaders = getRoleList(agents, LEADER);
                     members = getRoleList(agents, MEMBER);
@@ -126,7 +130,7 @@ public class Manager implements SetParam {
 
 //            OutPut.writeReliabilities(turn,agents);
             OutPut.writeResults();
-//            OutPut.writeGraphInformation(agents);
+            OutPut.writeGraphInformation(agents, "result");
             outPut.fileClose();
 // */
             br.close();

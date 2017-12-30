@@ -5,11 +5,11 @@ import java.util.List;
  * ProposedMethodクラス
  * 信頼度更新式をちょっといじったやつ
  */
-public class ProposedMethod implements SetParam, Strategy {
+public class ProposedMethodWithCheating implements SetParam, Strategy {
     static final double γ = γ_r;
     static int[] min = new int[AGENT_NUM];
 
-    ProposedMethod() {
+    ProposedMethodWithCheating() {
         for (int i = 0; i < AGENT_NUM; i++) {
             min[i] = Integer.MAX_VALUE;
         }
@@ -19,12 +19,15 @@ public class ProposedMethod implements SetParam, Strategy {
     public void act(Agent agent) {
         assert agent.relAgents.size() <= MAX_RELIABLE_AGENTS : "alert3";
         setPrinciple(agent);
-        if (agent.phase == PROPOSITION) proposeAsL(agent);
-        else if (agent.phase == REPLY) replyAsM(agent);
-        else if (agent.phase == REPORT) reportAsL(agent);
-        else if (agent.phase == RECEPTION) receiveAsM(agent);
-        else if (agent.phase == EXECUTION) execute(agent);
-        agent.relAgents = decreaseDEC(agent);
+        if ((Manager.getTicks() - agent.validatedTicks) > ROLE_RENEWAL_TICKS) agent.inactivate(0);
+        else {
+            if (agent.phase == PROPOSITION) proposeAsL(agent);
+            else if (agent.phase == REPLY) replyAsM(agent);
+            else if (agent.phase == REPORT) reportAsL(agent);
+            else if (agent.phase == RECEPTION) receiveAsM(agent);
+            else if (agent.phase == EXECUTION) execute(agent);
+            agent.relAgents = decreaseDEC(agent);
+        }
     }
 
     private void proposeAsL(Agent leader) {
