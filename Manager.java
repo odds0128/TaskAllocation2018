@@ -37,7 +37,7 @@ public class Manager implements SetParam {
         assert MAX_RELIABLE_AGENTS < AGENT_NUM : "alert0";
         assert INITIAL_TASK_NUM <= TASK_QUEUE_SIZE : "alert1";
         assert AGENT_NUM <= ROW * COLUMN : "alert2";
-        assert FINAL_TERM < MAX_TURN_NUM : "a";
+        assert COALLITION_CHECK_SPAN < MAX_TURN_NUM : "a";
 
         try {
             // seedの読み込み
@@ -98,6 +98,7 @@ public class Manager implements SetParam {
                     if( turn == SNAPSHOT_TIME ){
                         snapshot = takeAgentsSnapshot(agents);
                         OutPut.writeGraphInformation(agents, "interim_report");
+                        Agent.resetWorkHistory(agents);
                     }
 
                     leaders = getRoleList(agents, LEADER);

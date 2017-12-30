@@ -17,7 +17,7 @@ public class Agent implements SetParam , Cloneable{
     static long _seed;
     static Random _randSeed;
     static int[] resSizeArray = new int[RESOURCE_TYPES + 1];
-
+    static int _coalition_check_end_time = SNAPSHOT_TIME;
     // リーダーもメンバも持つパラメータ
     int id;
     int x, y;
@@ -598,6 +598,15 @@ public class Agent implements SetParam , Cloneable{
 //        */
 
         return str.toString();
+    }
+
+    public static void resetWorkHistory(List<Agent> agents){
+        for(Agent ag: agents){
+            for( int i= 0; i < AGENT_NUM; i++ ) {
+                ag.workWithAsM[i] = 0;
+            }
+        }
+        _coalition_check_end_time = MAX_TURN_NUM;
     }
 
     static public int countReciprocalMember(List<Agent> agents){

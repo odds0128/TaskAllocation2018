@@ -215,9 +215,10 @@ public class OutPut implements SetParam {
     }
 
     static void writeGraphInformation(List<Agent> agents, String fp) throws FileNotFoundException, IOException {
-        outputFilePath = "/src/" + fp + ".xlsx";
-        Edge.makeEdge(agents);
-        assert Edge.to_id.size() == Edge.from_id.size() : "oioi";
+        outputFilePath = "src/" + fp + ".xlsx";
+        Edge edge = new Edge();
+        edge.makeEdge(agents);
+
         try {
             book = new SXSSFWorkbook();
             Font font = book.createFont();
@@ -419,7 +420,7 @@ public class OutPut implements SetParam {
                 }
                 // edgeシートへの書き込み
                 else if (i == 1) {
-                    for (int j = 0; j < Edge.from_id.size(); j++) {
+                    for (int j = 0; j < edge.from_id.size(); j++) {
                         rowNumber++;
                         colNumber = 0;
                         row = sheet.createRow(rowNumber);
@@ -431,17 +432,17 @@ public class OutPut implements SetParam {
                         cell = row.createCell(colNumber++);
                         cell.setCellStyle(style_string);
                         cell.setCellType(CellType.NUMERIC);
-                        cell.setCellValue(Edge.from_id.get(j));
+                        cell.setCellValue(edge.from_id.get(j));
 
                         cell = row.createCell(colNumber++);
                         cell.setCellStyle(style_string_wrap);
                         cell.setCellType(CellType.NUMERIC);
-                        cell.setCellValue(Edge.to_id.get(j));
+                        cell.setCellValue(edge.to_id.get(j));
 
                         cell = row.createCell(colNumber++);
                         cell.setCellStyle(style_string_wrap);
                         cell.setCellType(CellType.NUMERIC);
-                        cell.setCellValue(Edge.distance.get(j));
+                        cell.setCellValue(edge.distance.get(j));
 
                         //列幅の自動調整
                         for (int k = 0; k <= colNumber; k++) {
@@ -449,8 +450,8 @@ public class OutPut implements SetParam {
                         }
                     }
                 } else if (i == 2) {
-                    for (int j = 0; j < Edge.from_id.size(); j++) {
-                        if (Edge.isRecipro.get(j) != true) continue;
+                    for (int j = 0; j < edge.from_id.size(); j++) {
+                        if (edge.isRecipro.get(j) != true) continue;
                         rowNumber++;
                         colNumber = 0;
                         row = sheet.createRow(rowNumber);
@@ -462,17 +463,17 @@ public class OutPut implements SetParam {
                         cell = row.createCell(colNumber++);
                         cell.setCellStyle(style_string);
                         cell.setCellType(CellType.NUMERIC);
-                        cell.setCellValue(Edge.from_id.get(j));
+                        cell.setCellValue(edge.from_id.get(j));
 
                         cell = row.createCell(colNumber++);
                         cell.setCellStyle(style_string_wrap);
                         cell.setCellType(CellType.NUMERIC);
-                        cell.setCellValue(Edge.to_id.get(j));
+                        cell.setCellValue(edge.to_id.get(j));
 
                         cell = row.createCell(colNumber++);
                         cell.setCellStyle(style_string_wrap);
                         cell.setCellType(CellType.NUMERIC);
-                        cell.setCellValue(Edge.distance.get(j));
+                        cell.setCellValue(edge.distance.get(j));
 
                         //列幅の自動調整
                         for (int k = 0; k <= colNumber; k++) {
@@ -502,6 +503,7 @@ public class OutPut implements SetParam {
                 }
             }
         }
+        edge = null;
     }
 
     static void writeResults() {

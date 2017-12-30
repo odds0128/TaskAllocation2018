@@ -10,8 +10,8 @@ interface SetParam {
     int WRITING_TIMES   = 1000;         // データのファイルへの出力回数
 
     // 結果表示のためのパラメータ
-    int  FINAL_TERM = 5000;          // 協調関係ができているか確認するための最後の方のターム
-    double THRESHOLD_FOR_COALITION = 10;
+    int  COALLITION_CHECK_SPAN = 5000;          // 協調関係ができているか確認するための最後の方のターム
+    double THRESHOLD_FOR_COALITION = 20;
     int THRESHOLD_FOR_NEET = 100000;
     int SNAPSHOT_TIME = 500000;
 

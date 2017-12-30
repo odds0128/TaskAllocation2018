@@ -230,10 +230,10 @@ public class ProposedMethod implements SetParam, Strategy {
         agent.executionTime--;
         if (agent.executionTime == 0) {
             if (agent.role == LEADER) {
-                if (MAX_TURN_NUM - Manager.getTicks() < FINAL_TERM)
+                if (agent._coalition_check_end_time - Manager.getTicks() < COALLITION_CHECK_SPAN)
                     for (Agent ag : agent.teamMembers) agent.workWithAsL[ag.id]++;
             } else {
-                if (MAX_TURN_NUM - Manager.getTicks() < FINAL_TERM) agent.workWithAsM[agent.leader.id]++;
+                if (agent._coalition_check_end_time - Manager.getTicks() < COALLITION_CHECK_SPAN) agent.workWithAsM[agent.leader.id]++;
             }
             // 自分のサブタスクが終わったら役割適応度を1で更新して非活性状態へ
             agent.inactivate(1);
@@ -271,7 +271,7 @@ public class ProposedMethod implements SetParam, Strategy {
     }
 
     /**
-     * selectLeaderメソッド
+     * selectLeaderメソッ
      * メンバがどのリーダーの要請を受けるかを判断する
      * 信頼エージェントのリストにあるリーダーエージェントからの要請を受ける
      */
@@ -453,6 +453,7 @@ public class ProposedMethod implements SetParam, Strategy {
         }
 
     }
+
 
     static public void clearPM() {
         for (int i = 0; i < AGENT_NUM; i++) {
