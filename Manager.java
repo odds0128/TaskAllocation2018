@@ -381,7 +381,6 @@ public class Manager implements SetParam {
         SubTask.clearST();
         Task.clearT();
         Agent.clearA();
-        if (strategy.getClass().getName() == "ProposedMethod2") ProposedMethod2.clearPM2();
         if (strategy.getClass().getName() == "ProposedMethod") ProposedMethod.clearPM();
     }
 
