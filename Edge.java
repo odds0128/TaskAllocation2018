@@ -36,6 +36,16 @@ public class Edge implements SetParam {
         }
     }
 
+    /*
+    public void makeEdgeFromLonelyAgent(List<Agent> agents){
+        for( Agent ag: agents ){
+            if( ag.isLonely == 1 ){
+                for(  )
+            }
+        }
+    }
+    // */
+
     public void makeCoalitionEdges(List<Agent> agents) {
         for (Agent ag : agents) {
             if (ag.e_member > ag.e_leader) {
@@ -50,5 +60,4 @@ public class Edge implements SetParam {
             }
         }
     }
-
 }

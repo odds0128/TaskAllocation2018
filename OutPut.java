@@ -29,9 +29,12 @@ public class OutPut implements SetParam {
     static double[] communicationDelayArray = new double[WRITING_TIMES];
     static int[] leaderNumArray = new int[WRITING_TIMES];
     static int[] memberNumArray = new int[WRITING_TIMES];
+    static int[] leaderNumInDepopulatedAreaArray = new int[WRITING_TIMES];
+    static int[] memberNumInDepopulatedAreaArray = new int[WRITING_TIMES];
     static int[] reciprocalistsArray = new int[WRITING_TIMES];
     static int[] rationalistsArray = new int[WRITING_TIMES];
     static int[] reciprocalMembersArray = new int[WRITING_TIMES];
+    static int[] finishedTasksInDepopulatedAreaArray = new int[WRITING_TIMES];
 
     OutPut() {
         try {
@@ -39,10 +42,13 @@ public class OutPut implements SetParam {
             bw = new BufferedWriter(fw);
             pw = new PrintWriter(bw);
             pw.println("turn" + ", " + "FinishedTasks" + "," + "DisposedTasks" + ", "
-                    + "OverflownTasks" + ", " + "CommunicationTime"
-                    + ", " + "Leader" + ", " + "Member" + ", "
+                    + "OverflownTasks" + ", " + "CommunicationTime" + ", "
+                    + "Leader" + ", " + "Member" + ", "
+                    + "Lonely leaders" + ", " + "Lonely members" + ", "
                     + "Reciprocal" + ", " + "Rational" + ", "
-                    + "ReciprocalMembers" + ",");
+                    + "ReciprocalMembers" + ","
+                    + "FinishedTasks in depopulated area" + ", "
+            );
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e2) {
@@ -50,12 +56,14 @@ public class OutPut implements SetParam {
         }
     }
 
-    static void aggregateAgentData() {
+    static void aggregateAgentData(List<Agent> agents) {
         leaderNumArray[index] += Agent._leader_num;
         memberNumArray[index] += Agent._member_num;
+        int temp = Agent.countLeadersInDepopulatedArea(agents);
+        leaderNumInDepopulatedAreaArray[index] += temp;
+        memberNumInDepopulatedAreaArray[index] += (Agent._lonelyAgents.size() - temp);
     }
-
-    static void aggregateData(int ft, int dt, int ot, int rm) {
+    static void aggregateData(int ft, int dt, int ot, int rm, int ftida) {
         finishedTasksArray[index] += ft;
         disposedTasksArray[index] += dt;
         overflownTasksArray[index] += ot;
@@ -64,8 +72,8 @@ public class OutPut implements SetParam {
         reciprocalistsArray[index] += Agent._recipro_num;
         rationalistsArray[index] += Agent._rational_num;
         reciprocalMembersArray[index] += rm;
+        finishedTasksInDepopulatedAreaArray[index] += ftida ;
     }
-
     static void indexIncrement() {
         index = (index + 1) % WRITING_TIMES;
     }
@@ -345,6 +353,11 @@ public class OutPut implements SetParam {
                     cell.setCellStyle(style_header);
                     cell.setCellType(CellType.STRING);
                     cell.setCellValue(" distance to leader ");
+
+                    cell = row.createCell(colNumber++);
+                    cell.setCellStyle(style_header);
+                    cell.setCellType(CellType.STRING);
+                    cell.setCellValue(" is lonely or not");
                 } else {
                     cell = row.createCell(colNumber++);
                     cell.setCellStyle(style_header);
@@ -365,7 +378,6 @@ public class OutPut implements SetParam {
 
                 //nodeシートへの書き込み
                 if (i == 0) {
-                    int j = 0;
                     for (Agent agent : agents) {
                         rowNumber++;
                         colNumber = 0;
@@ -409,8 +421,12 @@ public class OutPut implements SetParam {
                         cell.setCellStyle(style_string);
                         cell.setCellType(CellType.NUMERIC);
                         if (agent.e_leader > agent.e_member) cell.setCellValue(0);
-                        else if (agent.leader != null)
-                            cell.setCellValue(Manager.distance[agent.id][agent.leader.id] * 10);
+                        else if (agent.leader != null) cell.setCellValue(Manager.distance[agent.id][agent.leader.id] * 10);
+
+                        cell = row.createCell(colNumber++);
+                        cell.setCellStyle(style_string);
+                        cell.setCellType(CellType.NUMERIC);
+                        cell.setCellValue(agent.isLonely);
 
                         //列幅の自動調整
                         for (int k = 0; k <= colNumber; k++) {
@@ -515,9 +531,13 @@ public class OutPut implements SetParam {
                     + communicationDelayArray[i] / (double) EXECUTION_TIMES + ", "
                     + leaderNumArray[i] / EXECUTION_TIMES + ", "
                     + memberNumArray[i] / EXECUTION_TIMES + ", "
+                    + leaderNumInDepopulatedAreaArray[i]/EXECUTION_TIMES + ", "
+                    + memberNumInDepopulatedAreaArray[i]/EXECUTION_TIMES + ", "
                     + reciprocalistsArray[i] / EXECUTION_TIMES + ", "
                     + rationalistsArray[i] / EXECUTION_TIMES + ", "
-                    + reciprocalMembersArray[i] / EXECUTION_TIMES);
+                    + reciprocalMembersArray[i] / EXECUTION_TIMES + ", "
+                    + finishedTasksInDepopulatedAreaArray[i] / EXECUTION_TIMES + ", "
+            ) ;
         }
     }
 

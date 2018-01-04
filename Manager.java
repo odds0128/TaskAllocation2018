@@ -28,6 +28,7 @@ public class Manager implements SetParam {
     static int disposedTasks = 0;
     static int overflowTasks = 0;
     static int finishedTasks = 0;
+    static int finishedTasksInDepopulatedArea = 0;
     static int processingTasks = 0;
     static int turn;
     private static Random randSeed;
@@ -64,7 +65,6 @@ public class Manager implements SetParam {
 
                 // エージェントの生成
                 agents = generateAgents(seed, strategy);
-                setRelAg(agents);
 
                 // ターンの進行
                 for (turn = 1; turn <= MAX_TURN_NUM; turn++) {
@@ -92,15 +92,15 @@ public class Manager implements SetParam {
 
                     // フリーランサーが役割を選び終わった後で数える
                     if (turn % (MAX_TURN_NUM / WRITING_TIMES) == 0) {
-                        OutPut.aggregateAgentData();
+                        OutPut.aggregateAgentData(agents);
                     }
-
+/*
                     if( turn == SNAPSHOT_TIME ){
                         snapshot = takeAgentsSnapshot(agents);
                         OutPut.writeGraphInformation(agents, "interim_report");
                         Agent.resetWorkHistory(agents);
                     }
-
+// */
                     leaders = getRoleList(agents, LEADER);
                     members = getRoleList(agents, MEMBER);
 
@@ -113,11 +113,12 @@ public class Manager implements SetParam {
 
                     if (turn % (MAX_TURN_NUM / WRITING_TIMES) == 0) {
                         int rmNum = Agent.countReciprocalMember(agents);
-                        OutPut.aggregateData(finishedTasks, disposedTasks, overflowTasks, rmNum);
+                        OutPut.aggregateData(finishedTasks, disposedTasks, overflowTasks, rmNum, finishedTasksInDepopulatedArea);
                         OutPut.indexIncrement();
-                        finishedTasks = 0; disposedTasks = 0; overflowTasks = 0;
+                        finishedTasks = 0; disposedTasks = 0; overflowTasks = 0; finishedTasksInDepopulatedArea = 0;
                     }
-                    // ここが1tickの最後の部分．次のtickまでにやることあったらここで．
+// */
+                // ここが1tickの最後の部分．次のtickまでにやることあったらここで．
                 }
                 // ↑ 一回の実験のカッコ．以下は実験の合間で作業する部分
 
@@ -131,7 +132,7 @@ public class Manager implements SetParam {
 
 //            OutPut.writeReliabilities(turn,agents);
             OutPut.writeResults();
-            OutPut.writeGraphInformation(agents, "result");
+//            OutPut.writeGraphInformation(agents, "result");
             outPut.fileClose();
 // */
             br.close();
@@ -164,6 +165,8 @@ public class Manager implements SetParam {
             grids[temp.y][temp.x] = temp;
             tempList.add(temp);
         }
+        setRelAg(tempList);
+        Agent.makeLonelyAgentList(tempList);
         return tempList;
     }
 
@@ -182,14 +185,37 @@ public class Manager implements SetParam {
         else return false;
     }
 
+    /**
+     * setRelAgメソッド
+     *
+     * @param agents
+     * @return agents_in_depopulation_area;
+     */
     static void setRelAg(List<Agent> agents) {
         int dist = 0;
         List<Agent> tempList = new ArrayList();
+        int agents_in_depopulation_area = 0;
 
-        // 距離の計算
+        // 距離の計算 & iから距離1にいるエージェントのカウント
+        int min = Integer.MAX_VALUE;
+        int quartile = AGENT_NUM/4;
+        int[] density = new int[AGENT_NUM];     // エージェント周辺の密度(距離x=2以下にいるエージェントの数)
         for (int i = 0; i < AGENT_NUM; i++) {
+            int temp ;
             for (int j = 0; j < AGENT_NUM; j++) {
-                distance[i][j] = calcManhattan(agents.get(i), agents.get(j));
+                temp = calcManhattan(agents.get(i), agents.get(j));
+                distance[i][j] = temp;
+                if( temp <= 2 ) density[i]++;
+            }
+            if( density[i] < min ) min = density[i];
+         }
+        // 過疎エージェントの探索
+        for (int neighborhoods_i= min; agents_in_depopulation_area < quartile; neighborhoods_i++) {
+            for( int density_i = 0; density_i < AGENT_NUM; density_i++  ){
+                if( density[density_i] == neighborhoods_i ){
+                    agents_in_depopulation_area++;
+                    agents.get(density_i).isLonely = 1;
+                }
             }
         }
 
@@ -249,7 +275,6 @@ public class Manager implements SetParam {
                 }
             }
         }
-
     }
 
     static int inTheList(Agent a, List<Agent> agents) {
@@ -305,12 +330,9 @@ public class Manager implements SetParam {
 
     // 引数のリーダーが持つタスクの終了
     static void finishTask(Agent leader) {
-/*        System.out.println("turn: " + turn + ", ID: " + leader.id + " did " + leader.ourTask + ", and I(" + leader + ") did " + leader.mySubTask);
-        System.out.println( " Members: " + leader.teamMembers + " very good team!");
-// */
-//        if(leader.id == 3) System.out.println("ID: " + leader.id + ", " + leader.meanExecutedTicks);
         leader.ourTask = null;
-        Manager.finishedTasks++;
+        if( leader.isLonely == 1 ) finishedTasksInDepopulatedArea++;
+        finishedTasks++;
     }
 
     static List<Agent> getRoleList(List<Agent> agents, int role) {

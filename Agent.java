@@ -18,6 +18,8 @@ public class Agent implements SetParam , Cloneable{
     static Random _randSeed;
     static int[] resSizeArray = new int[RESOURCE_TYPES + 1];
     static int _coalition_check_end_time = SNAPSHOT_TIME;
+    static List<Integer> _lonelyAgents = new ArrayList<>();
+
     // リーダーもメンバも持つパラメータ
     int id;
     int x, y;
@@ -41,6 +43,7 @@ public class Agent implements SetParam , Cloneable{
     int principle = RATIONAL;
     int executionTime = 0;
     int start = 0;                 // その時のチーム参加要請を送った時刻
+    int isLonely = 0;              // 過疎地域のエージェントだったら1
     // リーダーエージェントが持つパラメータ
     List<Agent> candidates;         // これからチームへの参加を要請するエージェントのリスト
     List<Agent> teamMembers;        // すでにサブタスクを送っていてメンバの選定から外すエージェントのリスト
@@ -500,6 +503,8 @@ public class Agent implements SetParam , Cloneable{
         _member_num = 0;
         _rational_num = AGENT_NUM;
         _recipro_num = 0;
+        _coalition_check_end_time = SNAPSHOT_TIME;
+        _lonelyAgents.clear();
         for (int i = 0; i < RESOURCE_TYPES; i++) resSizeArray[i] = 0;
     }
 
@@ -613,6 +618,24 @@ public class Agent implements SetParam , Cloneable{
         int temp = 0;
         for( Agent ag: agents ){
             if( ag.e_member > ag.e_leader && ag.principle == RECIPROCAL ){
+                temp++;
+            }
+        }
+        return temp;
+    }
+
+    static void makeLonelyAgentList(List<Agent> agents){
+        for( Agent ag: agents ){
+            if( ag.isLonely == 1 ){
+                _lonelyAgents.add(ag.id);
+            }
+        }
+        System.out.println(_lonelyAgents.size());
+    }
+    static int countLeadersInDepopulatedArea(List<Agent> agents){
+        int temp = 0;
+        for( int lag: _lonelyAgents ){
+            if( agents.get(lag).e_leader > agents.get(lag).e_member ){
                 temp++;
             }
         }

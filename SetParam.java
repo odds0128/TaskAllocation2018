@@ -5,7 +5,7 @@
 
 interface SetParam {
     // 環境の設定( 変更していく部分 )
-    int EXECUTION_TIMES = 1;            // 実験の回数
+    int EXECUTION_TIMES = 20;            // 実験の回数
     int MAX_TURN_NUM    = 1000000;       // 一回の実験のターン数
     int WRITING_TIMES   = 1000;         // データのファイルへの出力回数
 
@@ -22,7 +22,7 @@ interface SetParam {
     int COLUMN = 50;                // 列数
 
     int TASK_ADDITION_SPAN = 1;          // タスクキューにタスクを追加するスパン
-    int ADDITIONAL_TASK_NUM  = 10;        // タスクを追加するタイミングで, タスクキューに追加するタスクの個数
+    int ADDITIONAL_TASK_NUM  = 5;        // タスクを追加するタイミングで, タスクキューに追加するタスクの個数
     int RESOURCE_TYPES = 6;
     int MAX_AGENT_RESOURCE_SIZE = 1;
     int MAX_SUBTASK_RESOURSE_SIZE = 1;
@@ -39,7 +39,7 @@ interface SetParam {
     double α = 0.05;
     double ε = 0.01;
     double γ_r = INITIAL_VALUE_OF_DEC/(double)MAX_TURN_NUM;
-    double THRESHOLD_FOR_DEPENDABILITY = 0.3;
+    double THRESHOLD_FOR_DEPENDABILITY = 0.5;
     double THRESHOLD_FOR_RECIPROCITY   = 0.5;
     int BIAS = 0;
     int UNIFORM = 1;
