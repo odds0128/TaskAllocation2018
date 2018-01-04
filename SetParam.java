@@ -22,7 +22,7 @@ interface SetParam {
     int COLUMN = 50;                // 列数
 
     int TASK_ADDITION_SPAN = 1;          // タスクキューにタスクを追加するスパン
-    int ADDITIONAL_TASK_NUM  = 5;        // タスクを追加するタイミングで, タスクキューに追加するタスクの個数
+    int ADDITIONAL_TASK_NUM  = 1;        // タスクを追加するタイミングで, タスクキューに追加するタスクの個数
     int RESOURCE_TYPES = 6;
     int MAX_AGENT_RESOURCE_SIZE = 1;
     int MAX_SUBTASK_RESOURSE_SIZE = 1;
