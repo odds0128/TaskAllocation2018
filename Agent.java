@@ -19,6 +19,7 @@ public class Agent implements SetParam , Cloneable{
     static int[] resSizeArray = new int[RESOURCE_TYPES + 1];
     static int _coalition_check_end_time = SNAPSHOT_TIME;
     static List<Integer> _lonelyAgents = new ArrayList<>();
+    static List<Integer> _accompaniedAgents = new ArrayList<>();
 
     // リーダーもメンバも持つパラメータ
     int id;
@@ -44,6 +45,7 @@ public class Agent implements SetParam , Cloneable{
     int executionTime = 0;
     int start = 0;                 // その時のチーム参加要請を送った時刻
     int isLonely = 0;              // 過疎地域のエージェントだったら1
+    int isAccompanied = 0;         // 過密地域のエージェントだったら1
     // リーダーエージェントが持つパラメータ
     List<Agent> candidates;         // これからチームへの参加を要請するエージェントのリスト
     List<Agent> teamMembers;        // すでにサブタスクを送っていてメンバの選定から外すエージェントのリスト
@@ -624,14 +626,18 @@ public class Agent implements SetParam , Cloneable{
         return temp;
     }
 
-    static void makeLonelyAgentList(List<Agent> agents){
+    static void makeLonelyORAccompaniedAgentList(List<Agent> agents){
         for( Agent ag: agents ){
             if( ag.isLonely == 1 ){
                 _lonelyAgents.add(ag.id);
+            }else if( ag.isAccompanied == 1 ){
+                _accompaniedAgents.add(ag.id);
             }
         }
         System.out.println(_lonelyAgents.size());
+        System.out.println(_accompaniedAgents.size());
     }
+
     static int countLeadersInDepopulatedArea(List<Agent> agents){
         int temp = 0;
         for( int lag: _lonelyAgents ){
@@ -641,4 +647,15 @@ public class Agent implements SetParam , Cloneable{
         }
         return temp;
     }
+
+    static int countLeadersInPopulatedArea(List<Agent> agents){
+        int temp = 0;
+        for( int lag: _accompaniedAgents ){
+            if( agents.get(lag).e_leader > agents.get(lag).e_member ){
+                temp++;
+            }
+        }
+        return temp;
+    }
+
 }

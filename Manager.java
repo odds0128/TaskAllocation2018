@@ -9,9 +9,9 @@ import java.io.IOException;
 import java.util.*;
 
 public class Manager implements SetParam {
-    private static Strategy strategy = new ProposedMethod();
+//    private static Strategy strategy = new ProposedMethod();
 //    private static Strategy strategy = new ProposedMethodWithCheating();
-//        private static Strategy strategy = new ReliabilityOriented();  // 信頼度の蒸発あり
+    private static Strategy strategy = new ReliabilityOriented();  // 信頼度の蒸発あり
 //    private static Strategy strategy = new ReliabilityOrientedWithCheating();
 //    private static Strategy strategy = new ProximityOriented();
 //    private static Strategy strategy = new RoundRobin();
@@ -166,7 +166,7 @@ public class Manager implements SetParam {
             tempList.add(temp);
         }
         setRelAg(tempList);
-        Agent.makeLonelyAgentList(tempList);
+        Agent.makeLonelyORAccompaniedAgentList(tempList);
         return tempList;
     }
 
@@ -194,10 +194,11 @@ public class Manager implements SetParam {
     static void setRelAg(List<Agent> agents) {
         int dist = 0;
         List<Agent> tempList = new ArrayList();
-        int agents_in_depopulation_area = 0;
+        int agents_in_depopulated_area = 0, agents_in_populated_area = 0;
 
         // 距離の計算 & iから距離1にいるエージェントのカウント
         int min = Integer.MAX_VALUE;
+        int max = 0;
         int quartile = AGENT_NUM/4;
         int[] density = new int[AGENT_NUM];     // エージェント周辺の密度(距離x=2以下にいるエージェントの数)
         for (int i = 0; i < AGENT_NUM; i++) {
@@ -208,13 +209,23 @@ public class Manager implements SetParam {
                 if( temp <= 2 ) density[i]++;
             }
             if( density[i] < min ) min = density[i];
+            if( density[i] > max ) max = density[i];
          }
         // 過疎エージェントの探索
-        for (int neighborhoods_i= min; agents_in_depopulation_area < quartile; neighborhoods_i++) {
+        for (int neighborhoods_i= min; agents_in_depopulated_area < quartile; neighborhoods_i++) {
             for( int density_i = 0; density_i < AGENT_NUM; density_i++  ){
                 if( density[density_i] == neighborhoods_i ){
-                    agents_in_depopulation_area++;
+                    agents_in_depopulated_area++;
                     agents.get(density_i).isLonely = 1;
+                }
+            }
+        }
+        // 過密エージェントの探索
+        for (int neighborhoods_i= max; agents_in_populated_area < quartile; neighborhoods_i--) {
+            for( int density_i = 0; density_i < AGENT_NUM; density_i++  ){
+                if( density[density_i] == neighborhoods_i ){
+                    agents_in_populated_area++;
+                    agents.get(density_i).isAccompanied = 1;
                 }
             }
         }

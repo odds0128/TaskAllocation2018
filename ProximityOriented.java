@@ -9,7 +9,7 @@ import java.util.List;
  */
 public class ProximityOriented implements Strategy, SetParam {
     public void act(Agent agent) {
-        if ((Manager.getTicks() - agent.validatedTicks) > RENEW_ROLE_TICKS ) agent.inactivateWithNoLearning(0);
+        if ((Manager.getTicks() - agent.validatedTicks) > ROLE_RENEWAL_TICKS) agent.inactivateWithNoLearning(0);
 
         else
 // */
@@ -195,10 +195,10 @@ public class ProximityOriented implements Strategy, SetParam {
         agent.executionTime--;
         if (agent.executionTime == 0) {
             if (agent.role == LEADER) {
-                if (TURN_NUM - Manager.getTicks() < LAST_PERIOD)
+                if (agent._coalition_check_end_time - Manager.getTicks() < COALLITION_CHECK_SPAN )
                     for (Agent ag : agent.teamMembers) agent.workWithAsL[ag.id]++;
             } else {
-                if (TURN_NUM - Manager.getTicks() < LAST_PERIOD) agent.workWithAsM[agent.leader.id]++;
+                if (agent._coalition_check_end_time - Manager.getTicks() < COALLITION_CHECK_SPAN) agent.workWithAsM[agent.leader.id]++;
             }
             // 自分のサブタスクが終わったら役割適応度を1で更新して非活性状態へ
             agent.inactivateWithNoLearning(1);

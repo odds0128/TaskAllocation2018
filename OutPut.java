@@ -22,32 +22,36 @@ public class OutPut implements SetParam {
 
     static int index = 0;
 
-    static int[] finishedTasksArray = new int[WRITING_TIMES];
-    static int[] disposedTasksArray = new int[WRITING_TIMES];
-    static int[] overflownTasksArray = new int[WRITING_TIMES];
-    static int[] messagesArray = new int[WRITING_TIMES];
-    static double[] communicationDelayArray = new double[WRITING_TIMES];
-    static int[] leaderNumArray = new int[WRITING_TIMES];
-    static int[] memberNumArray = new int[WRITING_TIMES];
-    static int[] leaderNumInDepopulatedAreaArray = new int[WRITING_TIMES];
-    static int[] memberNumInDepopulatedAreaArray = new int[WRITING_TIMES];
-    static int[] reciprocalistsArray = new int[WRITING_TIMES];
-    static int[] rationalistsArray = new int[WRITING_TIMES];
-    static int[] reciprocalMembersArray = new int[WRITING_TIMES];
+    static int[] finishedTasksArray                  = new int[WRITING_TIMES];
+    static int[] disposedTasksArray                  = new int[WRITING_TIMES];
+    static int[] overflownTasksArray                 = new int[WRITING_TIMES];
+    static int[] messagesArray                       = new int[WRITING_TIMES];
+    static double[] communicationDelayArray          = new double[WRITING_TIMES];
+    static int[] leaderNumArray                      = new int[WRITING_TIMES];
+    static int[] memberNumArray                      = new int[WRITING_TIMES];
+    static int[] leaderNumInDepopulatedAreaArray     = new int[WRITING_TIMES];
+    static int[] memberNumInDepopulatedAreaArray     = new int[WRITING_TIMES];
+    static int[] leaderNumInPopulatedAreaArray       = new int[WRITING_TIMES];
+    static int[] memberNumInPopulatedAreaArray       = new int[WRITING_TIMES];
+    static int[] reciprocalistsArray                 = new int[WRITING_TIMES];
+    static int[] rationalistsArray                   = new int[WRITING_TIMES];
+    static int[] reciprocalMembersArray              = new int[WRITING_TIMES];
     static int[] finishedTasksInDepopulatedAreaArray = new int[WRITING_TIMES];
+    static int[] finishedTasksInPopulatedAreaArray   = new int[WRITING_TIMES];
 
     OutPut() {
         try {
             fw = new FileWriter("/Users/r.funato/IdeaProjects/TaskAllocation/src/output1.csv", false);
             bw = new BufferedWriter(fw);
             pw = new PrintWriter(bw);
-            pw.println("turn" + ", " + "FinishedTasks" + "," + "DisposedTasks" + ", "
-                    + "OverflownTasks" + ", " + "CommunicationTime" + ", "
-                    + "Leader" + ", " + "Member" + ", "
-                    + "Lonely leaders" + ", " + "Lonely members" + ", "
-                    + "Reciprocal" + ", " + "Rational" + ", "
-                    + "ReciprocalMembers" + ","
-                    + "FinishedTasks in depopulated area" + ", "
+            pw.println("turn" + ", "
+                    + "FinishedTasks"                     + ", " + "DisposedTasks"                     + ", "
+                    + "OverflownTasks"                    + ", " + "CommunicationTime"                 + ", "
+                    + "Leader"                            + ", " + "Member"                            + ", "
+                    + "Lonely leaders"                    + ", " + "Lonely members"                    + ", "
+                    + "Accompanied leaders"               + ", " + "Accompanied members"               + ", "
+                    + "Reciprocal"                        + ", " + "Rational"                          + ", " + "ReciprocalMembers" + ","
+                    + "FinishedTasks in depopulated area" + ", " + "FinishedTasks in populated area"   + ", "
             );
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -59,9 +63,14 @@ public class OutPut implements SetParam {
     static void aggregateAgentData(List<Agent> agents) {
         leaderNumArray[index] += Agent._leader_num;
         memberNumArray[index] += Agent._member_num;
-        int temp = Agent.countLeadersInDepopulatedArea(agents);
-        leaderNumInDepopulatedAreaArray[index] += temp;
-        memberNumInDepopulatedAreaArray[index] += (Agent._lonelyAgents.size() - temp);
+
+        int a = Agent.countLeadersInDepopulatedArea(agents);
+        int b = Agent.countLeadersInPopulatedArea(agents);
+
+        leaderNumInDepopulatedAreaArray[index] += a;
+        memberNumInDepopulatedAreaArray[index] += (Agent._lonelyAgents.size() - a);
+        leaderNumInPopulatedAreaArray[index]   += b;
+        memberNumInPopulatedAreaArray[index]   += (Agent._lonelyAgents.size() - b);
     }
     static void aggregateData(int ft, int dt, int ot, int rm, int ftida) {
         finishedTasksArray[index] += ft;
@@ -524,19 +533,22 @@ public class OutPut implements SetParam {
 
     static void writeResults() {
         for (int i = 0; i < WRITING_TIMES; i++) {
-            pw.println((i + 1) * (MAX_TURN_NUM / WRITING_TIMES) + ", "
-                    + finishedTasksArray[i] / EXECUTION_TIMES + ", "
-                    + disposedTasksArray[i] / EXECUTION_TIMES + ", "
-                    + overflownTasksArray[i] / EXECUTION_TIMES + ", "
-                    + communicationDelayArray[i] / (double) EXECUTION_TIMES + ", "
-                    + leaderNumArray[i] / EXECUTION_TIMES + ", "
-                    + memberNumArray[i] / EXECUTION_TIMES + ", "
-                    + leaderNumInDepopulatedAreaArray[i]/EXECUTION_TIMES + ", "
-                    + memberNumInDepopulatedAreaArray[i]/EXECUTION_TIMES + ", "
-                    + reciprocalistsArray[i] / EXECUTION_TIMES + ", "
-                    + rationalistsArray[i] / EXECUTION_TIMES + ", "
-                    + reciprocalMembersArray[i] / EXECUTION_TIMES + ", "
+            pw.println((i + 1) * (MAX_TURN_NUM / WRITING_TIMES)  + ", "
+                    + finishedTasksArray[i]                  / EXECUTION_TIMES + ", "
+                    + disposedTasksArray[i]                  / EXECUTION_TIMES + ", "
+                    + overflownTasksArray[i]                 / EXECUTION_TIMES + ", "
+                    + communicationDelayArray[i]             / (double) EXECUTION_TIMES + ", "
+                    + leaderNumArray[i]                      / EXECUTION_TIMES + ", "
+                    + memberNumArray[i]                      / EXECUTION_TIMES + ", "
+                    + leaderNumInDepopulatedAreaArray[i]     / EXECUTION_TIMES + ", "
+                    + memberNumInDepopulatedAreaArray[i]     / EXECUTION_TIMES + ", "
+                    + leaderNumInPopulatedAreaArray[i]       / EXECUTION_TIMES + ", "
+                    + memberNumInPopulatedAreaArray[i]       / EXECUTION_TIMES + ", "
+                    + reciprocalistsArray[i]                 / EXECUTION_TIMES + ", "
+                    + rationalistsArray[i]                   / EXECUTION_TIMES + ", "
+                    + reciprocalMembersArray[i]              / EXECUTION_TIMES + ", "
                     + finishedTasksInDepopulatedAreaArray[i] / EXECUTION_TIMES + ", "
+                    + finishedTasksInPopulatedAreaArray[i]   / EXECUTION_TIMES + ", "
             ) ;
         }
     }
