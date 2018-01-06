@@ -367,6 +367,11 @@ public class OutPut implements SetParam {
                     cell.setCellStyle(style_header);
                     cell.setCellType(CellType.STRING);
                     cell.setCellValue(" is lonely or not");
+
+                    cell = row.createCell(colNumber++);
+                    cell.setCellStyle(style_header);
+                    cell.setCellType(CellType.STRING);
+                    cell.setCellValue(" is accompanied or not");
                 } else {
                     cell = row.createCell(colNumber++);
                     cell.setCellStyle(style_header);
@@ -436,6 +441,11 @@ public class OutPut implements SetParam {
                         cell.setCellStyle(style_string);
                         cell.setCellType(CellType.NUMERIC);
                         cell.setCellValue(agent.isLonely);
+
+                        cell = row.createCell(colNumber++);
+                        cell.setCellStyle(style_string);
+                        cell.setCellType(CellType.NUMERIC);
+                        cell.setCellValue(agent.isAccompanied);
 
                         //列幅の自動調整
                         for (int k = 0; k <= colNumber; k++) {
