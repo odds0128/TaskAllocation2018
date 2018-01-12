@@ -11,8 +11,8 @@ import java.util.*;
 public class Manager implements SetParam {
 //    private static Strategy strategy = new ProposedMethod();
 //    private static Strategy strategy = new ProposedMethodWithCheating();
-    private static Strategy strategy = new ReliabilityOriented();  // 信頼度の蒸発あり
-//    private static Strategy strategy = new ReliabilityOrientedWithCheating();
+//    private static Strategy strategy = new ReliabilityOriented();  // 信頼度の蒸発あり
+    private static Strategy strategy = new ReliabilityOrientedWithCheating();
 //    private static Strategy strategy = new ProximityOriented();
 //    private static Strategy strategy = new RoundRobin();
 
@@ -29,6 +29,7 @@ public class Manager implements SetParam {
     static int overflowTasks = 0;
     static int finishedTasks = 0;
     static int finishedTasksInDepopulatedArea = 0;
+    static int finishedTasksInPopulatedArea   = 0;
     static int processingTasks = 0;
     static int turn;
     private static Random randSeed;
@@ -45,15 +46,14 @@ public class Manager implements SetParam {
             FileReader fr = new FileReader("/Users/r.funato/IdeaProjects/TaskAllocation/src/RandomSeed.txt");
             BufferedReader br = new BufferedReader(fr);
             String line;
-            StringTokenizer token;
 
             int num = 0;
             long seed;
             System.out.println(strategy.getClass().getName());
+            System.out.println(" λ = " + ADDITIONAL_TASK_NUM);
 
             // num回実験
             while ((line = br.readLine()) != null) {
-                if (num == EXECUTION_TIMES) break;
                 System.out.println(++num + "回目");
                 seed = Long.parseLong(line);
                 randSeed = new Random(seed);
@@ -68,8 +68,9 @@ public class Manager implements SetParam {
 
                 // ターンの進行
                 for (turn = 1; turn <= MAX_TURN_NUM; turn++) {
-/*                    System.out.println("------------------------------------------------------------------");
-                    System.out.println("Turn: " + turn);
+/*
+                  System.out.println("------------------------------------------------------------------");
+                  System.out.println("Turn: " + turn);
 // */
                     // まずタスクキューにタスクを追加する
                     if (turn % TASK_ADDITION_SPAN == 0) {
@@ -97,7 +98,7 @@ public class Manager implements SetParam {
 /*
                     if( turn == SNAPSHOT_TIME ){
                         snapshot = takeAgentsSnapshot(agents);
-                        OutPut.writeGraphInformation(agents, "interim_report");
+//                        OutPut.writeGraphInformation(agents, "interim_report");
                         Agent.resetWorkHistory(agents);
                     }
 // */
@@ -113,9 +114,9 @@ public class Manager implements SetParam {
 
                     if (turn % (MAX_TURN_NUM / WRITING_TIMES) == 0) {
                         int rmNum = Agent.countReciprocalMember(agents);
-                        OutPut.aggregateData(finishedTasks, disposedTasks, overflowTasks, rmNum, finishedTasksInDepopulatedArea);
+                        OutPut.aggregateData(finishedTasks, disposedTasks, overflowTasks, rmNum, finishedTasksInDepopulatedArea, finishedTasksInPopulatedArea);
                         OutPut.indexIncrement();
-                        finishedTasks = 0; disposedTasks = 0; overflowTasks = 0; finishedTasksInDepopulatedArea = 0;
+                        finishedTasks = 0; disposedTasks = 0; overflowTasks = 0; finishedTasksInDepopulatedArea = 0; finishedTasksInPopulatedArea = 0;
                     }
 // */
                 // ここが1tickの最後の部分．次のtickまでにやることあったらここで．
@@ -123,7 +124,7 @@ public class Manager implements SetParam {
                 // ↑ 一回の実験のカッコ．以下は実験の合間で作業する部分
 
                 processingTasks = countProcessing();
-//                OutPut.showResults(turn, agents,num);
+                //                OutPut.showResults(turn, agents,num);
 //                OutPut.showLeaderRetirement(snapshot, agents);
                 if (num == EXECUTION_TIMES) break;
                 clearAll();
@@ -342,7 +343,8 @@ public class Manager implements SetParam {
     // 引数のリーダーが持つタスクの終了
     static void finishTask(Agent leader) {
         leader.ourTask = null;
-        if( leader.isLonely == 1 ) finishedTasksInDepopulatedArea++;
+        if( leader.isLonely == 1 )      finishedTasksInDepopulatedArea++;
+        if( leader.isAccompanied == 1 ) finishedTasksInPopulatedArea++;
         finishedTasks++;
     }
 
@@ -400,6 +402,7 @@ public class Manager implements SetParam {
         // この時点でのリーダーエージェントをsnapshotとして残しておく
         int size = agents.size();
         Agent ag;
+        int positiveAgents = 0, mPositiveAgents = 0;
 
         for( Agent a : agents ){
             temp.add( a.clone() );
@@ -407,9 +410,16 @@ public class Manager implements SetParam {
 
         for( int i = 0; i < size; i++ ){
             ag = temp.remove(0);
-            if( ag.e_leader > ag.e_member ) temp.add(ag);
+            if( ag.e_leader > ag.e_member ){
+                temp.add(ag);
+                for( double  rel: ag.reliabilities ){
+                    if( rel > 0 ) positiveAgents++;
+                }
+/*                System.out.println("positiveAgents: " + positiveAgents);
+                mPositiveAgents += positiveAgents;
+// */            }
         }
-        System.out.println("turn :" + SNAPSHOT_TIME + ", Leaders: " + temp.size());
+//        System.out.println("turn :" + SNAPSHOT_TIME + ", Leaders: " + temp.size() + ", Positive Agents: " + mPositiveAgents);
         assert size == agents.size() : "Deep copy failed";
         return temp;
     }

@@ -33,6 +33,7 @@ public class OutPut implements SetParam {
     static int[] memberNumInDepopulatedAreaArray     = new int[WRITING_TIMES];
     static int[] leaderNumInPopulatedAreaArray       = new int[WRITING_TIMES];
     static int[] memberNumInPopulatedAreaArray       = new int[WRITING_TIMES];
+    static int[] neetMembersArray                    = new int[WRITING_TIMES];
     static int[] reciprocalistsArray                 = new int[WRITING_TIMES];
     static int[] rationalistsArray                   = new int[WRITING_TIMES];
     static int[] reciprocalMembersArray              = new int[WRITING_TIMES];
@@ -45,13 +46,14 @@ public class OutPut implements SetParam {
             bw = new BufferedWriter(fw);
             pw = new PrintWriter(bw);
             pw.println("turn" + ", "
-                    + "FinishedTasks"                     + ", " + "DisposedTasks"                     + ", "
-                    + "OverflownTasks"                    + ", " + "CommunicationTime"                 + ", "
-                    + "Leader"                            + ", " + "Member"                            + ", "
-                    + "Lonely leaders"                    + ", " + "Lonely members"                    + ", "
-                    + "Accompanied leaders"               + ", " + "Accompanied members"               + ", "
-                    + "Reciprocal"                        + ", " + "Rational"                          + ", " + "ReciprocalMembers" + ","
-                    + "FinishedTasks in depopulated area" + ", " + "FinishedTasks in populated area"   + ", "
+                    + "FinishedTasks"                     + ", " //+ "DisposedTasks"                     + ", "+ "OverflownTasks"                    + ", "
+                    + "CommunicationTime"                 + ", "
+                    + "Leader"                            + ", " // + "Member"                            + ", "
+                    + "NEET Members"                      + ", "
+                   // + "Lonely leaders"                    + ", " + "Lonely members"                    + ", "
+                   // + "Accompanied leaders"               + ", " + "Accompanied members"               + ", "
+                   // + "Reciprocal"                        + ", " + "Rational"                          + ", " + "ReciprocalMembers" + ","
+                   // + "FinishedTasks in depopulated area" + ", " + "FinishedTasks in populated area"   + ", "
             );
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -61,8 +63,9 @@ public class OutPut implements SetParam {
     }
 
     static void aggregateAgentData(List<Agent> agents) {
-        leaderNumArray[index] += Agent._leader_num;
-        memberNumArray[index] += Agent._member_num;
+        leaderNumArray[index]   += Agent._leader_num;
+        neetMembersArray[index] += Agent.countNEETmembers(agents, MAX_TURN_NUM/WRITING_TIMES);
+/*        memberNumArray[index] += Agent._member_num;
 
         int a = Agent.countLeadersInDepopulatedArea(agents);
         int b = Agent.countLeadersInPopulatedArea(agents);
@@ -71,17 +74,20 @@ public class OutPut implements SetParam {
         memberNumInDepopulatedAreaArray[index] += (Agent._lonelyAgents.size() - a);
         leaderNumInPopulatedAreaArray[index]   += b;
         memberNumInPopulatedAreaArray[index]   += (Agent._lonelyAgents.size() - b);
+        // */
     }
-    static void aggregateData(int ft, int dt, int ot, int rm, int ftida) {
+    static void aggregateData(int ft, int dt, int ot, int rm, int ftida, int ftipa) {
         finishedTasksArray[index] += ft;
-        disposedTasksArray[index] += dt;
+        communicationDelayArray[index] += TransmissionPath.getCT();
+        /*        disposedTasksArray[index] += dt;
         overflownTasksArray[index] += ot;
         messagesArray[index] += TransmissionPath.messageNum;
-        communicationDelayArray[index] += TransmissionPath.getCT();
         reciprocalistsArray[index] += Agent._recipro_num;
         rationalistsArray[index] += Agent._rational_num;
         reciprocalMembersArray[index] += rm;
         finishedTasksInDepopulatedAreaArray[index] += ftida ;
+        finishedTasksInPopulatedAreaArray[index]   += ftipa ;
+// */
     }
     static void indexIncrement() {
         index = (index + 1) % WRITING_TIMES;
@@ -178,26 +184,44 @@ public class OutPut implements SetParam {
     }
 
     static void showLeaderRetirement(List<Agent> snapshot, List<Agent> agents) {
-        int change = 0, ln = 0, mp = 0;
+        int countPositiveBefore, countPositiveAfter ;
+        int mCountPositiveBefore = 0, mCountPositiveAfter = 0;
+        Agent ag;
         for (Agent ss : snapshot) {
+            ag = agents.get(ss.id);
             // まず, メンバになったのかどうか確認. なっていたら, その理由を究明
-            if (agents.get(ss.id).e_leader < agents.get(ss.id).e_member) {
-                change++;
-                // e_leaderが下がっていたら(リーダー適正値が低いがためにリーダーをやめた)
-                if (agents.get(ss.id).e_leader < ss.e_leader) {
-                    ln++;
+            if ( ag.e_leader < ag.e_member) {
+                countPositiveBefore = 0; countPositiveAfter = 0;
+                for( double rel: ag.reliabilities ){
+                    if( rel > 0 ) countPositiveAfter++;
                 }
-                // e_memberが上がっていたら(メンバ適正値が高いがためにメンバになった)
-                if (agents.get(ss.id).e_member > ss.e_member) {
-                    mp++;
-                }
-                System.out.println("ID: " + ss.id + ", el: " + ss.e_leader + " → " + agents.get(ss.id).e_leader
-                        + ", em: " + ss.e_member + " → " + agents.get(ss.id).e_member
-                        + " from: " + agents.get(ss.id).validatedTicks);
+                mCountPositiveBefore += countPositiveBefore;
+                mCountPositiveAfter  += countPositiveAfter ;
+                System.out.println("ID: " + ss.id
+                        + ", Positive Agents: " + countPositiveAfter
+                );
             }
         }
-        System.out.println("Leader to member: " + change + ", Negative Leader: " + ln + ", Positive Member: " + mp);
+        int countPositive, countLeader = 0;
+        int mCountPositive = 0;
+        System.out.println("Normal leaders↓");
+        for( Agent nAg: agents ){
+            if( nAg.e_leader > nAg.e_member ){
+                countLeader++;
+                countPositive = 0;
+                for( double rel: nAg.reliabilities ){
+                    if( rel > 0 ) countPositive++;
+                }
+                mCountPositive += countPositive;
+                System.out.println("ID: " + nAg.id + ", el: "
+                        + ", Positive Agents: " + countPositive
+                );
+            }
+        }
+        System.out.println("loser:  → " + mCountPositiveAfter/snapshot.size());
+        System.out.println("Surviver: " + mCountPositive/countLeader );
     }
+
 
     static void showResults(int turn, List<Agent> agents, int num) {
         int tempL = 0, tempM = 0;
@@ -545,10 +569,11 @@ public class OutPut implements SetParam {
         for (int i = 0; i < WRITING_TIMES; i++) {
             pw.println((i + 1) * (MAX_TURN_NUM / WRITING_TIMES)  + ", "
                     + finishedTasksArray[i]                  / EXECUTION_TIMES + ", "
-                    + disposedTasksArray[i]                  / EXECUTION_TIMES + ", "
-                    + overflownTasksArray[i]                 / EXECUTION_TIMES + ", "
                     + communicationDelayArray[i]             / (double) EXECUTION_TIMES + ", "
                     + leaderNumArray[i]                      / EXECUTION_TIMES + ", "
+                    + neetMembersArray[i]                    / EXECUTION_TIMES + ", "
+/*                    + disposedTasksArray[i]                  / EXECUTION_TIMES + ", "
+                    + overflownTasksArray[i]                 / EXECUTION_TIMES + ", "
                     + memberNumArray[i]                      / EXECUTION_TIMES + ", "
                     + leaderNumInDepopulatedAreaArray[i]     / EXECUTION_TIMES + ", "
                     + memberNumInDepopulatedAreaArray[i]     / EXECUTION_TIMES + ", "
@@ -559,7 +584,8 @@ public class OutPut implements SetParam {
                     + reciprocalMembersArray[i]              / EXECUTION_TIMES + ", "
                     + finishedTasksInDepopulatedAreaArray[i] / EXECUTION_TIMES + ", "
                     + finishedTasksInPopulatedAreaArray[i]   / EXECUTION_TIMES + ", "
-            ) ;
+// */
+                    );
         }
     }
 

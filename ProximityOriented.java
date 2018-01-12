@@ -194,11 +194,12 @@ public class ProximityOriented implements Strategy, SetParam {
     private void execute(Agent agent) {
         agent.executionTime--;
         if (agent.executionTime == 0) {
-            if (agent.role == LEADER) {
-                if (agent._coalition_check_end_time - Manager.getTicks() < COALLITION_CHECK_SPAN )
+            if (agent._coalition_check_end_time - Manager.getTicks() < COALLITION_CHECK_SPAN) {
+                if (agent.role == LEADER) {
                     for (Agent ag : agent.teamMembers) agent.workWithAsL[ag.id]++;
-            } else {
-                if (agent._coalition_check_end_time - Manager.getTicks() < COALLITION_CHECK_SPAN) agent.workWithAsM[agent.leader.id]++;
+                } else {
+                    agent.workWithAsM[agent.leader.id]++;
+                }
             }
             // 自分のサブタスクが終わったら役割適応度を1で更新して非活性状態へ
             agent.inactivateWithNoLearning(1);

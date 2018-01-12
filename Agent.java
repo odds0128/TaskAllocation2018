@@ -129,10 +129,6 @@ public class Agent implements SetParam , Cloneable{
         else strategy.act(this);
     }
 
-    /**
-     * doRoleメソッド
-     * eの値によって次の自分の役割を選択する.
-     */
     void selectRole() {
         validatedTicks = Manager.getTicks();
         if (epsilonGreedy()) {
@@ -167,6 +163,7 @@ public class Agent implements SetParam , Cloneable{
                     this.phase = WAITING;
                 }
             }
+        // εじゃない時
         } else {
             if (e_leader > e_member) {
                 role = LEADER;
@@ -200,7 +197,6 @@ public class Agent implements SetParam , Cloneable{
             }
         }
     }
-
     void selectRoleWithoutLearning() {
         validatedTicks = Manager.getTicks();
         int ran = _randSeed.nextInt(5);
@@ -268,10 +264,6 @@ public class Agent implements SetParam , Cloneable{
         this.validatedTicks = Manager.getTicks();
 //        System.out.println("ID: " + id + " is inactivated .");
     }
-
-    /*
-    学習しない戦略のinactivate
-     */
     void inactivateWithNoLearning(int success) {
         if (role == LEADER) {
             if (success == 1) {
@@ -339,11 +331,9 @@ public class Agent implements SetParam , Cloneable{
             executionTime = 1;
         }
     }
-
     void sendMessage(Agent from, Agent to, int type, Object o) {
         TransmissionPath.sendMessage(new Message(from, to, type, o));
     }
-
     void sendNegative(Agent agent, Agent to, int type, SubTask subTask) {
         if (type == PROPOSAL) {
             sendMessage(agent, to, REPLY, REJECT);
@@ -353,7 +343,6 @@ public class Agent implements SetParam , Cloneable{
 //            sendMessage(agent, to, SUBTASK_RESULT, subTask);
         }
     }
-
     public int calcExecutionTime(Agent agent) {
         SubTask st;
         st = agent.mySubTask;
@@ -362,9 +351,6 @@ public class Agent implements SetParam , Cloneable{
 // */
         return (int) Math.ceil((double) st.reqRes[st.resType] / (double) agent.res[st.resType]);
     }
-
-    // 自分がリーダーの時とか正しく拒否メッセージが送れていない
-
     /**
      * checkMessagesメソッド
      * selfに届いたメッセージcheckListの中から,
@@ -412,7 +398,6 @@ public class Agent implements SetParam , Cloneable{
             }
         }
     }
-
     /**
      * inTheListメソッド
      * 引数のエージェントが引数のリスト内にあればその索引を, いなければ-1を返す
@@ -423,7 +408,6 @@ public class Agent implements SetParam , Cloneable{
         }
         return -1;
     }
-
     /**
      * getAllocationメソッド
      * 引数のエージェントに割り当てるサブタスクを返す
@@ -438,35 +422,6 @@ public class Agent implements SetParam , Cloneable{
         }
         return null;
     }
-
-    /**
-     * removeAllocationメソッド
-     * 引数のエージェントへの割り当て情報を消す
-     */
-    protected void removeAllocation(Agent agent) {
-        int size = allocations.size();
-        for (int i = 0; i < size; i++) {
-            if (agent == allocations.get(i).getCandidate()) {
-                allocations.remove(i);
-                return;
-            }
-        }
-    }
-
-    /**
-     * removeTeamMemberメソッド
-     * 引数のエージェントへの割り当て情報を消す
-     */
-    protected void removeTeamMember(Agent agent) {
-        int size = teamMembers.size();
-        for (int i = 0; i < size; i++) {
-            if (agent == teamMembers.get(i)) {
-                teamMembers.remove(i);
-                return;
-            }
-        }
-    }
-
     protected boolean epsilonGreedy() {
         double random = _randSeed.nextDouble();
         if (random < ε) {
@@ -474,7 +429,6 @@ public class Agent implements SetParam , Cloneable{
         }
         return false;
     }
-
     /**
      * nextPhaseメソッド
      * phaseの変更をする
@@ -488,10 +442,17 @@ public class Agent implements SetParam , Cloneable{
 //        System.out.println(" phase : " + phase);
         this.validatedTicks = Manager.getTicks();
     }
-
     protected boolean canDo(Agent agent, SubTask st) {
         if (agent.res[st.resType] == st.reqRes[st.resType]) return true;
         else return false;
+    }
+
+    int countZeroReliability(List<Agent> agents){
+        int countZero = 0;
+        for( double rel: this.reliabilities ){
+            if( rel == 0 ) countZero++;
+        }
+        return countZero;
     }
 
     private static void setSeed(long seed) {
@@ -507,7 +468,76 @@ public class Agent implements SetParam , Cloneable{
         _recipro_num = 0;
         _coalition_check_end_time = SNAPSHOT_TIME;
         _lonelyAgents.clear();
+        _accompaniedAgents.clear();
         for (int i = 0; i < RESOURCE_TYPES; i++) resSizeArray[i] = 0;
+    }
+
+
+    // 結果集計用のstaticメソッド
+    public static void resetWorkHistory(List<Agent> agents){
+        for(Agent ag: agents){
+            for( int i= 0; i < AGENT_NUM; i++ ) {
+                ag.workWithAsM[i] = 0;
+            }
+        }
+        _coalition_check_end_time = MAX_TURN_NUM;
+    }
+    public static int countReciprocalMember(List<Agent> agents){
+        int temp = 0;
+        for( Agent ag: agents ){
+            if( ag.e_member > ag.e_leader && ag.principle == RECIPROCAL ){
+                temp++;
+            }
+        }
+        return temp;
+    }
+    static void makeLonelyORAccompaniedAgentList(List<Agent> agents){
+        for( Agent ag: agents ){
+            if( ag.isLonely == 1 ){
+                _lonelyAgents.add(ag.id);
+            }else if( ag.isAccompanied == 1 ){
+                _accompaniedAgents.add(ag.id);
+            }
+        }
+        System.out.println(_lonelyAgents.size());
+        System.out.println(_accompaniedAgents.size());
+    }
+    static int countLeadersInDepopulatedArea(List<Agent> agents){
+        int temp = 0;
+        for( int lag: _lonelyAgents ){
+            if( agents.get(lag).e_leader > agents.get(lag).e_member ){
+                temp++;
+            }
+        }
+        return temp;
+    }
+    static int countLeadersInPopulatedArea(List<Agent> agents){
+        int temp = 0;
+        for( int lag: _accompaniedAgents ){
+            if( agents.get(lag).e_leader > agents.get(lag).e_member ){
+                temp++;
+            }
+        }
+        return temp;
+    }
+
+    /**
+     * agentsの中でspan以上の時間誰からの依頼も受けずチームに参加していないメンバ数を返す．
+     * @param agents
+     * @param span
+     * @return
+     */
+    public static int countNEETmembers(List<Agent> agents, int span){
+        int neetM = 0;
+        int now = Manager.getTicks();
+        for( Agent ag: agents ){
+            if( ag.e_member > ag.e_leader ){
+                if ( now - ag.validatedTicks > span) {
+                    neetM++;
+                }
+            }
+        }
+        return neetM;
     }
 
     @Override
@@ -521,8 +551,6 @@ public class Agent implements SetParam , Cloneable{
         }
         return b;
     }
-// */
-
     @Override
     public String toString() {
         String sep = System.getProperty("line.separator");
@@ -606,56 +634,4 @@ public class Agent implements SetParam , Cloneable{
 
         return str.toString();
     }
-
-    public static void resetWorkHistory(List<Agent> agents){
-        for(Agent ag: agents){
-            for( int i= 0; i < AGENT_NUM; i++ ) {
-                ag.workWithAsM[i] = 0;
-            }
-        }
-        _coalition_check_end_time = MAX_TURN_NUM;
-    }
-
-    static public int countReciprocalMember(List<Agent> agents){
-        int temp = 0;
-        for( Agent ag: agents ){
-            if( ag.e_member > ag.e_leader && ag.principle == RECIPROCAL ){
-                temp++;
-            }
-        }
-        return temp;
-    }
-
-    static void makeLonelyORAccompaniedAgentList(List<Agent> agents){
-        for( Agent ag: agents ){
-            if( ag.isLonely == 1 ){
-                _lonelyAgents.add(ag.id);
-            }else if( ag.isAccompanied == 1 ){
-                _accompaniedAgents.add(ag.id);
-            }
-        }
-        System.out.println(_lonelyAgents.size());
-        System.out.println(_accompaniedAgents.size());
-    }
-
-    static int countLeadersInDepopulatedArea(List<Agent> agents){
-        int temp = 0;
-        for( int lag: _lonelyAgents ){
-            if( agents.get(lag).e_leader > agents.get(lag).e_member ){
-                temp++;
-            }
-        }
-        return temp;
-    }
-
-    static int countLeadersInPopulatedArea(List<Agent> agents){
-        int temp = 0;
-        for( int lag: _accompaniedAgents ){
-            if( agents.get(lag).e_leader > agents.get(lag).e_member ){
-                temp++;
-            }
-        }
-        return temp;
-    }
-
 }
