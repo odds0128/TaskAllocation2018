@@ -15,7 +15,6 @@ public class ProposedMethod implements SetParam, Strategy {
         }
     }
 
-    // */
     public void actAsLeader(Agent agent) {
         setPrinciple(agent);
         if (agent.phase == PROPOSITION) proposeAsL(agent);
@@ -23,7 +22,6 @@ public class ProposedMethod implements SetParam, Strategy {
         else if (agent.phase == EXECUTION) execute(agent);
         decreaseDEC(agent);
     }
-
     public void actAsMember(Agent agent){
         setPrinciple(agent);
         if (agent.phase == REPLY) replyAsM(agent);
@@ -56,7 +54,10 @@ public class ProposedMethod implements SetParam, Strategy {
     }
 
     private void replyAsM(Agent member) {
-        if (member.messages.size() == 0) return;     // メッセージをチェック
+        if (member.messages.size() == 0) {
+            member.inactivate(0);
+            return;
+        }
         member.leader = selectLeader(member, member.messages);
         if (member.leader != null) {
             member.joined = true;
@@ -86,7 +87,6 @@ public class ProposedMethod implements SetParam, Strategy {
         for (Message reply : leader.replies) {
             leader.replyNum++;
             candidate = reply.getFrom();
-            int i = leader.inTheList(candidate, leader.candidates);
             // 受諾なら信頼度をプラスに更新する
             if (reply.getReply() == ACCEPT) {
                 int rt = Manager.getTicks() - leader.start;             // 応答時間
@@ -96,6 +96,7 @@ public class ProposedMethod implements SetParam, Strategy {
             }
             // 拒否ならそのエージェントを候補リストから外し, 信頼度を0で更新する
             else {
+                int i = leader.inTheList(candidate, leader.candidates);
                 if (i > 0) leader.candidates.set(i, null);
                 leader.relAgents = renewRel(leader, candidate, 0);
             }
@@ -339,17 +340,17 @@ public class ProposedMethod implements SetParam, Strategy {
     private List<Agent> renewRel(Agent agent, Agent target, double evaluation) {
         assert evaluation <= 1 : "evaluation too big";
         assert !agent.equals(target) : "alert4";
-        double temp = agent.reliabilities[target.id];
+        double former = agent.reliabilities[target.id];
 //        if( Manager.getTicks() % 10000 == 0 ) System.out.println( evaluation );
         // 信頼度の更新式
         if (agent.role == LEADER) {
-            agent.reliabilities[target.id] = temp * (1.0 - α) + α * evaluation;
+            agent.reliabilities[target.id] = former * (1.0 - α) + α * evaluation;
         } else {
-            if (evaluation >= 0) agent.reliabilities[target.id] = temp * (1.0 - α) + α * evaluation;
-            else agent.reliabilities[target.id] = temp * (1.0 + α * evaluation);
+            if (evaluation >= 0) agent.reliabilities[target.id] = former * (1.0 - α) + α * evaluation;
+            else agent.reliabilities[target.id] = former * (1.0 + α * evaluation);
         }
 
-        assert agent.reliabilities[target.id] <= 1.0 : "Illegal reliability renewal ... Turn: " + Manager.getTicks() + ", ID: " + agent.id + ", target: " + target.id + ", change: " + temp + " → " + agent.reliabilities[target.id];
+        assert agent.reliabilities[target.id] <= 1.0 : "Illegal reliability renewal ... Turn: " + Manager.getTicks() + ", ID: " + agent.id + ", target: " + target.id + ", change: " + former + " → " + agent.reliabilities[target.id];
 
         /*
          信頼エージェントの更新
@@ -357,7 +358,7 @@ public class ProposedMethod implements SetParam, Strategy {
      //   */
         // 信頼度が下がった場合と上がった場合で比較の対象を変える
         // 上がった場合は順位が上のやつと比較して
-        if (evaluation > 0) {
+        if ( former < agent.reliabilities[target.id] ) {
             int index = agent.inTheList(target, agent.relRanking) - 1;    // targetの現在順位の上を持ってくる
             while (index > -1) {
                 // 順位が上のやつよりも信頼度が高くなったなら

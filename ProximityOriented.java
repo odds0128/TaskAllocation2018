@@ -60,7 +60,7 @@ public class ProximityOriented implements Strategy, SetParam {
         // 有効なReplyメッセージもResultメッセージもなければreturn
         if (leader.replies.size() == 0 && leader.results.size() == 0) return;
 
-        Agent candidate, member;
+        Agent candidate;
         for (Message reply : leader.replies) {
             leader.replyNum++;
             candidate = reply.getFrom();
@@ -126,7 +126,7 @@ public class ProximityOriented implements Strategy, SetParam {
             // 未割り当てのサブタスクがあっても最後のチャンス
             SubTask st;
             Agent lo;
-            int flag ;
+            int flag;
             if (reallocations.size() > 0 && losers.size() > 0) {
                 // 未割り当てのサブタスクひとつひとつに対して
                 for (int i = 0; i < reallocations.size(); i++) {
@@ -195,13 +195,6 @@ public class ProximityOriented implements Strategy, SetParam {
     private void execute(Agent agent) {
         agent.executionTime--;
         if (agent.executionTime == 0) {
-            if (agent._coalition_check_end_time - Manager.getTicks() < COALLITION_CHECK_SPAN) {
-                if (agent.role == LEADER) {
-                    for (Agent ag : agent.teamMembers) agent.workWithAsL[ag.id]++;
-                } else {
-                    agent.workWithAsM[agent.leader.id]++;
-                }
-            }
             // 自分のサブタスクが終わったら役割適応度を1で更新して非活性状態へ
             agent.inactivateWithNoLearning(1);
         }

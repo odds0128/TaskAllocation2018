@@ -8,6 +8,7 @@ import java.util.List;
  * メンバは信頼エージェントであるリーダーの要請を受ける
  */
 public class RoundRobin implements Strategy, SetParam {
+
     public void actAsLeader(Agent agent) {
         if (agent.phase == PROPOSITION) proposeAsL(agent);
         else if (agent.phase == REPORT) reportAsL(agent);

@@ -229,10 +229,10 @@ public class Agent implements SetParam , Cloneable{
      */
     void inactivate(int success) {
         if (role == LEADER) {
-            e_leader = e_leader * (1 - α) + α * success;
+            e_leader = e_leader * (1.0 - α) + α * success;
             assert e_leader <= 1 && e_leader >= 0 : "Illegal adaption to role";
         } else {
-            e_member = e_member * (1 - α) + α * success;
+            e_member = e_member * (1.0 - α) + α * success;
             assert e_member <= 1 && e_member >= 0 : "Illegal adaption to role";
         }
         if (role == LEADER) {
@@ -266,7 +266,6 @@ public class Agent implements SetParam , Cloneable{
             index = prevIndex;
         }
         this.validatedTicks = Manager.getTicks();
-//        System.out.println("ID: " + id + " is inactivated .");
     }
     void inactivateWithNoLearning(int success) {
         if (role == LEADER) {
@@ -350,9 +349,6 @@ public class Agent implements SetParam , Cloneable{
     public int calcExecutionTime(Agent agent) {
         SubTask st;
         st = agent.mySubTask;
-/*        System.out.println( st );
-        System.out.println( st.reqRes[st.resType] + ", " + agent.res[st.resType] );
-// */
         return (int) Math.ceil((double) st.reqRes[st.resType] / (double) agent.res[st.resType]);
     }
     /**
@@ -443,7 +439,6 @@ public class Agent implements SetParam , Cloneable{
         else if (this.phase == WAITING) this.phase = RECEPTION;
         else if (this.phase == REPORT) this.phase = EXECUTION;
         else if (this.phase == RECEPTION) this.phase = EXECUTION;
-//        System.out.println(" phase : " + phase);
         this.validatedTicks = Manager.getTicks();
     }
     protected boolean canDo(Agent agent, SubTask st) {

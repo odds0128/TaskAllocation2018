@@ -11,10 +11,10 @@ import java.util.*;
 public class Manager implements SetParam {
 //    private static Strategy strategy = new ProposedMethod();
 //    private static Strategy strategy = new ProposedMethodWithCheating();
-    private static Strategy strategy = new ReliabilityOriented();  // 信頼度の蒸発あり
+//    private static Strategy strategy = new ReliabilityOriented();  // 信頼度の蒸発あり
 //    private static Strategy strategy = new ReliabilityOrientedWithCheating();
 //    private static Strategy strategy = new ProximityOriented();
-//    private static Strategy strategy = new RoundRobin();
+    private static Strategy strategy = new RoundRobin();
 
     static private long    _seed ;
     private static Random _randSeed;
