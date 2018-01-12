@@ -5,8 +5,8 @@
 
 interface SetParam {
     // 環境の設定( 変更していく部分 )
-    int EXECUTION_TIMES = 5;            // 実験の回数
-    int MAX_TURN_NUM    = 5000000;       // 一回の実験のターン数
+    int EXECUTION_TIMES = 2;            // 実験の回数
+    int MAX_TURN_NUM    = 100000;       // 一回の実験のターン数
     int WRITING_TIMES   = 1000;         // データのファイルへの出力回数
 
     // 結果表示のためのパラメータ
@@ -50,12 +50,12 @@ interface SetParam {
     boolean PROCESSING = true;
 
     // エージェント
-    int LEADER = 1 ;
-    int JONE_DOE   = 0 ;
-    int MEMBER = -1;
-    int RATIONAL = 0;
-    int RECIPROCAL = 1;
-    boolean ACCEPT = true;
+    int LEADER     = 1    ;
+    int JONE_DOE   = 0    ;
+    int MEMBER     = -1   ;
+    int RATIONAL   = 0    ;
+    int RECIPROCAL = 1    ;
+    boolean ACCEPT = true ;
     boolean REJECT = false;
 
     // メッセージ

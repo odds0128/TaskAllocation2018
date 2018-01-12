@@ -8,13 +8,16 @@ import java.util.List;
 public class ReliabilityOriented implements SetParam, Strategy {
     static final double γ = γ_r;
 
-    public void act(Agent agent) {
-        assert agent.relAgents.size() <= MAX_RELIABLE_AGENTS : "alert3";
-
+    public void actAsLeader(Agent agent) {
         setPrinciple(agent);
         if (agent.phase == PROPOSITION) proposeAsL(agent);
-        else if (agent.phase == REPLY) replyAsM(agent);
         else if (agent.phase == REPORT) reportAsL(agent);
+        else if (agent.phase == EXECUTION) execute(agent);
+        decreaseDEC(agent);
+    }
+    public void actAsMember(Agent agent){
+        setPrinciple(agent);
+        if (agent.phase == REPLY) replyAsM(agent);
         else if (agent.phase == RECEPTION) receiveAsM(agent);
         else if (agent.phase == EXECUTION) execute(agent);
         decreaseDEC(agent);
@@ -41,7 +44,6 @@ public class ReliabilityOriented implements SetParam, Strategy {
         leader.candidates = selectMembers(leader, leader.ourTask.subTasks);   // メッセージ送信
         leader.nextPhase();  // 次のフェイズへ
     }
-
     private void replyAsM(Agent member) {
         if (member.messages.size() == 0) return;     // メッセージをチェック
         member.leader = selectLeader(member, member.messages);
@@ -56,7 +58,6 @@ public class ReliabilityOriented implements SetParam, Strategy {
             member.nextPhase();
         }
     }
-
     private void reportAsL(Agent leader) {
         // 有効なReplyメッセージがなければreturn
         if (leader.replies.size() == 0) return;
@@ -180,7 +181,6 @@ public class ReliabilityOriented implements SetParam, Strategy {
         }
         leader.replies.clear();
     }
-
     private void receiveAsM(Agent member) {
         // リーダーからの返事が来るまで待つ
         if (member.messages.size() == 0) return;
@@ -216,7 +216,6 @@ public class ReliabilityOriented implements SetParam, Strategy {
             agent.inactivate(1);
         }
     }
-
     /**
      * selectMembersメソッド
      * 優先度の高いエージェントから(すなわち添字の若い信頼エージェントから)選択する
@@ -246,13 +245,11 @@ public class ReliabilityOriented implements SetParam, Strategy {
         }
         return temp;
     }
-
     /**
      * selectLeaderメソッド
      * メンバがどのリーダーの要請を受けるかを判断する
      * 信頼エージェントのリストにあるリーダーエージェントからの要請を受ける
      */
-    // 互恵主義と合理主義のどちらかによって行動を変える
     public Agent selectLeader(Agent member, List<Message> messages) {
         int size = messages.size();
         Message message;

@@ -8,14 +8,15 @@ import java.util.List;
  * メンバは信頼エージェントであるリーダーの要請を受ける
  */
 public class ProximityOriented implements Strategy, SetParam {
-    public void act(Agent agent) {
-        if ((Manager.getTicks() - agent.validatedTicks) > ROLE_RENEWAL_TICKS) agent.inactivateWithNoLearning(0);
 
-        else
-// */
+    public void actAsLeader(Agent agent) {
         if (agent.phase == PROPOSITION) proposeAsL(agent);
-        else if (agent.phase == WAITING ) replyAsM(agent);
         else if (agent.phase == REPORT) reportAsL(agent);
+        else if (agent.phase == EXECUTION) execute(agent);
+    }
+
+    public void actAsMember(Agent agent){
+        if (agent.phase == REPLY) replyAsM(agent);
         else if (agent.phase == RECEPTION) receiveAsM(agent);
         else if (agent.phase == EXECUTION) execute(agent);
     }

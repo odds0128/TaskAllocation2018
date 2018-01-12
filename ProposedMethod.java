@@ -16,15 +16,20 @@ public class ProposedMethod implements SetParam, Strategy {
     }
 
     // */
-    public void act(Agent agent) {
-        assert agent.relAgents.size() <= MAX_RELIABLE_AGENTS : "alert3";
+    public void actAsLeader(Agent agent) {
         setPrinciple(agent);
         if (agent.phase == PROPOSITION) proposeAsL(agent);
-        else if (agent.phase == REPLY) replyAsM(agent);
         else if (agent.phase == REPORT) reportAsL(agent);
+        else if (agent.phase == EXECUTION) execute(agent);
+        decreaseDEC(agent);
+    }
+
+    public void actAsMember(Agent agent){
+        setPrinciple(agent);
+        if (agent.phase == REPLY) replyAsM(agent);
         else if (agent.phase == RECEPTION) receiveAsM(agent);
         else if (agent.phase == EXECUTION) execute(agent);
-        agent.relAgents = decreaseDEC(agent);
+        decreaseDEC(agent);
     }
 
     private void proposeAsL(Agent leader) {

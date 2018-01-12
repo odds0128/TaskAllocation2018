@@ -123,10 +123,14 @@ public class Agent implements SetParam , Cloneable{
         }
     }
 
-    void act() {
+    void actAsLeader() {
 //        if (strategy.getClass().getName() == "RandomStrategy") strategy.act(this, action);
-        if (phase == SELECT_ROLE) selectRole();
-        else strategy.act(this);
+        strategy.actAsLeader(this);
+    }
+
+    void actAsMember() {
+//        if (strategy.getClass().getName() == "RandomStrategy") strategy.act(this, action);
+        strategy.actAsMember(this);
     }
 
     void selectRole() {

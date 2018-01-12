@@ -12,17 +12,20 @@ import java.util.List;
 public class ReliabilityOrientedWithCheating implements SetParam, Strategy {
     static final double γ = γ_r;
 
-    public void act(Agent agent) {
-        assert agent.relAgents.size() <= MAX_RELIABLE_AGENTS : "alert3";
-        if ((Manager.getTicks() - agent.validatedTicks) > ROLE_RENEWAL_TICKS) agent.inactivate(0);
-        else {
-            setPrinciple(agent);
-            if (agent.phase == PROPOSITION) proposeAsL(agent);
-            else if (agent.phase == REPLY) replyAsM(agent);
-            else if (agent.phase == REPORT) reportAsL(agent);
-            else if (agent.phase == RECEPTION) receiveAsM(agent);
-            else if (agent.phase == EXECUTION) execute(agent);
-        }
+    public void actAsLeader(Agent agent) {
+        setPrinciple(agent);
+        if (agent.phase == PROPOSITION) proposeAsL(agent);
+        else if (agent.phase == REPORT) reportAsL(agent);
+        else if (agent.phase == EXECUTION) execute(agent);
+        decreaseDEC(agent);
+    }
+
+    public void actAsMember(Agent agent){
+        setPrinciple(agent);
+        if (agent.phase == REPLY) replyAsM(agent);
+        else if (agent.phase == RECEPTION) receiveAsM(agent);
+        else if (agent.phase == EXECUTION) execute(agent);
+        decreaseDEC(agent);
     }
 
     private void proposeAsL(Agent leader) {

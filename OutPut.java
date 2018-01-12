@@ -20,6 +20,8 @@ public class OutPut implements SetParam {
     static Workbook book = null;
     static FileOutputStream fout = null;
 
+    static OutPut _syngleton = new OutPut();
+
     static int index = 0;
 
     static int[] finishedTasksArray                  = new int[WRITING_TIMES];
@@ -40,7 +42,7 @@ public class OutPut implements SetParam {
     static int[] finishedTasksInDepopulatedAreaArray = new int[WRITING_TIMES];
     static int[] finishedTasksInPopulatedAreaArray   = new int[WRITING_TIMES];
 
-    OutPut() {
+    private OutPut() {
         try {
             fw = new FileWriter("/Users/r.funato/IdeaProjects/TaskAllocation/src/output1.csv", false);
             bw = new BufferedWriter(fw);

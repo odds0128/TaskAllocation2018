@@ -11,28 +11,24 @@ import java.util.*;
 public class Manager implements SetParam {
 //    private static Strategy strategy = new ProposedMethod();
 //    private static Strategy strategy = new ProposedMethodWithCheating();
-//    private static Strategy strategy = new ReliabilityOriented();  // 信頼度の蒸発あり
-    private static Strategy strategy = new ReliabilityOrientedWithCheating();
+    private static Strategy strategy = new ReliabilityOriented();  // 信頼度の蒸発あり
+//    private static Strategy strategy = new ReliabilityOrientedWithCheating();
 //    private static Strategy strategy = new ProximityOriented();
 //    private static Strategy strategy = new RoundRobin();
 
-    static private OutPut outPut = new OutPut();
+    static private long    _seed ;
+    private static Random _randSeed;
 
     static Queue<Task> taskQueue;
     static int[][] distance = new int[AGENT_NUM][AGENT_NUM];
     private static Agent[][] grids = new Agent[ROW][COLUMN];
     private static List<Agent> agents;
-    private static List<Agent> leaders;
-    private static List<Agent> members;
-    private static List<Agent> freelancer;
     static int disposedTasks = 0;
     static int overflowTasks = 0;
     static int finishedTasks = 0;
     static int finishedTasksInDepopulatedArea = 0;
     static int finishedTasksInPopulatedArea   = 0;
-    static int processingTasks = 0;
     static int turn;
-    private static Random randSeed;
     static List<Agent> snapshot = new ArrayList<>();
 
     public static void main(String[] args) {
@@ -42,77 +38,40 @@ public class Manager implements SetParam {
         assert COALLITION_CHECK_SPAN < MAX_TURN_NUM : "a";
 
         try {
+            int writeResultsSpan = MAX_TURN_NUM / WRITING_TIMES;
+
             // seedの読み込み
             FileReader fr = new FileReader("/Users/r.funato/IdeaProjects/TaskAllocation/src/RandomSeed.txt");
             BufferedReader br = new BufferedReader(fr);
             String line;
 
             int num = 0;
-            long seed;
             System.out.println(strategy.getClass().getName());
             System.out.println(" λ = " + ADDITIONAL_TASK_NUM);
 
             // num回実験
             while ((line = br.readLine()) != null) {
                 System.out.println(++num + "回目");
-                seed = Long.parseLong(line);
-                randSeed = new Random(seed);
-
-                // タスクの生成
-                taskQueue = new LinkedList<>();
-                taskQueue.add(new Task(seed));
-                for (int i = 1; i < INITIAL_TASK_NUM; i++) taskQueue.add(new Task());
-
-                // エージェントの生成
-                agents = generateAgents(seed, strategy);
+                // シード，タスク，エージェントの初期化処理
+                initiate(line);
 
                 // ターンの進行
                 for (turn = 1; turn <= MAX_TURN_NUM; turn++) {
-/*
-                  System.out.println("------------------------------------------------------------------");
-                  System.out.println("Turn: " + turn);
-// */
-                    // まずタスクキューにタスクを追加する
-                    if (turn % TASK_ADDITION_SPAN == 0) {
-                        int room = TASK_QUEUE_SIZE - taskQueue.size();    // タスクキューの空き
-                        // タスクキューに空きが十分にあるなら, 普通にぶち込む
-                        if ( ADDITIONAL_TASK_NUM <= room ) {
-                            for (int i = 0; i < ADDITIONAL_TASK_NUM; i++) taskQueue.add(new Task());
-                        }
-                        // タスクキューからタスクがはみ出そうなら, 入れるだけ入れてはみ出る分はオーバーフローとする
-                        else{
-                            int i;
-                            for (i = 0; i < room; i++) taskQueue.add(new Task());
-                            overflowTasks += ADDITIONAL_TASK_NUM - i;
-                        }
-                    }
-// */
-                    // まず役割のない奴が役割を決めてからスタート
-                    freelancer = getRoleList(agents, JONE_DOE);
-                    actRandom(freelancer);
-
-                    // フリーランサーが役割を選び終わった後で数える
-                    if (turn % (MAX_TURN_NUM / WRITING_TIMES) == 0) {
+                    addNewTasksToQueue();
+                    actFreeLancer();
+                    if (turn % writeResultsSpan == 0) {
                         OutPut.aggregateAgentData(agents);
                     }
 /*
                     if( turn == SNAPSHOT_TIME ){
                         snapshot = takeAgentsSnapshot(agents);
-//                        OutPut.writeGraphInformation(agents, "interim_report");
+                        OutPut.writeGraphInformation(agents, "interim_report");
                         Agent.resetWorkHistory(agents);
                     }
 // */
-                    leaders = getRoleList(agents, LEADER);
-                    members = getRoleList(agents, MEMBER);
+                    actLeadersAndMembers();
 
-                    TransmissionPath.transmit();                // 通信遅延あり
-//                    TransmissionPath.transmitWithNoDelay();   // 通信遅延なし
-                    checkMessage(agents);          // 要請の確認, 無効なメッセージに対する返信
-
-                    actRandom(leaders);            // メンバの選定,　要請の送信
-                    actRandom(members);            // 要請があるメンバ達はそれに返事をする
-
-                    if (turn % (MAX_TURN_NUM / WRITING_TIMES) == 0) {
+                    if (turn % writeResultsSpan == 0) {
                         int rmNum = Agent.countReciprocalMember(agents);
                         OutPut.aggregateData(finishedTasks, disposedTasks, overflowTasks, rmNum, finishedTasksInDepopulatedArea, finishedTasksInPopulatedArea);
                         OutPut.indexIncrement();
@@ -123,8 +82,7 @@ public class Manager implements SetParam {
                 }
                 // ↑ 一回の実験のカッコ．以下は実験の合間で作業する部分
 
-                processingTasks = countProcessing();
-                //                OutPut.showResults(turn, agents,num);
+//                OutPut.showResults(turn, agents,num);
 //                OutPut.showLeaderRetirement(snapshot, agents);
                 if (num == EXECUTION_TIMES) break;
                 clearAll();
@@ -134,7 +92,7 @@ public class Manager implements SetParam {
 //            OutPut.writeReliabilities(turn,agents);
             OutPut.writeResults();
 //            OutPut.writeGraphInformation(agents, "result");
-            outPut.fileClose();
+            OutPut.fileClose();
 // */
             br.close();
         } catch (FileNotFoundException e) {
@@ -145,22 +103,39 @@ public class Manager implements SetParam {
     }
 
 
-    static List<Agent> generateAgents(long seed, Strategy strategy) {
+    // 環境の準備に使うメソッド
+    private static void initiate(String line){
+        // シードの設定
+        setSeed(line);
+        // タスクキューの初期化
+        taskQueue = new LinkedList<>();
+        taskQueue.add(new Task(_seed));
+        for (int i = 1; i < INITIAL_TASK_NUM; i++) taskQueue.add(new Task());
+
+        // エージェントの初期化
+        agents = generateAgents(strategy);
+
+    }
+    private static void setSeed( String line ){
+        _seed     = Long.parseLong(line);
+        _randSeed = new Random(_seed);
+    }
+    private static List<Agent> generateAgents(Strategy strategy) {
         Agent temp;
         List tempList = new ArrayList();
-        int randX = randSeed.nextInt(COLUMN);
-        int randY = randSeed.nextInt(ROW);
+        int randX = _randSeed.nextInt(COLUMN);
+        int randY = _randSeed.nextInt(ROW);
         while (checkDuplication(randX, randY) == false) {
-            randX = randSeed.nextInt(COLUMN);
-            randY = randSeed.nextInt(ROW);
+            randX = _randSeed.nextInt(COLUMN);
+            randY = _randSeed.nextInt(ROW);
         }
-        temp = new Agent(seed, randX, randY, strategy);
+        temp = new Agent(_seed, randX, randY, strategy);
         grids[temp.y][temp.x] = temp;
         tempList.add(temp);
         for (int i = 1; i < AGENT_NUM; i++) {
             while (checkDuplication(randX, randY) == false) {
-                randX = randSeed.nextInt(COLUMN);
-                randY = randSeed.nextInt(ROW);
+                randX = _randSeed.nextInt(COLUMN);
+                randY = _randSeed.nextInt(ROW);
             }
             temp = new Agent(randX, randY, strategy);
             grids[temp.y][temp.x] = temp;
@@ -170,28 +145,19 @@ public class Manager implements SetParam {
         Agent.makeLonelyORAccompaniedAgentList(tempList);
         return tempList;
     }
-
     static Agent getAgentRandomly(Agent self, List<Agent> exceptions) {
-        int random = randSeed.nextInt(agents.size());
+        int random = _randSeed.nextInt(agents.size());
         Agent candidate = agents.get(random);
         while (candidate.equals(self) || self.inTheList(candidate, exceptions) > 0) {
-            random = randSeed.nextInt(agents.size());
+            random = _randSeed.nextInt(agents.size());
             candidate = agents.get(random);
         }
         return candidate;
     }
-
     static boolean checkDuplication(int x, int y) {
         if (grids[y][x] == null) return true;
         else return false;
     }
-
-    /**
-     * setRelAgメソッド
-     *
-     * @param agents
-     * @return agents_in_depopulation_area;
-     */
     static void setRelAg(List<Agent> agents) {
         int dist = 0;
         List<Agent> tempList = new ArrayList();
@@ -281,26 +247,23 @@ public class Manager implements SetParam {
                 Agent ag;
                 agent = agents.get(i);
                 while (temp.size() != 0) {
-                    rand = randSeed.nextInt(temp.size());
+                    rand = _randSeed.nextInt(temp.size());
                     ag = temp.remove(rand);
                     if (!ag.equals(agent)) agent.relRanking.add(ag);
                 }
             }
         }
     }
-
     static int inTheList(Agent a, List<Agent> agents) {
         for (int i = 0; i < agents.size(); i++) {
             if (a == agents.get(i)) return i;
         }
         return -1;
     }
-
     static int calcManhattan(Agent from, Agent to) {
         int distance = Math.abs(from.x - to.x) + Math.abs(from.y - to.y);
         return (int) Math.ceil((double) (distance * 10) / (double) (ROW + COLUMN - 2));
     }
-
     // taskQueueにあるタスクをリーダーに渡すメソッド
     static Task getTask() {
         Task temp;
@@ -308,46 +271,76 @@ public class Manager implements SetParam {
         if (temp != null) temp.flag = PROCESSING;
         return temp;
     }
-
     // 現在のターン数を返すメソッド
     static int getTicks() {
         return turn;
     }
 
-    // タスクキューからタスクがオーバーフローしたか判定するメソッド
-    static boolean taskOverflows() {
-        return (overflowTasks > 0);
-    }
-
-    static int countProcessing() {
-        int count = 0;
-        for (Agent leader : agents) {
-            if (leader.role == LEADER) {
-                if (leader.ourTask != null) count++;
+    static void addNewTasksToQueue(){
+        if (turn % TASK_ADDITION_SPAN == 0) {
+            int room = TASK_QUEUE_SIZE - taskQueue.size();    // タスクキューの空き
+            // タスクキューに空きが十分にあるなら, 普通にぶち込む
+            if ( ADDITIONAL_TASK_NUM <= room ) {
+                for (int i = 0; i < ADDITIONAL_TASK_NUM; i++) taskQueue.add(new Task());
+            }
+            // タスクキューからタスクがはみ出そうなら, 入れるだけ入れてはみ出る分はオーバーフローとする
+            else{
+                int i;
+                for (i = 0; i < room; i++) taskQueue.add(new Task());
+                overflowTasks += ADDITIONAL_TASK_NUM - i;
             }
         }
-        return count;
+    }
+    static void actFreeLancer(){
+        List<Agent> freelancer;
+        freelancer = getRoleList(agents, JONE_DOE);
+        actRandom(freelancer, "select role");
+    }
+    static void actLeadersAndMembers(){
+        List<Agent> leaders, members;
+        leaders = getRoleList(agents, LEADER);
+        members = getRoleList(agents, MEMBER);
+
+        TransmissionPath.transmit();                // 通信遅延あり
+//                    TransmissionPath.transmitWithNoDelay();   // 通信遅延なし
+        checkMessage(agents);          // 要請の確認, 無効なメッセージに対する返信
+
+        actRandom(leaders, "act as leader");            // メンバの選定,　要請の送信
+        actRandom(members, "act as member");            // 要請があるメンバ達はそれに返事をする
+    }
+    private static void actRandom(List<Agent> agents, String command) {
+        List<Agent> temp = new ArrayList<>(agents);
+        int rand;
+        if( command == "select role" ) {
+            while (temp.size() != 0) {
+                rand = _randSeed.nextInt(temp.size());
+                temp.remove(rand).selectRole();
+            }
+        }else if( command == "act as member" ){
+            while (temp.size() != 0) {
+                rand = _randSeed.nextInt(temp.size());
+                temp.remove(rand).actAsMember();
+            }
+        }else if( command == "act as leader" ){
+            while (temp.size() != 0) {
+                rand = _randSeed.nextInt(temp.size());
+                temp.remove(rand).actAsLeader();
+            }
+        }
+        temp.clear();
+
     }
 
-    /**
-     * disposeTaskメソッド
-     * 引数のリーダーが持つタスクを放棄する
-     * 2017/11/02 廃棄タスクはタスクキューに入れ直すことにする
-     * 2017/11/25 再び破棄する方式に. 今後その方針を変える必要はおそらくない
-     */
     static void disposeTask(Agent leader) {
         disposedTasks++;
         leader.ourTask = null;
     }
-
-    // 引数のリーダーが持つタスクの終了
     static void finishTask(Agent leader) {
         leader.ourTask = null;
         if( leader.isLonely == 1 )      finishedTasksInDepopulatedArea++;
         if( leader.isAccompanied == 1 ) finishedTasksInPopulatedArea++;
         finishedTasks++;
     }
-
     static List<Agent> getRoleList(List<Agent> agents, int role) {
         List<Agent> temp = new ArrayList<>();
         for (Agent ag : agents) {
@@ -355,49 +348,10 @@ public class Manager implements SetParam {
         }
         return temp;
     }
-
-    // 順番をランダムに行動させる部分
-    private static void actRandom(List<Agent> agents) {
-        List<Agent> temp = new ArrayList<>(agents);
-        int rand;
-        while (temp.size() != 0) {
-            rand = randSeed.nextInt(temp.size());
-            temp.remove(rand).act();
-        }
-        temp.clear();
-    }
-
     private static void checkMessage(List<Agent> agents) {
         for (Agent ag : agents) ag.checkMessages(ag);
     }
-
-    // 次のタームに行く前にあらゆるパラメータを初期化する部分
-    private static void clearAll() {
-        taskQueue.clear();
-        agents = null;
-        snapshot = null;
-        disposedTasks = 0;
-        finishedTasks = 0;
-        overflowTasks = 0;
-        processingTasks = 0;
-        for (int i = 0; i < AGENT_NUM; i++) {
-            for (int j = 0; j < AGENT_NUM; j++) {
-                distance[i][j] = 0;
-            }
-        }
-        for (int i = 0; i < ROW; i++) {
-            for (int j = 0; j < COLUMN; j++) {
-                grids[i][j] = null;
-            }
-        }
-        TransmissionPath.clearTP();
-        SubTask.clearST();
-        Task.clearT();
-        Agent.clearA();
-        if (strategy.getClass().getName() == "ProposedMethod") ProposedMethod.clearPM();
-    }
-
-    static private List<Agent> takeAgentsSnapshot(List<Agent> agents){
+    private static  List<Agent> takeAgentsSnapshot(List<Agent> agents){
         List<Agent> temp = new ArrayList<>();
         // この時点でのリーダーエージェントをsnapshotとして残しておく
         int size = agents.size();
@@ -422,5 +376,29 @@ public class Manager implements SetParam {
 //        System.out.println("turn :" + SNAPSHOT_TIME + ", Leaders: " + temp.size() + ", Positive Agents: " + mPositiveAgents);
         assert size == agents.size() : "Deep copy failed";
         return temp;
+    }
+
+    private static void clearAll() {
+        taskQueue.clear();
+        agents = null;
+        snapshot = null;
+        disposedTasks = 0;
+        finishedTasks = 0;
+        overflowTasks = 0;
+        for (int i = 0; i < AGENT_NUM; i++) {
+            for (int j = 0; j < AGENT_NUM; j++) {
+                distance[i][j] = 0;
+            }
+        }
+        for (int i = 0; i < ROW; i++) {
+            for (int j = 0; j < COLUMN; j++) {
+                grids[i][j] = null;
+            }
+        }
+        TransmissionPath.clearTP();
+        SubTask.clearST();
+        Task.clearT();
+        Agent.clearA();
+        if (strategy.getClass().getName() == "ProposedMethod") ProposedMethod.clearPM();
     }
 }
