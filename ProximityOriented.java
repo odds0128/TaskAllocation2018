@@ -23,19 +23,7 @@ public class ProximityOriented implements Strategy, SetParam {
 
     private void proposeAsL(Agent leader) {
         leader.ourTask = Manager.getTask();
-        if (leader.ourTask == null) {
-            leader.candidates.clear();
-            leader.teamMembers.clear();
-            leader.allocations.clear();
-            leader.replies.clear();
-            leader.results.clear();
-            leader.restSubTask = 0;
-            leader.replyNum = 0;
-            leader.joined = false;
-            leader.role  = LEADER ;
-            leader.phase = PROPOSITION;
-            return;
-        }
+        if (leader.ourTask == null) return;
         leader.restSubTask = leader.ourTask.subTaskNum;                       // 残りサブタスク数を設定
         leader.selectSubTask();
         leader.candidates = selectMembers(leader, leader.ourTask.subTasks);   // メッセージ送信

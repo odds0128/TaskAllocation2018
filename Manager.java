@@ -11,10 +11,10 @@ import java.util.*;
 public class Manager implements SetParam {
 //    private static Strategy strategy = new ProposedMethod();
 //    private static Strategy strategy = new ProposedMethodWithCheating();
-//    private static Strategy strategy = new ReliabilityOriented();  // 信頼度の蒸発あり
+    private static Strategy strategy = new ReliabilityOriented();  // 信頼度の蒸発あり
 //    private static Strategy strategy = new ReliabilityOrientedWithCheating();
 //    private static Strategy strategy = new ProximityOriented();
-    private static Strategy strategy = new RoundRobin();
+//    private static Strategy strategy = new RoundRobin();
 
     static private long    _seed ;
     private static Random _randSeed;
@@ -69,6 +69,10 @@ public class Manager implements SetParam {
                         Agent.resetWorkHistory(agents);
                     }
 // */
+                    TransmissionPath.transmit();                // 通信遅延あり
+//                    TransmissionPath.transmitWithNoDelay();   // 通信遅延なし
+                    checkMessage(agents);          // 要請の確認, 無効なメッセージに対する返信
+
                     actLeadersAndMembers();
 
                     if (turn % writeResultsSpan == 0) {
@@ -293,18 +297,16 @@ public class Manager implements SetParam {
     }
     static void actFreeLancer(){
         List<Agent> freelancer;
-        freelancer = getRoleList(agents, JONE_DOE);
+        freelancer = getFreelancerList(agents);
         actRandom(freelancer, "select role");
     }
     static void actLeadersAndMembers(){
-        List<Agent> leaders, members;
-        leaders = getRoleList(agents, LEADER);
-        members = getRoleList(agents, MEMBER);
-
-        TransmissionPath.transmit();                // 通信遅延あり
-//                    TransmissionPath.transmitWithNoDelay();   // 通信遅延なし
-        checkMessage(agents);          // 要請の確認, 無効なメッセージに対する返信
-
+        List<Agent> leaders = new ArrayList<>();
+        List<Agent> members = new ArrayList<>();
+        for (Agent ag : agents) {
+            if (ag.role == MEMBER)     members.add(ag);
+            else if(ag.role == LEADER) leaders.add(ag);
+        }
         actRandom(leaders, "act as leader");            // メンバの選定,　要請の送信
         actRandom(members, "act as member");            // 要請があるメンバ達はそれに返事をする
     }
@@ -341,10 +343,10 @@ public class Manager implements SetParam {
         if( leader.isAccompanied == 1 ) finishedTasksInPopulatedArea++;
         finishedTasks++;
     }
-    static List<Agent> getRoleList(List<Agent> agents, int role) {
+    static List<Agent> getFreelancerList(List<Agent> agents) {
         List<Agent> temp = new ArrayList<>();
         for (Agent ag : agents) {
-            if (ag.role == role) temp.add(ag);
+            if (ag.role == JONE_DOE) temp.add(ag);
         }
         return temp;
     }

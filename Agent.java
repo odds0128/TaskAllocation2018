@@ -124,12 +124,9 @@ public class Agent implements SetParam , Cloneable{
     }
 
     void actAsLeader() {
-//        if (strategy.getClass().getName() == "RandomStrategy") strategy.act(this, action);
         strategy.actAsLeader(this);
     }
-
     void actAsMember() {
-//        if (strategy.getClass().getName() == "RandomStrategy") strategy.act(this, action);
         strategy.actAsMember(this);
     }
 
@@ -227,7 +224,7 @@ public class Agent implements SetParam , Cloneable{
      * inactiveメソッド
      * チームが解散になったときに待機状態になる.
      */
-    void inactivate(int success) {
+    void inactivate(double success) {
         if (role == LEADER) {
             e_leader = e_leader * (1.0 - α) + α * success;
             assert e_leader <= 1 && e_leader >= 0 : "Illegal adaption to role";

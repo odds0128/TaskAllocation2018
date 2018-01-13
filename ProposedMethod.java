@@ -54,10 +54,7 @@ public class ProposedMethod implements SetParam, Strategy {
     }
 
     private void replyAsM(Agent member) {
-        if (member.messages.size() == 0) {
-            member.inactivate(0);
-            return;
-        }
+        if (member.messages.size() == 0) { return; }
         member.leader = selectLeader(member, member.messages);
         if (member.leader != null) {
             member.joined = true;
@@ -70,10 +67,6 @@ public class ProposedMethod implements SetParam, Strategy {
             member.totalOffers++;
             member.start = Manager.getTicks();
             member.nextPhase();
-        }
-        // どこにも参加しないのであれば, 役割適正値を更新するようにする
-        else {
-            member.inactivate(0);
         }
 // */
     }
