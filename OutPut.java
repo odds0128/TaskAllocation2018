@@ -258,7 +258,7 @@ public class OutPut implements SetParam {
     }
 
     static void writeGraphInformation(List<Agent> agents, String fp) throws FileNotFoundException, IOException {
-        outputFilePath = "src/" + fp + ".xlsx";
+        outputFilePath = "out/production/TaskAllocation/" + fp + ".xlsx";
         Edge edge = new Edge();
         edge.makeEdge(agents);
 
