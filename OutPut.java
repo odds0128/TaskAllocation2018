@@ -3,6 +3,7 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.apache.xmlbeans.impl.xb.xsdschema.All;
 
 import java.io.*;
 import java.util.*;
@@ -149,10 +150,11 @@ public class OutPut implements SetParam {
         System.out.println("Total Agents is " + Agent._id);
         System.out.println("Leaders is " + Agent._leader_num + ", Members is " + Agent._member_num + ", Resources : ");
 
-/*
-        for( int i = 0; i < RESOURCE_NUM; i++ ) System.out.print( Agent.resSizeArray[i] + ", " );
-        System.out.println();
 
+        for( Agent agent: agents ) {
+            for (int i = 0; i < RESOURCE_TYPES; i++) System.out.print(agent.res[i] + ", ");
+            System.out.println();
+        }
 // */
 
 /*
@@ -177,12 +179,28 @@ public class OutPut implements SetParam {
             System.out.println();
         }
 // */
-        for (Agent agent : agents) {
+/*        for (Agent agent : agents) {
             System.out.print("ID " + agent.id + ", e_l " + String.format("%.2f", agent.e_leader));
             System.out.print(", e_m " + String.format("%.2f", agent.e_member));
             System.out.println();
         }
 // */
+    }
+
+    static void checkTeam( Agent leader ){
+        System.out.print(leader.id + " and ");
+        for(Agent mem: leader.teamMembers){
+            System.out.print(mem.id + ", ");
+        }
+        System.out.println("are good team!");
+        if( leader.mySubTask != null ){
+            System.out.println(" leader: " + leader + "→" + leader.mySubTask + ": " + leader.calcExecutionTime(leader, leader.mySubTask) + "[tick(s)]");
+        }else{
+            System.out.println(" leader: " + leader );
+        }
+        for(Allocation al: leader.allocations){
+            System.out.println(" member: " + al.getCandidate() + "→" + al.getSubtask() + ": " + leader.calcExecutionTime(al.getCandidate(), al.getSubtask() ) + "[tick(s)]");
+        }
     }
 
     static void showLeaderRetirement(List<Agent> snapshot, List<Agent> agents) {

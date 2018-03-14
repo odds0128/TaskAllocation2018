@@ -78,7 +78,7 @@ public class Agent implements SetParam , Cloneable{
         this.strategy = strategy;
         setResource(UNIFORM);
         Arrays.fill(reliabilities, INITIAL_VALUE_OF_DEC);
-        if (strategy.getClass().getName() == "RoundRobin" || strategy.getClass().getName() == "ProximityOriented") {
+        if (strategy.getClass().getName() == "RoundRobin" || strategy.getClass().getName() == "ComparativeMethod1") {
             selectRoleWithoutLearning();
         } else {
             selectRole();
@@ -96,7 +96,7 @@ public class Agent implements SetParam , Cloneable{
         this.strategy = strategy;
         setResource(UNIFORM);
         Arrays.fill(reliabilities, INITIAL_VALUE_OF_DEC);
-        if (strategy.getClass().getName() == "RoundRobin" || strategy.getClass().getName() == "ProximityOriented") {
+        if (strategy.getClass().getName() == "RoundRobin" || strategy.getClass().getName() == "ComparativeMethod1") {
             selectRoleWithoutLearning();
         } else {
             selectRole();
@@ -115,11 +115,10 @@ public class Agent implements SetParam , Cloneable{
             while (resSize == 0) {
                 for (int i = 0; i < RESOURCE_TYPES; i++) {
                     int rand = _randSeed.nextInt(MAX_AGENT_RESOURCE_SIZE + 1);
-                    res[i] = rand;
-                    resSize += rand;
+                    res[i]   =  rand;
+                    resSize +=  rand;
                 }
             }
-            resSizeArray[resSize]++;
         }
     }
 
@@ -219,7 +218,6 @@ public class Agent implements SetParam , Cloneable{
         }
     }
 
-
     /**
      * inactiveメソッド
      * チームが解散になったときに待機状態になる.
@@ -311,24 +309,29 @@ public class Agent implements SetParam , Cloneable{
      * なければ何もしない
      */
     void selectSubTask() {
-        List<SubTask> temp = new ArrayList<>();
+        int calc = 0;
+        int temp = Integer.MAX_VALUE;
+        int tempIndex = -1;
+        int i = 0;
+
         // 自分に可能なサブタスクを抽出する
         for (SubTask st : ourTask.subTasks) {
-            if (res[st.resType] == st.reqRes[st.resType]) temp.add(st);
+            calc = calcExecutionTime(this, st);
+            if( calc > 0 && calc < temp ){
+                temp = calc ;
+                tempIndex = i;
+            }
+            i++;
         }
         // もし一つもなかったら仕方ないからなしでreturn
-        if (temp.size() == 0) {
-            temp = null;
-            executionTime = 1;
+        if (tempIndex == -1) {
             return;
         }
         // 一個でもあったらどれかを選んで自分のサブタスクとする
         else {
-            int rand = _randSeed.nextInt(temp.size());
-            mySubTask = temp.get(rand);
-            ourTask.subTasks.remove(temp.get(rand));
+            executionTime = temp;
+            mySubTask = ourTask.subTasks.remove(tempIndex);
             restSubTask--;
-            executionTime = 1;
         }
     }
     void sendMessage(Agent from, Agent to, int type, Object o) {
@@ -343,11 +346,27 @@ public class Agent implements SetParam , Cloneable{
 //            sendMessage(agent, to, SUBTASK_RESULT, subTask);
         }
     }
-    public int calcExecutionTime(Agent agent) {
-        SubTask st;
-        st = agent.mySubTask;
-        return (int) Math.ceil((double) st.reqRes[st.resType] / (double) agent.res[st.resType]);
+
+    /**
+     * calcExecutionTimeメソッド
+     * 引数のエージェントが引数のサブタスクを処理できなければ-1を返す．
+     * できるのであれば，その処理時間(>0)を返す
+     * @param aTarget
+     * @param sTarget
+     * @return
+     */
+    public int calcExecutionTime(Agent aTarget, SubTask sTarget) {
+        int temp = 0, ceil ;
+        // 全種リソースについて見て行く
+        for (int i = 0; i < RESOURCE_TYPES; i++) {
+            // サブタスク側が要求するリソースをエージェントが持っていない場合は-1をリターンする
+            if( sTarget.reqRes[i] > 0 && aTarget.res[i] == 0) return -1;
+            ceil = (int) Math.ceil((double) sTarget.reqRes[i] / (double)aTarget.res[i]);
+            if( temp < ceil ) temp = ceil ;
+        }
+        return temp;
     }
+
     /**
      * checkMessagesメソッド
      * selfに届いたメッセージcheckListの中から,
@@ -434,7 +453,21 @@ public class Agent implements SetParam , Cloneable{
     protected void nextPhase() {
         if (this.phase == PROPOSITION) this.phase = REPORT;
         else if (this.phase == WAITING) this.phase = RECEPTION;
-        else if (this.phase == REPORT) this.phase = EXECUTION;
+        else if (this.phase == REPORT){
+            if( this.executionTime < 0 ){
+                if (_coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
+                    if (role == LEADER) {
+                        for (Agent ag : teamMembers) workWithAsL[ag.id]++;
+                    } else {
+                        workWithAsM[leader.id]++;
+                    }
+                }
+                // 自分のサブタスクが終わったら役割適応度を1で更新して非活性状態へ
+                inactivate(1);
+            }else {
+                this.phase = EXECUTION;
+            }
+        }
         else if (this.phase == RECEPTION) this.phase = EXECUTION;
         this.validatedTicks = Manager.getTicks();
     }
@@ -550,8 +583,8 @@ public class Agent implements SetParam , Cloneable{
     @Override
     public String toString() {
         String sep = System.getProperty("line.separator");
-        StringBuilder str;
-        str = new StringBuilder("ID:" + String.format("%3d", id));
+        StringBuilder str = new StringBuilder();
+//        str = new StringBuilder("ID:" + String.format("%3d", id));
 //        str = new StringBuilder("ID:" + String.format("%3d", id) + ", " + "x: " + x + ", y: " + y + ", ");
 //        str = new StringBuilder("ID:" + String.format("%3d", id) + "  " + messages );
 //        str = new StringBuilder("ID: " + String.format("%3d", id) + ", " + String.format("%.3f", e_leader) + ", " + String.format("%.3f", e_member)  );
@@ -562,9 +595,8 @@ public class Agent implements SetParam , Cloneable{
             str.append(", the distance: " + Manager.distance[this.id][relRanking.get(0).id]);
         }
 // */
-        /*
         str.append("[");
-        for (int i = 0; i < RESOURCE_NUM; i++) str.append(res[i] + ",");
+        for (int i = 0; i < RESOURCE_TYPES; i++) str.append( String.format("%3d",res[i]) + "," );
         str.append("]");
 // */
         /*
@@ -581,7 +613,7 @@ public class Agent implements SetParam , Cloneable{
         else if (role == JONE_DOE) str.append(", free: ");
 //        str.append(String.format(", %.3f", e_leader) + ", " + String.format("%.3f", e_member) + sep);
 
-//        for( int i = 0; i < AGENT_NUM; i++ ) str.append( i + ": " + String.format("%.3f", reliabilities[i] ) + ",  " );
+        for( int i = 0; i < AGENT_NUM; i++ ) str.append( i + ": " + String.format("%.3f", reliabilities[i] ) + ",  " );
 // */
 /*        str.append("e_leader: " + e_leader + ", e_member: " + e_member);
         if( role == MEMBER ) str.append(", member: ");

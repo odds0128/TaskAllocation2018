@@ -10,7 +10,7 @@ interface SetParam {
     int WRITING_TIMES   = 1000;         // データのファイルへの出力回数
 
     // 結果表示のためのパラメータ
-    int  COALLITION_CHECK_SPAN = 5000;          // 協調関係ができているか確認するための最後の方のターム
+    int  COALITION_CHECK_SPAN = 5000;          // 協調関係ができているか確認するための最後の方のターム
     double THRESHOLD_FOR_COALITION = 10;
     int THRESHOLD_FOR_NEET = 5000;
     int SNAPSHOT_TIME = MAX_TURN_NUM/2;
@@ -24,9 +24,10 @@ interface SetParam {
     int TASK_ADDITION_SPAN = 1;          // タスクキューにタスクを追加するスパン
     int ADDITIONAL_TASK_NUM  = 10;        // タスクを追加するタイミングで, タスクキューに追加するタスクの個数(=λ)
     int RESOURCE_TYPES = 6;
-    int MAX_AGENT_RESOURCE_SIZE = 1;
-    int MAX_SUBTASK_RESOURSE_SIZE = 1;
-    int MIN_SUBTASK_RESOURSE_SIZE = 0;
+    int MAX_AGENT_RESOURCE_SIZE   = 10;
+    int MIN_AGENT_RESOURCE_SIZE   = 0;
+    int MAX_SUBTASK_RESOURCE_SIZE = 10;
+    int MIN_SUBTASK_RESOURCE_SIZE = 0;
 
     int RESEND_TIMES   = 2;         // あるサブタスクについて要請を出すエージェントの数
     int MAX_RELIABLE_AGENTS = 5;         // 信頼エージェントの数

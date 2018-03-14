@@ -10,7 +10,8 @@ public class SubTask implements SetParam{
     static long _seed;
     static Random _randSeed;
     int subtask_id ;
-    int reqRes[] = new int[RESOURCE_TYPES];
+    int reqRes[]  = new int[RESOURCE_TYPES];
+    int resSize  = 0;
     int resType  ;
     int resentTimes = 0;
 
@@ -40,16 +41,26 @@ public class SubTask implements SetParam{
 
     /**
      * setResourcesメソッド
-     * 1~4の間で要求リソースを定義
+     * 要求リソース
      */
     private void setResources(int taskType){
         // とりあえずuniformだけで
-        if( taskType ==  BIAS){
-        }else{
-            resType = _randSeed.nextInt(RESOURCE_TYPES);
-            reqRes[resType] = 1;
+        if (taskType == BIAS) {
+/*            for (int i = 0; i < RESOURCE_NUM; i++) {
+                int rand = random.nextInt(3) + 6;
+                res[i] = rand;
+            }
+*/
+        } else {
+            while (resSize == 0) {
+                for (int i = 0; i < RESOURCE_TYPES; i++) {
+                    int rand = _randSeed.nextInt(MAX_SUBTASK_RESOURCE_SIZE + 1);
+                    reqRes[i] =  rand;
+                    resSize  +=  rand;
+                }
+            }
+            assert resSize > 0 : "SubTask requires no resource.";
         }
-
     }
 
     /**
@@ -77,8 +88,9 @@ public class SubTask implements SetParam{
 
     @Override
     public String toString() {
-        StringBuilder str = new StringBuilder( subtask_id + " needs " + resType + ":  ");
-        for( int i = 0; i < RESOURCE_TYPES; i++ ) str.append( reqRes[i] + ", ");
+        StringBuilder str = new StringBuilder("[");
+        for( int i = 0; i < RESOURCE_TYPES; i++ ) str.append( String.format("%3d",reqRes[i]) + ", " );
+        str.append("]");
         return str.toString();
     }
 }

@@ -9,12 +9,12 @@ import java.io.IOException;
 import java.util.*;
 
 public class Manager implements SetParam {
-//    private static Strategy strategy = new ProposedMethod();
-//    private static Strategy strategy = new ProposedMethodWithCheating();
-    private static Strategy strategy = new ReliabilityOriented();  // 信頼度の蒸発あり
-//    private static Strategy strategy = new ReliabilityOrientedWithCheating();
-//    private static Strategy strategy = new ProximityOriented();
-//    private static Strategy strategy = new RoundRobin();
+    private static Strategy strategy = new ProposedMethod();
+//    private static Strategy strategy = new ComparativeMethod0();   // 旧信頼度更新式で役割更新なし
+//    private static Strategy strategy = new ComparativeMethod1();   // 近距離優先手法
+//    private static Strategy strategy = new ComparativeMethod2();   // 旧信頼度更新式で役割更新あり
+//    private static Strategy strategy = new ComparativeMethod3();   // 新信頼度更新式で役割更新なし
+//    private static Strategy strategy = new RoundRobin();           // ラウンドロビン
 
     static private long    _seed ;
     private static Random _randSeed;
@@ -35,7 +35,7 @@ public class Manager implements SetParam {
         assert MAX_RELIABLE_AGENTS < AGENT_NUM : "alert0";
         assert INITIAL_TASK_NUM <= TASK_QUEUE_SIZE : "alert1";
         assert AGENT_NUM <= ROW * COLUMN : "alert2";
-        assert COALLITION_CHECK_SPAN < MAX_TURN_NUM : "a";
+        assert COALITION_CHECK_SPAN < MAX_TURN_NUM : "a";
 
         try {
             int writeResultsSpan = MAX_TURN_NUM / WRITING_TIMES;
@@ -118,6 +118,7 @@ public class Manager implements SetParam {
 
         // エージェントの初期化
         agents = generateAgents(strategy);
+//        OutPut.checkAgent(agents);
 
     }
     private static void setSeed( String line ){
@@ -219,7 +220,7 @@ public class Manager implements SetParam {
             }
         }
         // 学習なし手法で距離依存の場合(学習なしでは信頼度は使わないが便宜上定義する)
-        else if (strategy.getClass().getName() == "RoundRobin" || strategy.getClass().getName() == "ProximityOriented") {
+        else if (strategy.getClass().getName() == "RoundRobin" || strategy.getClass().getName() == "ComparativeMethod1") {
             Agent agent;
             for (int i = 0; i < AGENT_NUM; ) {
                 agent = agents.get(i);
@@ -338,6 +339,7 @@ public class Manager implements SetParam {
         leader.ourTask = null;
     }
     static void finishTask(Agent leader) {
+        OutPut.checkTeam(leader);
         leader.ourTask = null;
         if( leader.isLonely == 1 )      finishedTasksInDepopulatedArea++;
         if( leader.isAccompanied == 1 ) finishedTasksInPopulatedArea++;
@@ -401,6 +403,6 @@ public class Manager implements SetParam {
         SubTask.clearST();
         Task.clearT();
         Agent.clearA();
-        if (strategy.getClass().getName() == "ProposedMethod") ProposedMethod.clearPM();
+        if (strategy.getClass().getName() == "ComparativeMethod3") ComparativeMethod3.clearPM();
     }
 }

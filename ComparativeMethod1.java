@@ -2,12 +2,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * ComparativeMethod9クラス(距離志向戦略)
+ * ComparativeMethod1クラス(距離志向戦略)
  * 近いエージェントを優先するエージェント
  * リーダーは信頼エージェント(通信可能範囲)から選ぶ.
  * メンバは信頼エージェントであるリーダーの要請を受ける
  */
-public class RoundRobin implements Strategy, SetParam {
+public class ComparativeMethod1 implements Strategy, SetParam {
 
     public void actAsLeader(Agent agent) {
         if (agent.phase == PROPOSITION) proposeAsL(agent);
@@ -27,11 +27,6 @@ public class RoundRobin implements Strategy, SetParam {
         leader.restSubTask = leader.ourTask.subTaskNum;                       // 残りサブタスク数を設定
         leader.selectSubTask();
         leader.candidates = selectMembers(leader, leader.ourTask.subTasks);   // メッセージ送信
-        if (leader.candidates == null) {
-            Manager.disposeTask(leader);
-            return;
-        }
-
         leader.nextPhase();  // 次のフェイズへ
     }
 
@@ -128,7 +123,7 @@ public class RoundRobin implements Strategy, SetParam {
                     // 受理を返したのに競合のせいでサブタスクが割り当てられなかったいい奴らの中から割り当てを探す
                     for (int j = 0; j < losers.size(); j++) {
                         lo = losers.remove(0);
-                        if (leader.calcExecutionTime(lo, st)>0) {
+                        if (leader.calcExecutionTime(lo, st) > 0) {
                             leader.restSubTask--;
                             leader.allocations.add(new Allocation(lo, st));
                             leader.teamMembers.add(lo);
@@ -203,30 +198,17 @@ public class RoundRobin implements Strategy, SetParam {
         List<Agent> temp = new ArrayList<>();
         Agent candidate;
         SubTask subtask;
-        int prevIndex = leader.index;
         for (int i = 0; i < subtasks.size() * RESEND_TIMES; i++) {
             subtask = subtasks.get(i / RESEND_TIMES);
+            int j = 0;
             while (true) {
-                candidate = leader.relAgents.get(leader.index++ % leader.relAgents.size() );
+                // エージェント1から全走査
+                candidate = leader.relRanking.get(j++);
                 // そいつがまだ候補に入っていなくてさらにそのサブタスクをこなせそうなら
-                if (leader.inTheList(candidate, temp) < 0 && leader.calcExecutionTime(candidate, subtask) > 0) break;
-                // 走査が一周した, すなわち誰もこなせないのなら候補者なしとしてbreak
-                if( leader.index - leader.relAgents.size() == prevIndex ){
-                    candidate = null;
-                    break;
-                }
+                if (leader.inTheList(candidate, temp) < 0 && leader.calcExecutionTime(candidate, subtask) > 0 ) break;
             }
-            // 候補者が見つからなかったなら何もせずnullを返す
-            if( candidate == null ) {
-                return null;
-            }
-            prevIndex = leader.index;
             temp.add(candidate);
-        }
-        // 無事割り当て予定が出揃ったら参加要請送信
-        for( int i = 0; i < subtasks.size() * RESEND_TIMES; i++ ) {
-            subtask = subtasks.get(i / RESEND_TIMES);
-            leader.sendMessage(leader, temp.get(i), PROPOSAL, subtask.resType);
+            leader.sendMessage(leader, candidate, PROPOSAL, subtask.resType);
         }
         return temp;
     }
@@ -258,4 +240,3 @@ public class RoundRobin implements Strategy, SetParam {
     public void inactivateWithNoLearning() {
     }
 }
-
