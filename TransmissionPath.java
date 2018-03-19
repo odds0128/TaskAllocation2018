@@ -20,7 +20,7 @@ class TransmissionPath implements SetParam {
 
     private static TransmissionPath transmissionPath = new TransmissionPath();
     private static List<Message> messageQueue = new ArrayList<>();
-    private static List<Integer> delay = new ArrayList<>();
+    private static List<Integer> delays = new ArrayList<>();
 
     private TransmissionPath() {
     }
@@ -37,8 +37,8 @@ class TransmissionPath implements SetParam {
      */
     static void sendMessage(Message message) {
         messageQueue.add(message);
-        int temp = Manager.distance[message.getFrom().id][message.getTo().id];
-        delay.add(temp);
+        int temp = Manager.delays[message.getFrom().id][message.getTo().id];
+        delays.add(temp);
         calcCT(temp);
         if (message.getMessageType() == PROPOSAL) proposals++;
         if (message.getMessageType() == REPLY) {
@@ -48,7 +48,7 @@ class TransmissionPath implements SetParam {
         }
         if (message.getMessageType() == RESULT) results++;
 //        System.out.println(message);
-//         System.out.println(" from: " + message.getFrom().id + ", to: " + message.getTo().id + ", distance: " + calcTicks(message));
+//         System.out.println(" from: " + message.getFrom().id + ", to: " + message.getTo().id + ", delays: " + calcTicks(message));
     }
 
     /**
@@ -60,13 +60,13 @@ class TransmissionPath implements SetParam {
         Message tempM;
         int size = messageQueue.size();
         for (int i = 0; i < size; i++) {
-            tempI = delay.remove(0);
+            tempI = delays.remove(0);
             tempI--;
             tempM = messageQueue.remove(0);
             if (tempI == 0) {
                 tempM.getTo().messages.add(tempM);
             } else {
-                delay.add(tempI);
+                delays.add(tempI);
                 messageQueue.add(tempM);
             }
         }
@@ -99,16 +99,16 @@ class TransmissionPath implements SetParam {
         int size = messageQueue.size();
         Message m;
         for (int i = 0; i < size; i++) {
-            delay.remove(0);
+            delays.remove(0);
             m = messageQueue.remove(0);
             m.getTo().messages.add(m);
         }
-        assert delay.size() == 0 && messageQueue.size() == 0 : "transmitAlert";
+        assert delays.size() == 0 && messageQueue.size() == 0 : "transmitAlert";
     }
 
     static void clearTP() {
         messageQueue.clear();
-        delay.clear();
+        delays.clear();
         messageNum = 0;
         communicationTime = 0;
         proposals = 0;

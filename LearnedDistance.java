@@ -10,11 +10,11 @@ import java.util.List;
 public class LearnedDistance {
     private Agent target;
     private Agent from;
-    private int distance;
+    private int delay;
 
-    LearnedDistance(Agent target, int distance, Agent from, List<LearnedDistance> ldl) {
+    LearnedDistance(Agent target, int delay, Agent from, List<LearnedDistance> ldl) {
         this.target = target;
-        this.distance = distance;
+        this.delay = delay;
         this.from = from;
         sortDT(this, ldl);
     }
@@ -50,12 +50,12 @@ public class LearnedDistance {
     }
 
     public int getDistance() {
-        return distance;
+        return delay;
     }
 
     @Override
     public String toString() {
-        StringBuilder str = new StringBuilder("[" + target.id + "] : " + distance + ", " + from.reliabilities[target.id] + " ||| ");
+        StringBuilder str = new StringBuilder("[" + target.id + "] : " + delay + ", " + from.reliabilities[target.id] + " ||| ");
         return str.toString();
     }
 

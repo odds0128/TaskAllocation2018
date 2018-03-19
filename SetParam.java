@@ -5,9 +5,10 @@
 
 interface SetParam {
     // 環境の設定( 変更していく部分 )
-    int EXECUTION_TIMES = 1;            // 実験の回数
+    int EXECUTION_TIMES = 100;            // 実験の回数
     int MAX_TURN_NUM    = 100000;       // 一回の実験のターン数
     int WRITING_TIMES   = 1000;         // データのファイルへの出力回数
+    boolean CHECK_INITIATION = true;
 
     // 結果表示のためのパラメータ
     int  COALITION_CHECK_SPAN = 5000;          // 協調関係ができているか確認するための最後の方のターム
@@ -16,10 +17,11 @@ interface SetParam {
     int SNAPSHOT_TIME = MAX_TURN_NUM/2;
 
     int INITIAL_TASK_NUM = 0;       // 最初のタスク数
-    int TASK_QUEUE_SIZE  = 500;     // タスクキューのサイズ. だけど現状だと意味がない
+    int TASK_QUEUE_SIZE  = 500;     // タスクキューのサイズ
     int AGENT_NUM = 500;            // エージェントの数
     int ROW    = 50;                // 行数
     int COLUMN = 50;                // 列数
+    int MAX_DELAY = 10;
 
     int TASK_ADDITION_SPAN = 1;          // タスクキューにタスクを追加するスパン
     int ADDITIONAL_TASK_NUM  = 10;        // タスクを追加するタイミングで, タスクキューに追加するタスクの個数(=λ)

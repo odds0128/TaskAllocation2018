@@ -592,7 +592,7 @@ public class Agent implements SetParam , Cloneable{
 /*
         if( this.principle == RECIPROCAL ) {
             str.append(", The most reliable agent: " + relRanking.get(0).id + "← reliability: " + reliabilities[relRanking.get(0).id]);
-            str.append(", the distance: " + Manager.distance[this.id][relRanking.get(0).id]);
+            str.append(", the delay: " + Manager.delays[this.id][relRanking.get(0).id]);
         }
 // */
         str.append("[");

@@ -20,7 +20,7 @@ public class Manager implements SetParam {
     private static Random _randSeed;
 
     static Queue<Task> taskQueue;
-    static int[][] distance = new int[AGENT_NUM][AGENT_NUM];
+    static int[][] delays = new int[AGENT_NUM][AGENT_NUM];
     private static Agent[][] grids = new Agent[ROW][COLUMN];
     private static List<Agent> agents;
     static int disposedTasks = 0;
@@ -51,10 +51,13 @@ public class Manager implements SetParam {
 
             // num回実験
             while ((line = br.readLine()) != null) {
-                System.out.println(++num + "回目");
-                // シード，タスク，エージェントの初期化処理
-                initiate(line);
-
+                initiate(line);                         // シード，タスク，エージェントの初期化処理
+                if (num == EXECUTION_TIMES) break;
+                System.out.println( ++num + "回目");
+                if( CHECK_INITIATION == true ){
+                    clearAll();
+                    continue;
+                }
                 // ターンの進行
                 for (turn = 1; turn <= MAX_TURN_NUM; turn++) {
                     addNewTasksToQueue();
@@ -88,15 +91,14 @@ public class Manager implements SetParam {
 
 //                OutPut.showResults(turn, agents,num);
 //                OutPut.showLeaderRetirement(snapshot, agents);
-                if (num == EXECUTION_TIMES) break;
                 clearAll();
             }
             // ↑ 全実験の終了のカッコ．以下は後処理
 
-//            OutPut.writeReliabilities(turn,agents);
-            OutPut.writeResults();
+//            OutPut.writeReliabilities(turn,agents, strategy);
+//            OutPut.writeResults(strategy);
+            OutPut.writeDelays(delays);
 //            OutPut.writeGraphInformation(agents, "result");
-            OutPut.fileClose();
 // */
             br.close();
         } catch (FileNotFoundException e) {
@@ -118,8 +120,7 @@ public class Manager implements SetParam {
 
         // エージェントの初期化
         agents = generateAgents(strategy);
-//        OutPut.checkAgent(agents);
-
+        OutPut.countDelays(delays);
     }
     private static void setSeed( String line ){
         _seed     = Long.parseLong(line);
@@ -177,7 +178,7 @@ public class Manager implements SetParam {
             int temp ;
             for (int j = 0; j < AGENT_NUM; j++) {
                 temp = calcManhattan(agents.get(i), agents.get(j));
-                distance[i][j] = temp;
+                delays[i][j] = temp;
                 if( temp <= 2 ) density[i]++;
             }
             if( density[i] < min ) min = density[i];
@@ -229,7 +230,7 @@ public class Manager implements SetParam {
                 // 距離に基づいて信頼エージェントを設定する
                 for (int j = 0; j < AGENT_NUM; j++) {
                     // 距離がdistなら信頼エージェント候補とする
-                    if (distance[i][j] == dist) {
+                    if (delays[i][j] == dist) {
                         tempList.add(agents.get(j));
                     }
                 }
@@ -266,8 +267,8 @@ public class Manager implements SetParam {
         return -1;
     }
     static int calcManhattan(Agent from, Agent to) {
-        int distance = Math.abs(from.x - to.x) + Math.abs(from.y - to.y);
-        return (int) Math.ceil((double) (distance * 10) / (double) (ROW + COLUMN - 2));
+        int delay = Math.abs(from.x - to.x) + Math.abs(from.y - to.y);
+        return (int) Math.ceil((double) (delay * MAX_DELAY) / (double) (ROW + COLUMN - 2) );
     }
     // taskQueueにあるタスクをリーダーに渡すメソッド
     static Task getTask() {
@@ -339,7 +340,7 @@ public class Manager implements SetParam {
         leader.ourTask = null;
     }
     static void finishTask(Agent leader) {
-        OutPut.checkTeam(leader);
+        // OutPut.checkTeam(leader);
         leader.ourTask = null;
         if( leader.isLonely == 1 )      finishedTasksInDepopulatedArea++;
         if( leader.isAccompanied == 1 ) finishedTasksInPopulatedArea++;
@@ -391,7 +392,7 @@ public class Manager implements SetParam {
         overflowTasks = 0;
         for (int i = 0; i < AGENT_NUM; i++) {
             for (int j = 0; j < AGENT_NUM; j++) {
-                distance[i][j] = 0;
+                delays[i][j] = 0;
             }
         }
         for (int i = 0; i < ROW; i++) {

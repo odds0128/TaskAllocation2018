@@ -14,10 +14,6 @@ import java.util.*;
  * 結果の画面出力とファイル出力を管理
  */
 public class OutPut implements SetParam {
-    static FileWriter fw;
-    static BufferedWriter bw;
-    static PrintWriter pw;
-    static String outputFilePath;
     static Workbook book = null;
     static FileOutputStream fout = null;
 
@@ -25,49 +21,27 @@ public class OutPut implements SetParam {
 
     static int index = 0;
 
-    static int[] finishedTasksArray                  = new int[WRITING_TIMES];
-    static int[] disposedTasksArray                  = new int[WRITING_TIMES];
-    static int[] overflownTasksArray                 = new int[WRITING_TIMES];
-    static int[] messagesArray                       = new int[WRITING_TIMES];
-    static double[] communicationDelayArray          = new double[WRITING_TIMES];
-    static int[] leaderNumArray                      = new int[WRITING_TIMES];
-    static int[] memberNumArray                      = new int[WRITING_TIMES];
-    static int[] leaderNumInDepopulatedAreaArray     = new int[WRITING_TIMES];
-    static int[] memberNumInDepopulatedAreaArray     = new int[WRITING_TIMES];
-    static int[] leaderNumInPopulatedAreaArray       = new int[WRITING_TIMES];
-    static int[] memberNumInPopulatedAreaArray       = new int[WRITING_TIMES];
-    static int[] neetMembersArray                    = new int[WRITING_TIMES];
-    static int[] reciprocalistsArray                 = new int[WRITING_TIMES];
-    static int[] rationalistsArray                   = new int[WRITING_TIMES];
-    static int[] reciprocalMembersArray              = new int[WRITING_TIMES];
+    static int[] finishedTasksArray = new int[WRITING_TIMES];
+    static int[] disposedTasksArray = new int[WRITING_TIMES];
+    static int[] overflownTasksArray = new int[WRITING_TIMES];
+    static int[] messagesArray = new int[WRITING_TIMES];
+    static double[] communicationDelayArray = new double[WRITING_TIMES];
+    static int[] leaderNumArray = new int[WRITING_TIMES];
+    static int[] memberNumArray = new int[WRITING_TIMES];
+    static int[] leaderNumInDepopulatedAreaArray = new int[WRITING_TIMES];
+    static int[] memberNumInDepopulatedAreaArray = new int[WRITING_TIMES];
+    static int[] leaderNumInPopulatedAreaArray = new int[WRITING_TIMES];
+    static int[] memberNumInPopulatedAreaArray = new int[WRITING_TIMES];
+    static int[] neetMembersArray = new int[WRITING_TIMES];
+    static int[] reciprocalistsArray = new int[WRITING_TIMES];
+    static int[] rationalistsArray = new int[WRITING_TIMES];
+    static int[] reciprocalMembersArray = new int[WRITING_TIMES];
     static int[] finishedTasksInDepopulatedAreaArray = new int[WRITING_TIMES];
-    static int[] finishedTasksInPopulatedAreaArray   = new int[WRITING_TIMES];
-
-    private OutPut() {
-        try {
-            fw = new FileWriter("/Users/r.funato/IdeaProjects/TaskAllocation/src/output1.csv", false);
-            bw = new BufferedWriter(fw);
-            pw = new PrintWriter(bw);
-            pw.println("turn" + ", "
-                    + "FinishedTasks"                     + ", " //+ "DisposedTasks"                     + ", "+ "OverflownTasks"                    + ", "
-                    + "CommunicationTime"                 + ", "
-                    + "Leader"                            + ", " // + "Member"                            + ", "
-                    + "NEET Members"                      + ", "
-                   // + "Lonely leaders"                    + ", " + "Lonely members"                    + ", "
-                   // + "Accompanied leaders"               + ", " + "Accompanied members"               + ", "
-                   // + "Reciprocal"                        + ", " + "Rational"                          + ", " + "ReciprocalMembers" + ","
-                   // + "FinishedTasks in depopulated area" + ", " + "FinishedTasks in populated area"   + ", "
-            );
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e2) {
-            e2.printStackTrace();
-        }
-    }
+    static int[] finishedTasksInPopulatedAreaArray = new int[WRITING_TIMES];
 
     static void aggregateAgentData(List<Agent> agents) {
-        leaderNumArray[index]   += Agent._leader_num;
-        neetMembersArray[index] += Agent.countNEETmembers(agents, MAX_TURN_NUM/WRITING_TIMES);
+        leaderNumArray[index] += Agent._leader_num;
+        neetMembersArray[index] += Agent.countNEETmembers(agents, MAX_TURN_NUM / WRITING_TIMES);
 /*        memberNumArray[index] += Agent._member_num;
 
         int a = Agent.countLeadersInDepopulatedArea(agents);
@@ -113,7 +87,6 @@ public class OutPut implements SetParam {
         }
         System.out.println("  Remains: " + taskQueue.size());
     }
-
     /**
      * checkAgentメソッド
      * 二次元配列の場合
@@ -129,17 +102,15 @@ public class OutPut implements SetParam {
             System.out.println();
         }
     }
-
-    static void checkDistance(int[][] distances) {
+    static void checkDelay(int[][] delays) {
         for (int i = 0; i < AGENT_NUM; i++) {
             System.out.print("ID: " + i + "...");
             for (int j = 0; j < AGENT_NUM; j++) {
-                System.out.print(distances[i][j] + ", ");
+                System.out.print(delays[i][j] + ", ");
             }
             System.out.println();
         }
     }
-
     /**
      * checkAgentメソッド
      *
@@ -151,7 +122,7 @@ public class OutPut implements SetParam {
         System.out.println("Leaders is " + Agent._leader_num + ", Members is " + Agent._member_num + ", Resources : ");
 
 
-        for( Agent agent: agents ) {
+        for (Agent agent : agents) {
             for (int i = 0; i < RESOURCE_TYPES; i++) System.out.print(agent.res[i] + ", ");
             System.out.println();
         }
@@ -161,7 +132,7 @@ public class OutPut implements SetParam {
         for (int i = 0; i < AGENT_NUM; i++) {
             System.out.print("ID : " + i + ", ");
             for( int j = 0; j < AGENT_NUM; j++ ){
-                System.out.print(String.format("%3d", Manager.distance[i][j]));
+                System.out.print(String.format("%3d", Manager.delays[i][j]));
             }
             System.out.println();
         }
@@ -186,37 +157,37 @@ public class OutPut implements SetParam {
         }
 // */
     }
-
-    static void checkTeam( Agent leader ){
+    static void checkTeam(Agent leader) {
         System.out.print(leader.id + " and ");
-        for(Agent mem: leader.teamMembers){
+        for (Agent mem : leader.teamMembers) {
             System.out.print(mem.id + ", ");
         }
         System.out.println("are good team!");
-        if( leader.mySubTask != null ){
+        if (leader.mySubTask != null) {
             System.out.println(" leader: " + leader + "→" + leader.mySubTask + ": " + leader.calcExecutionTime(leader, leader.mySubTask) + "[tick(s)]");
-        }else{
-            System.out.println(" leader: " + leader );
+        } else {
+            System.out.println(" leader: " + leader);
         }
-        for(Allocation al: leader.allocations){
-            System.out.println(" member: " + al.getCandidate() + "→" + al.getSubtask() + ": " + leader.calcExecutionTime(al.getCandidate(), al.getSubtask() ) + "[tick(s)]");
+        for (Allocation al : leader.allocations) {
+            System.out.println(" member: " + al.getCandidate() + "→" + al.getSubtask() + ": " + leader.calcExecutionTime(al.getCandidate(), al.getSubtask()) + "[tick(s)]");
         }
     }
 
     static void showLeaderRetirement(List<Agent> snapshot, List<Agent> agents) {
-        int countPositiveBefore, countPositiveAfter ;
+        int countPositiveBefore, countPositiveAfter;
         int mCountPositiveBefore = 0, mCountPositiveAfter = 0;
         Agent ag;
         for (Agent ss : snapshot) {
             ag = agents.get(ss.id);
             // まず, メンバになったのかどうか確認. なっていたら, その理由を究明
-            if ( ag.e_leader < ag.e_member) {
-                countPositiveBefore = 0; countPositiveAfter = 0;
-                for( double rel: ag.reliabilities ){
-                    if( rel > 0 ) countPositiveAfter++;
+            if (ag.e_leader < ag.e_member) {
+                countPositiveBefore = 0;
+                countPositiveAfter = 0;
+                for (double rel : ag.reliabilities) {
+                    if (rel > 0) countPositiveAfter++;
                 }
                 mCountPositiveBefore += countPositiveBefore;
-                mCountPositiveAfter  += countPositiveAfter ;
+                mCountPositiveAfter += countPositiveAfter;
                 System.out.println("ID: " + ss.id
                         + ", Positive Agents: " + countPositiveAfter
                 );
@@ -225,12 +196,12 @@ public class OutPut implements SetParam {
         int countPositive, countLeader = 0;
         int mCountPositive = 0;
         System.out.println("Normal leaders↓");
-        for( Agent nAg: agents ){
-            if( nAg.e_leader > nAg.e_member ){
+        for (Agent nAg : agents) {
+            if (nAg.e_leader > nAg.e_member) {
                 countLeader++;
                 countPositive = 0;
-                for( double rel: nAg.reliabilities ){
-                    if( rel > 0 ) countPositive++;
+                for (double rel : nAg.reliabilities) {
+                    if (rel > 0) countPositive++;
                 }
                 mCountPositive += countPositive;
                 System.out.println("ID: " + nAg.id + ", el: "
@@ -238,11 +209,9 @@ public class OutPut implements SetParam {
                 );
             }
         }
-        System.out.println("loser:  → " + mCountPositiveAfter/snapshot.size());
-        System.out.println("Surviver: " + mCountPositive/countLeader );
+        System.out.println("loser:  → " + mCountPositiveAfter / snapshot.size());
+        System.out.println("Survivor: " + mCountPositive / countLeader);
     }
-
-
     static void showResults(int turn, List<Agent> agents, int num) {
         int tempL = 0, tempM = 0;
         int neetL = 0, neetM = 0;
@@ -276,10 +245,10 @@ public class OutPut implements SetParam {
     }
 
     static void writeGraphInformation(List<Agent> agents, String fp) throws FileNotFoundException, IOException {
-        outputFilePath = "out/production/TaskAllocation/" + fp + ".xlsx";
+        String currentPath  = System.getProperty("user.dir");
+        String outputFilePath = currentPath + "/out/実験結果/" + fp + ".xlsx";
         Edge edge = new Edge();
         edge.makeEdge(agents);
-
         try {
             book = new SXSSFWorkbook();
             Font font = book.createFont();
@@ -405,7 +374,7 @@ public class OutPut implements SetParam {
                     cell = row.createCell(colNumber++);
                     cell.setCellStyle(style_header);
                     cell.setCellType(CellType.STRING);
-                    cell.setCellValue(" distance to leader ");
+                    cell.setCellValue(" delay to leader ");
 
                     cell = row.createCell(colNumber++);
                     cell.setCellStyle(style_header);
@@ -479,7 +448,8 @@ public class OutPut implements SetParam {
                         cell.setCellStyle(style_string);
                         cell.setCellType(CellType.NUMERIC);
                         if (agent.e_leader > agent.e_member) cell.setCellValue(0);
-                        else if (agent.leader != null) cell.setCellValue(Manager.distance[agent.id][agent.leader.id] * 10);
+                        else if (agent.leader != null)
+                            cell.setCellValue(Manager.delays[agent.id][agent.leader.id] * 10);
 
                         cell = row.createCell(colNumber++);
                         cell.setCellStyle(style_string);
@@ -521,7 +491,7 @@ public class OutPut implements SetParam {
                         cell = row.createCell(colNumber++);
                         cell.setCellStyle(style_string_wrap);
                         cell.setCellType(CellType.NUMERIC);
-                        cell.setCellValue(edge.distance.get(j));
+                        cell.setCellValue(edge.delays.get(j));
 
                         //列幅の自動調整
                         for (int k = 0; k <= colNumber; k++) {
@@ -552,7 +522,7 @@ public class OutPut implements SetParam {
                         cell = row.createCell(colNumber++);
                         cell.setCellStyle(style_string_wrap);
                         cell.setCellType(CellType.NUMERIC);
-                        cell.setCellValue(edge.distance.get(j));
+                        cell.setCellValue(edge.delays.get(j));
 
                         //列幅の自動調整
                         for (int k = 0; k <= colNumber; k++) {
@@ -584,14 +554,33 @@ public class OutPut implements SetParam {
         }
         edge = null;
     }
+    static void writeResults(Strategy st) {
+        FileWriter fw;
+        BufferedWriter bw;
+        PrintWriter pw;
+        String fileName = st.getClass().getName();
+        try {
+            String currentPath  = System.getProperty("user.dir");
+            fw = new FileWriter(currentPath + "/out/実験結果/" + fileName + ", λ=" + ADDITIONAL_TASK_NUM + ".csv", false);
+            bw = new BufferedWriter(fw);
+            pw = new PrintWriter(bw);
 
-    static void writeResults() {
-        for (int i = 0; i < WRITING_TIMES; i++) {
-            pw.println((i + 1) * (MAX_TURN_NUM / WRITING_TIMES)  + ", "
-                    + finishedTasksArray[i]                  / EXECUTION_TIMES + ", "
-                    + communicationDelayArray[i]             / (double) EXECUTION_TIMES + ", "
-                    + leaderNumArray[i]                      / EXECUTION_TIMES + ", "
-                    + neetMembersArray[i]                    / EXECUTION_TIMES + ", "
+            pw.println("turn" + ", "
+                            + "FinishedTasks" + ", " //+ "DisposedTasks"                     + ", "+ "OverflownTasks"                    + ", "
+                            + "CommunicationTime" + ", "
+                            + "Leader" + ", " // + "Member"                            + ", "
+                            + "NEET Members" + ", "
+                    // + "Lonely leaders"                    + ", " + "Lonely members"                    + ", "
+                    // + "Accompanied leaders"               + ", " + "Accompanied members"               + ", "
+                    // + "Reciprocal"                        + ", " + "Rational"                          + ", " + "ReciprocalMembers" + ","
+                    // + "FinishedTasks in depopulated area" + ", " + "FinishedTasks in populated area"   + ", "
+            );
+            for (int i = 0; i < WRITING_TIMES; i++) {
+                pw.println((i + 1) * (MAX_TURN_NUM / WRITING_TIMES) + ", "
+                                + finishedTasksArray[i] / EXECUTION_TIMES + ", "
+                                + communicationDelayArray[i] / (double) EXECUTION_TIMES + ", "
+                                + leaderNumArray[i] / EXECUTION_TIMES + ", "
+                                + neetMembersArray[i] / EXECUTION_TIMES + ", "
 /*                    + disposedTasksArray[i]                  / EXECUTION_TIMES + ", "
                     + overflownTasksArray[i]                 / EXECUTION_TIMES + ", "
                     + memberNumArray[i]                      / EXECUTION_TIMES + ", "
@@ -605,23 +594,62 @@ public class OutPut implements SetParam {
                     + finishedTasksInDepopulatedAreaArray[i] / EXECUTION_TIMES + ", "
                     + finishedTasksInPopulatedAreaArray[i]   / EXECUTION_TIMES + ", "
 // */
-                    );
+                );
+            }
+            pw.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e2) {
+            e2.printStackTrace();
         }
     }
-
-    static void writeReliabilities(int turn, List<Agent> agents) {
+    static void writeDelays(int[][] delays){
+        FileWriter fw;
+        BufferedWriter bw;
+        PrintWriter pw;
+        try {
+            String currentPath  = System.getProperty("user.dir");
+            fw = new FileWriter(currentPath + "/out/実験結果/communicationDelay=" + MAX_DELAY + ".csv", false);
+            bw = new BufferedWriter(fw);
+            pw = new PrintWriter(bw);
+            pw.println("delay" + ", " + " count ");
+            for( int i = 1 ; i < MAX_DELAY + 1 ; i++ ){
+                pw.println(i + ", " + dCounts[i]/2);
+            }
+            pw.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e2) {
+            e2.printStackTrace();
+        }
+    }
+    static void writeReliabilities(int turn, List<Agent> agents, Strategy st) {
+        FileWriter fw;
+        BufferedWriter bw;
+        PrintWriter pw;
+        String fileName = st.getClass().getName();
+        try {
+            fw = new FileWriter("/Users/r.funato/IdeaProjects/TaskAllocation/src/r" + fileName + ", λ=" + ADDITIONAL_TASK_NUM + ".csv", false);
+            bw = new BufferedWriter(fw);
+            pw = new PrintWriter(bw);
+            // 列番号入れる部分
 //        for (int i = 0; i < AGENT_NUM; i++) pw.print(", " + i);
 //        pw.println();
-        for (Agent ag : agents) {
-            pw.print("I'm " + ag.id + ", ");
-            for (int i = 0; i < AGENT_NUM; i++) {
-                if (ag.e_member > ag.e_leader) {
-                    pw.print(ag.reliabilities[i] + ", ");
-                } else {
-                    pw.print("-" + ag.reliabilities[i] + ", ");
+            for (Agent ag : agents) {
+                pw.print("I'm " + ag.id + ", ");
+                for (int i = 0; i < AGENT_NUM; i++) {
+                    if (ag.e_member > ag.e_leader) {
+                        pw.print(ag.reliabilities[i] + ", ");
+                    } else {
+                        pw.print("-" + ag.reliabilities[i] + ", ");
+                    }
                 }
+                pw.println();
             }
-            pw.println();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e2) {
+            e2.printStackTrace();
         }
 // */
 
@@ -644,7 +672,14 @@ public class OutPut implements SetParam {
         }
         return temp;
     }
-
+    static int[] dCounts = new int[MAX_DELAY + 1];
+    static void countDelays(int[][] delays){
+        for( int[] row : delays ){
+            for( int column : row ){
+                dCounts[column]++;
+            }
+        }
+    }
     static int countReciplocalMembers(List<Agent> agents) {
         int temp = 0;
 /*        for (Agent agent : agents) {
@@ -656,10 +691,6 @@ public class OutPut implements SetParam {
                 temp++;
         }
         return temp;
-    }
-
-    static void fileClose() {
-        pw.close();
     }
 
     private static void setBorder(CellStyle style, BorderStyle border) {
