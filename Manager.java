@@ -9,11 +9,11 @@ import java.io.IOException;
 import java.util.*;
 
 public class Manager implements SetParam {
-    private static Strategy strategy = new ProposedMethod();
+//    private static Strategy strategy = new ProposedMethod();
 //    private static Strategy strategy = new ComparativeMethod0();   // 旧信頼度更新式で役割更新なし
 //    private static Strategy strategy = new ComparativeMethod1();   // 近距離優先手法
 //    private static Strategy strategy = new ComparativeMethod2();   // 旧信頼度更新式で役割更新あり
-//    private static Strategy strategy = new ComparativeMethod3();   // 新信頼度更新式で役割更新なし
+    private static Strategy strategy = new ComparativeMethod3();   // 新信頼度更新式で役割更新なし
 //    private static Strategy strategy = new RoundRobin();           // ラウンドロビン
 
     static private long    _seed ;
@@ -41,21 +41,19 @@ public class Manager implements SetParam {
             int writeResultsSpan = MAX_TURN_NUM / WRITING_TIMES;
 
             // seedの読み込み
-            FileReader fr = new FileReader("/Users/r.funato/IdeaProjects/TaskAllocation/src/RandomSeed.txt");
+            String currentPath  = System.getProperty("user.dir");
+            FileReader fr = new FileReader(currentPath + "/src/RandomSeed.txt");
             BufferedReader br = new BufferedReader(fr);
             String line;
 
             int num = 0;
-            System.out.println(strategy.getClass().getName());
-            System.out.println(" λ = " + ADDITIONAL_TASK_NUM);
+            System.out.println(strategy.getClass().getName() + ", λ=" + ADDITIONAL_TASK_NUM);
 
             // num回実験
             while ((line = br.readLine()) != null) {
                 initiate(line);                         // シード，タスク，エージェントの初期化処理
-                if (num == EXECUTION_TIMES) break;
                 System.out.println( ++num + "回目");
-                if( CHECK_INITIATION == true ){
-                    clearAll();
+                if( CHECK_INITIATION ){
                     continue;
                 }
                 // ターンの進行
@@ -65,13 +63,13 @@ public class Manager implements SetParam {
                     if (turn % writeResultsSpan == 0) {
                         OutPut.aggregateAgentData(agents);
                     }
-/*
-                    if( turn == SNAPSHOT_TIME ){
+
+                    if( turn == SNAPSHOT_TIME && CHECK_RELATIONSHIPS ){
                         snapshot = takeAgentsSnapshot(agents);
                         OutPut.writeGraphInformation(agents, "interim_report");
                         Agent.resetWorkHistory(agents);
                     }
-// */
+
                     TransmissionPath.transmit();                // 通信遅延あり
 //                    TransmissionPath.transmitWithNoDelay();   // 通信遅延なし
                     checkMessage(agents);          // 要請の確認, 無効なメッセージに対する返信
@@ -91,14 +89,14 @@ public class Manager implements SetParam {
 
 //                OutPut.showResults(turn, agents,num);
 //                OutPut.showLeaderRetirement(snapshot, agents);
-                clearAll();
+                if (num == EXECUTION_TIMES) break;
+                else clearAll();
             }
             // ↑ 全実験の終了のカッコ．以下は後処理
-
 //            OutPut.writeReliabilities(turn,agents, strategy);
-//            OutPut.writeResults(strategy);
-            OutPut.writeDelays(delays);
-//            OutPut.writeGraphInformation(agents, "result");
+            OutPut.writeResults(strategy);
+//            OutPut.writeDelays(delays);
+            if( CHECK_RELATIONSHIPS ) OutPut.writeGraphInformation(agents, "graph" + strategy.getClass().getName());
 // */
             br.close();
         } catch (FileNotFoundException e) {

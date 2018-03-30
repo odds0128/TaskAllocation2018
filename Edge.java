@@ -24,6 +24,7 @@ public class Edge implements SetParam {
         for (Agent ag : agents) {
             if (ag.e_member > ag.e_leader) {
                 for (int i = 0; i < AGENT_NUM; i++) {
+//                    if(  ag.workWithAsM[i] > 10 ) System.out.println(ag.id + ": " + ag.workWithAsM[i]);
                     if (ag.workWithAsM[i] >= THRESHOLD_FOR_COALITION) {
                         from_id.add(ag.id);
                         to_id.add(i);

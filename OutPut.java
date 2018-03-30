@@ -249,6 +249,7 @@ public class OutPut implements SetParam {
         String outputFilePath = currentPath + "/out/実験結果/" + fp + ".xlsx";
         Edge edge = new Edge();
         edge.makeEdge(agents);
+//        System.exit(0);
         try {
             book = new SXSSFWorkbook();
             Font font = book.createFont();

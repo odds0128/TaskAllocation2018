@@ -528,8 +528,8 @@ public class Agent implements SetParam , Cloneable{
                 _accompaniedAgents.add(ag.id);
             }
         }
-        System.out.println(_lonelyAgents.size());
-        System.out.println(_accompaniedAgents.size());
+//        System.out.println(_lonelyAgents.size());
+//        System.out.println(_accompaniedAgents.size());
     }
     static int countLeadersInDepopulatedArea(List<Agent> agents){
         int temp = 0;
