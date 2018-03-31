@@ -2,7 +2,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * ComparativeMethod1クラス(距離志向戦略)
+ * ComparativeMethod1クラス(最短応答優先戦略)
  * 近いエージェントを優先するエージェント
  * リーダーは信頼エージェント(通信可能範囲)から選ぶ.
  * メンバは信頼エージェントであるリーダーの要請を受ける

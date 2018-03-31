@@ -3,7 +3,8 @@ import java.util.List;
 
 /**
  * ProposedMethodクラス
- * 信頼度更新式をちょっといじったやつ
+ * 信頼度更新式は最短終了時間優先
+ * 役割更新機構なし
  */
 public class ProposedMethod implements SetParam, Strategy {
     static final double γ = γ_r;
@@ -25,11 +26,11 @@ public class ProposedMethod implements SetParam, Strategy {
     }
 
     public void actAsMember(Agent agent){
-        if( Manager.getTicks() - agent.validatedTicks > ROLE_RENEWAL_TICKS ){
+/*        if( Manager.getTicks() - agent.validatedTicks > ROLE_RENEWAL_TICKS ){
             agent.inactivate(0);
             return;
         }
-        setPrinciple(agent);
+// */        setPrinciple(agent);
         if (agent.phase == REPLY) replyAsM(agent);
         else if (agent.phase == RECEPTION) receiveAsM(agent);
         else if (agent.phase == EXECUTION) execute(agent);
@@ -74,7 +75,6 @@ public class ProposedMethod implements SetParam, Strategy {
     private void reportAsL(Agent leader) {
         // 有効なReplyメッセージがなければreturn
         if (leader.replies.size() == 0) return;
-        // 2017/12/06 ICARRTに揃えるために, チーム編成が成功してからサブタスクの実行指示をだすことに
 
         Agent candidate;
         for (Message reply : leader.replies) {
@@ -90,9 +90,9 @@ public class ProposedMethod implements SetParam, Strategy {
             }
             // 拒否ならそのエージェントを候補リストから外し, 信頼度を0で更新する
             else {
-                if (i > 0) leader.candidates.set(i, null);
-                leader.relAgents = renewRel(leader, candidate, 0);
-            }
+                 leader.candidates.set(i, null);
+                 leader.relAgents = renewRel(leader, candidate, 0);
+             }
         }
 
         int index;
@@ -232,6 +232,8 @@ public class ProposedMethod implements SetParam, Strategy {
                 if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN)
                     for (Agent ag : agent.teamMembers) agent.workWithAsL[ag.id]++;
             } else {
+                agent.sendMessage(agent, agent.leader, DONE, null ); // 役割がメンバだったらリーダーに完了報告をする
+//                System.out.println("Member: " + agent.id + " done");
                 if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) agent.workWithAsM[agent.leader.id]++;
             }
             // 自分のサブタスクが終わったら役割適応度を1で更新して非活性状態へ
@@ -266,6 +268,12 @@ public class ProposedMethod implements SetParam, Strategy {
             temp.add(candidate);
             leader.sendMessage(leader, candidate, PROPOSAL, subtask.resType);
         }
+/*        System.out.print("Leader " + leader.id + " tries " );
+        for( Agent a: temp ){
+            System.out.print( a.id + ", ");
+        }
+        System.out.println();
+// */
         return temp;
     }
 
@@ -317,6 +325,7 @@ public class ProposedMethod implements SetParam, Strategy {
                 } else member.sendMessage(member, temp, REPLY, REJECT);
             }
         }
+//        System.out.println("No." + member.id + "'s leader is " + myLeader.id);
         return myLeader;
     }
 

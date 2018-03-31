@@ -164,13 +164,14 @@ public class OutPut implements SetParam {
         }
         System.out.println("are good team!");
         if (leader.mySubTask != null) {
-            System.out.println(" leader: " + leader + "→" + leader.mySubTask + ": " + leader.calcExecutionTime(leader, leader.mySubTask) + "[tick(s)]");
+            System.out.println(" leader: " + leader.id + leader + "→" + leader.mySubTask + ": " + leader.calcExecutionTime(leader, leader.mySubTask) + "[tick(s)]");
         } else {
-            System.out.println(" leader: " + leader);
+            System.out.println(" leader: " + leader.id + leader);
         }
         for (Allocation al : leader.allocations) {
-            System.out.println(" member: " + al.getCandidate() + "→" + al.getSubtask() + ": " + leader.calcExecutionTime(al.getCandidate(), al.getSubtask()) + "[tick(s)]");
+            System.out.println(" member: " + al.getCandidate().id + al.getCandidate() + "→" + al.getSubtask() + ": " + leader.calcExecutionTime(al.getCandidate(), al.getSubtask()) + "[tick(s)]");
         }
+        // */
     }
 
     static void showLeaderRetirement(List<Agent> snapshot, List<Agent> agents) {
@@ -249,7 +250,6 @@ public class OutPut implements SetParam {
         String outputFilePath = currentPath + "/out/実験結果/" + fp + ".xlsx";
         Edge edge = new Edge();
         edge.makeEdge(agents);
-//        System.exit(0);
         try {
             book = new SXSSFWorkbook();
             Font font = book.createFont();
@@ -604,6 +604,318 @@ public class OutPut implements SetParam {
             e2.printStackTrace();
         }
     }
+    static void writeResultsX(Strategy st, List<Agent> agents, String fp) throws FileNotFoundException, IOException {
+        String currentPath  = System.getProperty("user.dir");
+        String outputFilePath = currentPath + "/out/実験結果/" + fp + ".xlsx";
+        Edge edge = new Edge();
+        edge.makeEdge(agents);
+        try {
+            book = new SXSSFWorkbook();
+            Font font = book.createFont();
+            font.setFontName("ＭＳ ゴシック");
+            font.setFontHeightInPoints((short) 9);
+
+            DataFormat format = book.createDataFormat();
+
+            //ヘッダ文字列用のスタイル
+            CellStyle style_header = book.createCellStyle();
+            style_header.setBorderBottom(BorderStyle.THIN);
+            OutPut.setBorder(style_header, BorderStyle.THIN);
+            style_header.setFillForegroundColor(HSSFColor.HSSFColorPredefined.LIGHT_CORNFLOWER_BLUE.getIndex());
+            style_header.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            style_header.setVerticalAlignment(VerticalAlignment.TOP);
+            style_header.setFont(font);
+
+            //文字列用のスタイル
+            CellStyle style_string = book.createCellStyle();
+            OutPut.setBorder(style_string, BorderStyle.THIN);
+            style_string.setVerticalAlignment(VerticalAlignment.TOP);
+            style_string.setFont(font);
+
+            //改行が入った文字列用のスタイル
+            CellStyle style_string_wrap = book.createCellStyle();
+            OutPut.setBorder(style_string_wrap, BorderStyle.THIN);
+            style_string_wrap.setVerticalAlignment(VerticalAlignment.TOP);
+            style_string_wrap.setWrapText(true);
+            style_string_wrap.setFont(font);
+
+            //整数用のスタイル
+            CellStyle style_int = book.createCellStyle();
+            OutPut.setBorder(style_int, BorderStyle.THIN);
+            style_int.setDataFormat(format.getFormat("###0;-###0"));
+            style_int.setVerticalAlignment(VerticalAlignment.TOP);
+            style_int.setFont(font);
+
+            //小数用のスタイル
+            CellStyle style_double = book.createCellStyle();
+            OutPut.setBorder(style_double, BorderStyle.THIN);
+            style_double.setDataFormat(format.getFormat("###0.0;-###0.0"));
+            style_double.setVerticalAlignment(VerticalAlignment.TOP);
+            style_double.setFont(font);
+
+            //円表示用のスタイル
+            CellStyle style_yen = book.createCellStyle();
+            OutPut.setBorder(style_yen, BorderStyle.THIN);
+            style_yen.setDataFormat(format.getFormat("\"\\\"###0;\"\\\"-###0"));
+            style_yen.setVerticalAlignment(VerticalAlignment.TOP);
+            style_yen.setFont(font);
+
+            //パーセント表示用のスタイル
+            CellStyle style_percent = book.createCellStyle();
+            OutPut.setBorder(style_percent, BorderStyle.THIN);
+            style_percent.setDataFormat(format.getFormat("0.0%"));
+            style_percent.setVerticalAlignment(VerticalAlignment.TOP);
+            style_percent.setFont(font);
+
+            //日時表示用のスタイル
+            CellStyle style_datetime = book.createCellStyle();
+            OutPut.setBorder(style_datetime, BorderStyle.THIN);
+            style_datetime.setDataFormat(format.getFormat("yyyy/mm/dd hh:mm:ss"));
+            style_datetime.setVerticalAlignment(VerticalAlignment.TOP);
+            style_datetime.setFont(font);
+
+            Row row;
+            int rowNumber;
+            Cell cell;
+            int colNumber;
+
+
+            Sheet sheet;
+
+            for (int i = 0; i < 3; i++) {
+                sheet = book.createSheet();
+                if (sheet instanceof SXSSFSheet) {
+                    ((SXSSFSheet) sheet).trackAllColumnsForAutoSizing();
+                }
+                //シート名称の設定
+                if (i == 0) book.setSheetName(i, "nodes");
+                else if (i == 1) book.setSheetName(i, "edges");
+                else if (i == 2) book.setSheetName(i, "reciprocalEdges");
+
+                //ヘッダ行の作成
+                rowNumber = 0;
+                colNumber = 0;
+
+                row = sheet.createRow(rowNumber);
+                cell = row.createCell(colNumber++);
+                cell.setCellStyle(style_header);
+                cell.setCellType(CellType.STRING);
+                if (i == 0) cell.setCellValue("Node id");
+                else cell.setCellValue("Edge id");
+
+                cell = row.createCell(colNumber++);
+                cell.setCellStyle(style_header);
+                cell.setCellType(CellType.STRING);
+                if (i == 0) cell.setCellValue("Node color");
+                else cell.setCellValue("Source Node id");
+
+                cell = row.createCell(colNumber++);
+                cell.setCellStyle(style_header);
+                cell.setCellType(CellType.STRING);
+                if (i == 0) cell.setCellValue("Node shape");
+                else cell.setCellValue("Target Node id");
+
+                if (i == 0) {
+                    cell = row.createCell(colNumber++);
+                    cell.setCellStyle(style_header);
+                    cell.setCellType(CellType.STRING);
+                    cell.setCellValue(" x-coordinate ");
+
+                    cell = row.createCell(colNumber++);
+                    cell.setCellStyle(style_header);
+                    cell.setCellType(CellType.STRING);
+                    cell.setCellValue(" y-coordinate ");
+
+                    cell = row.createCell(colNumber++);
+                    cell.setCellStyle(style_header);
+                    cell.setCellType(CellType.STRING);
+                    cell.setCellValue(" leader id");
+
+                    cell = row.createCell(colNumber++);
+                    cell.setCellStyle(style_header);
+                    cell.setCellType(CellType.STRING);
+                    cell.setCellValue(" delay to leader ");
+
+                    cell = row.createCell(colNumber++);
+                    cell.setCellStyle(style_header);
+                    cell.setCellType(CellType.STRING);
+                    cell.setCellValue(" is lonely or not");
+
+                    cell = row.createCell(colNumber++);
+                    cell.setCellStyle(style_header);
+                    cell.setCellType(CellType.STRING);
+                    cell.setCellValue(" is accompanied or not");
+                } else {
+                    cell = row.createCell(colNumber++);
+                    cell.setCellStyle(style_header);
+                    cell.setCellType(CellType.STRING);
+                    cell.setCellValue(" length ");
+                }
+
+                //ウィンドウ枠の固定
+                sheet.createFreezePane(1, 1);
+
+                //ヘッダ行にオートフィルタの設定
+                sheet.setAutoFilter(new CellRangeAddress(0, 0, 0, colNumber));
+
+                //列幅の自動調整
+                for (int j = 0; j <= colNumber; j++) {
+                    sheet.autoSizeColumn(j, true);
+                }
+
+                //nodeシートへの書き込み
+                if (i == 0) {
+                    for (Agent agent : agents) {
+                        rowNumber++;
+                        colNumber = 0;
+                        row = sheet.createRow(rowNumber);
+                        cell = row.createCell(colNumber++);
+                        cell.setCellStyle(style_int);
+                        cell.setCellType(CellType.NUMERIC);
+                        cell.setCellValue(agent.id);
+
+                        cell = row.createCell(colNumber++);
+                        cell.setCellStyle(style_string);
+                        cell.setCellType(CellType.STRING);
+                        if (agent.e_leader > agent.e_member) cell.setCellValue("Red");
+                        else if (agent.principle == RATIONAL) cell.setCellValue("Green");
+                        else if (agent.principle == RECIPROCAL) cell.setCellValue("Blue");
+
+                        cell = row.createCell(colNumber++);
+                        cell.setCellStyle(style_string_wrap);
+                        cell.setCellType(CellType.STRING);
+                        if (agent.e_leader > agent.e_member) cell.setCellValue("Circle");
+                        else if (agent.principle == RATIONAL) cell.setCellValue("Square");
+                        else if (agent.principle == RECIPROCAL) cell.setCellValue("Triangle");
+
+                        cell = row.createCell(colNumber++);
+                        cell.setCellStyle(style_string);
+                        cell.setCellType(CellType.NUMERIC);
+                        cell.setCellValue(agent.x * 10);
+
+                        cell = row.createCell(colNumber++);
+                        cell.setCellStyle(style_string);
+                        cell.setCellType(CellType.NUMERIC);
+                        cell.setCellValue(agent.y * 10);
+
+                        cell = row.createCell(colNumber++);
+                        cell.setCellStyle(style_string);
+                        cell.setCellType(CellType.NUMERIC);
+                        if (agent.e_leader > agent.e_member) cell.setCellValue(agent.id * 3);
+                        else if (agent.leader != null) cell.setCellValue(agent.leader.id * 3);
+
+                        cell = row.createCell(colNumber++);
+                        cell.setCellStyle(style_string);
+                        cell.setCellType(CellType.NUMERIC);
+                        if (agent.e_leader > agent.e_member) cell.setCellValue(0);
+                        else if (agent.leader != null)
+                            cell.setCellValue(Manager.delays[agent.id][agent.leader.id] * 10);
+
+                        cell = row.createCell(colNumber++);
+                        cell.setCellStyle(style_string);
+                        cell.setCellType(CellType.NUMERIC);
+                        cell.setCellValue(agent.isLonely);
+
+                        cell = row.createCell(colNumber++);
+                        cell.setCellStyle(style_string);
+                        cell.setCellType(CellType.NUMERIC);
+                        cell.setCellValue(agent.isAccompanied);
+
+                        //列幅の自動調整
+                        for (int k = 0; k <= colNumber; k++) {
+                            sheet.autoSizeColumn(k, true);
+                        }
+                    }
+                }
+                // edgeシートへの書き込み
+                else if (i == 1) {
+                    for (int j = 0; j < edge.from_id.size(); j++) {
+                        rowNumber++;
+                        colNumber = 0;
+                        row = sheet.createRow(rowNumber);
+                        cell = row.createCell(colNumber++);
+                        cell.setCellStyle(style_int);
+                        cell.setCellType(CellType.NUMERIC);
+                        cell.setCellValue(j);
+
+                        cell = row.createCell(colNumber++);
+                        cell.setCellStyle(style_string);
+                        cell.setCellType(CellType.NUMERIC);
+                        cell.setCellValue(edge.from_id.get(j));
+
+                        cell = row.createCell(colNumber++);
+                        cell.setCellStyle(style_string_wrap);
+                        cell.setCellType(CellType.NUMERIC);
+                        cell.setCellValue(edge.to_id.get(j));
+
+                        cell = row.createCell(colNumber++);
+                        cell.setCellStyle(style_string_wrap);
+                        cell.setCellType(CellType.NUMERIC);
+                        cell.setCellValue(edge.delays.get(j));
+
+                        //列幅の自動調整
+                        for (int k = 0; k <= colNumber; k++) {
+                            sheet.autoSizeColumn(k, true);
+                        }
+                    }
+                } else if (i == 2) {
+                    for (int j = 0; j < edge.from_id.size(); j++) {
+                        if (edge.isRecipro.get(j) != true) continue;
+                        rowNumber++;
+                        colNumber = 0;
+                        row = sheet.createRow(rowNumber);
+                        cell = row.createCell(colNumber++);
+                        cell.setCellStyle(style_int);
+                        cell.setCellType(CellType.NUMERIC);
+                        cell.setCellValue(j);
+
+                        cell = row.createCell(colNumber++);
+                        cell.setCellStyle(style_string);
+                        cell.setCellType(CellType.NUMERIC);
+                        cell.setCellValue(edge.from_id.get(j));
+
+                        cell = row.createCell(colNumber++);
+                        cell.setCellStyle(style_string_wrap);
+                        cell.setCellType(CellType.NUMERIC);
+                        cell.setCellValue(edge.to_id.get(j));
+
+                        cell = row.createCell(colNumber++);
+                        cell.setCellStyle(style_string_wrap);
+                        cell.setCellType(CellType.NUMERIC);
+                        cell.setCellValue(edge.delays.get(j));
+
+                        //列幅の自動調整
+                        for (int k = 0; k <= colNumber; k++) {
+                            sheet.autoSizeColumn(k, true);
+                        }
+                    }
+                }
+            }
+            //ファイル出力
+            fout = new FileOutputStream(outputFilePath);
+            book.write(fout);
+        } finally {
+            if (fout != null) {
+                try {
+                    fout.close();
+                } catch (IOException e) {
+                }
+            }
+            if (book != null) {
+                try {
+                    /*
+                        SXSSFWorkbookはメモリ空間を節約する代わりにテンポラリファイルを大量に生成するため、
+                        不要になった段階でdisposeしてテンポラリファイルを削除する必要がある
+                     */
+                    ((SXSSFWorkbook) book).dispose();
+                } catch (Exception e) {
+                }
+            }
+        }
+        edge = null;
+    }
+
+
     static void writeDelays(int[][] delays){
         FileWriter fw;
         BufferedWriter bw;

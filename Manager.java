@@ -9,11 +9,10 @@ import java.io.IOException;
 import java.util.*;
 
 public class Manager implements SetParam {
-//    private static Strategy strategy = new ProposedMethod();
-//    private static Strategy strategy = new ComparativeMethod0();   // 旧信頼度更新式で役割更新なし
-//    private static Strategy strategy = new ComparativeMethod1();   // 近距離優先手法
-//    private static Strategy strategy = new ComparativeMethod2();   // 旧信頼度更新式で役割更新あり
-    private static Strategy strategy = new ComparativeMethod3();   // 新信頼度更新式で役割更新なし
+    private static Strategy strategy = new ProposedMethod();     // 最短終了時間優先信頼度更新式
+//    private static Strategy strategy = new ComparativeMethod1();   // 最短応答優先手法
+//    private static Strategy strategy = new ComparativeMethod2();     // 最短応答優先信頼度更新で役割更新なし
+//    private static Strategy strategy = new ComparativeMethod3();   // 最短応答優先信頼度更新で役割更新あり
 //    private static Strategy strategy = new RoundRobin();           // ラウンドロビン
 
     static private long    _seed ;
@@ -58,6 +57,9 @@ public class Manager implements SetParam {
                 }
                 // ターンの進行
                 for (turn = 1; turn <= MAX_TURN_NUM; turn++) {
+//                    System.out.println("===========================================================");
+//                    System.out.println("Turn: " + turn);
+
                     addNewTasksToQueue();
                     actFreeLancer();
                     if (turn % writeResultsSpan == 0) {
@@ -119,6 +121,7 @@ public class Manager implements SetParam {
         // エージェントの初期化
         agents = generateAgents(strategy);
         OutPut.countDelays(delays);
+        OutPut.checkGrids(grids);
     }
     private static void setSeed( String line ){
         _seed     = Long.parseLong(line);
@@ -265,8 +268,8 @@ public class Manager implements SetParam {
         return -1;
     }
     static int calcManhattan(Agent from, Agent to) {
-        int delay = Math.abs(from.x - to.x) + Math.abs(from.y - to.y);
-        return (int) Math.ceil((double) (delay * MAX_DELAY) / (double) (ROW + COLUMN - 2) );
+        int distance = Math.abs(from.x - to.x) + Math.abs(from.y - to.y);
+        return (int) Math.ceil((double) (distance * MAX_DELAY) / (double) (ROW + COLUMN - 2) );
     }
     // taskQueueにあるタスクをリーダーに渡すメソッド
     static Task getTask() {
@@ -338,7 +341,7 @@ public class Manager implements SetParam {
         leader.ourTask = null;
     }
     static void finishTask(Agent leader) {
-        // OutPut.checkTeam(leader);
+//         OutPut.checkTeam(leader);
         leader.ourTask = null;
         if( leader.isLonely == 1 )      finishedTasksInDepopulatedArea++;
         if( leader.isAccompanied == 1 ) finishedTasksInPopulatedArea++;

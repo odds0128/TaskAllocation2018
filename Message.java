@@ -18,13 +18,12 @@ class Message implements SetParam{
         this.messageType = type;
         if( type == PROPOSAL ){
             this.resType = (int) o;
-        }
-        if( type == REPLY ){
+        }else if( type == REPLY ){
             this.reply       = Boolean.parseBoolean( o.toString() );
-        }
-        if( type == RESULT ){
+        }else if( type == RESULT ){
             this.subtask     = (SubTask) o ;
         }
+//        System.out.println(this);
     }
 
     Agent getFrom() {

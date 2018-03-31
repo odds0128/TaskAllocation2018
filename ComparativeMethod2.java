@@ -3,14 +3,18 @@ import java.util.List;
 
 /**
  * ComparativeMethod2クラス
- * 信頼度, 信頼エージェントの更新をする.
- * それによってメンバの選定並びにリーダーからの要請を受諾するかどうか決定する
- * RO1との違いはリーダーがチーム編成の成功可否を判断する際に,
- * 割り当てをいじるかどうか
- * 禁じ手を使う方
+ * 信頼度更新は最短応答優先
+ * 役割更新機構なし
  */
 public class ComparativeMethod2 implements SetParam, Strategy {
     static final double γ = γ_r;
+    static int[] min = new int[AGENT_NUM];
+
+    ComparativeMethod2() {
+        for (int i = 0; i < AGENT_NUM; i++) {
+            min[i] = Integer.MAX_VALUE;
+        }
+    }
 
     public void actAsLeader(Agent agent) {
         setPrinciple(agent);
@@ -19,13 +23,7 @@ public class ComparativeMethod2 implements SetParam, Strategy {
         else if (agent.phase == EXECUTION) execute(agent);
         decreaseDEC(agent);
     }
-
     public void actAsMember(Agent agent){
-        if( Manager.getTicks() - agent.validatedTicks > ROLE_RENEWAL_TICKS ){
-            agent.inactivate(0);
-            return;
-        }
-
         setPrinciple(agent);
         if (agent.phase == REPLY) replyAsM(agent);
         else if (agent.phase == RECEPTION) receiveAsM(agent);
@@ -42,11 +40,12 @@ public class ComparativeMethod2 implements SetParam, Strategy {
         leader.restSubTask = leader.ourTask.subTaskNum;                       // 残りサブタスク数を設定
         leader.selectSubTask();
         leader.candidates = selectMembers(leader, leader.ourTask.subTasks);   // メッセージ送信
+        leader.start = Manager.getTicks();
         leader.nextPhase();  // 次のフェイズへ
     }
 
     private void replyAsM(Agent member) {
-        if (member.messages.size() == 0) return;     // メッセージをチェック
+        if (member.messages.size() == 0) { return; }
         member.leader = selectLeader(member, member.messages);
         if (member.leader != null) {
             member.joined = true;
@@ -56,8 +55,11 @@ public class ComparativeMethod2 implements SetParam, Strategy {
         // どのリーダーからの要請も受けないのならinactivate
         // どっかには参加するのなら交渉2フェイズへ
         if (member.joined) {
+            member.totalOffers++;
+            member.start = Manager.getTicks();
             member.nextPhase();
         }
+// */
     }
 
     private void reportAsL(Agent leader) {
@@ -71,7 +73,10 @@ public class ComparativeMethod2 implements SetParam, Strategy {
             candidate = reply.getFrom();
             // 受諾なら信頼度をプラスに更新する
             if (reply.getReply() == ACCEPT) {
-                leader.relAgents = renewRel(leader, candidate, 1);
+                int rt = Manager.getTicks() - leader.start;             // 応答時間
+                if (rt < min[leader.id]) min[leader.id] = rt;
+//                renewHistory(leader, rt);
+                leader.relAgents = renewRel(leader, candidate, (double) min[leader.id] / (double) rt);
             }
             // 拒否ならそのエージェントを候補リストから外し, 信頼度を0で更新する
             else {
@@ -189,8 +194,14 @@ public class ComparativeMethod2 implements SetParam, Strategy {
         if (member.messages.size() == 0) return;
         Message message;
         message = member.messages.remove(0);
-        //       System.out.println("             " + message);
         member.mySubTask = message.getSubTask();
+
+        int rt = Manager.getTicks() - member.start;
+        if (rt < min[member.id]) min[member.id] = rt;
+/*
+        member.totalResponseTicks += rt;
+        member.meanRT = (double)member.totalResponseTicks/(double)member.totalOffers;
+// */
         // サブタスクがもらえたなら信頼度をプラスに更新し, 実行フェイズへ移る.
         if (member.mySubTask != null) {
             member.relAgents = renewRel(member, member.leader, 1);
@@ -200,7 +211,7 @@ public class ComparativeMethod2 implements SetParam, Strategy {
         // サブタスクが割り当てられなかったら信頼度を0で更新し, inactivate
         else {
             //       System.out.println(" ID: " + member.id + ", " + member.leader + " is unreliable");
-            member.relAgents = renewRel(member, member.leader, 0);
+            member.relAgents = renewRel(member, member.leader, -(double) rt / (double) min[member.id]);
             member.inactivate(0);
         }
     }
@@ -208,11 +219,12 @@ public class ComparativeMethod2 implements SetParam, Strategy {
     private void execute(Agent agent) {
         agent.executionTime--;
         if (agent.executionTime == 0) {
-            if (agent.role == LEADER) {
-                if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN)
+            if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
+                if (agent.role == LEADER) {
                     for (Agent ag : agent.teamMembers) agent.workWithAsL[ag.id]++;
-            } else {
-                if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) agent.workWithAsM[agent.leader.id]++;
+                } else {
+                    agent.workWithAsM[agent.leader.id]++;
+                }
             }
             // 自分のサブタスクが終わったら役割適応度を1で更新して非活性状態へ
             agent.inactivate(1);
@@ -237,7 +249,7 @@ public class ComparativeMethod2 implements SetParam, Strategy {
             else {
                 int j = 0;
                 while (true) {
-                    // 信頼度ランキング1位から全走査
+                    // エージェント1から全走査
                     candidate = leader.relRanking.get(j++);
                     // そいつがまだ候補に入っていなくてさらにそのサブタスクをこなせそうなら
                     if (leader.inTheList(candidate, temp) < 0 && leader.calcExecutionTime(candidate, subtask) > 0) break;
@@ -250,7 +262,7 @@ public class ComparativeMethod2 implements SetParam, Strategy {
     }
 
     /**
-     * selectLeaderメソッド
+     * selectLeaderメソッ
      * メンバがどのリーダーの要請を受けるかを判断する
      * 信頼エージェントのリストにあるリーダーエージェントからの要請を受ける
      */
@@ -304,20 +316,25 @@ public class ComparativeMethod2 implements SetParam, Strategy {
      * renewRelメソッド
      * 信頼度を更新し, 同時に信頼エージェントも更新する
      * agentのtargetに対する信頼度をevaluationによって更新し, 同時に信頼エージェントを更新する
+     * evaluationは正(プラスへの信頼度更新)と0(普通にマイナスに更新)と負(ペナルティを課して更新)がある.
+     * よって, この式の中で政府をいじる必要はないことに注意
      *
      * @param agent
      */
-    private List<Agent> renewRel(Agent agent, Agent target, int evaluation) {
+    private List<Agent> renewRel(Agent agent, Agent target, double evaluation) {
+        assert evaluation <= 1 : "evaluation too big";
         assert !agent.equals(target) : "alert4";
-        double temp = agent.reliabilities[target.id];
-
+        double former = agent.reliabilities[target.id];
+//        if( Manager.getTicks() % 10000 == 0 ) System.out.println( evaluation );
         // 信頼度の更新式
         if (agent.role == LEADER) {
-            agent.reliabilities[target.id] = temp * (1.0 - α) + α * (double) evaluation;
+            agent.reliabilities[target.id] = former * (1.0 - α) + α * evaluation;
         } else {
-            agent.reliabilities[target.id] = temp * (1.0 - α) + α * (double) evaluation;
+            if (evaluation >= 0) agent.reliabilities[target.id] = former * (1.0 - α) + α * evaluation;
+            else agent.reliabilities[target.id] = former * (1.0 + α * evaluation);
         }
-        assert agent.reliabilities[target.id] <= 1.0 : "Illegal reliability renewal ... Turn: " + Manager.getTicks() + ", ID: " + agent.id + ", target: " + target.id + ", change: " + temp + " → " + agent.reliabilities[target.id];
+
+        assert agent.reliabilities[target.id] <= 1.0 : "Illegal reliability renewal ... Turn: " + Manager.getTicks() + ", ID: " + agent.id + ", target: " + target.id + ", change: " + former + " → " + agent.reliabilities[target.id];
 
         /*
          信頼エージェントの更新
@@ -325,7 +342,7 @@ public class ComparativeMethod2 implements SetParam, Strategy {
      //   */
         // 信頼度が下がった場合と上がった場合で比較の対象を変える
         // 上がった場合は順位が上のやつと比較して
-        if (evaluation == 1) {
+        if ( former < agent.reliabilities[target.id] ) {
             int index = agent.inTheList(target, agent.relRanking) - 1;    // targetの現在順位の上を持ってくる
             while (index > -1) {
                 // 順位が上のやつよりも信頼度が高くなったなら
@@ -392,9 +409,6 @@ public class ComparativeMethod2 implements SetParam, Strategy {
                 break;
             }
         }
-/*        if (tmp.size() == 0 || agent.e_member < THRESHOLD_RECIPROCITY) agent.principle = RATIONAL;
-        else agent.principle = RECIPROCAL;
-// */
         return tmp;
     }
 
@@ -431,6 +445,11 @@ public class ComparativeMethod2 implements SetParam, Strategy {
 
     }
 
-    public void inactivate() {
+
+    static public void clearPM() {
+        for (int i = 0; i < AGENT_NUM; i++) {
+            min[i] = Integer.MAX_VALUE;
+        }
     }
+
 }

@@ -377,7 +377,19 @@ public class Agent implements SetParam , Cloneable{
         int size = messages.size();
         Message m;
         if (size == 0) return;
-//        System.out.println("ID: " + self.id + ", Phase: " + self.phase + " message:  "+ self.messages);
+        // メンバからの作業完了報告をチェックする
+        for (int i = 0; i < size; i++) {
+            m = messages.remove(0);
+            if( m.getMessageType() == DONE ){
+//               System.out.println(" Member: " + m.getFrom().id + " → Leader: " + m.getTo().id + ", DONE");
+                // prevTeamMembersから削除して
+                // 「リーダーとしての更新式で」信頼度を更新する
+                size--;
+            }else{
+                messages.add(m); // 違うメッセージだったら戻す
+            }
+        }
+        //        System.out.println("ID: " + self.id + ", Phase: " + self.phase + " message:  "+ self.messages);
         // リーダーでPROPOSITION or 誰でもEXECUTION → 誰からのメッセージも期待していない
         if (self.phase == PROPOSITION || self.phase == EXECUTION) {
             for (int i = 0; i < size; i++) {
@@ -420,7 +432,7 @@ public class Agent implements SetParam , Cloneable{
      */
     protected int inTheList(Agent a, List<Agent> agents) {
         for (int i = 0; i < agents.size(); i++) {
-            if (a == agents.get(i)) return i;
+            if( a.equals(agents.get(i)) ) return i;
         }
         return -1;
     }
