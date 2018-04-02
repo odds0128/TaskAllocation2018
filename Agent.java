@@ -52,7 +52,7 @@ public class Agent implements SetParam , Cloneable{
     List<Allocation> allocations;       // サブタスクの割り当て候補を< agent, subtask >のリストで保持
     List<Message> replies;
     List<Message> results;
-    List<Agent> prevTeamMember;
+    List<Agent> prevTeamMember = new ArrayList<>();
     Task ourTask;                  // 持ってきた(割り振られた)タスク
     int restSubTask;               // 残りのサブタスク数
     int index = 0;                 // 一回要請を送ったメンバにもう一度送らないようにindex管理
@@ -241,7 +241,6 @@ public class Agent implements SetParam , Cloneable{
             allocations.clear();
             replies.clear();
             results.clear();
-            prevTeamMember = teamMembers;
             restSubTask = 0;
             replyNum = 0;
         } else {
@@ -374,21 +373,14 @@ public class Agent implements SetParam , Cloneable{
      * それ以外はネガティブな返事をする
      */
     void checkMessages(Agent self) {
+        if( strategy.getClass().getName() == "ProposedMethod" ) {
+            strategy.checkMessages(self);
+            return;
+        }
+
         int size = messages.size();
         Message m;
         if (size == 0) return;
-        // メンバからの作業完了報告をチェックする
-        for (int i = 0; i < size; i++) {
-            m = messages.remove(0);
-            if( m.getMessageType() == DONE ){
-//               System.out.println(" Member: " + m.getFrom().id + " → Leader: " + m.getTo().id + ", DONE");
-                // prevTeamMembersから削除して
-                // 「リーダーとしての更新式で」信頼度を更新する
-                size--;
-            }else{
-                messages.add(m); // 違うメッセージだったら戻す
-            }
-        }
         //        System.out.println("ID: " + self.id + ", Phase: " + self.phase + " message:  "+ self.messages);
         // リーダーでPROPOSITION or 誰でもEXECUTION → 誰からのメッセージも期待していない
         if (self.phase == PROPOSITION || self.phase == EXECUTION) {

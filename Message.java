@@ -1,3 +1,5 @@
+import java.io.DataOutput;
+
 /**
  * @author Funato
  * @version 2.0
@@ -11,6 +13,7 @@ class Message implements SetParam{
     private int resType;
     private boolean reply;
     private SubTask subtask;  // チーム編成が成功したら, 割り当てるサブタスクが入る. 失敗したらnull
+    private int timeSTarrived;
 
     Message(Agent from, Agent to, int type, Object o) {
         this.from = from;
@@ -22,6 +25,8 @@ class Message implements SetParam{
             this.reply       = Boolean.parseBoolean( o.toString() );
         }else if( type == RESULT ){
             this.subtask     = (SubTask) o ;
+        }else if( type == DONE){
+            this.timeSTarrived = (int) o ;
         }
 //        System.out.println(this);
     }
@@ -42,6 +47,7 @@ class Message implements SetParam{
         return reply;
     }
     int getResType(){ return resType; }
+    int getTimeSTarrived() { return timeSTarrived; }
 
     @Override
     public String toString(){

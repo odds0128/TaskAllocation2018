@@ -81,7 +81,8 @@ public class ComparativeMethod2 implements SetParam, Strategy {
             // 拒否ならそのエージェントを候補リストから外し, 信頼度を0で更新する
             else {
                 int i = leader.inTheList(candidate, leader.candidates);
-                if (i > 0) leader.candidates.set(i, null);
+                assert i >= 0 : "alert: Leader got reply from a ghost.";
+                leader.candidates.set(i, null);
                 leader.relAgents = renewRel(leader, candidate, 0);
             }
         }
@@ -445,6 +446,9 @@ public class ComparativeMethod2 implements SetParam, Strategy {
 
     }
 
+    public void checkMessages(Agent ag){
+
+    }
 
     static public void clearPM() {
         for (int i = 0; i < AGENT_NUM; i++) {
