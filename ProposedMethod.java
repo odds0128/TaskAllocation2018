@@ -241,6 +241,7 @@ public class ProposedMethod implements SetParam, Strategy {
     /**
      * selectMembersメソッド
      * 優先度の高いエージェントから(すなわち添字の若い信頼エージェントから)選択する
+     * ただし，自分がサブタスクを送ってまだ完了の返信が来ないやつは候補に含めない
      * ε-greedyを導入
      *
      * @param subtasks
@@ -258,8 +259,11 @@ public class ProposedMethod implements SetParam, Strategy {
                 while (true) {
                     // エージェント1から全走査
                     candidate = leader.relRanking.get(j++);
-                    // そいつがまだ候補に入っていなくてさらにそのサブタスクをこなせそうなら
-                    if (leader.inTheList(candidate, temp) < 0 && leader.calcExecutionTime(candidate, subtask) > 0)
+                    // そいつがまだ候補に入っていなくて，かつ最近サブタスクを割り振っていなくて，
+                    // さらにそのサブタスクをこなせそうなら
+                    if (leader.inTheList(candidate, temp) < 0 &&
+                            leader.inTheList(candidate, leader.prevTeamMember) < 0 &&
+                            leader.calcExecutionTime(candidate, subtask) > 0 );
                         break;
                 }
             }
