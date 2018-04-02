@@ -59,7 +59,8 @@ public class ComparativeMethod1 implements Strategy, SetParam {
             // 拒否ならそのエージェントを候補リストから外す
             else {
                 int i = leader.inTheList(candidate, leader.candidates);
-                if (i > 0) leader.candidates.set(i, null);
+                assert i >= 0 : "alert: Leader got reply from a ghost.";
+                leader.candidates.set(i, null);
             }
         }
 

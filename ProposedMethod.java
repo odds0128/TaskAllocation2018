@@ -90,8 +90,9 @@ public class ProposedMethod implements SetParam, Strategy {
             }
             // 拒否ならそのエージェントを候補リストから外し, 信頼度を0で更新する
             else {
-                 leader.candidates.set(i, null);
-                 leader.relAgents = renewRel(leader, candidate, 0);
+                assert i >= 0 : "alert: Leader got reply from a ghost.";
+                leader.candidates.set(i, null);
+                leader.relAgents = renewRel(leader, candidate, 0);
              }
         }
 
