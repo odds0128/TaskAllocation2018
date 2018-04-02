@@ -9,10 +9,10 @@ import java.io.IOException;
 import java.util.*;
 
 public class Manager implements SetParam {
-// private static Strategy strategy = new ProposedMethod();     // 最短終了時間優先信頼度更新式
+ private static Strategy strategy = new ProposedMethod();     // 最短終了時間優先信頼度更新式
 //    private static Strategy strategy = new ComparativeMethod1();   // 最短応答優先手法
 //    private static Strategy strategy = new ComparativeMethod2();     // 最短応答優先信頼度更新で役割更新なし
-    private static Strategy strategy = new ComparativeMethod3();   // 最短応答優先信頼度更新で役割更新あり
+//    private static Strategy strategy = new ComparativeMethod3();   // 最短応答優先信頼度更新で役割更新あり
 //    private static Strategy strategy = new RoundRobin();           // ラウンドロビン
 
     static private long    _seed ;
@@ -58,9 +58,9 @@ public class Manager implements SetParam {
                 }
                 // ターンの進行
                 for (turn = 1; turn <= MAX_TURN_NUM; turn++) {
-//                    System.out.println("===========================================================");
-//                    System.out.println("Turn: " + turn);
-
+/*                    System.out.println("===========================================================");
+                    System.out.println("Turn: " + turn);
+// */
                     addNewTasksToQueue();
                     actFreeLancer();
                     if (turn % writeResultsSpan == 0) {

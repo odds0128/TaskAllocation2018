@@ -377,7 +377,7 @@ public class Agent implements SetParam , Cloneable{
             strategy.checkMessages(self);
             return;
         }
-
+        System.out.println("no year");
         int size = messages.size();
         Message m;
         if (size == 0) return;
