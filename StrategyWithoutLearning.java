@@ -24,6 +24,8 @@ public class StrategyWithoutLearning implements Strategy, SetParam {
     }
     void execute(Agent agent){
     }
+    public void checkMessages(Agent ag){
+    }
 
     @Override
     public Agent selectLeader(Agent agent, List<Message> messages) {

@@ -9,7 +9,12 @@ import java.io.IOException;
 import java.util.*;
 
 public class Manager implements SetParam {
-    private static Strategy strategy = new ProposedMethod();     // 最短終了時間優先信頼度更新式
+// private static Strategy strategy = new ProposedMethodA();     // 最短終了時間優先信頼度更新式
+//    private static Strategy strategy = new ProposedMethodA_2();     // 最短終了時間優先信頼度更新式
+//    private static Strategy strategy = new ProposedMethodB();     // 最短終了時間優先信頼度更新式
+//    private static Strategy strategy = new ProposedMethodB_2();     // 最短終了時間優先信頼度更新式
+private static Strategy strategy = new ProposedMethodC();     // 最短終了時間優先信頼度更新式
+//    private static Strategy strategy = new ProposedMethodC_2();     // 最短終了時間優先信頼度更新式
 //    private static Strategy strategy = new ComparativeMethod1();   // 最短応答優先手法
 //    private static Strategy strategy = new ComparativeMethod2();     // 最短応答優先信頼度更新で役割更新なし
 //    private static Strategy strategy = new ComparativeMethod3();   // 最短応答優先信頼度更新で役割更新あり
@@ -53,13 +58,16 @@ public class Manager implements SetParam {
                 initiate(line);                         // シード，タスク，エージェントの初期化処理
                 System.out.println( ++num + "回目");
                 if( CHECK_INITIATION ){
+                    clearAll();
                     continue;
                 }
                 // ターンの進行
                 for (turn = 1; turn <= MAX_TURN_NUM; turn++) {
-//                    System.out.println("===========================================================");
-//                    System.out.println("Turn: " + turn);
-
+/*                    if( turn > 1000 ) {
+                        System.out.println("===========================================================");
+                        System.out.println("Turn: " + turn);
+                    }
+// */
                     addNewTasksToQueue();
                     actFreeLancer();
                     if (turn % writeResultsSpan == 0) {
@@ -73,7 +81,6 @@ public class Manager implements SetParam {
                     }
 
                     TransmissionPath.transmit();                // 通信遅延あり
-//                    TransmissionPath.transmitWithNoDelay();   // 通信遅延なし
                     checkMessage(agents);          // 要請の確認, 無効なメッセージに対する返信
 
                     actLeadersAndMembers();
@@ -84,20 +91,17 @@ public class Manager implements SetParam {
                         OutPut.indexIncrement();
                         finishedTasks = 0; disposedTasks = 0; overflowTasks = 0; finishedTasksInDepopulatedArea = 0; finishedTasksInPopulatedArea = 0;
                     }
-// */
                 // ここが1tickの最後の部分．次のtickまでにやることあったらここで．
                 }
                 // ↑ 一回の実験のカッコ．以下は実験の合間で作業する部分
-
-//                OutPut.showResults(turn, agents,num);
-//                OutPut.showLeaderRetirement(snapshot, agents);
                 if (num == EXECUTION_TIMES) break;
-                else clearAll();
+                clearAll();
             }
             // ↑ 全実験の終了のカッコ．以下は後処理
-//            OutPut.writeReliabilities(turn,agents, strategy);
             OutPut.writeResults(strategy);
 //            OutPut.writeDelays(delays);
+//            OutPut.writeReliabilities(agents, strategy);
+            OutPut.writeDelaysAndRels(delays, agents, strategy);
             if( CHECK_RELATIONSHIPS ) OutPut.writeGraphInformation(agents, "graph" + strategy.getClass().getName());
 // */
             br.close();
@@ -120,8 +124,8 @@ public class Manager implements SetParam {
 
         // エージェントの初期化
         agents = generateAgents(strategy);
-        OutPut.countDelays(delays);
-        OutPut.checkGrids(grids);
+//        OutPut.countDelays(delays);
+//        OutPut.checkGrids(grids);
     }
     private static void setSeed( String line ){
         _seed     = Long.parseLong(line);
@@ -341,7 +345,7 @@ public class Manager implements SetParam {
         leader.ourTask = null;
     }
     static void finishTask(Agent leader) {
-//         OutPut.checkTeam(leader);
+//        if( leader.id == 271 ) OutPut.checkTeam(leader);
         leader.ourTask = null;
         if( leader.isLonely == 1 )      finishedTasksInDepopulatedArea++;
         if( leader.isAccompanied == 1 ) finishedTasksInPopulatedArea++;

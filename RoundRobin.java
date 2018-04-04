@@ -255,6 +255,10 @@ public class RoundRobin implements Strategy, SetParam {
         return myLeader;
     }
 
+    public void checkMessages(Agent ag){
+
+    }
+
     public void inactivateWithNoLearning() {
     }
 }

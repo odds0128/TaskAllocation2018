@@ -48,7 +48,7 @@ class TransmissionPath implements SetParam {
         }
         if (message.getMessageType() == RESULT) results++;
 //        System.out.println(message);
-//         System.out.println(" from: " + message.getFrom().id + ", to: " + message.getTo().id + ", delays: " + calcTicks(message));
+
     }
 
     /**
@@ -86,9 +86,12 @@ class TransmissionPath implements SetParam {
 
     static public double getCT(){
         int ct = communicationTime, mn = messageNum;
+        assert (ct > 0 && mn > 0) || (ct == 0 && mn == 0) : "ghost message was sent";
+        if( ct == 0 && mn == 0 ) return 4.0;
+        double temp = (double)ct/(double) mn;
         communicationTime = 0;
         messageNum = 0;
-        return (double)ct/(double) mn;
+        return temp;
     }
 
     /**

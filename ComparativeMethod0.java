@@ -427,6 +427,10 @@ public class ComparativeMethod0 implements SetParam, Strategy {
 
     }
 
+    public void checkMessages(Agent ag){
+
+    }
+
     public void inactivate() {
     }
 }

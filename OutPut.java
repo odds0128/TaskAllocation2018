@@ -53,6 +53,7 @@ public class OutPut implements SetParam {
         memberNumInPopulatedAreaArray[index]   += (Agent._lonelyAgents.size() - b);
         // */
     }
+
     static void aggregateData(int ft, int dt, int ot, int rm, int ftida, int ftipa) {
         finishedTasksArray[index] += ft;
         communicationDelayArray[index] += TransmissionPath.getCT();
@@ -66,6 +67,7 @@ public class OutPut implements SetParam {
         finishedTasksInPopulatedAreaArray[index]   += ftipa ;
 // */
     }
+
     static void indexIncrement() {
         index = (index + 1) % WRITING_TIMES;
     }
@@ -87,6 +89,7 @@ public class OutPut implements SetParam {
         }
         System.out.println("  Remains: " + taskQueue.size());
     }
+
     /**
      * checkAgentメソッド
      * 二次元配列の場合
@@ -102,6 +105,7 @@ public class OutPut implements SetParam {
             System.out.println();
         }
     }
+
     static void checkDelay(int[][] delays) {
         for (int i = 0; i < AGENT_NUM; i++) {
             System.out.print("ID: " + i + "...");
@@ -111,6 +115,7 @@ public class OutPut implements SetParam {
             System.out.println();
         }
     }
+
     /**
      * checkAgentメソッド
      *
@@ -157,12 +162,14 @@ public class OutPut implements SetParam {
         }
 // */
     }
+
     static void checkTeam(Agent leader) {
         System.out.print(leader.id + " and ");
         for (Agent mem : leader.teamMembers) {
             System.out.print(mem.id + ", ");
         }
         System.out.println("are good team!");
+/*
         if (leader.mySubTask != null) {
             System.out.println(" leader: " + leader.id + leader + "→" + leader.mySubTask + ": " + leader.calcExecutionTime(leader, leader.mySubTask) + "[tick(s)]");
         } else {
@@ -213,6 +220,7 @@ public class OutPut implements SetParam {
         System.out.println("loser:  → " + mCountPositiveAfter / snapshot.size());
         System.out.println("Survivor: " + mCountPositive / countLeader);
     }
+
     static void showResults(int turn, List<Agent> agents, int num) {
         int tempL = 0, tempM = 0;
         int neetL = 0, neetM = 0;
@@ -246,8 +254,8 @@ public class OutPut implements SetParam {
     }
 
     static void writeGraphInformation(List<Agent> agents, String fp) throws FileNotFoundException, IOException {
-        String currentPath  = System.getProperty("user.dir");
-        String outputFilePath = currentPath + "/out/実験結果/" + fp + ".xlsx";
+        String currentPath = System.getProperty("user.dir");
+        String outputFilePath = currentPath + "/out/results/" + fp + ".xlsx";
         Edge edge = new Edge();
         edge.makeEdge(agents);
         try {
@@ -555,14 +563,15 @@ public class OutPut implements SetParam {
         }
         edge = null;
     }
+
     static void writeResults(Strategy st) {
         FileWriter fw;
         BufferedWriter bw;
         PrintWriter pw;
         String fileName = st.getClass().getName();
         try {
-            String currentPath  = System.getProperty("user.dir");
-            fw = new FileWriter(currentPath + "/out/実験結果/" + fileName + ", λ=" + ADDITIONAL_TASK_NUM + ".csv", false);
+            String currentPath = System.getProperty("user.dir");
+            fw = new FileWriter(currentPath + "/out/results/" + fileName + ", λ=" + ADDITIONAL_TASK_NUM + ".csv", false);
             bw = new BufferedWriter(fw);
             pw = new PrintWriter(bw);
 
@@ -604,8 +613,9 @@ public class OutPut implements SetParam {
             e2.printStackTrace();
         }
     }
+
     static void writeResultsX(Strategy st, List<Agent> agents, String fp) throws FileNotFoundException, IOException {
-        String currentPath  = System.getProperty("user.dir");
+        String currentPath = System.getProperty("user.dir");
         String outputFilePath = currentPath + "/out/実験結果/" + fp + ".xlsx";
         Edge edge = new Edge();
         edge.makeEdge(agents);
@@ -915,19 +925,31 @@ public class OutPut implements SetParam {
         edge = null;
     }
 
-
-    static void writeDelays(int[][] delays){
+    static void writeDelays(int[][] delays) {
         FileWriter fw;
         BufferedWriter bw;
         PrintWriter pw;
         try {
-            String currentPath  = System.getProperty("user.dir");
-            fw = new FileWriter(currentPath + "/out/実験結果/communicationDelay=" + MAX_DELAY + ".csv", false);
+            String currentPath = System.getProperty("user.dir");
+            fw = new FileWriter(currentPath + "/out/results/communicationDelay=" + MAX_DELAY + ".csv", false);
             bw = new BufferedWriter(fw);
             pw = new PrintWriter(bw);
-            pw.println("delay" + ", " + " count ");
-            for( int i = 1 ; i < MAX_DELAY + 1 ; i++ ){
-                pw.println(i + ", " + dCounts[i]/2);
+
+/*            pw.println("delay" + ", " + " count ");
+            for (int i = 1; i < MAX_DELAY + 1; i++) {
+                pw.println(i + ", " + dCounts[i] / 2);
+            }
+            pw.println();
+// */
+            pw.print("id");
+            for (int i = 0; i < AGENT_NUM; i++) pw.print(", " + i);
+            pw.println();
+            for (int i = 0; i < AGENT_NUM; i++) {
+                pw.print( i + ", ");
+                for (int j = 0; j < AGENT_NUM; j++) {
+                    pw.print(delays[i][j] + ", ");
+                }
+                pw.println();
             }
             pw.close();
         } catch (FileNotFoundException e) {
@@ -936,29 +958,84 @@ public class OutPut implements SetParam {
             e2.printStackTrace();
         }
     }
-    static void writeReliabilities(int turn, List<Agent> agents, Strategy st) {
+
+    static void writeDelaysAndRels(int[][] delays, List<Agent> agents, Strategy st) {
+        FileWriter fw;
+        BufferedWriter bw;
+        PrintWriter pw;
+        String fileName = st.getClass().getName();
+
+        try {
+            String currentPath = System.getProperty("user.dir");
+            fw = new FileWriter(currentPath + "/out/results/d&r " + fileName + ".csv", false);
+            bw = new BufferedWriter(fw);
+            pw = new PrintWriter(bw);
+
+            for( int from = 0; from < AGENT_NUM ; from++ ){
+                for( int to = 0; to < AGENT_NUM; to++ ){
+                    pw.println( delays[from][to] + ", " + agents.get(from).reliabilities[to] );
+                }
+            }
+
+/*            List[] delayLists = new ArrayList[MAX_DELAY + 1];
+            for( int i = 0; i < delayLists.length; i++ ){
+                delayLists[i] = new ArrayList<>();
+            }
+
+            for(int from = 0; from < AGENT_NUM; from++){
+                for( int to = 0; to < AGENT_NUM; to++ ){
+                    delayLists[delays[from][to]].add(agents.get(from).reliabilities[to]);
+                }
+            }
+            System.out.println(delayLists.length);
+            for( int i = 1; i < delayLists.length ; i++ ){
+                pw.print( i  );
+                for( int j = 0; j < delayLists[i].size(); j++ ){
+                    pw.print( ", " + delayLists[i].get(j) );
+                }
+                pw.println();
+            }
+            // */
+            pw.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e2) {
+            e2.printStackTrace();
+        }
+    }
+
+
+    static void writeReliabilities( List<Agent> agents, Strategy st) {
         FileWriter fw;
         BufferedWriter bw;
         PrintWriter pw;
         String fileName = st.getClass().getName();
         try {
-            fw = new FileWriter("/Users/r.funato/IdeaProjects/TaskAllocation/src/r" + fileName + ", λ=" + ADDITIONAL_TASK_NUM + ".csv", false);
+            String currentPath = System.getProperty("user.dir");
+            fw = new FileWriter(currentPath + "/out/results/rel" + fileName + ", λ=" + ADDITIONAL_TASK_NUM + ".csv", false);
             bw = new BufferedWriter(fw);
             pw = new PrintWriter(bw);
             // 列番号入れる部分
-//        for (int i = 0; i < AGENT_NUM; i++) pw.print(", " + i);
-//        pw.println();
+            pw.print("id");
+            for (int i = 0; i < AGENT_NUM; i++) pw.print(", " + i);
+            pw.println();
+            System.out.println(agents.size());
+            int j = 0;
             for (Agent ag : agents) {
-                pw.print("I'm " + ag.id + ", ");
-                for (int i = 0; i < AGENT_NUM; i++) {
-                    if (ag.e_member > ag.e_leader) {
-                        pw.print(ag.reliabilities[i] + ", ");
-                    } else {
+                System.out.println(j++);
+                pw.print(ag.id + ", ");
+                if (ag.e_member > ag.e_leader) {
+                    for (int i = 0; i < AGENT_NUM; i++) {
                         pw.print("-" + ag.reliabilities[i] + ", ");
+                    }
+                } else {
+                    for (int i = 0; i < AGENT_NUM; i++) {
+                        pw.print( ag.reliabilities[i] + ", ");
                     }
                 }
                 pw.println();
             }
+            pw.close();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e2) {
@@ -972,7 +1049,6 @@ public class OutPut implements SetParam {
 // */
     }
 
-
     static int countReciplocalist(List<Agent> agents) {
         int temp = 0;
 /*        for (Agent agent : agents) {
@@ -985,14 +1061,17 @@ public class OutPut implements SetParam {
         }
         return temp;
     }
+
     static int[] dCounts = new int[MAX_DELAY + 1];
-    static void countDelays(int[][] delays){
-        for( int[] row : delays ){
-            for( int column : row ){
+
+    static void countDelays(int[][] delays) {
+        for (int[] row : delays) {
+            for (int column : row) {
                 dCounts[column]++;
             }
         }
     }
+
     static int countReciplocalMembers(List<Agent> agents) {
         int temp = 0;
 /*        for (Agent agent : agents) {

@@ -52,7 +52,7 @@ public class Agent implements SetParam , Cloneable{
     List<Allocation> allocations;       // サブタスクの割り当て候補を< agent, subtask >のリストで保持
     List<Message> replies;
     List<Message> results;
-    List<Agent> prevTeamMember;
+    List<Agent> prevTeamMember = new ArrayList<>();
     Task ourTask;                  // 持ってきた(割り振られた)タスク
     int restSubTask;               // 残りのサブタスク数
     int index = 0;                 // 一回要請を送ったメンバにもう一度送らないようにindex管理
@@ -241,7 +241,6 @@ public class Agent implements SetParam , Cloneable{
             allocations.clear();
             replies.clear();
             results.clear();
-            prevTeamMember = teamMembers;
             restSubTask = 0;
             replyNum = 0;
         } else {
@@ -337,11 +336,16 @@ public class Agent implements SetParam , Cloneable{
     void sendMessage(Agent from, Agent to, int type, Object o) {
         TransmissionPath.sendMessage(new Message(from, to, type, o));
     }
-    void sendNegative(Agent agent, Agent to, int type, SubTask subTask) {
+    void sendNegative(Agent ag, Agent to, int type, SubTask subTask) {
         if (type == PROPOSAL) {
-            sendMessage(agent, to, REPLY, REJECT);
+            // 今実行しているサブタスクをくれたリーダーが，実行中にもかかわらずまた要請を出して来たらその旨を伝える
+            if( ag.phase == EXECUTION && to.equals(ag.leader) ) {
+                sendMessage(ag, to, REPLY, REJECT_FOR_DOING_YOUR_ST);
+            }else{
+                sendMessage(ag, to, REPLY, REJECT);
+            }
         } else if (type == REPLY) {
-            sendMessage(agent, to, RESULT, null);
+            sendMessage(ag, to, RESULT, null);
         } else if (type == RESULT) {
 //            sendMessage(agent, to, SUBTASK_RESULT, subTask);
         }
@@ -374,21 +378,13 @@ public class Agent implements SetParam , Cloneable{
      * それ以外はネガティブな返事をする
      */
     void checkMessages(Agent self) {
+        if( strategy.getClass().getName().startsWith( "ProposedMethod" )) {
+            strategy.checkMessages(self);
+            return;
+        }
         int size = messages.size();
         Message m;
         if (size == 0) return;
-        // メンバからの作業完了報告をチェックする
-        for (int i = 0; i < size; i++) {
-            m = messages.remove(0);
-            if( m.getMessageType() == DONE ){
-//               System.out.println(" Member: " + m.getFrom().id + " → Leader: " + m.getTo().id + ", DONE");
-                // prevTeamMembersから削除して
-                // 「リーダーとしての更新式で」信頼度を更新する
-                size--;
-            }else{
-                messages.add(m); // 違うメッセージだったら戻す
-            }
-        }
         //        System.out.println("ID: " + self.id + ", Phase: " + self.phase + " message:  "+ self.messages);
         // リーダーでPROPOSITION or 誰でもEXECUTION → 誰からのメッセージも期待していない
         if (self.phase == PROPOSITION || self.phase == EXECUTION) {
@@ -596,7 +592,7 @@ public class Agent implements SetParam , Cloneable{
     public String toString() {
         String sep = System.getProperty("line.separator");
         StringBuilder str = new StringBuilder();
-//        str = new StringBuilder("ID:" + String.format("%3d", id));
+        str = new StringBuilder( String.format("%3d", id));
 //        str = new StringBuilder("ID:" + String.format("%3d", id) + ", " + "x: " + x + ", y: " + y + ", ");
 //        str = new StringBuilder("ID:" + String.format("%3d", id) + "  " + messages );
 //        str = new StringBuilder("ID: " + String.format("%3d", id) + ", " + String.format("%.3f", e_leader) + ", " + String.format("%.3f", e_member)  );
@@ -607,7 +603,7 @@ public class Agent implements SetParam , Cloneable{
             str.append(", the delay: " + Manager.delays[this.id][relRanking.get(0).id]);
         }
 // */
-        str.append("[");
+/*        str.append("[");
         for (int i = 0; i < RESOURCE_TYPES; i++) str.append( String.format("%3d",res[i]) + "," );
         str.append("]");
 // */

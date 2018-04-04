@@ -446,6 +446,9 @@ public class ComparativeMethod2 implements SetParam, Strategy {
 
     }
 
+    public void checkMessages(Agent ag){
+
+    }
 
     static public void clearPM() {
         for (int i = 0; i < AGENT_NUM; i++) {

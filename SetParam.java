@@ -6,11 +6,10 @@
 interface SetParam {
     // 環境の設定( 変更していく部分 )
     int EXECUTION_TIMES = 1;             // 実験の回数
-    int MAX_TURN_NUM    = 100;        // 一回の実験のターン数
-    int WRITING_TIMES   = 100;           // データのファイルへの出力回数
+    int MAX_TURN_NUM    = 500000;        // 一回の実験のターン数
+    int WRITING_TIMES   = 1000;           // データのファイルへの出力回数
     boolean CHECK_RELATIONSHIPS = false;  // エージェント関係の協調関係を録るモード
     boolean CHECK_INITIATION    = false;  // エージェントやタスクの初期設定を確認するモード
-
 
     // 結果表示のためのパラメータ
     int  COALITION_CHECK_SPAN = 5000;          // 協調関係ができているか確認するための最後の方のターム
@@ -20,9 +19,9 @@ interface SetParam {
 
     int INITIAL_TASK_NUM = 0;       // 最初のタスク数
     int TASK_QUEUE_SIZE  = 500;     // タスクキューのサイズ
-    int AGENT_NUM = 40;            // エージェントの数
-    int ROW    = 10;                // 行数
-    int COLUMN = 10;                // 列数
+    int AGENT_NUM = 500;            // エージェントの数
+    int ROW    = 50;                // 行数
+    int COLUMN = 50;                // 列数
     int MAX_DELAY = 10;
 
     int TASK_ADDITION_SPAN = 1;          // タスクキューにタスクを追加するスパン
@@ -60,14 +59,17 @@ interface SetParam {
     int MEMBER     = -1   ;
     int RATIONAL   = 0    ;
     int RECIPROCAL = 1    ;
-    boolean ACCEPT = true ;
-    boolean REJECT = false;
 
-    // メッセージ
+    // メッセージの種類
     int PROPOSAL   = 1;
     int REPLY      = 2;
     int RESULT     = 3;
-    int DONE   = 4;
+    int DONE       = 4;
+
+    // REPLYの種類
+    int ACCEPT = 1 ;
+    int REJECT = 0 ;
+    int REJECT_FOR_DOING_YOUR_ST = -1 ;
 
     // フェイズ
     int SELECT_ROLE  = 0;  // 全員
