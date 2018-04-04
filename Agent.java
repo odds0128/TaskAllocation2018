@@ -336,11 +336,16 @@ public class Agent implements SetParam , Cloneable{
     void sendMessage(Agent from, Agent to, int type, Object o) {
         TransmissionPath.sendMessage(new Message(from, to, type, o));
     }
-    void sendNegative(Agent agent, Agent to, int type, SubTask subTask) {
+    void sendNegative(Agent ag, Agent to, int type, SubTask subTask) {
         if (type == PROPOSAL) {
-            sendMessage(agent, to, REPLY, REJECT);
+            // 今実行しているサブタスクをくれたリーダーが，実行中にもかかわらずまた要請を出して来たらその旨を伝える
+            if( ag.phase == EXECUTION && to.equals(ag.leader) ) {
+                sendMessage(ag, to, REPLY, REJECT_FOR_DOING_YOUR_ST);
+            }else{
+                sendMessage(ag, to, REPLY, REJECT);
+            }
         } else if (type == REPLY) {
-            sendMessage(agent, to, RESULT, null);
+            sendMessage(ag, to, RESULT, null);
         } else if (type == RESULT) {
 //            sendMessage(agent, to, SUBTASK_RESULT, subTask);
         }
@@ -373,7 +378,7 @@ public class Agent implements SetParam , Cloneable{
      * それ以外はネガティブな返事をする
      */
     void checkMessages(Agent self) {
-        if( strategy.getClass().getName() == "ProposedMethod" ) {
+        if( strategy.getClass().getName().startsWith( "ProposedMethod" )) {
             strategy.checkMessages(self);
             return;
         }

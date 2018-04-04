@@ -76,13 +76,20 @@ public class ProposedMethodA_2 implements SetParam, Strategy {
         Agent from;
         for (Message reply : leader.replies) {
             leader.replyNum++;
-            // 拒否ならそのエージェントを候補リストから外し, 信頼度を0で更新する
+            // ただの拒否ならそのエージェントを候補リストから外し, 信頼度を0で更新する
             if (reply.getReply() == REJECT) {
                 from = reply.getFrom();
                 int i = leader.inTheList(from, leader.candidates);
                 assert i >= 0 : "alert: Leader got reply from a ghost.";
                 leader.candidates.set(i, null);
                 leader.relAgents = renewRel(leader, from, 0);
+            }
+            // 自分がかつて割り振ったサブタスクをまだしているのが理由なら信頼度は下げない
+            else if( reply.getReply() == REJECT_FOR_DOING_YOUR_ST ){
+                from = reply.getFrom();
+                int i = leader.inTheList(from, leader.candidates);
+                assert i >= 0 : "alert: Leader got reply from a ghost.";
+                leader.candidates.set(i, null);
             }
         }
         int index;
@@ -250,24 +257,15 @@ public class ProposedMethodA_2 implements SetParam, Strategy {
         for (int i = 0; i / RESEND_TIMES < subtasks.size(); i++) {
             subtask = subtasks.get(i / RESEND_TIMES);
             if (leader.epsilonGreedy() ) {
-//                System.out.print( leader.prevTeamMember.size() + ", " + temp.size() + " → " );
-                List<Agent> t = new ArrayList<>();
-                t.addAll(temp);
-                t.addAll(leader.prevTeamMember);
-//                System.out.println( leader.prevTeamMember.size() + ", " + temp.size() );
-                candidate = Manager.getAgentRandomly(leader, t );
-//                System.out.println( leader.prevTeamMember.size() + ", " + temp.size() );
-                t.clear();
+                candidate = Manager.getAgentRandomly(leader, temp );
             }
             else {
                 int j = 0;
                 while (true) {
                     // エージェント1から全走査
                     candidate = leader.relRanking.get(j++);
-                    // そいつがまだ候補に入っていなくて，かつ最近サブタスクを割り振っていなくて，
-                    // さらにそのサブタスクをこなせそうなら
+                    // そいつがまだ候補に入っていなくて， さらにそのサブタスクをこなせそうなら
                     if ( leader.inTheList(candidate, temp) < 0 &&
-                            leader.inTheList(candidate, leader.prevTeamMember) < 0 &&
                             leader.calcExecutionTime(candidate, subtask) > 0) {
                         break;
                     }

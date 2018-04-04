@@ -77,7 +77,7 @@ public class ProposedMethodB_2 implements SetParam, Strategy {
         for (Message reply : leader.replies) {
             leader.replyNum++;
             // 拒否ならそのエージェントを候補リストから外し, 信頼度を0で更新する
-            if (reply.getReply() == REJECT) {
+            if (reply.getReply() != ACCEPT) {
                 from = reply.getFrom();
                 int i = leader.inTheList(from, leader.candidates);
                 assert i >= 0 : "alert: Leader got reply from a ghost.";

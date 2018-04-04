@@ -2,15 +2,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * ProposedMethodBクラス
+ * ProposedMethodC_2クラス
  * 信頼度更新式は最短終了応答優先
- * 役割更新機構あり
+ * 役割更新機構なし
  */
-public class ProposedMethodB implements SetParam, Strategy {
+public class ProposedMethodC_2 implements SetParam, Strategy {
     static final double γ = γ_r;
     static int[] min = new int[AGENT_NUM];
 
-    ProposedMethodB() {
+    ProposedMethodC_2() {
         for (int i = 0; i < AGENT_NUM; i++) {
             min[i] = Integer.MAX_VALUE;
         }
@@ -268,11 +268,9 @@ public class ProposedMethodB implements SetParam, Strategy {
                 while (true) {
                     // エージェント1から全走査
                     candidate = leader.relRanking.get(j++);
-                    // そいつがまだ候補に入っていなくて，かつ最近サブタスクを割り振っていなくて，
-                    // さらにそのサブタスクをこなせそうなら
+                    // そいつがまだ候補に入っていなくて，さらにそのサブタスクをこなせそうなら
                     if ( leader.inTheList(candidate, temp) < 0 &&
-                          leader.inTheList(candidate, leader.prevTeamMember) < 0 &&
-                           leader.calcExecutionTime(candidate, subtask) > 0) {
+                            leader.calcExecutionTime(candidate, subtask) > 0) {
                         break;
                     }
                 }
@@ -474,15 +472,8 @@ public class ProposedMethodB implements SetParam, Strategy {
         for (int i = 0; i < size; i++) {
             m = ag.messages.remove(0);
             if (m.getMessageType() == DONE) {
-                if( ag.id == 271 ){
-                    System.out.print( "Message get from " + m.getFrom().id + ", ");
-                    System.out.print(ag.prevTeamMember.size() + "→");
-                }
                 // prevTeamMembersから削除して
                 ag.prevTeamMember.remove(m.getFrom());
-                if( ag.id == 271 ) {
-                    System.out.println(ag.prevTeamMember.size());
-                }
                 // 「リーダーとしての更新式で」信頼度を更新する
                 // そのメンバがサブタスクを受け取ってからリーダーがその完了報告を受けるまでの時間
                 // すなわちrt = "メンバのサブタスク実行時間 + メッセージ到達時間"

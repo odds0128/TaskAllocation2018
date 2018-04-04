@@ -9,10 +9,12 @@ import java.io.IOException;
 import java.util.*;
 
 public class Manager implements SetParam {
- private static Strategy strategy = new ProposedMethodA();     // 最短終了時間優先信頼度更新式
+// private static Strategy strategy = new ProposedMethodA();     // 最短終了時間優先信頼度更新式
 //    private static Strategy strategy = new ProposedMethodA_2();     // 最短終了時間優先信頼度更新式
 //    private static Strategy strategy = new ProposedMethodB();     // 最短終了時間優先信頼度更新式
 //    private static Strategy strategy = new ProposedMethodB_2();     // 最短終了時間優先信頼度更新式
+private static Strategy strategy = new ProposedMethodC();     // 最短終了時間優先信頼度更新式
+//    private static Strategy strategy = new ProposedMethodC_2();     // 最短終了時間優先信頼度更新式
 //    private static Strategy strategy = new ComparativeMethod1();   // 最短応答優先手法
 //    private static Strategy strategy = new ComparativeMethod2();     // 最短応答優先信頼度更新で役割更新なし
 //    private static Strategy strategy = new ComparativeMethod3();   // 最短応答優先信頼度更新で役割更新あり
@@ -343,7 +345,7 @@ public class Manager implements SetParam {
         leader.ourTask = null;
     }
     static void finishTask(Agent leader) {
-        if( leader.id == 271 ) OutPut.checkTeam(leader);
+//        if( leader.id == 271 ) OutPut.checkTeam(leader);
         leader.ourTask = null;
         if( leader.isLonely == 1 )      finishedTasksInDepopulatedArea++;
         if( leader.isAccompanied == 1 ) finishedTasksInPopulatedArea++;
