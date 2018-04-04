@@ -58,8 +58,10 @@ public class Manager implements SetParam {
                 }
                 // ターンの進行
                 for (turn = 1; turn <= MAX_TURN_NUM; turn++) {
-/*                    System.out.println("===========================================================");
-                    System.out.println("Turn: " + turn);
+/*                    if( turn > 1000 ) {
+                        System.out.println("===========================================================");
+                        System.out.println("Turn: " + turn);
+                    }
 // */
                     addNewTasksToQueue();
                     actFreeLancer();
@@ -338,7 +340,7 @@ public class Manager implements SetParam {
         leader.ourTask = null;
     }
     static void finishTask(Agent leader) {
-//         OutPut.checkTeam(leader);
+        if( leader.id == 271 ) OutPut.checkTeam(leader);
         leader.ourTask = null;
         if( leader.isLonely == 1 )      finishedTasksInDepopulatedArea++;
         if( leader.isAccompanied == 1 ) finishedTasksInPopulatedArea++;

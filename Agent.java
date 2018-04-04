@@ -377,7 +377,6 @@ public class Agent implements SetParam , Cloneable{
             strategy.checkMessages(self);
             return;
         }
-        System.out.println("no year");
         int size = messages.size();
         Message m;
         if (size == 0) return;
@@ -588,7 +587,7 @@ public class Agent implements SetParam , Cloneable{
     public String toString() {
         String sep = System.getProperty("line.separator");
         StringBuilder str = new StringBuilder();
-//        str = new StringBuilder("ID:" + String.format("%3d", id));
+        str = new StringBuilder( String.format("%3d", id));
 //        str = new StringBuilder("ID:" + String.format("%3d", id) + ", " + "x: " + x + ", y: " + y + ", ");
 //        str = new StringBuilder("ID:" + String.format("%3d", id) + "  " + messages );
 //        str = new StringBuilder("ID: " + String.format("%3d", id) + ", " + String.format("%.3f", e_leader) + ", " + String.format("%.3f", e_member)  );
@@ -599,7 +598,7 @@ public class Agent implements SetParam , Cloneable{
             str.append(", the delay: " + Manager.delays[this.id][relRanking.get(0).id]);
         }
 // */
-        str.append("[");
+/*        str.append("[");
         for (int i = 0; i < RESOURCE_TYPES; i++) str.append( String.format("%3d",res[i]) + "," );
         str.append("]");
 // */

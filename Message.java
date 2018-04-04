@@ -25,10 +25,9 @@ class Message implements SetParam{
             this.reply       = Boolean.parseBoolean( o.toString() );
         }else if( type == RESULT ){
             this.subtask     = (SubTask) o ;
-        }else if( type == DONE){
+        }else if( type == DONE ){
             this.timeSTarrived = (int) o ;
         }
-//        System.out.println(this);
     }
 
     Agent getFrom() {
@@ -55,8 +54,15 @@ class Message implements SetParam{
         str.append(" from: " + from.id );
         str.append(", to: " + to.id);
         str.append(", type: " + messageType );
-        str.append(", " + reply);
+        if( messageType == PROPOSAL ){
+            str.append(", " + resType);
+        }else if( messageType == REPLY ){
+            str.append(", " + reply);
+        }else if( messageType == RESULT ){
+            str.append(", " + subtask);
+        }else if( messageType == DONE ){
+            str.append(", " + timeSTarrived);
+        }
         return str.toString();
     }
-
 }

@@ -10,7 +10,7 @@ public class ProposedMethod implements SetParam, Strategy {
     static final double γ = γ_r;
     static int[] min = new int[AGENT_NUM];
 
-     ProposedMethod() {
+    ProposedMethod() {
         for (int i = 0; i < AGENT_NUM; i++) {
             min[i] = Integer.MAX_VALUE;
         }
@@ -25,8 +25,8 @@ public class ProposedMethod implements SetParam, Strategy {
         decreaseDEC(agent);
     }
 
-    public void actAsMember(Agent agent){
-        if( Manager.getTicks() - agent.validatedTicks > ROLE_RENEWAL_TICKS ){
+    public void actAsMember(Agent agent) {
+        if (Manager.getTicks() - agent.validatedTicks > ROLE_RENEWAL_TICKS) {
             agent.inactivate(0);
             return;
         }
@@ -77,26 +77,18 @@ public class ProposedMethod implements SetParam, Strategy {
         if (leader.replies.size() == 0) return;
         // 2017/12/06 ICARRTに揃えるために, チーム編成が成功してからサブタスクの実行指示をだすことに
 
-        Agent candidate;
+        Agent from;
         for (Message reply : leader.replies) {
             leader.replyNum++;
-            candidate = reply.getFrom();
-            int i = leader.inTheList(candidate, leader.candidates);
-            // 受諾なら信頼度をプラスに更新する
-            if (reply.getReply() == ACCEPT) {
-                int rt = Manager.getTicks() - leader.start;             // 応答時間
-                if (rt < min[leader.id]) min[leader.id] = rt;
-//                renewHistory(leader, rt);
-                leader.relAgents = renewRel(leader, candidate, (double) min[leader.id] / (double) rt);
-            }
             // 拒否ならそのエージェントを候補リストから外し, 信頼度を0で更新する
-            else {
+            if (reply.getReply() == REJECT) {
+                from = reply.getFrom();
+                int i = leader.inTheList(from, leader.candidates);
                 assert i >= 0 : "alert: Leader got reply from a ghost.";
                 leader.candidates.set(i, null);
-                leader.relAgents = renewRel(leader, candidate, 0);
+                leader.relAgents = renewRel(leader, from, 0);
             }
         }
-
         int index;
         Agent A, B;
         List<Agent> losers = new ArrayList<>();
@@ -181,6 +173,9 @@ public class ProposedMethod implements SetParam, Strategy {
                 for (Agent ls : losers) {
                     leader.sendMessage(leader, ls, RESULT, null);
                 }
+                leader.prevTeamMember.addAll(leader.teamMembers);
+//                System.out.print(leader.id + ", " + leader.prevTeamMember + "+");
+//                System.out.println(leader.teamMembers);
                 Manager.finishTask(leader);
                 leader.nextPhase();
             }
@@ -217,7 +212,7 @@ public class ProposedMethod implements SetParam, Strategy {
         if (member.mySubTask != null) {
             member.start = Manager.getTicks();
             member.relAgents = renewRel(member, member.leader, 1);
-            member.executionTime = member.calcExecutionTime(member,member.mySubTask);
+            member.executionTime = member.calcExecutionTime(member, member.mySubTask);
             member.nextPhase();
         }
         // サブタスクが割り当てられなかったら信頼度を0で更新し, inactivate
@@ -236,7 +231,8 @@ public class ProposedMethod implements SetParam, Strategy {
                     for (Agent ag : agent.teamMembers) agent.workWithAsL[ag.id]++;
             } else {
                 agent.sendMessage(agent, agent.leader, DONE, agent.start);
-                if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) agent.workWithAsM[agent.leader.id]++;
+                if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN)
+                    agent.workWithAsM[agent.leader.id]++;
             }
             // 自分のサブタスクが終わったら役割適応度を1で更新して非活性状態へ
             agent.inactivate(1);
@@ -257,14 +253,28 @@ public class ProposedMethod implements SetParam, Strategy {
 
         for (int i = 0; i / RESEND_TIMES < subtasks.size(); i++) {
             subtask = subtasks.get(i / RESEND_TIMES);
-            if (leader.epsilonGreedy()) candidate = Manager.getAgentRandomly(leader, temp);
+            if (leader.epsilonGreedy() ) {
+//                System.out.print( leader.prevTeamMember.size() + ", " + temp.size() + " → " );
+                List<Agent> t = new ArrayList<>();
+                t.addAll(temp);
+                t.addAll(leader.prevTeamMember);
+//                System.out.println( leader.prevTeamMember.size() + ", " + temp.size() );
+                candidate = Manager.getAgentRandomly(leader, t );
+//                System.out.println( leader.prevTeamMember.size() + ", " + temp.size() );
+                t.clear();
+            }
             else {
                 int j = 0;
                 while (true) {
                     // エージェント1から全走査
                     candidate = leader.relRanking.get(j++);
-                    // そいつがまだ候補に入っていなくてさらにそのサブタスクをこなせそうなら
-                    if (leader.inTheList(candidate, temp) < 0 && leader.calcExecutionTime(candidate, subtask) > 0 ) break;
+                    // そいつがまだ候補に入っていなくて，かつ最近サブタスクを割り振っていなくて，
+                    // さらにそのサブタスクをこなせそうなら
+                    if ( leader.inTheList(candidate, temp) < 0 &&
+                          leader.inTheList(candidate, leader.prevTeamMember) < 0 &&
+                           leader.calcExecutionTime(candidate, subtask) > 0) {
+                        break;
+                    }
                 }
             }
             temp.add(candidate);
@@ -464,21 +474,28 @@ public class ProposedMethod implements SetParam, Strategy {
         for (int i = 0; i < size; i++) {
             m = ag.messages.remove(0);
             if (m.getMessageType() == DONE) {
+                if( ag.id == 271 ){
+                    System.out.print( "Message get from " + m.getFrom().id + ", ");
+                    System.out.print(ag.prevTeamMember.size() + "→");
+                }
                 // prevTeamMembersから削除して
                 ag.prevTeamMember.remove(m.getFrom());
+                if( ag.id == 271 ) {
+                    System.out.println(ag.prevTeamMember.size());
+                }
                 // 「リーダーとしての更新式で」信頼度を更新する
                 // そのメンバがサブタスクを受け取ってからリーダーがその完了報告を受けるまでの時間
                 // すなわちrt = "メンバのサブタスク実行時間 + メッセージ到達時間"
                 int rt = Manager.getTicks() - m.getTimeSTarrived();
-                System.out.println(rt);
+//                System.out.println(rt);
                 if (rt < min[ag.id]) min[ag.id] = rt;
-//                ag.relAgents = renewRel(ag, m.getFrom(), (double) min[ag.id] / (double) rt);
-                size--;
+                ag.relAgents = renewRel(ag, m.getFrom(), (double) min[ag.id] / (double) rt);
             } else {
                 ag.messages.add(m); // 違うメッセージだったら戻す
             }
         }
 // */
+        size =  ag.messages.size();
         if (size == 0) return;
         //        System.out.println("ID: " + self.id + ", Phase: " + self.phase + " message:  "+ self.messages);
         // リーダーでPROPOSITION or 誰でもEXECUTION → 誰からのメッセージも期待していない
