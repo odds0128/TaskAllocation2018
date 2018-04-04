@@ -1,0 +1,7 @@
+ProposedMethodA    ... リーダーはかつてのチームメンバも含めた全員の中からチーム候補を選定する．
+ProposedMethodB    ... リーダーはかつてのチームメンバを除く全員の中からチーム候補を選定する
+ProposedMethodA_2  ... ProposedMethodAから能動的役割更新機構を除いたもの
+ProposedMethodB_2  ... ProposedMethodBから能動的役割更新機構を除いたもの
+ComparativeMethod1 ... 最短応答優先手法(学習なし)
+ComparativeMethod2 ... 最短応答優先信頼度学習手法
+ComparativeMethod3 ... 最短応答優先信頼度学習手法 + 能動的役割更新機構

@@ -169,6 +169,7 @@ public class OutPut implements SetParam {
             System.out.print(mem.id + ", ");
         }
         System.out.println("are good team!");
+/*
         if (leader.mySubTask != null) {
             System.out.println(" leader: " + leader.id + leader + "→" + leader.mySubTask + ": " + leader.calcExecutionTime(leader, leader.mySubTask) + "[tick(s)]");
         } else {

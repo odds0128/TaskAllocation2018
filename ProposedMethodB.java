@@ -2,15 +2,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * ProposedMethodクラス
+ * ProposedMethodBクラス
  * 信頼度更新式は最短終了応答優先
  * 役割更新機構あり
  */
-public class ProposedMethod implements SetParam, Strategy {
+public class ProposedMethodB implements SetParam, Strategy {
     static final double γ = γ_r;
     static int[] min = new int[AGENT_NUM];
 
-    ProposedMethod() {
+    ProposedMethodB() {
         for (int i = 0; i < AGENT_NUM; i++) {
             min[i] = Integer.MAX_VALUE;
         }

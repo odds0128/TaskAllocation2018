@@ -2,15 +2,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * ProposedMethodクラス
+ * ProposedMethodB_2クラス
  * 信頼度更新式は最短終了応答優先
- * 役割更新機構あり
+ * 役割更新機構なし
  */
-public class ProposedMethod implements SetParam, Strategy {
+public class ProposedMethodB_2 implements SetParam, Strategy {
     static final double γ = γ_r;
     static int[] min = new int[AGENT_NUM];
 
-    ProposedMethod() {
+    ProposedMethodB_2() {
         for (int i = 0; i < AGENT_NUM; i++) {
             min[i] = Integer.MAX_VALUE;
         }
@@ -26,10 +26,6 @@ public class ProposedMethod implements SetParam, Strategy {
     }
 
     public void actAsMember(Agent agent) {
-        if (Manager.getTicks() - agent.validatedTicks > ROLE_RENEWAL_TICKS) {
-            agent.inactivate(0);
-            return;
-        }
         setPrinciple(agent);
         if (agent.phase == REPLY) replyAsM(agent);
         else if (agent.phase == RECEPTION) receiveAsM(agent);
@@ -271,8 +267,8 @@ public class ProposedMethod implements SetParam, Strategy {
                     // そいつがまだ候補に入っていなくて，かつ最近サブタスクを割り振っていなくて，
                     // さらにそのサブタスクをこなせそうなら
                     if ( leader.inTheList(candidate, temp) < 0 &&
-                          leader.inTheList(candidate, leader.prevTeamMember) < 0 &&
-                           leader.calcExecutionTime(candidate, subtask) > 0) {
+                            leader.inTheList(candidate, leader.prevTeamMember) < 0 &&
+                            leader.calcExecutionTime(candidate, subtask) > 0) {
                         break;
                     }
                 }
