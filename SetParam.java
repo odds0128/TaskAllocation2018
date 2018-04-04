@@ -60,14 +60,17 @@ interface SetParam {
     int MEMBER     = -1   ;
     int RATIONAL   = 0    ;
     int RECIPROCAL = 1    ;
-    boolean ACCEPT = true ;
-    boolean REJECT = false;
 
-    // メッセージ
+    // メッセージの種類
     int PROPOSAL   = 1;
     int REPLY      = 2;
     int RESULT     = 3;
     int DONE   = 4;
+
+    // REPLYの種類
+    int ACCEPT = 1 ;
+    int REJECT = 0 ;
+    int REJECT_FOR_DOING_YOUR_ST = -1 ;
 
     // フェイズ
     int SELECT_ROLE  = 0;  // 全員

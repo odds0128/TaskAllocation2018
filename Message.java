@@ -11,7 +11,7 @@ class Message implements SetParam{
     private int   messageType;
     // メッセージにサブタスクを載せること自体は悪いことじゃないことに注意. 最終的には渡さないといけない
     private int resType;
-    private boolean reply;
+    private int reply;
     private SubTask subtask;  // チーム編成が成功したら, 割り当てるサブタスクが入る. 失敗したらnull
     private int timeSTarrived;
 
@@ -22,7 +22,7 @@ class Message implements SetParam{
         if( type == PROPOSAL ){
             this.resType = (int) o;
         }else if( type == REPLY ){
-            this.reply       = Boolean.parseBoolean( o.toString() );
+            this.reply       = (int) o;
         }else if( type == RESULT ){
             this.subtask     = (SubTask) o ;
         }else if( type == DONE){
@@ -43,7 +43,7 @@ class Message implements SetParam{
     SubTask getSubTask() {
         return subtask;
     }
-    boolean getReply( ) {
+    int getReply( ) {
         return reply;
     }
     int getResType(){ return resType; }
