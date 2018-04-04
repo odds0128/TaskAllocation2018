@@ -81,13 +81,6 @@ public class ProposedMethodC_2 implements SetParam, Strategy {
         for (Message reply : leader.replies) {
             leader.replyNum++;
             // 拒否ならそのエージェントを候補リストから外し, 信頼度を0で更新する
-<<<<<<< HEAD:ProposedMethod.java
-            else {
-                assert i >= 0 : "alert: Leader got reply from a ghost.";
-                leader.candidates.set(i, null);
-                leader.relAgents = renewRel(leader, candidate, 0);
-             }
-=======
             if (reply.getReply() != ACCEPT ) {
                 from = reply.getFrom();
                 int i = leader.inTheList(from, leader.candidates);
@@ -95,7 +88,6 @@ public class ProposedMethodC_2 implements SetParam, Strategy {
                 leader.candidates.set(i, null);
                 leader.relAgents = renewRel(leader, from, 0);
             }
->>>>>>> implement_a_type_member_selection:ProposedMethodC_2.java
         }
         int index;
         Agent A, B;
