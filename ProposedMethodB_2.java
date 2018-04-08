@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * ProposedMethodB_2クラス
@@ -19,6 +20,8 @@ public class ProposedMethodB_2 implements SetParam, Strategy {
         }
     }
 
+
+    // */
     public void actAsLeader(Agent agent) {
         setPrinciple(agent);
         if (agent.phase == PROPOSITION) proposeAsL(agent);
@@ -166,14 +169,12 @@ public class ProposedMethodB_2 implements SetParam, Strategy {
             // 未割り当てが残っていないのならば負け犬どもに引導を渡して実行へ
             if (reallocations.size() == 0) {
                 for (Agent tm : leader.teamMembers) {
+                    tSubtaskAllocated[leader.id].put(tm, Manager.getTicks());
                     leader.sendMessage(leader, tm, RESULT, leader.getAllocation(tm).getSubtask());
                 }
                 for (Agent ls : losers) {
                     leader.sendMessage(leader, ls, RESULT, null);
                 }
-                leader.prevTeamMember.addAll(leader.teamMembers);
-//                System.out.print(leader.id + ", " + leader.prevTeamMember + "+");
-//                System.out.println(leader.teamMembers);
                 Manager.finishTask(leader);
                 leader.nextPhase();
             }
@@ -249,17 +250,17 @@ public class ProposedMethodB_2 implements SetParam, Strategy {
         Agent candidate;
         SubTask subtask;
 
+        List<Agent> t = new ArrayList<>();
+//        t.addAll(temp);
+        for(Map.Entry<Agent, Integer> ex: tSubtaskAllocated[leader.id].entrySet() ) {
+            t.add(ex.getKey());
+        }
+// この時点でtにはかつての仲間たちが入っている
+
         for (int i = 0; i / RESEND_TIMES < subtasks.size(); i++) {
             subtask = subtasks.get(i / RESEND_TIMES);
             if (leader.epsilonGreedy() ) {
-//                System.out.print( leader.prevTeamMember.size() + ", " + temp.size() + " → " );
-                List<Agent> t = new ArrayList<>();
-                t.addAll(temp);
-                t.addAll(leader.prevTeamMember);
-//                System.out.println( leader.prevTeamMember.size() + ", " + temp.size() );
                 candidate = Manager.getAgentRandomly(leader, t );
-//                System.out.println( leader.prevTeamMember.size() + ", " + temp.size() );
-                t.clear();
             }
             else {
                 int j = 0;
@@ -268,14 +269,13 @@ public class ProposedMethodB_2 implements SetParam, Strategy {
                     candidate = leader.relRanking.get(j++);
                     // そいつがまだ候補に入っていなくて，かつ最近サブタスクを割り振っていなくて，
                     // さらにそのサブタスクをこなせそうなら
-                    if ( leader.inTheList(candidate, temp) < 0 &&
-                            leader.inTheList(candidate, leader.prevTeamMember) < 0 &&
+                    if ( leader.inTheList(candidate, t) < 0 &&
                             leader.calcExecutionTime(candidate, subtask) > 0) {
                         break;
                     }
                 }
             }
-            temp.add(candidate);
+            t.add(candidate);
             leader.sendMessage(leader, candidate, PROPOSAL, subtask.resType);
         }
         return temp;

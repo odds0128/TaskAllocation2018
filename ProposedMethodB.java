@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * ProposedMethodBクラス
@@ -85,7 +86,7 @@ public class ProposedMethodB implements SetParam, Strategy {
         for (Message reply : leader.replies) {
             leader.replyNum++;
             // 拒否ならそのエージェントを候補リストから外し, 信頼度を0で更新する
-            if (reply.getReply() != ACCEPT ) {
+            if (reply.getReply() != ACCEPT) {
                 from = reply.getFrom();
                 int i = leader.inTheList(from, leader.candidates);
                 assert i >= 0 : "alert: Leader got reply from a ghost.";
@@ -172,14 +173,12 @@ public class ProposedMethodB implements SetParam, Strategy {
             // 未割り当てが残っていないのならば負け犬どもに引導を渡して実行へ
             if (reallocations.size() == 0) {
                 for (Agent tm : leader.teamMembers) {
+                    tSubtaskAllocated[leader.id].put(tm, Manager.getTicks());
                     leader.sendMessage(leader, tm, RESULT, leader.getAllocation(tm).getSubtask());
                 }
                 for (Agent ls : losers) {
                     leader.sendMessage(leader, ls, RESULT, null);
                 }
-                leader.prevTeamMember.addAll(leader.teamMembers);
-//                System.out.print(leader.id + ", " + leader.prevTeamMember + "+");
-//                System.out.println(leader.teamMembers);
                 Manager.finishTask(leader);
                 leader.nextPhase();
             }
@@ -255,33 +254,31 @@ public class ProposedMethodB implements SetParam, Strategy {
         Agent candidate;
         SubTask subtask;
 
+        List<Agent> t = new ArrayList<>();
+//        t.addAll(temp);
+        for (Map.Entry<Agent, Integer> ex : tSubtaskAllocated[leader.id].entrySet()) {
+            t.add(ex.getKey());
+        }
+// この時点でtにはかつての仲間たちが入っている
+
         for (int i = 0; i / RESEND_TIMES < subtasks.size(); i++) {
             subtask = subtasks.get(i / RESEND_TIMES);
-            if (leader.epsilonGreedy() ) {
-//                System.out.print( leader.prevTeamMember.size() + ", " + temp.size() + " → " );
-                List<Agent> t = new ArrayList<>();
-                t.addAll(temp);
-                t.addAll(leader.prevTeamMember);
-//                System.out.println( leader.prevTeamMember.size() + ", " + temp.size() );
-                candidate = Manager.getAgentRandomly(leader, t );
-//                System.out.println( leader.prevTeamMember.size() + ", " + temp.size() );
-                t.clear();
-            }
-            else {
+            if (leader.epsilonGreedy()) {
+                candidate = Manager.getAgentRandomly(leader, t);
+            } else {
                 int j = 0;
                 while (true) {
                     // エージェント1から全走査
                     candidate = leader.relRanking.get(j++);
                     // そいつがまだ候補に入っていなくて，かつ最近サブタスクを割り振っていなくて，
                     // さらにそのサブタスクをこなせそうなら
-                    if ( leader.inTheList(candidate, temp) < 0 &&
-                          leader.inTheList(candidate, leader.prevTeamMember) < 0 &&
-                           leader.calcExecutionTime(candidate, subtask) > 0) {
+                    if (leader.inTheList(candidate, t) < 0 &&
+                            leader.calcExecutionTime(candidate, subtask) > 0) {
                         break;
                     }
                 }
             }
-            temp.add(candidate);
+            t.add(candidate);
             leader.sendMessage(leader, candidate, PROPOSAL, subtask.resType);
         }
         return temp;
@@ -490,7 +487,7 @@ public class ProposedMethodB implements SetParam, Strategy {
             }
         }
 // */
-        size =  ag.messages.size();
+        size = ag.messages.size();
         if (size == 0) return;
         //        System.out.println("ID: " + self.id + ", Phase: " + self.phase + " message:  "+ self.messages);
         // リーダーでPROPOSITION or 誰でもEXECUTION → 誰からのメッセージも期待していない
