@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -9,12 +10,15 @@ import java.util.List;
 public class ProposedMethodB implements SetParam, Strategy {
     static final double γ = γ_r;
     static int[] min = new int[AGENT_NUM];
+    static HashMap<Agent, Integer>[] tSubtaskAllocated = new HashMap[AGENT_NUM];
 
     ProposedMethodB() {
         for (int i = 0; i < AGENT_NUM; i++) {
             min[i] = Integer.MAX_VALUE;
+            tSubtaskAllocated[i] = new HashMap<Agent, Integer>();
         }
     }
+
 
     // */
     public void actAsLeader(Agent agent) {
@@ -474,13 +478,11 @@ public class ProposedMethodB implements SetParam, Strategy {
         for (int i = 0; i < size; i++) {
             m = ag.messages.remove(0);
             if (m.getMessageType() == DONE) {
-                // prevTeamMembersから削除して
-                ag.prevTeamMember.remove(m.getFrom());
                 // 「リーダーとしての更新式で」信頼度を更新する
-                // そのメンバがサブタスクを受け取ってからリーダーがその完了報告を受けるまでの時間
-                // すなわちrt = "メンバのサブタスク実行時間 + メッセージ到達時間"
-                int rt = Manager.getTicks() - m.getTimeSTarrived();
-//                System.out.println(rt);
+                // そのメンバにサブタスクを送ってからリーダーがその完了報告を受けるまでの時間
+                // すなわちrt = "メンバのサブタスク実行時間 + メッセージ往復時間"
+                int rt = Manager.getTicks() - tSubtaskAllocated[ag.id].remove(m.getFrom());
+                //                System.out.println(rt);
                 if (rt < min[ag.id]) min[ag.id] = rt;
                 ag.relAgents = renewRel(ag, m.getFrom(), (double) min[ag.id] / (double) rt);
             } else {

@@ -1,18 +1,21 @@
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
 
 /**
- * ProposedMethodA_2クラス
+ * ProposedMethodA_2"クラス
  * 信頼度更新式は最短終了応答優先
- * 役割更新機構なし
+ * 役割更新機構あり
  */
 public class ProposedMethodA_2 implements SetParam, Strategy {
     static final double γ = γ_r;
     static int[] min = new int[AGENT_NUM];
+    static HashMap<Agent, Integer>[] tSubtaskAllocated = new HashMap[AGENT_NUM];
 
     ProposedMethodA_2() {
         for (int i = 0; i < AGENT_NUM; i++) {
             min[i] = Integer.MAX_VALUE;
+            tSubtaskAllocated[i] = new HashMap<Agent, Integer>();
         }
     }
 
@@ -171,14 +174,12 @@ public class ProposedMethodA_2 implements SetParam, Strategy {
             // 未割り当てが残っていないのならば負け犬どもに引導を渡して実行へ
             if (reallocations.size() == 0) {
                 for (Agent tm : leader.teamMembers) {
+                    tSubtaskAllocated[leader.id].put(tm, Manager.getTicks());
                     leader.sendMessage(leader, tm, RESULT, leader.getAllocation(tm).getSubtask());
                 }
                 for (Agent ls : losers) {
                     leader.sendMessage(leader, ls, RESULT, null);
                 }
-                leader.prevTeamMember.addAll(leader.teamMembers);
-//                System.out.print(leader.id + ", " + leader.prevTeamMember + "+");
-//                System.out.println(leader.teamMembers);
                 Manager.finishTask(leader);
                 leader.nextPhase();
             }
@@ -468,13 +469,11 @@ public class ProposedMethodA_2 implements SetParam, Strategy {
         for (int i = 0; i < size; i++) {
             m = ag.messages.remove(0);
             if (m.getMessageType() == DONE) {
-                // prevTeamMembersから削除して
-                ag.prevTeamMember.remove(m.getFrom());
                 // 「リーダーとしての更新式で」信頼度を更新する
-                // そのメンバがサブタスクを受け取ってからリーダーがその完了報告を受けるまでの時間
-                // すなわちrt = "メンバのサブタスク実行時間 + メッセージ到達時間"
-                int rt = Manager.getTicks() - m.getTimeSTarrived();
-//                System.out.println(rt);
+                // そのメンバにサブタスクを送ってからリーダーがその完了報告を受けるまでの時間
+                // すなわちrt = "メンバのサブタスク実行時間 + メッセージ往復時間"
+                int rt = Manager.getTicks() - tSubtaskAllocated[ag.id].remove(m.getFrom());
+                //                System.out.println(rt);
                 if (rt < min[ag.id]) min[ag.id] = rt;
                 ag.relAgents = renewRel(ag, m.getFrom(), (double) min[ag.id] / (double) rt);
             } else {

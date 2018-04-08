@@ -1,22 +1,24 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
  * ProposedMethodB_2クラス
  * 信頼度更新式は最短終了応答優先
- * 役割更新機構なし
+ * 役割更新機構あり
  */
 public class ProposedMethodB_2 implements SetParam, Strategy {
     static final double γ = γ_r;
     static int[] min = new int[AGENT_NUM];
+    static HashMap<Agent, Integer>[] tSubtaskAllocated = new HashMap[AGENT_NUM];
 
     ProposedMethodB_2() {
         for (int i = 0; i < AGENT_NUM; i++) {
             min[i] = Integer.MAX_VALUE;
+            tSubtaskAllocated[i] = new HashMap<Agent, Integer>();
         }
     }
 
-    // */
     public void actAsLeader(Agent agent) {
         setPrinciple(agent);
         if (agent.phase == PROPOSITION) proposeAsL(agent);
@@ -77,7 +79,7 @@ public class ProposedMethodB_2 implements SetParam, Strategy {
         for (Message reply : leader.replies) {
             leader.replyNum++;
             // 拒否ならそのエージェントを候補リストから外し, 信頼度を0で更新する
-            if (reply.getReply() != ACCEPT) {
+            if (reply.getReply() != ACCEPT ) {
                 from = reply.getFrom();
                 int i = leader.inTheList(from, leader.candidates);
                 assert i >= 0 : "alert: Leader got reply from a ghost.";
@@ -470,13 +472,11 @@ public class ProposedMethodB_2 implements SetParam, Strategy {
         for (int i = 0; i < size; i++) {
             m = ag.messages.remove(0);
             if (m.getMessageType() == DONE) {
-                // prevTeamMembersから削除して
-                ag.prevTeamMember.remove(m.getFrom());
                 // 「リーダーとしての更新式で」信頼度を更新する
-                // そのメンバがサブタスクを受け取ってからリーダーがその完了報告を受けるまでの時間
-                // すなわちrt = "メンバのサブタスク実行時間 + メッセージ到達時間"
-                int rt = Manager.getTicks() - m.getTimeSTarrived();
-//                System.out.println(rt);
+                // そのメンバにサブタスクを送ってからリーダーがその完了報告を受けるまでの時間
+                // すなわちrt = "メンバのサブタスク実行時間 + メッセージ往復時間"
+                int rt = Manager.getTicks() - tSubtaskAllocated[ag.id].remove(m.getFrom());
+                //                System.out.println(rt);
                 if (rt < min[ag.id]) min[ag.id] = rt;
                 ag.relAgents = renewRel(ag, m.getFrom(), (double) min[ag.id] / (double) rt);
             } else {

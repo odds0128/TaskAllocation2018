@@ -8,12 +8,12 @@ interface SetParam {
     int EXECUTION_TIMES = 1;             // 実験の回数
     int MAX_TURN_NUM    = 5000000;        // 一回の実験のターン数
     int WRITING_TIMES   = 1000;           // データのファイルへの出力回数
-    boolean CHECK_RELATIONSHIPS = false;  // エージェント関係の協調関係を録るモード
+    boolean CHECK_RELATIONSHIPS = true;  // エージェント関係の協調関係を録るモード
     boolean CHECK_INITIATION    = false;  // エージェントやタスクの初期設定を確認するモード
 
     // 結果表示のためのパラメータ
     int  COALITION_CHECK_SPAN = 5000;          // 協調関係ができているか確認するための最後の方のターム
-    double THRESHOLD_FOR_COALITION = 50;
+    double THRESHOLD_FOR_COALITION = 10;
     int THRESHOLD_FOR_NEET = 5000;
     int SNAPSHOT_TIME = MAX_TURN_NUM;
 

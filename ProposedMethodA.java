@@ -184,9 +184,6 @@ public class ProposedMethodA implements SetParam, Strategy {
                 for (Agent ls : losers) {
                     leader.sendMessage(leader, ls, RESULT, null);
                 }
-                leader.prevTeamMember.addAll(leader.teamMembers);
-//                System.out.print(leader.id + ", " + leader.prevTeamMember + "+");
-//                System.out.println(leader.teamMembers);
                 Manager.finishTask(leader);
                 leader.nextPhase();
             }
@@ -476,8 +473,6 @@ public class ProposedMethodA implements SetParam, Strategy {
         for (int i = 0; i < size; i++) {
             m = ag.messages.remove(0);
             if (m.getMessageType() == DONE) {
-                // prevTeamMembersから削除して
-                ag.prevTeamMember.remove(m.getFrom());
                 // 「リーダーとしての更新式で」信頼度を更新する
                 // そのメンバにサブタスクを送ってからリーダーがその完了報告を受けるまでの時間
                 // すなわちrt = "メンバのサブタスク実行時間 + メッセージ往復時間"

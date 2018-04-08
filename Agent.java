@@ -272,7 +272,6 @@ public class Agent implements SetParam , Cloneable{
             allocations.clear();
             replies.clear();
             results.clear();
-            prevTeamMember = teamMembers;
             restSubTask = 0;
             replyNum = 0;
             role = LEADER;
