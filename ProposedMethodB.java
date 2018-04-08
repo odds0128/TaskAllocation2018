@@ -255,12 +255,10 @@ public class ProposedMethodB implements SetParam, Strategy {
         SubTask subtask;
 
         List<Agent> t = new ArrayList<>();
-//        t.addAll(temp);
         for (Map.Entry<Agent, Integer> ex : tSubtaskAllocated[leader.id].entrySet()) {
             t.add(ex.getKey());
         }
 // この時点でtにはかつての仲間たちが入っている
-
         for (int i = 0; i / RESEND_TIMES < subtasks.size(); i++) {
             subtask = subtasks.get(i / RESEND_TIMES);
             if (leader.epsilonGreedy()) {
@@ -279,6 +277,7 @@ public class ProposedMethodB implements SetParam, Strategy {
                 }
             }
             t.add(candidate);
+            temp.add(candidate);
             leader.sendMessage(leader, candidate, PROPOSAL, subtask.resType);
         }
         return temp;

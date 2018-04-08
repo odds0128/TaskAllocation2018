@@ -5,7 +5,7 @@
 
 interface SetParam {
     // 環境の設定( 変更していく部分 )
-    int EXECUTION_TIMES = 1;             // 実験の回数
+    int EXECUTION_TIMES = 10;             // 実験の回数
     int MAX_TURN_NUM    = 5000000;        // 一回の実験のターン数
     int WRITING_TIMES   = 1000;           // データのファイルへの出力回数
     boolean CHECK_RELATIONSHIPS = true;  // エージェント関係の協調関係を録るモード
@@ -25,7 +25,7 @@ interface SetParam {
     int MAX_DELAY = 10;
 
     int TASK_ADDITION_SPAN = 1;          // タスクキューにタスクを追加するスパン
-    int ADDITIONAL_TASK_NUM  = 7;        // タスクを追加するタイミングで, タスクキューに追加するタスクの個数(=λ)
+    int ADDITIONAL_TASK_NUM  = 3;        // タスクを追加するタイミングで, タスクキューに追加するタスクの個数(=λ)
     int RESOURCE_TYPES = 3;
     int MAX_AGENT_RESOURCE_SIZE   = 10;
     int MIN_AGENT_RESOURCE_SIZE   = 0;

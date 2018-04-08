@@ -6,7 +6,7 @@ import java.util.Map;
 /**
  * ProposedMethodB_2クラス
  * 信頼度更新式は最短終了応答優先
- * 役割更新機構あり
+ * 役割更新機構なし
  */
 public class ProposedMethodB_2 implements SetParam, Strategy {
     static final double γ = γ_r;
@@ -82,7 +82,7 @@ public class ProposedMethodB_2 implements SetParam, Strategy {
         for (Message reply : leader.replies) {
             leader.replyNum++;
             // 拒否ならそのエージェントを候補リストから外し, 信頼度を0で更新する
-            if (reply.getReply() != ACCEPT ) {
+            if (reply.getReply() != ACCEPT) {
                 from = reply.getFrom();
                 int i = leader.inTheList(from, leader.candidates);
                 assert i >= 0 : "alert: Leader got reply from a ghost.";
@@ -251,31 +251,29 @@ public class ProposedMethodB_2 implements SetParam, Strategy {
         SubTask subtask;
 
         List<Agent> t = new ArrayList<>();
-//        t.addAll(temp);
-        for(Map.Entry<Agent, Integer> ex: tSubtaskAllocated[leader.id].entrySet() ) {
+        for (Map.Entry<Agent, Integer> ex : tSubtaskAllocated[leader.id].entrySet()) {
             t.add(ex.getKey());
         }
 // この時点でtにはかつての仲間たちが入っている
-
         for (int i = 0; i / RESEND_TIMES < subtasks.size(); i++) {
             subtask = subtasks.get(i / RESEND_TIMES);
-            if (leader.epsilonGreedy() ) {
-                candidate = Manager.getAgentRandomly(leader, t );
-            }
-            else {
+            if (leader.epsilonGreedy()) {
+                candidate = Manager.getAgentRandomly(leader, t);
+            } else {
                 int j = 0;
                 while (true) {
                     // エージェント1から全走査
                     candidate = leader.relRanking.get(j++);
                     // そいつがまだ候補に入っていなくて，かつ最近サブタスクを割り振っていなくて，
                     // さらにそのサブタスクをこなせそうなら
-                    if ( leader.inTheList(candidate, t) < 0 &&
+                    if (leader.inTheList(candidate, t) < 0 &&
                             leader.calcExecutionTime(candidate, subtask) > 0) {
                         break;
                     }
                 }
             }
             t.add(candidate);
+            temp.add(candidate);
             leader.sendMessage(leader, candidate, PROPOSAL, subtask.resType);
         }
         return temp;
@@ -484,7 +482,7 @@ public class ProposedMethodB_2 implements SetParam, Strategy {
             }
         }
 // */
-        size =  ag.messages.size();
+        size = ag.messages.size();
         if (size == 0) return;
         //        System.out.println("ID: " + self.id + ", Phase: " + self.phase + " message:  "+ self.messages);
         // リーダーでPROPOSITION or 誰でもEXECUTION → 誰からのメッセージも期待していない
