@@ -9,11 +9,11 @@ import java.io.IOException;
 import java.util.*;
 
 public class Manager implements SetParam {
-// private static Strategy strategy = new ProposedMethodA();     // 最短終了時間優先信頼度更新式
+ private static Strategy strategy = new ProposedMethodA();     // 最短終了時間優先信頼度更新式
 //    private static Strategy strategy = new ProposedMethodA_2();     // 最短終了時間優先信頼度更新式
 //    private static Strategy strategy = new ProposedMethodB();     // 最短終了時間優先信頼度更新式
 //    private static Strategy strategy = new ProposedMethodB_2();     // 最短終了時間優先信頼度更新式
-private static Strategy strategy = new ProposedMethodC();     // 最短終了時間優先信頼度更新式
+// private static Strategy strategy = new ProposedMethodC();     // 最短終了時間優先信頼度更新式
 //    private static Strategy strategy = new ProposedMethodC_2();     // 最短終了時間優先信頼度更新式
 //    private static Strategy strategy = new ComparativeMethod1();   // 最短応答優先手法
 //    private static Strategy strategy = new ComparativeMethod2();     // 最短応答優先信頼度更新で役割更新なし
@@ -74,12 +74,12 @@ private static Strategy strategy = new ProposedMethodC();     // 最短終了時
                         OutPut.aggregateAgentData(agents);
                     }
 
-                    if( turn == SNAPSHOT_TIME && CHECK_RELATIONSHIPS ){
+/*                    if( turn == SNAPSHOT_TIME && CHECK_RELATIONSHIPS ){
                         snapshot = takeAgentsSnapshot(agents);
                         OutPut.writeGraphInformation(agents, "interim_report");
                         Agent.resetWorkHistory(agents);
                     }
-
+// */
                     TransmissionPath.transmit();                // 通信遅延あり
                     checkMessage(agents);          // 要請の確認, 無効なメッセージに対する返信
 

@@ -6,7 +6,7 @@
 interface SetParam {
     // 環境の設定( 変更していく部分 )
     int EXECUTION_TIMES = 1;             // 実験の回数
-    int MAX_TURN_NUM    = 500000;        // 一回の実験のターン数
+    int MAX_TURN_NUM    = 5000000;        // 一回の実験のターン数
     int WRITING_TIMES   = 1000;           // データのファイルへの出力回数
     boolean CHECK_RELATIONSHIPS = false;  // エージェント関係の協調関係を録るモード
     boolean CHECK_INITIATION    = false;  // エージェントやタスクの初期設定を確認するモード
@@ -15,7 +15,7 @@ interface SetParam {
     int  COALITION_CHECK_SPAN = 5000;          // 協調関係ができているか確認するための最後の方のターム
     double THRESHOLD_FOR_COALITION = 50;
     int THRESHOLD_FOR_NEET = 5000;
-    int SNAPSHOT_TIME = MAX_TURN_NUM/2;
+    int SNAPSHOT_TIME = MAX_TURN_NUM;
 
     int INITIAL_TASK_NUM = 0;       // 最初のタスク数
     int TASK_QUEUE_SIZE  = 500;     // タスクキューのサイズ

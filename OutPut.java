@@ -57,9 +57,9 @@ public class OutPut implements SetParam {
     static void aggregateData(int ft, int dt, int ot, int rm, int ftida, int ftipa) {
         finishedTasksArray[index] += ft;
         communicationDelayArray[index] += TransmissionPath.getCT();
-        /*        disposedTasksArray[index] += dt;
+        disposedTasksArray[index] += dt;
         overflownTasksArray[index] += ot;
-        messagesArray[index] += TransmissionPath.messageNum;
+        /* messagesArray[index] += TransmissionPath.messageNum;
         reciprocalistsArray[index] += Agent._recipro_num;
         rationalistsArray[index] += Agent._rational_num;
         reciprocalMembersArray[index] += rm;
@@ -576,7 +576,7 @@ public class OutPut implements SetParam {
             pw = new PrintWriter(bw);
 
             pw.println("turn" + ", "
-                            + "FinishedTasks" + ", " //+ "DisposedTasks"                     + ", "+ "OverflownTasks"                    + ", "
+                            + "FinishedTasks" + ", " + "DisposedTasks"                     + ", "+ "OverflownTasks"                    + ", "
                             + "CommunicationTime" + ", "
                             + "Leader" + ", " // + "Member"                            + ", "
                             + "NEET Members" + ", "
@@ -591,9 +591,9 @@ public class OutPut implements SetParam {
                                 + communicationDelayArray[i] / (double) EXECUTION_TIMES + ", "
                                 + leaderNumArray[i] / EXECUTION_TIMES + ", "
                                 + neetMembersArray[i] / EXECUTION_TIMES + ", "
-/*                    + disposedTasksArray[i]                  / EXECUTION_TIMES + ", "
+                    + disposedTasksArray[i]                  / EXECUTION_TIMES + ", "
                     + overflownTasksArray[i]                 / EXECUTION_TIMES + ", "
-                    + memberNumArray[i]                      / EXECUTION_TIMES + ", "
+/*                    + memberNumArray[i]                      / EXECUTION_TIMES + ", "
                     + leaderNumInDepopulatedAreaArray[i]     / EXECUTION_TIMES + ", "
                     + memberNumInDepopulatedAreaArray[i]     / EXECUTION_TIMES + ", "
                     + leaderNumInPopulatedAreaArray[i]       / EXECUTION_TIMES + ", "

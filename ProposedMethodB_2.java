@@ -470,15 +470,8 @@ public class ProposedMethodB_2 implements SetParam, Strategy {
         for (int i = 0; i < size; i++) {
             m = ag.messages.remove(0);
             if (m.getMessageType() == DONE) {
-                if( ag.id == 271 ){
-                    System.out.print( "Message get from " + m.getFrom().id + ", ");
-                    System.out.print(ag.prevTeamMember.size() + "→");
-                }
                 // prevTeamMembersから削除して
                 ag.prevTeamMember.remove(m.getFrom());
-                if( ag.id == 271 ) {
-                    System.out.println(ag.prevTeamMember.size());
-                }
                 // 「リーダーとしての更新式で」信頼度を更新する
                 // そのメンバがサブタスクを受け取ってからリーダーがその完了報告を受けるまでの時間
                 // すなわちrt = "メンバのサブタスク実行時間 + メッセージ到達時間"

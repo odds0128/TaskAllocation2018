@@ -48,7 +48,6 @@ class TransmissionPath implements SetParam {
         }
         if (message.getMessageType() == RESULT) results++;
 //        System.out.println(message);
-
     }
 
     /**
