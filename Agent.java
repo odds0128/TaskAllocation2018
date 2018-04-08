@@ -52,7 +52,6 @@ public class Agent implements SetParam , Cloneable{
     List<Allocation> allocations;       // サブタスクの割り当て候補を< agent, subtask >のリストで保持
     List<Message> replies;
     List<Message> results;
-    List<Agent> prevTeamMember = new ArrayList<>();
     Task ourTask;                  // 持ってきた(割り振られた)タスク
     int restSubTask;               // 残りのサブタスク数
     int index = 0;                 // 一回要請を送ったメンバにもう一度送らないようにindex管理
