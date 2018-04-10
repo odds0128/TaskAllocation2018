@@ -394,6 +394,22 @@ public class OutPut implements SetParam {
                     cell.setCellStyle(style_header);
                     cell.setCellType(CellType.STRING);
                     cell.setCellValue(" is accompanied or not");
+
+                    cell = row.createCell(colNumber++);
+                    cell.setCellStyle(style_header);
+                    cell.setCellType(CellType.STRING);
+                    cell.setCellValue(" Resource 1 ");
+
+                    cell = row.createCell(colNumber++);
+                    cell.setCellStyle(style_header);
+                    cell.setCellType(CellType.STRING);
+                    cell.setCellValue(" Resource 2 ");
+
+                    cell = row.createCell(colNumber++);
+                    cell.setCellStyle(style_header);
+                    cell.setCellType(CellType.STRING);
+                    cell.setCellValue(" Resource 3 ");
+
                 } else {
                     cell = row.createCell(colNumber++);
                     cell.setCellStyle(style_header);
@@ -479,6 +495,13 @@ public class OutPut implements SetParam {
                         cell.setCellStyle(style_string);
                         cell.setCellType(CellType.NUMERIC);
                         cell.setCellValue(agent.isAccompanied);
+
+                        for( int j = 0; j < RESOURCE_TYPES; j++ ) {
+                            cell = row.createCell(colNumber++);
+                            cell.setCellStyle(style_header);
+                            cell.setCellType(CellType.STRING);
+                            cell.setCellValue(agent.res[j]);
+                        }
 
                         //列幅の自動調整
                         for (int k = 0; k <= colNumber; k++) {
