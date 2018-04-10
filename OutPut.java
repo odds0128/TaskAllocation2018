@@ -395,20 +395,12 @@ public class OutPut implements SetParam {
                     cell.setCellType(CellType.STRING);
                     cell.setCellValue(" is accompanied or not");
 
-                    cell = row.createCell(colNumber++);
-                    cell.setCellStyle(style_header);
-                    cell.setCellType(CellType.STRING);
-                    cell.setCellValue(" Resource 1 ");
-
-                    cell = row.createCell(colNumber++);
-                    cell.setCellStyle(style_header);
-                    cell.setCellType(CellType.STRING);
-                    cell.setCellValue(" Resource 2 ");
-
-                    cell = row.createCell(colNumber++);
-                    cell.setCellStyle(style_header);
-                    cell.setCellType(CellType.STRING);
-                    cell.setCellValue(" Resource 3 ");
+                    for( int j = 0; j < RESOURCE_TYPES; j++ ) {
+                        cell = row.createCell(colNumber++);
+                        cell.setCellStyle(style_header);
+                        cell.setCellType(CellType.STRING);
+                        cell.setCellValue(" Resource " + j);
+                    }
 
                 } else {
                     cell = row.createCell(colNumber++);
