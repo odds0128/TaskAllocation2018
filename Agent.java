@@ -113,7 +113,7 @@ public class Agent implements SetParam , Cloneable{
         } else {
             while (resSize == 0) {
                 for (int i = 0; i < RESOURCE_TYPES; i++) {
-                    int rand = _randSeed.nextInt(MAX_AGENT_RESOURCE_SIZE + 1);
+                    int rand = _randSeed.nextInt(MAX_AGENT_RESOURCE_SIZE - MIN_AGENT_RESOURCE_SIZE + 1) + MIN_AGENT_RESOURCE_SIZE;
                     res[i]   =  rand;
                     resSize +=  rand;
                 }

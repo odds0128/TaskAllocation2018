@@ -255,7 +255,7 @@ public class OutPut implements SetParam {
 
     static void writeGraphInformation(List<Agent> agents, String fp) throws FileNotFoundException, IOException {
         String currentPath = System.getProperty("user.dir");
-        String outputFilePath = currentPath + "/out/results/" + fp + ".xlsx";
+        String outputFilePath = currentPath + "/out/relationships/" + fp + ".xlsx";
         Edge edge = new Edge();
         edge.makeEdge(agents);
         try {
@@ -399,6 +399,16 @@ public class OutPut implements SetParam {
                     cell.setCellStyle(style_header);
                     cell.setCellType(CellType.STRING);
                     cell.setCellValue(" length ");
+
+                    cell = row.createCell(colNumber++);
+                    cell.setCellStyle(style_header);
+                    cell.setCellType(CellType.STRING);
+                    cell.setCellValue(" times ");
+
+                    cell = row.createCell(colNumber++);
+                    cell.setCellStyle(style_header);
+                    cell.setCellType(CellType.STRING);
+                    cell.setCellValue("Target Node id again");
                 }
 
                 //ウィンドウ枠の固定
@@ -502,6 +512,17 @@ public class OutPut implements SetParam {
                         cell.setCellType(CellType.NUMERIC);
                         cell.setCellValue(edge.delays.get(j));
 
+                        cell = row.createCell(colNumber++);
+                        cell.setCellStyle(style_string_wrap);
+                        cell.setCellType(CellType.NUMERIC);
+                        cell.setCellValue(edge.times.get(j));
+
+                        cell = row.createCell(colNumber++);
+                        cell.setCellStyle(style_string_wrap);
+                        cell.setCellType(CellType.NUMERIC);
+                        cell.setCellValue(edge.to_id.get(j));
+
+
                         //列幅の自動調整
                         for (int k = 0; k <= colNumber; k++) {
                             sheet.autoSizeColumn(k, true);
@@ -532,6 +553,16 @@ public class OutPut implements SetParam {
                         cell.setCellStyle(style_string_wrap);
                         cell.setCellType(CellType.NUMERIC);
                         cell.setCellValue(edge.delays.get(j));
+
+                        cell = row.createCell(colNumber++);
+                        cell.setCellStyle(style_string_wrap);
+                        cell.setCellType(CellType.NUMERIC);
+                        cell.setCellValue(edge.times.get(j));
+
+                        cell = row.createCell(colNumber++);
+                        cell.setCellStyle(style_string_wrap);
+                        cell.setCellType(CellType.NUMERIC);
+                        cell.setCellValue(edge.to_id.get(j));
 
                         //列幅の自動調整
                         for (int k = 0; k <= colNumber; k++) {

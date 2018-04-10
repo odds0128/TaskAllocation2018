@@ -54,7 +54,7 @@ public class SubTask implements SetParam{
         } else {
             while (resSize == 0) {
                 for (int i = 0; i < RESOURCE_TYPES; i++) {
-                    int rand = _randSeed.nextInt(MAX_SUBTASK_RESOURCE_SIZE + 1);
+                    int rand = _randSeed.nextInt(MAX_SUBTASK_RESOURCE_SIZE - MIN_SUBTASK_RESOURCE_SIZE + 1) - MIN_SUBTASK_RESOURCE_SIZE;
                     reqRes[i] =  rand;
                     resSize  +=  rand;
                 }

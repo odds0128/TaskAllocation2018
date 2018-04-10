@@ -38,6 +38,8 @@ public class Manager implements SetParam {
         assert INITIAL_TASK_NUM <= TASK_QUEUE_SIZE : "alert1";
         assert AGENT_NUM <= ROW * COLUMN : "alert2";
         assert COALITION_CHECK_SPAN < MAX_TURN_NUM : "a";
+        // 仮にサブタスクの要求リソースの最小値を0より大きくすると，エージェントの所持リソースに0がありえる場合不可能になる可能性がある
+        assert MIN_SUBTASK_RESOURCE_SIZE <= MIN_AGENT_RESOURCE_SIZE : "b";
 
         try {
             int writeResultsSpan = MAX_TURN_NUM / WRITING_TIMES;

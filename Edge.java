@@ -11,23 +11,29 @@ public class Edge implements SetParam {
     List<Integer> to_id;        // エッジの先端
     List<Integer> delays;
     List<Boolean> isRecipro;    // 互恵主義かどうか
+    List<Integer> times;        // そのリーダーと何度仕事をしたか
 
     Edge() {
         from_id = new ArrayList<>();
         to_id = new ArrayList<>();
         delays = new ArrayList<>();
         isRecipro = new ArrayList<>();
+        times     = new ArrayList<>();
     }
 
-
     public void makeEdge(List<Agent> agents) {
+        int temp;
         for (Agent ag : agents) {
+            // agがメンバの場合
             if (ag.e_member > ag.e_leader) {
-                for (int i = 0; i < AGENT_NUM; i++) {
-                    if (ag.workWithAsM[i] >= THRESHOLD_FOR_COALITION) {
+                // iは相手のid
+                for (int id = 0; id < AGENT_NUM; id++) {
+                    temp = ag.workWithAsM[id] ;
+                    if ( temp >= THRESHOLD_FOR_COALITION) {
                         from_id.add(ag.id);
-                        to_id.add(i);
-                        delays.add(Manager.delays[ag.id][i]);
+                        to_id.add(id);
+                        delays.add(Manager.delays[ag.id][id]);
+                        times.add(temp);
                         if (ag.principle == RECIPROCAL) isRecipro.add(true);
                         else isRecipro.add(false);
                     }
