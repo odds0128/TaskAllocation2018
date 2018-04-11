@@ -98,10 +98,10 @@ public class Manager implements SetParam {
                 clearAll();
             }
             // ↑ 全実験の終了のカッコ．以下は後処理
-            OutPut.writeResults(strategy);
+            OutPut.writeResultsX(strategy);
 //            OutPut.writeDelays(delays);
 //            OutPut.writeReliabilities(agents, strategy);
-            OutPut.writeDelaysAndRels(delays, agents, strategy);
+//            OutPut.writeDelaysAndRels(delays, agents, strategy);
             if( CHECK_RELATIONSHIPS ) OutPut.writeGraphInformation(agents, "graph" + strategy.getClass().getName());
 // */
             br.close();
