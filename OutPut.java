@@ -17,7 +17,7 @@ public class OutPut implements SetParam {
     static Workbook book = null;
     static FileOutputStream fout = null;
 
-    static OutPut _syngleton = new OutPut();
+    static OutPut _singleton = new OutPut();
 
     static int index = 0;
 
@@ -304,8 +304,7 @@ public class OutPut implements SetParam {
     }
 
     static void writeResultsX(Strategy st) throws FileNotFoundException, IOException {
-        String currentPath = System.getProperty("user.dir");
-        String outputFilePath = currentPath + "/out/results/" + st.getClass().getName() + ", λ=" + ADDITIONAL_TASK_NUM + ".xlsx";
+        String outputFilePath = _singleton.setPath("results", st.getClass().getName() );
 
         try {
             book = new SXSSFWorkbook();
@@ -373,10 +372,8 @@ public class OutPut implements SetParam {
             style_datetime.setFont(font);
 
             Row row;
-            int rowNumber;
-            Cell cell;
-            int colNumber;
-
+            int rowNumber = 0;
+            int colNumber = 0;
 
             Sheet sheet;
 
@@ -387,45 +384,14 @@ public class OutPut implements SetParam {
             //シート名称の設定
             book.setSheetName(0, st.getClass().getName());
 
-            //ヘッダ行の作成
-            rowNumber = 0;
-            colNumber = 0;
-
             row = sheet.createRow(rowNumber);
-            cell = row.createCell(colNumber++);
-            cell.setCellStyle(style_header);
-            cell.setCellType(CellType.STRING);
-            cell.setCellValue("Turn");
-
-            cell = row.createCell(colNumber++);
-            cell.setCellStyle(style_header);
-            cell.setCellType(CellType.STRING);
-            cell.setCellValue("Finished tasks");
-
-            cell = row.createCell(colNumber++);
-            cell.setCellStyle(style_header);
-            cell.setCellType(CellType.STRING);
-            cell.setCellValue("Disposed tasks");
-
-            cell = row.createCell(colNumber++);
-            cell.setCellStyle(style_header);
-            cell.setCellType(CellType.STRING);
-            cell.setCellValue("Overflown tasks");
-
-            cell = row.createCell(colNumber++);
-            cell.setCellStyle(style_header);
-            cell.setCellType(CellType.STRING);
-            cell.setCellValue("Communication time");
-
-            cell = row.createCell(colNumber++);
-            cell.setCellStyle(style_header);
-            cell.setCellType(CellType.STRING);
-            cell.setCellValue("Leaders");
-
-            cell = row.createCell(colNumber++);
-            cell.setCellStyle(style_header);
-            cell.setCellType(CellType.STRING);
-            cell.setCellValue("NEET member");
+            _singleton.writeCell(row, colNumber++, style_header, "Turn");
+            _singleton.writeCell(row, colNumber++, style_header, "Finished tasks");
+            _singleton.writeCell(row, colNumber++, style_header, "Disposed tasks");
+            _singleton.writeCell(row, colNumber++, style_header, "Overflown tasks");
+            _singleton.writeCell(row, colNumber++, style_header, "Communication time");
+            _singleton.writeCell(row, colNumber++, style_header, "Leaders");
+            _singleton.writeCell(row, colNumber++, style_header, "NEET member");
 
             //ウィンドウ枠の固定
             sheet.createFreezePane(1, 1);
@@ -438,44 +404,19 @@ public class OutPut implements SetParam {
                 sheet.autoSizeColumn(j, true);
             }
 
+            // 結果を書き込んでいく
             for (int wt = 0; wt < WRITING_TIMES; wt++) {
                 rowNumber++;
                 colNumber = 0;
                 row = sheet.createRow(rowNumber);
-                cell = row.createCell(colNumber++);
-                cell.setCellStyle(style_int);
-                cell.setCellType(CellType.NUMERIC);
-                cell.setCellValue((wt + 1) * (MAX_TURN_NUM / WRITING_TIMES));
 
-                cell = row.createCell(colNumber++);
-                cell.setCellStyle(style_int);
-                cell.setCellType(CellType.NUMERIC);
-                cell.setCellValue(finishedTasksArray[wt] / EXECUTION_TIMES);
-
-                cell = row.createCell(colNumber++);
-                cell.setCellStyle(style_int);
-                cell.setCellType(CellType.NUMERIC);
-                cell.setCellValue(disposedTasksArray[wt] / EXECUTION_TIMES);
-
-                cell = row.createCell(colNumber++);
-                cell.setCellStyle(style_int);
-                cell.setCellType(CellType.NUMERIC);
-                cell.setCellValue(overflownTasksArray[wt] / EXECUTION_TIMES);
-
-                cell = row.createCell(colNumber++);
-                cell.setCellStyle(style_int);
-                cell.setCellType(CellType.NUMERIC);
-                cell.setCellValue(communicationDelayArray[wt] / (double) EXECUTION_TIMES);
-
-                cell = row.createCell(colNumber++);
-                cell.setCellStyle(style_int);
-                cell.setCellType(CellType.NUMERIC);
-                cell.setCellValue(leaderNumArray[wt] / EXECUTION_TIMES);
-
-                cell = row.createCell(colNumber++);
-                cell.setCellStyle(style_int);
-                cell.setCellType(CellType.NUMERIC);
-                cell.setCellValue(neetMembersArray[wt] / EXECUTION_TIMES);
+                _singleton.writeCell(row, colNumber++, style_header, (wt + 1) * (MAX_TURN_NUM    / WRITING_TIMES));
+                _singleton.writeCell(row, colNumber++, style_header, finishedTasksArray[wt]      / EXECUTION_TIMES);
+                _singleton.writeCell(row, colNumber++, style_header, disposedTasksArray[wt]      / EXECUTION_TIMES);
+                _singleton.writeCell(row, colNumber++, style_header, overflownTasksArray[wt]     / EXECUTION_TIMES);
+                _singleton.writeCell(row, colNumber++, style_header, communicationDelayArray[wt] / (double) EXECUTION_TIMES);
+                _singleton.writeCell(row, colNumber++, style_header, leaderNumArray[wt]          / EXECUTION_TIMES);
+                _singleton.writeCell(row, colNumber++, style_header, neetMembersArray[wt]        / EXECUTION_TIMES);
 
                 //列幅の自動調整
                 for (int k = 0; k <= colNumber; k++) {
@@ -484,7 +425,6 @@ public class OutPut implements SetParam {
             }
             //ファイル出力
             fout = new FileOutputStream(outputFilePath);
-            System.out.println("ttt");
             book.write(fout);
         } finally {
             if (fout != null) {
@@ -744,7 +684,7 @@ public class OutPut implements SetParam {
                         for (int j = 0; j < RESOURCE_TYPES; j++) {
                             cell = row.createCell(colNumber++);
                             cell.setCellStyle(style_header);
-                            cell.setCellType(CellType.STRING);
+                            cell.setCellType(CellType.NUMERIC);
                             cell.setCellValue(agent.res[j]);
                         }
 
@@ -760,6 +700,7 @@ public class OutPut implements SetParam {
                         rowNumber++;
                         colNumber = 0;
                         row = sheet.createRow(rowNumber);
+
                         cell = row.createCell(colNumber++);
                         cell.setCellStyle(style_int);
                         cell.setCellType(CellType.NUMERIC);
@@ -1032,6 +973,39 @@ public class OutPut implements SetParam {
     private final static String[] LIST_ALPHA = {
             "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"
     };
+
+    private String setPath( String dir_name, String file_name ){
+        String currentPath = System.getProperty("user.dir");
+        String outputFilePath = currentPath + "/out/" + dir_name + "/" + file_name + ".xlsx";
+        return outputFilePath;
+    }
+
+    private void prepareExcelSheet(  ){
+
+    }
+
+    // あるrowのcolumn列にoを書き込むメソッド
+    // 返り値は
+    private Cell writeCell( Row row, int col_number, CellStyle style_header, Object o){
+        Cell cell;
+        if( o.getClass().getName() == "java.lang.String" ){
+            cell = row.createCell(col_number++);
+            cell.setCellStyle(style_header);
+            cell.setCellType(CellType.STRING);
+            cell.setCellValue( o.toString() );
+        }else if( o.getClass().getName() == "java.lang.Integer" ){
+            cell = row.createCell(col_number++);
+            cell.setCellStyle(style_header);
+            cell.setCellType(CellType.NUMERIC);
+            cell.setCellValue( (int) o );
+        }else{
+            cell = row.createCell(col_number++);
+            cell.setCellStyle(style_header);
+            cell.setCellType(CellType.NUMERIC);
+            cell.setCellValue( (double) o );
+        }
+        return cell;
+    }
 
     private static String getExcelColumnString(int column) {
         String result = "";
