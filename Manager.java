@@ -51,7 +51,7 @@ public class Manager implements SetParam {
             String line;
 
             int num = 0;
-            System.out.println(strategy.getClass().getName() + ", λ=" + ADDITIONAL_TASK_NUM);
+            System.out.println(strategy.getClass().getName() + ", λ=" + (double)ADDITIONAL_TASK_NUM/TASK_ADDITION_SPAN);
 
             // num回実験
             while ((line = br.readLine()) != null) {
