@@ -337,13 +337,13 @@ public class OutPut implements SetParam {
                 colNumber = 0;
                 row = sheet.createRow(rowNumber);
 
-                _singleton.writeCell(row, colNumber++, style_header, (wt + 1) * (MAX_TURN_NUM    / WRITING_TIMES));
-                _singleton.writeCell(row, colNumber++, style_header, finishedTasksArray[wt]      / EXECUTION_TIMES);
-                _singleton.writeCell(row, colNumber++, style_header, disposedTasksArray[wt]      / EXECUTION_TIMES);
-                _singleton.writeCell(row, colNumber++, style_header, overflownTasksArray[wt]     / EXECUTION_TIMES);
-                _singleton.writeCell(row, colNumber++, style_header, communicationDelayArray[wt] / (double) EXECUTION_TIMES);
-                _singleton.writeCell(row, colNumber++, style_header, leaderNumArray[wt]          / EXECUTION_TIMES);
-                _singleton.writeCell(row, colNumber++, style_header, neetMembersArray[wt]        / EXECUTION_TIMES);
+                _singleton.writeCell(row, colNumber++, style_int, (wt + 1) * (MAX_TURN_NUM    / WRITING_TIMES));
+                _singleton.writeCell(row, colNumber++, style_int, finishedTasksArray[wt]      / EXECUTION_TIMES);
+                _singleton.writeCell(row, colNumber++, style_int, disposedTasksArray[wt]      / EXECUTION_TIMES);
+                _singleton.writeCell(row, colNumber++, style_int, overflownTasksArray[wt]     / EXECUTION_TIMES);
+                _singleton.writeCell(row, colNumber++, style_double, communicationDelayArray[wt] / (double) EXECUTION_TIMES);
+                _singleton.writeCell(row, colNumber++, style_int, leaderNumArray[wt]          / EXECUTION_TIMES);
+                _singleton.writeCell(row, colNumber++, style_int, neetMembersArray[wt]        / EXECUTION_TIMES);
 
                 //列幅の自動調整
                 for (int k = 0; k <= colNumber; k++) {
@@ -903,7 +903,7 @@ public class OutPut implements SetParam {
 
     private String setPath( String dir_name, String file_name ){
         String currentPath = System.getProperty("user.dir");
-        String outputFilePath = currentPath + "/out/" + dir_name + "/" + file_name + ".xlsx";
+        String outputFilePath = currentPath + "/out/" + dir_name + "/" + file_name + ",λ=" + ADDITIONAL_TASK_NUM + ".xlsx";
         return outputFilePath;
     }
 
@@ -913,21 +913,21 @@ public class OutPut implements SetParam {
 
     // あるrowのcolumn列にoを書き込むメソッド
     // 返り値は
-    private Cell writeCell( Row row, int col_number, CellStyle style_header, Object o){
+    private Cell writeCell( Row row, int col_number, CellStyle style, Object o){
         Cell cell;
         if( o.getClass().getName() == "java.lang.String" ){
             cell = row.createCell(col_number++);
-            cell.setCellStyle(style_header);
+            cell.setCellStyle(style);
             cell.setCellType(CellType.STRING);
             cell.setCellValue( o.toString() );
         }else if( o.getClass().getName() == "java.lang.Integer" ){
             cell = row.createCell(col_number++);
-            cell.setCellStyle(style_header);
+            cell.setCellStyle(style);
             cell.setCellType(CellType.NUMERIC);
             cell.setCellValue( (int) o );
         }else{
             cell = row.createCell(col_number++);
-            cell.setCellStyle(style_header);
+            cell.setCellStyle(style);
             cell.setCellType(CellType.NUMERIC);
             cell.setCellValue( (double) o );
         }
