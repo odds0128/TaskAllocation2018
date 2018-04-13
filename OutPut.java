@@ -84,7 +84,6 @@ public class OutPut implements SetParam {
         for (int i = 0; i < num; i++) {
             Task temp = taskQueue.poll();
             System.out.println(temp);
-            System.out.println(temp.subTasks);
             taskQueue.add(temp);
         }
         System.out.println("  Remains: " + taskQueue.size());
@@ -169,88 +168,16 @@ public class OutPut implements SetParam {
             System.out.print(mem.id + ", ");
         }
         System.out.println("are good team!");
-/*
+
         if (leader.mySubTask != null) {
-            System.out.println(" leader: " + leader.id + leader + "→" + leader.mySubTask + ": " + leader.calcExecutionTime(leader, leader.mySubTask) + "[tick(s)]");
+            System.out.println(" leader: " + leader + "→" + leader.mySubTask + ": " + leader.calcExecutionTime(leader, leader.mySubTask) + "[tick(s)]");
         } else {
-            System.out.println(" leader: " + leader.id + leader);
+            System.out.println(" leader: " + leader);
         }
         for (Allocation al : leader.allocations) {
-            System.out.println(" member: " + al.getCandidate().id + al.getCandidate() + "→" + al.getSubtask() + ": " + leader.calcExecutionTime(al.getCandidate(), al.getSubtask()) + "[tick(s)]");
+            System.out.println(" member: " + al.getCandidate() + "→" + al.getSubtask() + ": " + leader.calcExecutionTime(al.getCandidate(), al.getSubtask()) + "[tick(s)]");
         }
         // */
-    }
-
-    static void showLeaderRetirement(List<Agent> snapshot, List<Agent> agents) {
-        int countPositiveBefore, countPositiveAfter;
-        int mCountPositiveBefore = 0, mCountPositiveAfter = 0;
-        Agent ag;
-        for (Agent ss : snapshot) {
-            ag = agents.get(ss.id);
-            // まず, メンバになったのかどうか確認. なっていたら, その理由を究明
-            if (ag.e_leader < ag.e_member) {
-                countPositiveBefore = 0;
-                countPositiveAfter = 0;
-                for (double rel : ag.reliabilities) {
-                    if (rel > 0) countPositiveAfter++;
-                }
-                mCountPositiveBefore += countPositiveBefore;
-                mCountPositiveAfter += countPositiveAfter;
-                System.out.println("ID: " + ss.id
-                        + ", Positive Agents: " + countPositiveAfter
-                );
-            }
-        }
-        int countPositive, countLeader = 0;
-        int mCountPositive = 0;
-        System.out.println("Normal leaders↓");
-        for (Agent nAg : agents) {
-            if (nAg.e_leader > nAg.e_member) {
-                countLeader++;
-                countPositive = 0;
-                for (double rel : nAg.reliabilities) {
-                    if (rel > 0) countPositive++;
-                }
-                mCountPositive += countPositive;
-                System.out.println("ID: " + nAg.id + ", el: "
-                        + ", Positive Agents: " + countPositive
-                );
-            }
-        }
-        System.out.println("loser:  → " + mCountPositiveAfter / snapshot.size());
-        System.out.println("Survivor: " + mCountPositive / countLeader);
-    }
-
-    static void showResults(int turn, List<Agent> agents, int num) {
-        int tempL = 0, tempM = 0;
-        int neetL = 0, neetM = 0;
-        System.out.println(" Turn: " + turn);
-        System.out.println("  Total Agents is " + Agent._id);
-        int temp = countReciplocalist(agents);
-        for (Agent ag : agents) {
-            if (ag.e_leader > ag.e_member) {
-                tempL++;
-                // 最後に活動したのがだいぶ前のことであるならば
-                if (MAX_TURN_NUM - ag.validatedTicks > THRESHOLD_FOR_NEET) neetL++;
-            } else if (ag.e_member > ag.e_leader) {
-                tempM++;
-                if (MAX_TURN_NUM - ag.validatedTicks > THRESHOLD_FOR_NEET) {
-                    neetM++;
-                    System.out.println(ag.validatedTicks + ", " + ag.e_leader + ", " + ag.e_member);
-                }
-            }
-        }
-        System.out.println("  Leaders is " + tempL + ", Members is " + tempM
-                + " (Rationalists: " + (AGENT_NUM - temp) + ", Reciprocalists: " + (temp) + "), "
-                + " (Reciplocal member: " + countReciplocalMembers(agents) + " )"
-                + "NEET l: " + neetL + ", m: " + neetM);
-        System.out.println("  Messages  : " + TransmissionPath.messageNum
-                + ", Mean TransmitTime: " + String.format("%.2f", communicationDelayArray[WRITING_TIMES - 1] / num)
-                + ", Proposals: " + TransmissionPath.proposals + ", Replies: " + TransmissionPath.replies
-                + ", Acceptances: " + TransmissionPath.acceptances + ", Rejects: " + TransmissionPath.rejects);
-        System.out.println("   , Results: " + TransmissionPath.results
-                + ", Finished: " + TransmissionPath.finished + ", Failed:" + TransmissionPath.failed);
-// */
     }
 
     static void writeResults(Strategy st) {

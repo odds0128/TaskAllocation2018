@@ -27,10 +27,10 @@ interface SetParam {
     int TASK_ADDITION_SPAN = 1;          // タスクキューにタスクを追加するスパン
     int ADDITIONAL_TASK_NUM  = 5;        // タスクを追加するタイミングで, タスクキューに追加するタスクの個数(=λ)
     int RESOURCE_TYPES = 3;
-    int MAX_AGENT_RESOURCE_SIZE   = 10;
+    int MAX_AGENT_RESOURCE_SIZE   = 5;
     int MIN_AGENT_RESOURCE_SIZE   = 0;
-    int MAX_SUBTASK_RESOURCE_SIZE = 40;
-    int MIN_SUBTASK_RESOURCE_SIZE = 0;
+    int MAX_SUBTASK_RESOURCE_SIZE = 100;
+    int MIN_SUBTASK_RESOURCE_SIZE = 50;
 
     int RESEND_TIMES   = 2;              // あるサブタスクについて要請を出すエージェントの数
     int MAX_RELIABLE_AGENTS = 5;         // 信頼エージェントの数

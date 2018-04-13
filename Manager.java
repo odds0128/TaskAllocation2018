@@ -124,6 +124,8 @@ public class Manager implements SetParam {
 
         // エージェントの初期化
         agents = generateAgents(strategy);
+//
+//        OutPut.checkAgent(agents);
 //        OutPut.countDelays(delays);
 //        OutPut.checkGrids(grids);
     }
@@ -301,6 +303,7 @@ public class Manager implements SetParam {
                 overflowTasks += ADDITIONAL_TASK_NUM - i;
             }
         }
+//        OutPut.checkTask(taskQueue);
     }
     static void actFreeLancer(){
         List<Agent> freelancer;
@@ -345,7 +348,7 @@ public class Manager implements SetParam {
         leader.ourTask = null;
     }
     static void finishTask(Agent leader) {
-//        if( leader.id == 271 ) OutPut.checkTeam(leader);
+       OutPut.checkTeam(leader);
         leader.ourTask = null;
         if( leader.isLonely == 1 )      finishedTasksInDepopulatedArea++;
         if( leader.isAccompanied == 1 ) finishedTasksInPopulatedArea++;

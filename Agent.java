@@ -353,20 +353,13 @@ public class Agent implements SetParam , Cloneable{
      * calcExecutionTimeメソッド
      * 引数のエージェントが引数のサブタスクを処理できなければ-1を返す．
      * できるのであれば，その処理時間(>0)を返す
-     * @param aTarget
-     * @param sTarget
+     * @param a
+     * @param st
      * @return
      */
-    public int calcExecutionTime(Agent aTarget, SubTask sTarget) {
-        int temp = 0, ceil ;
-        // 全種リソースについて見て行く
-        for (int i = 0; i < RESOURCE_TYPES; i++) {
-            // サブタスク側が要求するリソースをエージェントが持っていない場合は-1をリターンする
-            if( sTarget.reqRes[i] > 0 && aTarget.res[i] == 0) return -1;
-            ceil = (int) Math.ceil((double) sTarget.reqRes[i] / (double)aTarget.res[i]);
-            if( temp < ceil ) temp = ceil ;
-        }
-        return temp;
+    public int calcExecutionTime(Agent a, SubTask st) {
+        if( a.res[st.resType] == 0 ) return -1;
+        return (int) Math.ceil((double) st.reqRes[st.resType] / (double) a.res[st.resType]);
     }
 
     /**
@@ -601,7 +594,7 @@ public class Agent implements SetParam , Cloneable{
             str.append(", the delay: " + Manager.delays[this.id][relRanking.get(0).id]);
         }
 // */
-/*        str.append("[");
+        str.append("[");
         for (int i = 0; i < RESOURCE_TYPES; i++) str.append( String.format("%3d",res[i]) + "," );
         str.append("]");
 // */
