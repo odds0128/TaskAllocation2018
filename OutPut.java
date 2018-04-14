@@ -835,7 +835,7 @@ public class OutPut implements SetParam {
         String fileName = st.getClass().getName();
         try {
             String currentPath = System.getProperty("user.dir");
-            fw = new FileWriter(currentPath + "/out/results/rel" + fileName + ", λ=" + ADDITIONAL_TASK_NUM/TASK_ADDITION_SPAN + ".csv", false);
+            fw = new FileWriter(currentPath + "/out/results/rel" + fileName + ", λ=" +  String.format("%.2f", (double)ADDITIONAL_TASK_NUM/TASK_ADDITION_SPAN)+ ".csv", false);
             bw = new BufferedWriter(fw);
             pw = new PrintWriter(bw);
             // 列番号入れる部分
