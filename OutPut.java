@@ -38,6 +38,8 @@ public class OutPut implements SetParam {
     static int[] reciprocalMembersArray = new int[WRITING_TIMES];
     static int[] finishedTasksInDepopulatedAreaArray = new int[WRITING_TIMES];
     static int[] finishedTasksInPopulatedAreaArray = new int[WRITING_TIMES];
+    static int[] taskExecutionTimeArray = new int[WRITING_TIMES];
+    static int   taskExecutionTimes = 0;
 
     static void aggregateAgentData(List<Agent> agents) {
         leaderNumArray[index] += Agent._leader_num;
@@ -68,7 +70,20 @@ public class OutPut implements SetParam {
 // */
     }
 
+    static void aggregateTaskExecutionTime(Agent leader){
+        if( leader.mySubTask != null ){
+            taskExecutionTimeArray[index] += leader.executionTime;
+            taskExecutionTimes++;
+        }
+        for (Allocation al : leader.allocations) {
+            taskExecutionTimeArray[index] += leader.calcExecutionTime(al.getCandidate(), al.getSubtask());
+            taskExecutionTimes++;
+        }
+    }
+
     static void indexIncrement() {
+        if( taskExecutionTimes != 0 )taskExecutionTimeArray[index] /= taskExecutionTimes;
+        taskExecutionTimes = 0;
         index = (index + 1) % WRITING_TIMES;
     }
 
@@ -187,13 +202,13 @@ public class OutPut implements SetParam {
         String fileName = st.getClass().getName();
         try {
             String currentPath = System.getProperty("user.dir");
-            fw = new FileWriter(currentPath + "/out/results/" + fileName + ", λ=" + ADDITIONAL_TASK_NUM/TASK_ADDITION_SPAN + ".csv", false);
+            fw = new FileWriter(currentPath + "/out/results/" + fileName + ", λ=" + (double)ADDITIONAL_TASK_NUM/TASK_ADDITION_SPAN + ".csv", false);
             bw = new BufferedWriter(fw);
             pw = new PrintWriter(bw);
 
             pw.println("turn" + ", "
                             + "FinishedTasks" + ", " + "DisposedTasks" + ", " + "OverflownTasks" + ", "
-                            + "CommunicationTime" + ", "
+                            + "CommunicationTime" + ", " + "ExecutionTime" + ","
                             + "Leader" + ", " // + "Member"                            + ", "
                             + "NEET Members" + ", "
                     // + "Lonely leaders"                    + ", " + "Lonely members"                    + ", "
@@ -207,6 +222,7 @@ public class OutPut implements SetParam {
                                 + disposedTasksArray[i] / EXECUTION_TIMES + ", "
                                 + overflownTasksArray[i] / EXECUTION_TIMES + ", "
                                 + communicationDelayArray[i] / (double) EXECUTION_TIMES + ", "
+                                + (double) taskExecutionTimeArray[i]  / EXECUTION_TIMES + ", "
                                 + leaderNumArray[i] / EXECUTION_TIMES + ", "
                                 + neetMembersArray[i] / EXECUTION_TIMES + ", "
                         /*                    + memberNumArray[i]                      / EXECUTION_TIMES + ", "
@@ -317,6 +333,7 @@ public class OutPut implements SetParam {
             _singleton.writeCell(row, colNumber++, style_header, "Disposed tasks");
             _singleton.writeCell(row, colNumber++, style_header, "Overflown tasks");
             _singleton.writeCell(row, colNumber++, style_header, "Communication time");
+            _singleton.writeCell(row, colNumber++, style_header, "Execution time");
             _singleton.writeCell(row, colNumber++, style_header, "Leaders");
             _singleton.writeCell(row, colNumber++, style_header, "NEET member");
 
@@ -342,6 +359,7 @@ public class OutPut implements SetParam {
                 _singleton.writeCell(row, colNumber++, style_int, disposedTasksArray[wt]      / EXECUTION_TIMES);
                 _singleton.writeCell(row, colNumber++, style_int, overflownTasksArray[wt]     / EXECUTION_TIMES);
                 _singleton.writeCell(row, colNumber++, style_double, communicationDelayArray[wt] / (double) EXECUTION_TIMES);
+                _singleton.writeCell(row, colNumber++, style_double, (double) taskExecutionTimeArray[wt]  / EXECUTION_TIMES );
                 _singleton.writeCell(row, colNumber++, style_int, leaderNumArray[wt]          / EXECUTION_TIMES);
                 _singleton.writeCell(row, colNumber++, style_int, neetMembersArray[wt]        / EXECUTION_TIMES);
 
