@@ -522,12 +522,12 @@ public class OutPut implements SetParam {
                     cell.setCellStyle(style_header);
                     cell.setCellType(CellType.STRING);
                     cell.setCellValue(" leader id");
-
+// */
                     cell = row.createCell(colNumber++);
                     cell.setCellStyle(style_header);
                     cell.setCellType(CellType.STRING);
                     cell.setCellValue(" delay to leader ");
-
+/*
                     cell = row.createCell(colNumber++);
                     cell.setCellStyle(style_header);
                     cell.setCellType(CellType.STRING);
@@ -538,11 +538,12 @@ public class OutPut implements SetParam {
                     cell.setCellType(CellType.STRING);
                     cell.setCellValue(" is accompanied or not");
 // */
-                    cell = row.createCell(colNumber++);
-                    cell.setCellStyle(style_header);
-                    cell.setCellType(CellType.STRING);
-                    cell.setCellValue(" Resources ");
-
+                    for( int j = 0; j < RESOURCE_TYPES; j++ ) {
+                        cell = row.createCell(colNumber++);
+                        cell.setCellStyle(style_header);
+                        cell.setCellType(CellType.STRING);
+                        cell.setCellValue(" Resources " + j );
+                    }
                     cell = row.createCell(colNumber++);
                     cell.setCellStyle(style_header);
                     cell.setCellType(CellType.NUMERIC);
@@ -617,14 +618,13 @@ public class OutPut implements SetParam {
                         cell.setCellType(CellType.NUMERIC);
                         if (agent.e_leader > agent.e_member) cell.setCellValue(agent.id * 3);
                         else if (agent.leader != null) cell.setCellValue(agent.leader.id * 3);
-
+// */
                         cell = row.createCell(colNumber++);
                         cell.setCellStyle(style_string);
                         cell.setCellType(CellType.NUMERIC);
                         if (agent.e_leader > agent.e_member) cell.setCellValue(0);
-                        else if (agent.leader != null)
-                            cell.setCellValue(Manager.delays[agent.id][agent.leader.id] * 10);
-
+                        else if (agent.leader != null) cell.setCellValue(Manager.delays[agent.id][agent.leader.id] );
+/*
                         cell = row.createCell(colNumber++);
                         cell.setCellStyle(style_string);
                         cell.setCellType(CellType.NUMERIC);
@@ -635,16 +635,12 @@ public class OutPut implements SetParam {
                         cell.setCellType(CellType.NUMERIC);
                         cell.setCellValue(agent.isAccompanied);
 // */
-                        cell = row.createCell(colNumber++);
-                        cell.setCellStyle(style_string);
-                        cell.setCellType(CellType.STRING);
-                        StringBuilder str = new StringBuilder("[");
-                        for (int j = 0; j < RESOURCE_TYPES - 1; j++) {
-                            str.append(agent.res[j] + ", ");
+                        for( int j = 0; j < RESOURCE_TYPES; j++ ) {
+                            cell = row.createCell(colNumber++);
+                            cell.setCellStyle(style_string);
+                            cell.setCellType(CellType.NUMERIC);
+                            cell.setCellValue(agent.res[j]);
                         }
-                        str.append(agent.res[RESOURCE_TYPES-1] + "]");
-                        cell.setCellValue(str.toString());
-
                         cell = row.createCell(colNumber++);
                         cell.setCellStyle(style_string);
                         cell.setCellType(CellType.NUMERIC);
