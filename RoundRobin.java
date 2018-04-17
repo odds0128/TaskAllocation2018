@@ -261,5 +261,8 @@ public class RoundRobin implements Strategy, SetParam {
 
     public void inactivateWithNoLearning() {
     }
+
+    public void clearStrategy() {
+    }
 }
 

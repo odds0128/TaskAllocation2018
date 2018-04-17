@@ -5,8 +5,8 @@ import java.util.Map;
 
 public class Rational implements Strategy, SetParam {
     static final double γ = γ_r;
-    static int[] min = new int[AGENT_NUM];
-    static HashMap<Agent, Integer>[] tSubtaskAllocated = new HashMap[AGENT_NUM];
+    int[] min = new int[AGENT_NUM];
+    HashMap<Agent, Integer>[] tSubtaskAllocated = new HashMap[AGENT_NUM];
 
     Rational() {
         for (int i = 0; i < AGENT_NUM; i++) {
@@ -480,9 +480,10 @@ public class Rational implements Strategy, SetParam {
         }
     }
 
-    static public void clearPM() {
+    public void clearStrategy() {
         for (int i = 0; i < AGENT_NUM; i++) {
             min[i] = Integer.MAX_VALUE;
+            tSubtaskAllocated[i].clear();
         }
     }
 

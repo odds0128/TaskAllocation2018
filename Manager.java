@@ -55,7 +55,10 @@ public class Manager implements SetParam {
             System.out.println(strategy.getClass().getName() + ", λ=" + (double)ADDITIONAL_TASK_NUM/TASK_ADDITION_SPAN);
 
             // num回実験
+            line =  br.readLine();
+            System.out.println(line);
             while ((line = br.readLine()) != null) {
+                System.out.println(line);
                 initiate(line);                         // シード，タスク，エージェントの初期化処理
                 System.out.println( ++num + "回目");
                 if( CHECK_INITIATION ){
@@ -126,7 +129,7 @@ public class Manager implements SetParam {
         // エージェントの初期化
         agents = generateAgents(strategy);
 //
-//        OutPut.checkAgent(agents);
+        OutPut.checkAgent(agents);
 //        OutPut.countDelays(delays);
 //        OutPut.checkGrids(grids);
     }
@@ -415,6 +418,6 @@ public class Manager implements SetParam {
         SubTask.clearST();
         Task.clearT();
         Agent.clearA();
-        if (strategy.getClass().getName() == "ComparativeMethod3") ComparativeMethod3.clearPM();
+        strategy.clearStrategy();
     }
 }

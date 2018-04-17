@@ -242,6 +242,6 @@ public class ComparativeMethod1 implements Strategy, SetParam {
 
     }
 
-    public void inactivateWithNoLearning() {
+    public void clearStrategy() {
     }
 }

@@ -525,9 +525,10 @@ public class ProposedMethodA implements SetParam, Strategy {
         }
     }
 
-    static public void clearPM() {
+    public void clearStrategy() {
         for (int i = 0; i < AGENT_NUM; i++) {
             min[i] = Integer.MAX_VALUE;
+            tSubtaskAllocated[i].clear();
         }
     }
 

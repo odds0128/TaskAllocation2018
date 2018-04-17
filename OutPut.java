@@ -38,6 +38,7 @@ public class OutPut implements SetParam {
     static int[] reciprocalMembersArray = new int[WRITING_TIMES];
     static int[] finishedTasksInDepopulatedAreaArray = new int[WRITING_TIMES];
     static int[] finishedTasksInPopulatedAreaArray = new int[WRITING_TIMES];
+    static int[] tempTaskExecutionTimeArray = new int[WRITING_TIMES];
     static int[] taskExecutionTimeArray = new int[WRITING_TIMES];
     static int   taskExecutionTimes = 0;
 
@@ -72,17 +73,21 @@ public class OutPut implements SetParam {
 
     static void aggregateTaskExecutionTime(Agent leader){
         if( leader.mySubTask != null ){
-            taskExecutionTimeArray[index] += leader.executionTime;
+            tempTaskExecutionTimeArray[index] += leader.executionTime;
             taskExecutionTimes++;
         }
         for (Allocation al : leader.allocations) {
-            taskExecutionTimeArray[index] += leader.calcExecutionTime(al.getCandidate(), al.getSubtask());
+            tempTaskExecutionTimeArray[index] += leader.calcExecutionTime(al.getCandidate(), al.getSubtask());
             taskExecutionTimes++;
         }
+//        System.out.println(taskExecutionTimeArray[index] + ", " + taskExecutionTimes);
     }
 
     static void indexIncrement() {
-        if( taskExecutionTimes != 0 )taskExecutionTimeArray[index] /= taskExecutionTimes;
+        if( taskExecutionTimes != 0 ){
+            taskExecutionTimeArray[index] += tempTaskExecutionTimeArray[index]/taskExecutionTimes;
+//            System.out.println(taskExecutionTimeArray[index]);
+        }
         taskExecutionTimes = 0;
         index = (index + 1) % WRITING_TIMES;
     }
@@ -512,7 +517,7 @@ public class OutPut implements SetParam {
                     cell.setCellStyle(style_header);
                     cell.setCellType(CellType.STRING);
                     cell.setCellValue(" y-coordinate ");
-
+/*
                     cell = row.createCell(colNumber++);
                     cell.setCellStyle(style_header);
                     cell.setCellType(CellType.STRING);
@@ -532,13 +537,16 @@ public class OutPut implements SetParam {
                     cell.setCellStyle(style_header);
                     cell.setCellType(CellType.STRING);
                     cell.setCellValue(" is accompanied or not");
+// */
+                    cell = row.createCell(colNumber++);
+                    cell.setCellStyle(style_header);
+                    cell.setCellType(CellType.STRING);
+                    cell.setCellValue(" Resources ");
 
-                    for (int j = 0; j < RESOURCE_TYPES; j++) {
-                        cell = row.createCell(colNumber++);
-                        cell.setCellStyle(style_header);
-                        cell.setCellType(CellType.STRING);
-                        cell.setCellValue(" Resource " + j);
-                    }
+                    cell = row.createCell(colNumber++);
+                    cell.setCellStyle(style_header);
+                    cell.setCellType(CellType.NUMERIC);
+                    cell.setCellValue(" Times ");
 
                 } else {
                     cell = row.createCell(colNumber++);
@@ -603,6 +611,7 @@ public class OutPut implements SetParam {
                         cell.setCellType(CellType.NUMERIC);
                         cell.setCellValue(agent.y * 10);
 
+                        /*
                         cell = row.createCell(colNumber++);
                         cell.setCellStyle(style_string);
                         cell.setCellType(CellType.NUMERIC);
@@ -625,13 +634,21 @@ public class OutPut implements SetParam {
                         cell.setCellStyle(style_string);
                         cell.setCellType(CellType.NUMERIC);
                         cell.setCellValue(agent.isAccompanied);
-
-                        for (int j = 0; j < RESOURCE_TYPES; j++) {
-                            cell = row.createCell(colNumber++);
-                            cell.setCellStyle(style_header);
-                            cell.setCellType(CellType.NUMERIC);
-                            cell.setCellValue(agent.res[j]);
+// */
+                        cell = row.createCell(colNumber++);
+                        cell.setCellStyle(style_string);
+                        cell.setCellType(CellType.STRING);
+                        StringBuilder str = new StringBuilder("[");
+                        for (int j = 0; j < RESOURCE_TYPES - 1; j++) {
+                            str.append(agent.res[j] + ", ");
                         }
+                        str.append(agent.res[RESOURCE_TYPES-1] + "]");
+                        cell.setCellValue(str.toString());
+
+                        cell = row.createCell(colNumber++);
+                        cell.setCellStyle(style_string);
+                        cell.setCellType(CellType.NUMERIC);
+                        cell.setCellValue(agent.didTasksAsMember);
 
                         //列幅の自動調整
                         for (int k = 0; k <= colNumber; k++) {

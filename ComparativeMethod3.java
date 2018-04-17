@@ -8,7 +8,7 @@ import java.util.List;
  */
 public class ComparativeMethod3 implements SetParam, Strategy {
     static final double γ = γ_r;
-    static int[] min = new int[AGENT_NUM];
+    int[] min = new int[AGENT_NUM];
 
     ComparativeMethod3() {
         for (int i = 0; i < AGENT_NUM; i++) {
@@ -458,7 +458,7 @@ public class ComparativeMethod3 implements SetParam, Strategy {
     public void checkMessages(Agent ag){
     }
 
-    static public void clearPM() {
+    public void clearStrategy() {
         for (int i = 0; i < AGENT_NUM; i++) {
             min[i] = Integer.MAX_VALUE;
         }

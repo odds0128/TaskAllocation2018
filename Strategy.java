@@ -8,4 +8,5 @@ public interface Strategy {
     abstract Agent selectLeader(Agent agent, List<Message> messages);
 
     void checkMessages(Agent self);
+    void clearStrategy();
 }

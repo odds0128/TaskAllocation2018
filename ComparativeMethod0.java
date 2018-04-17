@@ -431,6 +431,7 @@ public class ComparativeMethod0 implements SetParam, Strategy {
 
     }
 
-    public void inactivate() {
-    }
+    public void clearStrategy() {
+     }
+
 }
