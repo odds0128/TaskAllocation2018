@@ -9,8 +9,8 @@ import java.util.HashMap;
  */
 public class ProposedMethodA_2 implements SetParam, Strategy {
     static final double γ = γ_r;
-    static int[] min = new int[AGENT_NUM];
-    static HashMap<Agent, Integer>[] tSubtaskAllocated = new HashMap[AGENT_NUM];
+    int[] min = new int[AGENT_NUM];
+    HashMap<Agent, Integer>[] tSubtaskAllocated = new HashMap[AGENT_NUM];
 
     ProposedMethodA_2() {
         for (int i = 0; i < AGENT_NUM; i++) {
