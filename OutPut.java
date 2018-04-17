@@ -76,11 +76,11 @@ public class OutPut implements SetParam {
             tempTaskExecutionTimeArray[index] += leader.executionTime;
             taskExecutionTimes++;
         }
-        for (Allocation al : leader.allocations) {
-            tempTaskExecutionTimeArray[index] += leader.calcExecutionTime(al.getCandidate(), al.getSubtask());
+        for ( Map.Entry<Agent, SubTask> al : leader.preAllocations.entrySet()) {
+            tempTaskExecutionTimeArray[index] += leader.calcExecutionTime(al.getKey(), al.getValue());
             taskExecutionTimes++;
         }
-//        System.out.println(taskExecutionTimeArray[index] + ", " + taskExecutionTimes);
+//        System.out.println(tempTaskExecutionTimeArray[index] + ", " + taskExecutionTimes);
     }
 
     static void indexIncrement() {
@@ -194,8 +194,8 @@ public class OutPut implements SetParam {
         } else {
             System.out.println(" leader: " + leader);
         }
-        for (Allocation al : leader.allocations) {
-            System.out.println(" member: " + al.getCandidate() + "→" + al.getSubtask() + ": " + leader.calcExecutionTime(al.getCandidate(), al.getSubtask()) + "[tick(s)]");
+        for ( Map.Entry<Agent, SubTask> al : leader.preAllocations.entrySet()) {
+            System.out.println(" member: " + al.getKey() + "→" + al.getValue() + ": " + leader.calcExecutionTime(al.getKey(), al.getValue()) + "[tick(s)]");
         }
         // */
     }
@@ -855,10 +855,7 @@ public class OutPut implements SetParam {
             pw.print("id");
             for (int i = 0; i < AGENT_NUM; i++) pw.print(", " + i);
             pw.println();
-            System.out.println(agents.size());
-            int j = 0;
             for (Agent ag : agents) {
-                System.out.println(j++);
                 pw.print(ag.id + ", ");
                 if (ag.e_member > ag.e_leader) {
                     for (int i = 0; i < AGENT_NUM; i++) {

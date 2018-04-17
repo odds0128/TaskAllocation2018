@@ -3,10 +3,7 @@
  * @version 2.0
  */
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class Agent implements SetParam , Cloneable{
     static int _id = 0;
@@ -49,7 +46,7 @@ public class Agent implements SetParam , Cloneable{
     // リーダーエージェントが持つパラメータ
     List<Agent> candidates;         // これからチームへの参加を要請するエージェントのリスト
     List<Agent> teamMembers;        // すでにサブタスクを送っていてメンバの選定から外すエージェントのリスト
-    List<Allocation> allocations;       // サブタスクの割り当て候補を< agent, subtask >のリストで保持
+    Map<Agent, SubTask> preAllocations;       // サブタスクの割り当て候補を< agent, subtask >のHashMapで保持
     List<Message> replies;
     List<Message> results;
     Task ourTask;                  // 持ってきた(割り振られた)タスク
@@ -137,7 +134,7 @@ public class Agent implements SetParam , Cloneable{
                 this.phase = PROPOSITION;
                 candidates = new ArrayList<>();
                 teamMembers = new ArrayList<>();
-                allocations = new ArrayList<>();
+                preAllocations = new HashMap<>();
                 replies = new ArrayList<>();
                 results = new ArrayList<>();
             } else if (e_member < e_leader) {
@@ -153,7 +150,7 @@ public class Agent implements SetParam , Cloneable{
                     this.phase = PROPOSITION;
                     candidates = new ArrayList<>();
                     teamMembers = new ArrayList<>();
-                    allocations = new ArrayList<>();
+                    preAllocations = new HashMap<>();
                     replies = new ArrayList<>();
                     results = new ArrayList<>();
                 } else {
@@ -170,7 +167,7 @@ public class Agent implements SetParam , Cloneable{
                 this.phase = PROPOSITION;
                 candidates = new ArrayList<>();
                 teamMembers = new ArrayList<>();
-                allocations = new ArrayList<>();
+                preAllocations = new HashMap<>();
                 replies = new ArrayList<>();
                 results = new ArrayList<>();
             } else if (e_member > e_leader) {
@@ -185,7 +182,7 @@ public class Agent implements SetParam , Cloneable{
                     this.phase = PROPOSITION;
                     candidates = new ArrayList<>();
                     teamMembers = new ArrayList<>();
-                    allocations = new ArrayList<>();
+                    preAllocations = new HashMap<>();
                     replies = new ArrayList<>();
                     results = new ArrayList<>();
                 } else {
@@ -206,7 +203,7 @@ public class Agent implements SetParam , Cloneable{
             this.phase = PROPOSITION;
             candidates = new ArrayList<>();
             teamMembers = new ArrayList<>();
-            allocations = new ArrayList<>();
+            preAllocations = new HashMap<>();
             replies = new ArrayList<>();
             results = new ArrayList<>();
         } else {
@@ -237,7 +234,7 @@ public class Agent implements SetParam , Cloneable{
             if (ourTask != null) Manager.disposeTask(this);
             candidates.clear();
             teamMembers.clear();
-            allocations.clear();
+            preAllocations.clear();
             replies.clear();
             results.clear();
             restSubTask = 0;
@@ -268,19 +265,20 @@ public class Agent implements SetParam , Cloneable{
             if (ourTask != null) Manager.disposeTask(this);
             candidates.clear();
             teamMembers.clear();
-            allocations.clear();
+            preAllocations.clear();
             replies.clear();
             results.clear();
             restSubTask = 0;
             replyNum = 0;
             role = LEADER;
             phase = PROPOSITION;
-            candidates = new ArrayList<>();
+/*            candidates = new ArrayList<>();
             teamMembers = new ArrayList<>();
-            allocations = new ArrayList<>();
+            preAllocations = new HashMap<>();
             replies = new ArrayList<>();
             results = new ArrayList<>();
-        } else {
+// */
+        }else {
             if (success == 1) didTasksAsMember++;
             role = MEMBER;
             this.phase = WAITING;
@@ -423,20 +421,7 @@ public class Agent implements SetParam , Cloneable{
         }
         return -1;
     }
-    /**
-     * getAllocationメソッド
-     * 引数のエージェントに割り当てるサブタスクを返す
-     * 割り当て情報は保持
-     */
-    protected Allocation getAllocation(Agent agent) {
-        int size = allocations.size();
-        for (int i = 0; i < size; i++) {
-            if (agent == allocations.get(i).getCandidate()) {
-                return allocations.get(i);
-            }
-        }
-        return null;
-    }
+
     protected boolean epsilonGreedy() {
         double random = _randSeed.nextDouble();
         if (random < ε) {
