@@ -74,7 +74,7 @@ public class Agent implements SetParam , Cloneable{
         this.strategy = strategy;
         setResource(UNIFORM);
         Arrays.fill(reliabilities, INITIAL_VALUE_OF_DEC);
-        if (strategy.getClass().getName() == "RoundRobin" || strategy.getClass().getName() == "ComparativeMethod1") {
+        if (strategy.getClass().getName() == "CNP") {
             selectRoleWithoutLearning();
         } else {
             selectRole();
@@ -92,7 +92,7 @@ public class Agent implements SetParam , Cloneable{
         this.strategy = strategy;
         setResource(UNIFORM);
         Arrays.fill(reliabilities, INITIAL_VALUE_OF_DEC);
-        if (strategy.getClass().getName() == "RoundRobin" || strategy.getClass().getName() == "ComparativeMethod1") {
+        if (strategy.getClass().getName() == "CNP") {
             selectRoleWithoutLearning();
         } else {
             selectRole();
@@ -320,6 +320,7 @@ public class Agent implements SetParam , Cloneable{
         }
         // もし一つもなかったら仕方ないからなしでreturn
         if (tempIndex == -1) {
+            System.out.println("W: " + this + ", " + this.ourTask);
             return;
         }
         // 一個でもあったらどれかを選んで自分のサブタスクとする
@@ -367,7 +368,7 @@ public class Agent implements SetParam , Cloneable{
      * それ以外はネガティブな返事をする
      */
     void checkMessages(Agent self) {
-        if( strategy.getClass().getName().startsWith( "ProposedMethod" )) {
+        if( strategy.getClass().getName().startsWith( "ProposedMethod" ) || strategy.getClass().getName().startsWith( "CNP" ) ) {
             strategy.checkMessages(self);
             return;
         }

@@ -6,8 +6,8 @@
 interface SetParam {
     // 環境の設定( 変更していく部分 )
     int EXECUTION_TIMES = 1;             // 実験の回数
-    int MAX_TURN_NUM    = 1000000;        // 一回の実験のターン数
-    int WRITING_TIMES   = 1000;           // データのファイルへの出力回数
+    int MAX_TURN_NUM    = 100;        // 一回の実験のターン数
+    int WRITING_TIMES   = 10;           // データのファイルへの出力回数
     boolean CHECK_RELATIONSHIPS = false;  // エージェント関係の協調関係を録るモード
     boolean CHECK_INITIATION    = false;  // エージェントやタスクの初期設定を確認するモード
 
@@ -66,10 +66,17 @@ interface SetParam {
     int RESULT     = 3;
     int DONE       = 4;
 
+    // CNP用のメッセージの種類
+    int PUBLICITY     = 1;
+    int BIDDINGorNOT  = 2;
+    int BID_RESULT    = 3;
+//    int DONE          = 4;
+
     // REPLYの種類
     int ACCEPT = 1 ;
     int REJECT = 0 ;
     int REJECT_FOR_DOING_YOUR_ST = -1 ;
+
 
     // フェイズ
     int SELECT_ROLE  = 0;  // 全員
@@ -78,4 +85,6 @@ interface SetParam {
     int REPORT       = 3;  // リーダー
     int RECEPTION    = 4;  // メンバ
     int EXECUTION    = 5;  // 全員
+
+    // CNP用のフェイズ
 }

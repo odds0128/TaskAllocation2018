@@ -10,11 +10,12 @@ class Message implements SetParam{
     private Agent to;
     private int   messageType;
     // メッセージにサブタスクを載せること自体は悪いことじゃないことに注意. 最終的には渡さないといけない
+
+    // 提案手法チックな手法で使う変数とコンストラクタ．引数4つ
     private int resType;
     private int reply;
     private SubTask subtask;  // チーム編成が成功したら, 割り当てるサブタスクが入る. 失敗したらnull
     private int timeSTarrived;
-
     Message(Agent from, Agent to, int type, Object o) {
         this.from = from;
         this.to   = to;
@@ -27,6 +28,31 @@ class Message implements SetParam{
             this.subtask     = (SubTask) o ;
         }else if( type == DONE ){
             this.timeSTarrived = (int) o ;
+        }
+    }
+
+    // CNPで使う変数とコンストラクタ．引数5つ
+    private Task    bidTask;
+    private SubTask bidSubtask;
+    private int     estimation;
+    private SubTask st;  // チーム編成が成功したら割り当てるサブタスクが入る. 失敗or割り当てなしでnull
+    Message(Agent from, Agent to, int type, Object o1, Object o2){
+        this.from = from;
+        this.to   = to;
+        this.messageType = type;
+        if( type == PUBLICITY ){
+            // 広報時にはタスクを載せる
+            bidTask = (Task) o1;
+        }else if( type == BIDDINGorNOT ){
+            // 入札時にはそのタスクのうちどれを何tickくらいでできるかを載せる．非入札時には0を返す
+            // どのサブタスクを選んだかはどう載せる? インデックス? サブタスクそのもの?
+            bidSubtask = (SubTask) o1;
+            estimation = (Integer) o2;
+        }else if( type == BID_RESULT ){
+            // 落札結果報告時には落札者にサブタスクを，非落札者にnullをあげる
+            st = (SubTask) o1;
+        }else if( type == DONE ){
+            // 終了時は終了の旨だけでいい
         }
     }
 
@@ -47,6 +73,14 @@ class Message implements SetParam{
     }
     int getResType(){ return resType; }
     int getTimeSTarrived() { return timeSTarrived; }
+
+    Task getBidTask(){
+        return bidTask;
+    }
+
+    SubTask getBidSubtask(){
+        return bidSubtask;
+    }
 
     @Override
     public String toString(){

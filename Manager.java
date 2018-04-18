@@ -18,7 +18,8 @@ public class Manager implements SetParam {
 //    private static Strategy strategy = new ComparativeMethod3();   // 最短応答優先信頼度更新で役割更新あり
 //    private static Strategy strategy = new RoundRobin();           // ラウンドロビン
 //    private static Strategy strategy = new Rational();
-    private static Strategy strategy = new ProposedMethodForSingapore();
+//    private static Strategy strategy = new ProposedMethodForSingapore();
+    private static Strategy strategy   = new CNP();
 
     static private long    _seed ;
     private static Random _randSeed;
@@ -60,6 +61,7 @@ public class Manager implements SetParam {
                 initiate(line);                         // シード，タスク，エージェントの初期化処理
                 System.out.println( ++num + "回目");
                 if( CHECK_INITIATION ){
+                    if( num == EXECUTION_TIMES ) break;
                     clearAll();
                     continue;
                 }
@@ -127,7 +129,7 @@ public class Manager implements SetParam {
         // エージェントの初期化
         agents = generateAgents(strategy);
 //
-//        OutPut.checkAgent(agents);
+        if( CHECK_INITIATION )  OutPut.checkAgent(agents);
 //        OutPut.countDelays(delays);
 //        OutPut.checkGrids(grids);
     }
@@ -418,4 +420,9 @@ public class Manager implements SetParam {
         Agent.clearA();
         strategy.clearStrategy();
     }
+
+    static public List<Agent> getAgents(){
+        return agents;
+    }
+
 }
