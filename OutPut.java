@@ -931,11 +931,7 @@ public class OutPut implements SetParam {
 
     private String setPath( String dir_name, String file_name ){
         String currentPath = System.getProperty("user.dir");
-<<<<<<< HEAD
-        String outputFilePath = currentPath + "/out/" + dir_name + "/" + file_name + ",λ=" + (double)ADDITIONAL_TASK_NUM/TASK_ADDITION_SPAN + ".xlsx";
-=======
         String outputFilePath = currentPath + "/out/" + dir_name + "/" + file_name + ",λ=" +  String.format("%.2f", (double)ADDITIONAL_TASK_NUM/TASK_ADDITION_SPAN) + ".xlsx";
->>>>>>> CNP
         return outputFilePath;
     }
 
