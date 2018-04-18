@@ -4,19 +4,26 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * ProposedMethodB_2クラス
- * 信頼度更新式は最短終了応答優先
- * 役割更新機構なし
+ * ProposedMethodForSingapore クラス
+ * サブタスクの要求リソースに量を設けたことにより，"報酬"を適切に考える必要が生じた
+ * そこで報酬はサブタスクの要求リソースに依存するものとし，信頼度更新式 e^i_j = (1-α)e^i_j + δ * α を
+ * 1. j(自分)がメンバでi(相手)がリーダーの場合，
+ * 　a. 成功(サブタスク割り当て)時　　　　　　　　δ = そのサブタスクの要求リソース / 実行時間  　
+ * 　b. 失敗(サブタスクみ割り当て)時　　　　　　　δ = 0
+ * 2. j(自分)がリーダーでi(相手)がメンバの場合，
+ * 　a. 成功(チーム編成成功)後，終了連絡受理時　　δ = そのサブタスクの要求リソース / 応答時間(= メッセージ往復時間 + サブタスク実行時間)　
+ * 　b. 失敗(チーム参加要請拒否受理)時，　　　　　δ = 0
+ *  によって更新する．
+ * 役割更新機構あり
  */
-public class ProposedMethodB_2 implements SetParam, Strategy {
-    static final double γ = γ_r;
-    static int[] min = new int[AGENT_NUM];
-    static HashMap<Agent, Integer>[] tSubtaskAllocated = new HashMap[AGENT_NUM];
 
-    ProposedMethodB_2() {
+public class ProposedMethodForSingapore implements Strategy, SetParam {
+    static final double γ = γ_r;
+    Map<Agent, AllocatedSubTask>[] teamHistory = new HashMap[AGENT_NUM];
+
+    ProposedMethodForSingapore() {
         for (int i = 0; i < AGENT_NUM; i++) {
-            min[i] = Integer.MAX_VALUE;
-            tSubtaskAllocated[i] = new HashMap<Agent, Integer>();
+            teamHistory[i] = new HashMap<>();
         }
     }
 
@@ -31,6 +38,10 @@ public class ProposedMethodB_2 implements SetParam, Strategy {
     }
 
     public void actAsMember(Agent agent) {
+        if (Manager.getTicks() - agent.validatedTicks > ROLE_RENEWAL_TICKS) {
+            agent.inactivate(0);
+            return;
+        }
         setPrinciple(agent);
         if (agent.phase == REPLY) replyAsM(agent);
         else if (agent.phase == RECEPTION) receiveAsM(agent);
@@ -39,6 +50,7 @@ public class ProposedMethodB_2 implements SetParam, Strategy {
     }
 
     private void proposeAsL(Agent leader) {
+
         leader.ourTask = Manager.getTask();
         if (leader.ourTask == null) {
             leader.inactivate(0);
@@ -112,14 +124,14 @@ public class ProposedMethodB_2 implements SetParam, Strategy {
                     if (leader.reliabilities[A.id] < leader.reliabilities[B.id]) {
                         leader.candidates.set(index + 1, null);
                         losers.add(A);
-                        leader.allocations.add(new Allocation(B, leader.ourTask.subTasks.get(i)));
+                        leader.preAllocations.put(B, leader.ourTask.subTasks.get(i));
                         leader.teamMembers.add(B);
                     }
                     // Aの方がBより信頼度が高い場合
                     else {
                         leader.candidates.set(index, null);
                         losers.add(B);
-                        leader.allocations.add(new Allocation(A, leader.ourTask.subTasks.get(i)));
+                        leader.preAllocations.put(A, leader.ourTask.subTasks.get(i));
                         leader.teamMembers.add(A);
                     }
                 }
@@ -128,13 +140,13 @@ public class ProposedMethodB_2 implements SetParam, Strategy {
                     // Bだけ受理してくれた
                     if (A == null) {
                         leader.candidates.set(index + 1, null);
-                        leader.allocations.add(new Allocation(B, leader.ourTask.subTasks.get(i)));
+                        leader.preAllocations.put(B, leader.ourTask.subTasks.get(i));
                         leader.teamMembers.add(B);
                     }
                     // Aだけ受理してくれた
                     else {
                         leader.candidates.set(index, null);
-                        leader.allocations.add(new Allocation(A, leader.ourTask.subTasks.get(i)));
+                        leader.preAllocations.put(A, leader.ourTask.subTasks.get(i));
                         leader.teamMembers.add(A);
                     }
                 }
@@ -153,7 +165,7 @@ public class ProposedMethodB_2 implements SetParam, Strategy {
                         lo = losers.remove(0);
                         if (leader.calcExecutionTime(lo, st) > 0) {
                             leader.restSubTask--;
-                            leader.allocations.add(new Allocation(lo, st));
+                            leader.preAllocations.put(lo, st);
                             leader.teamMembers.add(lo);
                             flag++;
                             break;
@@ -169,8 +181,8 @@ public class ProposedMethodB_2 implements SetParam, Strategy {
             // 未割り当てが残っていないのならば負け犬どもに引導を渡して実行へ
             if (reallocations.size() == 0) {
                 for (Agent tm : leader.teamMembers) {
-                    tSubtaskAllocated[leader.id].put(tm, Manager.getTicks());
-                    leader.sendMessage(leader, tm, RESULT, leader.getAllocation(tm).getSubtask());
+                    teamHistory[leader.id].put(tm, new AllocatedSubTask(leader.preAllocations.get(tm), Manager.getTicks()));
+                    leader.sendMessage(leader, tm, RESULT, leader.preAllocations.get(tm));
                 }
                 for (Agent ls : losers) {
                     leader.sendMessage(leader, ls, RESULT, null);
@@ -202,7 +214,6 @@ public class ProposedMethodB_2 implements SetParam, Strategy {
         member.mySubTask = message.getSubTask();
 
         int rt = Manager.getTicks() - member.start;
-        if (rt < min[member.id]) min[member.id] = rt;
 /*
         member.totalResponseTicks += rt;
         member.meanRT = (double)member.totalResponseTicks/(double)member.totalOffers;
@@ -210,14 +221,13 @@ public class ProposedMethodB_2 implements SetParam, Strategy {
         // サブタスクがもらえたなら信頼度をプラスに更新し, 実行フェイズへ移る.
         if (member.mySubTask != null) {
             member.start = Manager.getTicks();
-            member.relAgents = renewRel(member, member.leader, 1);
             member.executionTime = member.calcExecutionTime(member, member.mySubTask);
             member.nextPhase();
         }
         // サブタスクが割り当てられなかったら信頼度を0で更新し, inactivate
         else {
             //       System.out.println(" ID: " + member.id + ", " + member.leader + " is unreliable");
-            member.relAgents = renewRel(member, member.leader, -(double) rt / (double) min[member.id]);
+            member.relAgents = renewRel(member, member.leader, 0);
             member.inactivate(0);
         }
     }
@@ -230,6 +240,7 @@ public class ProposedMethodB_2 implements SetParam, Strategy {
                     for (Agent ag : agent.teamMembers) agent.workWithAsL[ag.id]++;
             } else {
                 agent.sendMessage(agent, agent.leader, DONE, agent.start);
+                agent.relAgents = renewRel(agent, agent.leader, agent.mySubTask.reqRes[agent.mySubTask.resType]/agent.calcExecutionTime(agent, agent.mySubTask));
                 if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN)
                     agent.workWithAsM[agent.leader.id]++;
             }
@@ -251,7 +262,7 @@ public class ProposedMethodB_2 implements SetParam, Strategy {
         SubTask subtask;
 
         List<Agent> t = new ArrayList<>();
-        for (Map.Entry<Agent, Integer> ex : tSubtaskAllocated[leader.id].entrySet()) {
+        for (Map.Entry<Agent, AllocatedSubTask> ex : teamHistory[leader.id].entrySet()) {
             t.add(ex.getKey());
         }
 // この時点でtにはかつての仲間たちが入っている
@@ -264,6 +275,10 @@ public class ProposedMethodB_2 implements SetParam, Strategy {
                 while (true) {
                     // エージェント1から全走査
                     candidate = leader.relRanking.get(j++);
+                    if( j >= AGENT_NUM - 1 ){
+                        System.out.println("It can't be executed.");
+                        return null;
+                    }
                     // そいつがまだ候補に入っていなくて，かつ最近サブタスクを割り振っていなくて，
                     // さらにそのサブタスクをこなせそうなら
                     if (leader.inTheList(candidate, t) < 0 &&
@@ -334,9 +349,6 @@ public class ProposedMethodB_2 implements SetParam, Strategy {
      * renewRelメソッド
      * 信頼度を更新し, 同時に信頼エージェントも更新する
      * agentのtargetに対する信頼度をevaluationによって更新し, 同時に信頼エージェントを更新する
-     * evaluationは正(プラスへの信頼度更新)と0(普通にマイナスに更新)と負(ペナルティを課して更新)がある.
-     * よって, この式の中で政府をいじる必要はないことに注意
-     *
      * @param agent
      */
     private List<Agent> renewRel(Agent agent, Agent target, double evaluation) {
@@ -345,13 +357,7 @@ public class ProposedMethodB_2 implements SetParam, Strategy {
         double temp = agent.reliabilities[target.id];
 //        if( Manager.getTicks() % 10000 == 0 ) System.out.println( evaluation );
         // 信頼度の更新式
-        if (agent.role == LEADER) {
-            agent.reliabilities[target.id] = temp * (1.0 - α) + α * evaluation;
-        } else {
-            if (evaluation >= 0) agent.reliabilities[target.id] = temp * (1.0 - α) + α * evaluation;
-            else agent.reliabilities[target.id] = temp * (1.0 + α * evaluation);
-        }
-
+        agent.reliabilities[target.id] = temp * (1.0 - α) + α * evaluation;
         assert agent.reliabilities[target.id] <= 1.0 : "Illegal reliability renewal ... Turn: " + Manager.getTicks() + ", ID: " + agent.id + ", target: " + target.id + ", change: " + temp + " → " + agent.reliabilities[target.id];
 
         /*
@@ -473,10 +479,11 @@ public class ProposedMethodB_2 implements SetParam, Strategy {
                 // 「リーダーとしての更新式で」信頼度を更新する
                 // そのメンバにサブタスクを送ってからリーダーがその完了報告を受けるまでの時間
                 // すなわちrt = "メンバのサブタスク実行時間 + メッセージ往復時間"
-                int rt = Manager.getTicks() - tSubtaskAllocated[ag.id].remove(m.getFrom());
+                AllocatedSubTask as = teamHistory[ag.id].remove(m.getFrom());
+                int rt = Manager.getTicks() - as.getAllocatedTime();
+                int reward = as.getRequiredResources();
                 //                System.out.println(rt);
-                if (rt < min[ag.id]) min[ag.id] = rt;
-                ag.relAgents = renewRel(ag, m.getFrom(), (double) min[ag.id] / (double) rt);
+                ag.relAgents = renewRel(ag, m.getFrom(), (double) reward / rt );
             } else {
                 ag.messages.add(m); // 違うメッセージだったら戻す
             }
@@ -522,10 +529,12 @@ public class ProposedMethodB_2 implements SetParam, Strategy {
         }
     }
 
-    static public void clearPM() {
+    public void clearStrategy() {
         for (int i = 0; i < AGENT_NUM; i++) {
-            min[i] = Integer.MAX_VALUE;
+            teamHistory[i].clear();
         }
     }
-
 }
+
+
+

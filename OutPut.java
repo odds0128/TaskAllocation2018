@@ -38,6 +38,7 @@ public class OutPut implements SetParam {
     static int[] reciprocalMembersArray = new int[WRITING_TIMES];
     static int[] finishedTasksInDepopulatedAreaArray = new int[WRITING_TIMES];
     static int[] finishedTasksInPopulatedAreaArray = new int[WRITING_TIMES];
+    static int[] tempTaskExecutionTimeArray = new int[WRITING_TIMES];
     static int[] taskExecutionTimeArray = new int[WRITING_TIMES];
     static int   taskExecutionTimes = 0;
 
@@ -72,17 +73,21 @@ public class OutPut implements SetParam {
 
     static void aggregateTaskExecutionTime(Agent leader){
         if( leader.mySubTask != null ){
-            taskExecutionTimeArray[index] += leader.executionTime;
+            tempTaskExecutionTimeArray[index] += leader.executionTime;
             taskExecutionTimes++;
         }
-        for (Allocation al : leader.allocations) {
-            taskExecutionTimeArray[index] += leader.calcExecutionTime(al.getCandidate(), al.getSubtask());
+        for ( Map.Entry<Agent, SubTask> al : leader.preAllocations.entrySet()) {
+            tempTaskExecutionTimeArray[index] += leader.calcExecutionTime(al.getKey(), al.getValue());
             taskExecutionTimes++;
         }
+//        System.out.println(tempTaskExecutionTimeArray[index] + ", " + taskExecutionTimes);
     }
 
     static void indexIncrement() {
-        if( taskExecutionTimes != 0 )taskExecutionTimeArray[index] /= taskExecutionTimes;
+        if( taskExecutionTimes != 0 ){
+            taskExecutionTimeArray[index] += tempTaskExecutionTimeArray[index]/taskExecutionTimes;
+//            System.out.println(taskExecutionTimeArray[index]);
+        }
         taskExecutionTimes = 0;
         index = (index + 1) % WRITING_TIMES;
     }
@@ -189,8 +194,8 @@ public class OutPut implements SetParam {
         } else {
             System.out.println(" leader: " + leader);
         }
-        for (Allocation al : leader.allocations) {
-            System.out.println(" member: " + al.getCandidate() + "→" + al.getSubtask() + ": " + leader.calcExecutionTime(al.getCandidate(), al.getSubtask()) + "[tick(s)]");
+        for ( Map.Entry<Agent, SubTask> al : leader.preAllocations.entrySet()) {
+            System.out.println(" member: " + al.getKey() + "→" + al.getValue() + ": " + leader.calcExecutionTime(al.getKey(), al.getValue()) + "[tick(s)]");
         }
         // */
     }
@@ -512,17 +517,17 @@ public class OutPut implements SetParam {
                     cell.setCellStyle(style_header);
                     cell.setCellType(CellType.STRING);
                     cell.setCellValue(" y-coordinate ");
-
+/*
                     cell = row.createCell(colNumber++);
                     cell.setCellStyle(style_header);
                     cell.setCellType(CellType.STRING);
                     cell.setCellValue(" leader id");
-
+// */
                     cell = row.createCell(colNumber++);
                     cell.setCellStyle(style_header);
                     cell.setCellType(CellType.STRING);
                     cell.setCellValue(" delay to leader ");
-
+/*
                     cell = row.createCell(colNumber++);
                     cell.setCellStyle(style_header);
                     cell.setCellType(CellType.STRING);
@@ -532,13 +537,17 @@ public class OutPut implements SetParam {
                     cell.setCellStyle(style_header);
                     cell.setCellType(CellType.STRING);
                     cell.setCellValue(" is accompanied or not");
-
-                    for (int j = 0; j < RESOURCE_TYPES; j++) {
+// */
+                    for( int j = 0; j < RESOURCE_TYPES; j++ ) {
                         cell = row.createCell(colNumber++);
                         cell.setCellStyle(style_header);
                         cell.setCellType(CellType.STRING);
-                        cell.setCellValue(" Resource " + j);
+                        cell.setCellValue(" Resources " + j );
                     }
+                    cell = row.createCell(colNumber++);
+                    cell.setCellStyle(style_header);
+                    cell.setCellType(CellType.NUMERIC);
+                    cell.setCellValue(" Times ");
 
                 } else {
                     cell = row.createCell(colNumber++);
@@ -603,19 +612,19 @@ public class OutPut implements SetParam {
                         cell.setCellType(CellType.NUMERIC);
                         cell.setCellValue(agent.y * 10);
 
+                        /*
                         cell = row.createCell(colNumber++);
                         cell.setCellStyle(style_string);
                         cell.setCellType(CellType.NUMERIC);
                         if (agent.e_leader > agent.e_member) cell.setCellValue(agent.id * 3);
                         else if (agent.leader != null) cell.setCellValue(agent.leader.id * 3);
-
+// */
                         cell = row.createCell(colNumber++);
                         cell.setCellStyle(style_string);
                         cell.setCellType(CellType.NUMERIC);
                         if (agent.e_leader > agent.e_member) cell.setCellValue(0);
-                        else if (agent.leader != null)
-                            cell.setCellValue(Manager.delays[agent.id][agent.leader.id] * 10);
-
+                        else if (agent.leader != null) cell.setCellValue(Manager.delays[agent.id][agent.leader.id] );
+/*
                         cell = row.createCell(colNumber++);
                         cell.setCellStyle(style_string);
                         cell.setCellType(CellType.NUMERIC);
@@ -625,13 +634,17 @@ public class OutPut implements SetParam {
                         cell.setCellStyle(style_string);
                         cell.setCellType(CellType.NUMERIC);
                         cell.setCellValue(agent.isAccompanied);
-
-                        for (int j = 0; j < RESOURCE_TYPES; j++) {
+// */
+                        for( int j = 0; j < RESOURCE_TYPES; j++ ) {
                             cell = row.createCell(colNumber++);
-                            cell.setCellStyle(style_header);
+                            cell.setCellStyle(style_string);
                             cell.setCellType(CellType.NUMERIC);
                             cell.setCellValue(agent.res[j]);
                         }
+                        cell = row.createCell(colNumber++);
+                        cell.setCellStyle(style_string);
+                        cell.setCellType(CellType.NUMERIC);
+                        cell.setCellValue(agent.didTasksAsMember);
 
                         //列幅の自動調整
                         for (int k = 0; k <= colNumber; k++) {
@@ -842,10 +855,7 @@ public class OutPut implements SetParam {
             pw.print("id");
             for (int i = 0; i < AGENT_NUM; i++) pw.print(", " + i);
             pw.println();
-            System.out.println(agents.size());
-            int j = 0;
             for (Agent ag : agents) {
-                System.out.println(j++);
                 pw.print(ag.id + ", ");
                 if (ag.e_member > ag.e_leader) {
                     for (int i = 0; i < AGENT_NUM; i++) {

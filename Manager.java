@@ -17,7 +17,8 @@ public class Manager implements SetParam {
 //    private static Strategy strategy = new ComparativeMethod2();     // 最短応答優先信頼度更新で役割更新なし
 //    private static Strategy strategy = new ComparativeMethod3();   // 最短応答優先信頼度更新で役割更新あり
 //    private static Strategy strategy = new RoundRobin();           // ラウンドロビン
-    private static Strategy strategy = new Rational();
+//    private static Strategy strategy = new Rational();
+    private static Strategy strategy = new ProposedMethodForSingapore();
 
     static private long    _seed ;
     private static Random _randSeed;
@@ -349,7 +350,7 @@ public class Manager implements SetParam {
         leader.ourTask = null;
     }
     static void finishTask(Agent leader) {
-//       OutPut.checkTeam(leader);
+//        OutPut.checkTeam(leader);
         OutPut.aggregateTaskExecutionTime(leader);
         leader.ourTask = null;
 /*        if( leader.isLonely == 1 )      finishedTasksInDepopulatedArea++;
@@ -415,6 +416,6 @@ public class Manager implements SetParam {
         SubTask.clearST();
         Task.clearT();
         Agent.clearA();
-        if (strategy.getClass().getName() == "ComparativeMethod3") ComparativeMethod3.clearPM();
+        strategy.clearStrategy();
     }
 }
