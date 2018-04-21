@@ -257,45 +257,6 @@ public class Agent implements SetParam , Cloneable{
         }
         this.validatedTicks = Manager.getTicks();
     }
-    void inactivateWithNoLearning(int success) {
-        if (role == LEADER) {
-            if (success == 1) {
-                didTasksAsLeader++;
-            }
-            if (ourTask != null) Manager.disposeTask(this);
-            candidates.clear();
-            teamMembers.clear();
-            preAllocations.clear();
-            replies.clear();
-            results.clear();
-            restSubTask = 0;
-            replyNum = 0;
-            role = LEADER;
-            phase = PROPOSITION;
-/*            candidates = new ArrayList<>();
-            teamMembers = new ArrayList<>();
-            preAllocations = new HashMap<>();
-            replies = new ArrayList<>();
-            results = new ArrayList<>();
-// */
-        }else {
-            if (success == 1) didTasksAsMember++;
-            role = MEMBER;
-            this.phase = WAITING;
-        }
-        joined = false;
-        leader = null;
-        mySubTask = null;
-        executionTime = 0;
-        if (strategy.getClass().getName() != "RoundRobin") {
-            index = 0;
-        } else {
-            prevIndex = index % relAgents.size();
-            index = prevIndex;
-        }
-        this.validatedTicks = Manager.getTicks();
-//        System.out.println("ID: " + id + " is inactivated .");
-    }
 
     /**
      * selectSubtaskメソッド
@@ -320,14 +281,15 @@ public class Agent implements SetParam , Cloneable{
         }
         // もし一つもなかったら仕方ないからなしでreturn
         if (tempIndex == -1) {
-            System.out.println("W: " + this + ", " + this.ourTask);
+            restSubTask = ourTask.subTaskNum;
             return;
         }
         // 一個でもあったらどれかを選んで自分のサブタスクとする
         else {
             executionTime = temp;
             mySubTask = ourTask.subTasks.remove(tempIndex);
-            restSubTask--;
+            ourTask.subTaskNum--;
+            restSubTask = ourTask.subTaskNum;
         }
     }
     void sendMessage(Agent from, Agent to, int type, Object o) {

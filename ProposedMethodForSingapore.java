@@ -59,6 +59,10 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
         leader.restSubTask = leader.ourTask.subTaskNum;                       // 残りサブタスク数を設定
         leader.selectSubTask();
         leader.candidates = selectMembers(leader, leader.ourTask.subTasks);   // メッセージ送信
+        if( leader.candidates == null ){
+            leader.inactivate(0);
+            return;
+        }
         leader.start = Manager.getTicks();
         leader.nextPhase();  // 次のフェイズへ
     }
@@ -240,7 +244,7 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
                     for (Agent ag : agent.teamMembers) agent.workWithAsL[ag.id]++;
             } else {
                 agent.sendMessage(agent, agent.leader, DONE, agent.start);
-                agent.relAgents = renewRel(agent, agent.leader, agent.mySubTask.reqRes[agent.mySubTask.resType]/agent.calcExecutionTime(agent, agent.mySubTask));
+                agent.relAgents = renewRel(agent, agent.leader, (double)agent.mySubTask.reqRes[agent.mySubTask.resType]/agent.calcExecutionTime(agent, agent.mySubTask));
                 if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN)
                     agent.workWithAsM[agent.leader.id]++;
             }
@@ -256,7 +260,7 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
      *
      * @param subtasks
      */
-    public List<Agent> selectMembers(Agent leader, List<SubTask> subtasks) {
+    public List<Agent>selectMembers(Agent leader, List<SubTask> subtasks) {
         List<Agent> temp = new ArrayList<>();
         Agent candidate;
         SubTask subtask;
@@ -274,11 +278,12 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
                 int j = 0;
                 while (true) {
                     // エージェント1から全走査
-                    candidate = leader.relRanking.get(j++);
-                    if( j >= AGENT_NUM - 1 ){
+                    if( j >= AGENT_NUM - 1 ) {
                         System.out.println("It can't be executed.");
                         return null;
                     }
+                    candidate = leader.relRanking.get(j++);
+
                     // そいつがまだ候補に入っていなくて，かつ最近サブタスクを割り振っていなくて，
                     // さらにそのサブタスクをこなせそうなら
                     if (leader.inTheList(candidate, t) < 0 &&

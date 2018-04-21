@@ -36,6 +36,7 @@ class TransmissionPath implements SetParam {
      * @param message
      */
     static void sendMessage(Message message) {
+        if( message.getTo() == message.getFrom() ) return;
         messageQueue.add(message);
         int temp = Manager.delays[message.getFrom().id][message.getTo().id];
         delays.add(temp);

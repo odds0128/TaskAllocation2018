@@ -131,7 +131,8 @@ public class Manager implements SetParam {
 //
         if( CHECK_INITIATION )  OutPut.checkAgent(agents);
 //        OutPut.countDelays(delays);
-//        OutPut.checkGrids(grids);
+        OutPut.checkGrids(grids);
+        OutPut.checkAgent(agents);
     }
     private static void setSeed( String line ){
         _seed     = Long.parseLong(line);
@@ -352,7 +353,7 @@ public class Manager implements SetParam {
         leader.ourTask = null;
     }
     static void finishTask(Agent leader) {
-//        OutPut.checkTeam(leader);
+      OutPut.checkTeam(leader);
         OutPut.aggregateTaskExecutionTime(leader);
         leader.ourTask = null;
 /*        if( leader.isLonely == 1 )      finishedTasksInDepopulatedArea++;

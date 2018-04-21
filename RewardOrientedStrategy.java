@@ -4,14 +4,13 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * ProposedMethodForSingapore クラス
- * サブタスクの要求リソースに量を設けたことにより，"報酬"を適切に考える必要が生じた
- * そこで報酬はサブタスクの要求リソースに依存するものとし，信頼度更新式 e^i_j = (1-α)e^i_j + δ * α を
+ * RewardOrientedStrategy クラス
+ * 提案手法と違い，通信や応答時間を考えずに報酬の大きさだけを考慮した手法
  * 1. j(自分)がメンバでi(相手)がリーダーの場合，
- * 　a. 成功(サブタスク割り当て)時　　　　　　　　δ = そのサブタスクの要求リソース / 実行時間
+ * 　a. 成功(サブタスク割り当て)時　　　　　　　　δ = そのサブタスクの要求リソース / 定数
  * 　b. 失敗(サブタスクみ割り当て)時　　　　　　　δ = 0
  * 2. j(自分)がリーダーでi(相手)がメンバの場合，
- * 　a. 成功(チーム編成成功)後，終了連絡受理時　　δ = そのサブタスクの要求リソース / 応答時間(= メッセージ往復時間 + サブタスク実行時間)
+ * 　a. 成功(チーム編成成功)後，終了連絡受理時　　δ = そのサブタスクの要求リソース / 定数
  * 　b. 失敗(チーム参加要請拒否受理)時，　　　　　δ = 0
  * によって更新する．
  * 役割更新機構あり
@@ -60,6 +59,10 @@ public class RewardOrientedStrategy implements Strategy, SetParam {
         leader.restSubTask = leader.ourTask.subTaskNum;                       // 残りサブタスク数を設定
         leader.selectSubTask();
         leader.candidates = selectMembers(leader, leader.ourTask.subTasks);   // メッセージ送信
+        if( leader.candidates == null ){
+            leader.inactivate(0);
+            return;
+        }
         leader.start = Manager.getTicks();
         leader.nextPhase();  // 次のフェイズへ
     }
