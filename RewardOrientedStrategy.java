@@ -60,6 +60,7 @@ public class RewardOrientedStrategy implements Strategy, SetParam {
         leader.selectSubTask();
         leader.candidates = selectMembers(leader, leader.ourTask.subTasks);   // メッセージ送信
         if( leader.candidates == null ){
+            leader.candidates = new ArrayList<>();
             leader.inactivate(0);
             return;
         }

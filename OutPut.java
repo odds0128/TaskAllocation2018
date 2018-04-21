@@ -73,11 +73,11 @@ public class OutPut implements SetParam {
 
     static void aggregateTaskExecutionTime(Agent leader){
         if( leader.mySubTask != null ){
-            tempTaskExecutionTimeArray[index] += leader.executionTime;
+            tempTaskExecutionTimeArray[index] += leader.calcExecutionTime(leader, leader.mySubTask);
             taskExecutionTimes++;
         }
-        for ( Map.Entry<Agent, SubTask> al : leader.preAllocations.entrySet()) {
-            tempTaskExecutionTimeArray[index] += leader.calcExecutionTime(al.getKey(), al.getValue());
+        for ( Agent tm: leader.teamMembers ) {
+            tempTaskExecutionTimeArray[index] += leader.calcExecutionTime(tm, leader.preAllocations.get(tm));
             taskExecutionTimes++;
         }
 //        System.out.println(tempTaskExecutionTimeArray[index] + ", " + taskExecutionTimes);
@@ -88,6 +88,7 @@ public class OutPut implements SetParam {
             taskExecutionTimeArray[index] += tempTaskExecutionTimeArray[index]/taskExecutionTimes;
 //            System.out.println(taskExecutionTimeArray[index]);
         }
+        tempTaskExecutionTimeArray[index] = 0;
         taskExecutionTimes = 0;
         index = (index + 1) % WRITING_TIMES;
     }

@@ -18,8 +18,9 @@ public class Manager implements SetParam {
 //    private static Strategy strategy = new ComparativeMethod3();   // 最短応答優先信頼度更新で役割更新あり
 //    private static Strategy strategy = new RoundRobin();           // ラウンドロビン
 //    private static Strategy strategy = new Rational();
-//    private static Strategy strategy = new ProposedMethodForSingapore();
-    private static Strategy strategy   = new CNP();
+    private static Strategy strategy = new ProposedMethodForSingapore();
+//    private static Strategy strategy = new RewardOrientedStrategy();
+//    private static Strategy strategy   = new CNP();
 
     static private long    _seed ;
     private static Random _randSeed;
@@ -131,8 +132,8 @@ public class Manager implements SetParam {
 //
         if( CHECK_INITIATION )  OutPut.checkAgent(agents);
 //        OutPut.countDelays(delays);
-        OutPut.checkGrids(grids);
-        OutPut.checkAgent(agents);
+//        OutPut.checkGrids(grids);
+//        OutPut.checkAgent(agents);
     }
     private static void setSeed( String line ){
         _seed     = Long.parseLong(line);
@@ -353,7 +354,7 @@ public class Manager implements SetParam {
         leader.ourTask = null;
     }
     static void finishTask(Agent leader) {
-      OutPut.checkTeam(leader);
+ //     OutPut.checkTeam(leader);
         OutPut.aggregateTaskExecutionTime(leader);
         leader.ourTask = null;
 /*        if( leader.isLonely == 1 )      finishedTasksInDepopulatedArea++;
