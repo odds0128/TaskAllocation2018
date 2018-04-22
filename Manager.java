@@ -19,8 +19,8 @@ public class Manager implements SetParam {
 //    private static Strategy strategy = new RoundRobin();           // ラウンドロビン
 //    private static Strategy strategy = new Rational();
 //    private static Strategy strategy = new ProposedMethodForSingapore();
-   private static Strategy strategy = new RewardOrientedStrategy();
- //   private static Strategy strategy   = new CNP();
+//   private static Strategy strategy = new RewardOrientedStrategy();
+   private static Strategy strategy   = new CNP();
 
     static private long    _seed ;
     private static Random _randSeed;

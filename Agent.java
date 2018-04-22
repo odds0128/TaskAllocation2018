@@ -319,6 +319,9 @@ public class Agent implements SetParam , Cloneable{
      * @return
      */
     public int calcExecutionTime(Agent a, SubTask st) {
+        if( a  == null ) System.out.println("Ghost trying to do subtask");
+        if( st == null ) System.out.println("Agent trying to do nothing");
+
         if( a.res[st.resType] == 0 ) return -1;
         return (int) Math.ceil((double) st.reqRes[st.resType] / (double) a.res[st.resType]);
     }

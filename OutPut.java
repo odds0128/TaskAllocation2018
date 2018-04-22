@@ -144,7 +144,7 @@ public class OutPut implements SetParam {
     static void checkAgent(List<Agent> agents) {
         List<Agent> temp = new ArrayList<>(agents);
         System.out.println("Total Agents is " + Agent._id);
-        System.out.println("Leaders is " + Agent._leader_num + ", Members is " + Agent._member_num + ", Resources : ");
+        System.out.println("Leaders is " + Agent._leader_num + ", Members is " + Agent._member_num);
 
         for (Agent agent : agents) {
             System.out.print("ID: " + agent.id + ", Role: " + agent.role + ", Res: ");
@@ -184,7 +184,7 @@ public class OutPut implements SetParam {
     }
 
     static void checkTeam(Agent leader) {
-        System.out.print(Manager.getTicks() + ", " +  leader.id + " and ");
+        System.out.print("Time: " + Manager.getTicks() + ", " +  leader.id + " and ");
         for (Agent mem : leader.teamMembers) {
             System.out.print(mem.id + ", ");
         }

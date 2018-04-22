@@ -9,7 +9,7 @@ import java.util.Map;
  */
 
 public class CNP implements Strategy, SetParam {
-    static final int reception_span = 10;
+    static final int reception_span = 3;
     int[] reception_time = new int[AGENT_NUM];
 
     CNP() {
@@ -19,6 +19,11 @@ public class CNP implements Strategy, SetParam {
     }
 
     public void actAsLeader(Agent agent) {
+        int time = 0;
+        if( agent.id == 9 ) {
+            time = Manager.getTicks();
+        }
+        time = time;
         if (agent.phase == lPHASE1) publicize(agent);
         else if (agent.phase == lPHASE2) organize(agent);
         else if (agent.phase == PHASE3) execute(agent);
@@ -38,6 +43,7 @@ public class CNP implements Strategy, SetParam {
         for (Agent ag : Manager.getAgents()) {
             TransmissionPath.sendMessage(new Message(le, ag, PUBLICITY, le.ourTask, null));
         }
+//        System.out.println("ID: " + le.id + " published " + le.ourTask);
         this.nextPhase(le);
     }
 
@@ -51,6 +57,7 @@ public class CNP implements Strategy, SetParam {
                 return;
             } else {
                 mem.leader = selectLeader(mem, mem.messages);
+//                System.out.println("ID: " + mem.id + " is bidding to " + mem.leader.id);
                 reception_time[mem.id] = reception_span;
                 this.nextPhase(mem);
             }
@@ -108,8 +115,10 @@ public class CNP implements Strategy, SetParam {
         // 割り当てが決まったらそいつらに実際にサブタスクを割り当てる
         for (int i = 0; i < le.restSubTask; i++) {
             le.teamMembers.add(bestAllocations[i]);
+            le.preAllocations.put(bestAllocations[i],le.ourTask.subTasks.get(i) );
             TransmissionPath.sendMessage(new Message(le, bestAllocations[i], BID_RESULT, le.ourTask.subTasks.get(i), null));
         }
+//        System.out.println("ID: " + le.id + " with " + le.teamMembers);
         this.nextPhase(le);
     }
 
@@ -124,7 +133,7 @@ public class CNP implements Strategy, SetParam {
         // サブタスクがもらえたなら実行フェイズへ移る.
         if (mem.mySubTask != null) {
             mem.executionTime = mem.calcExecutionTime(mem, mem.mySubTask);
-            System.out.println("ID:" + mem.id + "'s subtask will be executed in " + mem.executionTime);
+      //      System.out.println("ID:" + mem.id + "'s subtask will be executed in " + mem.executionTime);
             this.nextPhase(mem);
         }
         // サブタスクが割り当てられなかったら信頼度を0で更新し, inactivate
@@ -139,14 +148,19 @@ public class CNP implements Strategy, SetParam {
         if (ag.executionTime <= 0) {
             if (ag.role == LEADER) {
                 if (ag.messages.size() == ag.teamMembers.size()) {
-                    if (ag._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN)
+                    if (ag._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
                         for (Agent agent : ag.teamMembers) ag.workWithAsL[agent.id]++;
+                    }
                     Manager.finishTask(ag);
+                    for( Message m: ag.messages ){
+                        ag.preAllocations.remove(m.getFrom());
+                    }
                     this.inactivate(ag, 1);
                 }
             } else {
-                if (ag._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN)
+                if (ag._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
                     ag.workWithAsM[ag.leader.id]++;
+                }
                 ag.sendMessage(ag, ag.leader, DONE, 0);
                 // 自分のサブタスクが終わったら非活性状態へ
                 this.inactivate(ag, 1);
@@ -165,10 +179,15 @@ public class CNP implements Strategy, SetParam {
         Agent bidAg = mem; // 暫定の入札対象者　初期値は自分
         int bidStIndex = -1; // 暫定の入札対象サブタスク
 
+
         for (int i = 0; i < size; i++) {
             Message m = mem.messages.remove(0);
+
             int tempStIndex = selectBestSt(mem, m.getBidTask());
-            if (tempStIndex < 0) continue;
+            if (tempStIndex < 0){
+                TransmissionPath.sendMessage(new Message(mem, m.getFrom(), BIDDINGorNOT, -1, 0));
+                continue;
+            }
             SubTask tempSt = m.getBidTask().subTasks.get(tempStIndex);
             int tempStEt = mem.calcExecutionTime(mem, tempSt);
             int tempReward = tempSt.reqRes[tempSt.resType];
@@ -180,8 +199,10 @@ public class CNP implements Strategy, SetParam {
                 maxReward = tempReward;
                 bidStIndex = tempStIndex;
                 bidAg = m.getFrom();
+
             } else {
                 TransmissionPath.sendMessage(new Message(mem, m.getFrom(), BIDDINGorNOT, -1, 0));
+
             }
         }
 //        System.out.println("ID: " + mem.id + " bid " + bidAg.id);
