@@ -279,7 +279,7 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
                 int j = 0;
                 while (true) {
                     // エージェント1から全走査
-                    if( j >= AGENT_NUM - 1 ) {
+                    if ( j >= AGENT_NUM - 1 ) {
                         System.out.println("It can't be executed.");
                         return null;
                     }
@@ -541,6 +541,3 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
         }
     }
 }
-
-
-

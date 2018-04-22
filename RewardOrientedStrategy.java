@@ -102,7 +102,8 @@ public class RewardOrientedStrategy implements Strategy, SetParam {
             if (reply.getReply() != ACCEPT) {
                 from = reply.getFrom();
                 int i = leader.inTheList(from, leader.candidates);
-                assert i >= 0 : "alert: Leader got reply from a ghost.";
+                if( i == -1 ) System.out.println("ファーーーーーーーーー");
+                assert i >= 0 : "alert: Leader got reply from a ghost." + i;
                 leader.candidates.set(i, null);
                 leader.relAgents = renewRel(leader, from, 0);
             }
@@ -245,7 +246,7 @@ public class RewardOrientedStrategy implements Strategy, SetParam {
                     for (Agent ag : agent.teamMembers) agent.workWithAsL[ag.id]++;
             } else {
                 agent.sendMessage(agent, agent.leader, DONE, agent.start);
-                agent.relAgents = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / denominator);
+                agent.relAgents = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / (double)denominator);
                 if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN)
                     agent.workWithAsM[agent.leader.id]++;
             }
@@ -489,7 +490,7 @@ public class RewardOrientedStrategy implements Strategy, SetParam {
                 int rt = Manager.getTicks() - as.getAllocatedTime();
                 int reward = as.getRequiredResources();
                 //                System.out.println(rt);
-                ag.relAgents = renewRel(ag, m.getFrom(), (double) reward / denominator);
+                ag.relAgents = renewRel(ag, m.getFrom(), (double) reward / (double)denominator);
             } else {
                 ag.messages.add(m); // 違うメッセージだったら戻す
             }

@@ -330,7 +330,7 @@ public class Agent implements SetParam , Cloneable{
      * それ以外はネガティブな返事をする
      */
     void checkMessages(Agent self) {
-        if( strategy.getClass().getName().startsWith( "ProposedMethod" ) || strategy.getClass().getName().startsWith( "CNP" ) ) {
+        if( strategy.getClass().getName().startsWith( "ProposedMethod" ) || strategy.getClass().getName().startsWith( "CNP" ) || strategy.getClass().getName().startsWith( "RewardOrientedStrategy" )) {
             strategy.checkMessages(self);
             return;
         }

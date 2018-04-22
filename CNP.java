@@ -49,10 +49,11 @@ public class CNP implements Strategy, SetParam {
             if (mem.messages.size() == 0) {
                 reception_time[mem.id] = reception_span;
                 return;
+            } else {
+                mem.leader = selectLeader(mem, mem.messages);
+                reception_time[mem.id] = reception_span;
+                this.nextPhase(mem);
             }
-            mem.leader = selectLeader(mem, mem.messages);
-            reception_time[mem.id] = reception_span;
-            this.nextPhase(mem);
         }
     }
 
@@ -65,11 +66,11 @@ public class CNP implements Strategy, SetParam {
         // 割り当ては，実行時間が短い方を優先する
         // 下の配列はそれぞれ添え字がサブタスクのインデックスに対応する
         // そのサブタスクを割り当てる暫定のエージェントを格納する配列とその実行時間を格納する配列
-        Agent[] allocations = new Agent[le.restSubTask];
-        int[] executionTimes = new int[le.restSubTask];
+        Agent[] bestAllocations = new Agent[le.restSubTask];
+        int[]   bestEstimations = new int[le.restSubTask];
         for (int i = 0; i < le.restSubTask; i++) {
-            executionTimes[i] = Integer.MAX_VALUE;
-            allocations[i] = le;
+            bestEstimations[i] = Integer.MAX_VALUE;
+            bestAllocations[i] = le;
         }
 
         int size = le.messages.size();
@@ -77,26 +78,27 @@ public class CNP implements Strategy, SetParam {
             Message m = le.messages.remove(0);
             if (m.getBidStIndex() >= 0) {
                 // 暫定の一位よりも早く終わりそうなら
-                if (m.getEstimation() < executionTimes[m.getBidStIndex()]) {
+                if (m.getEstimation() < bestEstimations[m.getBidStIndex()]) {
                     // 元一位に未割り当てのメッセージを送って暫定一位を入れ替える
-                    TransmissionPath.sendMessage(new Message(le, allocations[m.getBidStIndex()], BID_RESULT, null, null));
-                    executionTimes[m.getBidStIndex()] = m.getEstimation();
-                    allocations[m.getBidStIndex()] = m.getFrom();
+                    TransmissionPath.sendMessage(new Message(le, bestAllocations[m.getBidStIndex()], BID_RESULT, null, null));
+                    bestEstimations[m.getBidStIndex()] = m.getEstimation();
+                    bestAllocations[m.getBidStIndex()] = m.getFrom();
                 }
                 // そもそも暫定一位より遅ければ未割り当てメッセージを送る
                 else {
                     TransmissionPath.sendMessage(new Message(le, m.getFrom(), BID_RESULT, null, null));
                 }
             }
+            // 非入札メッセージは無視する
         }
 
         // 割り当てが全部埋まったか確認する
-        for (Agent al : allocations) {
+        for (Agent al : bestAllocations) {
             // 一つでも割当先が見つからなければ失敗と判断し，割り当て候補にも未割り当てを送信するとともに
             // 　タスクを破棄して次のステップに行く
             if (al == le) {
                 Manager.disposeTask(le);
-                for (Agent allo : allocations) {
+                for (Agent allo : bestAllocations) {
                     TransmissionPath.sendMessage(new Message(le, allo, BID_RESULT, null, null));
                 }
                 this.inactivate( le, 0 );
@@ -105,8 +107,8 @@ public class CNP implements Strategy, SetParam {
         }
         // 割り当てが決まったらそいつらに実際にサブタスクを割り当てる
         for (int i = 0; i < le.restSubTask; i++) {
-            le.teamMembers.add(allocations[i]);
-            TransmissionPath.sendMessage(new Message(le, allocations[i], BID_RESULT, le.ourTask.subTasks.get(i), null));
+            le.teamMembers.add(bestAllocations[i]);
+            TransmissionPath.sendMessage(new Message(le, bestAllocations[i], BID_RESULT, le.ourTask.subTasks.get(i), null));
         }
         this.nextPhase(le);
     }
@@ -320,6 +322,4 @@ public class CNP implements Strategy, SetParam {
             ;
         }
     }
-
-
 }
