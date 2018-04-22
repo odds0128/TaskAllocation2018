@@ -18,8 +18,8 @@ public class Manager implements SetParam {
 //    private static Strategy strategy = new ComparativeMethod3();   // 最短応答優先信頼度更新で役割更新あり
 //    private static Strategy strategy = new RoundRobin();           // ラウンドロビン
 //    private static Strategy strategy = new Rational();
-    private static Strategy strategy = new ProposedMethodForSingapore();
-//    private static Strategy strategy = new RewardOrientedStrategy();
+//    private static Strategy strategy = new ProposedMethodForSingapore();
+    private static Strategy strategy = new RewardOrientedStrategy();
 //    private static Strategy strategy   = new CNP();
 
     static private long    _seed ;

@@ -245,7 +245,7 @@ public class RewardOrientedStrategy implements Strategy, SetParam {
                     for (Agent ag : agent.teamMembers) agent.workWithAsL[ag.id]++;
             } else {
                 agent.sendMessage(agent, agent.leader, DONE, agent.start);
-                agent.relAgents = renewRel(agent, agent.leader, agent.mySubTask.reqRes[agent.mySubTask.resType] / denominator);
+                agent.relAgents = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / denominator);
                 if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN)
                     agent.workWithAsM[agent.leader.id]++;
             }
