@@ -623,12 +623,12 @@ public class OutPut implements SetParam {
 
                 row = sheet.createRow(rowNumber);
 
-                _singleton.writeCell(row, colNumber++, style_string, "Edge id");
-                _singleton.writeCell(row, colNumber++, style_string, "Source Node id");
-                _singleton.writeCell(row, colNumber++, style_string, "Target Node id");
-                _singleton.writeCell(row, colNumber++, style_string, " length ");
-                _singleton.writeCell(row, colNumber++, style_string, " times ");
-                _singleton.writeCell(row, colNumber++, style_string, "Target Node id again");
+                _singleton.writeCell(row, colNumber++, style_header, "Edge id");
+                _singleton.writeCell(row, colNumber++, style_header, "Source Node id");
+                _singleton.writeCell(row, colNumber++, style_header, "Target Node id");
+                _singleton.writeCell(row, colNumber++, style_header, " length ");
+                _singleton.writeCell(row, colNumber++, style_header, " times ");
+                _singleton.writeCell(row, colNumber++, style_header, "Target Node id again");
 
                 //ウィンドウ枠の固定
                 sheet.createFreezePane(1, 1);
