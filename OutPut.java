@@ -608,6 +608,7 @@ public class OutPut implements SetParam {
 
 
             // ここからリーダーからのエッジ生成
+            edge.reset();
             edge.makeEdgesFromLeader(agents);
             for (int i = 0; i < 2; i++) {
                 sheet = book.createSheet();

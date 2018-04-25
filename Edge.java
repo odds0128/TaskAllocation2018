@@ -45,7 +45,7 @@ public class Edge implements SetParam {
     public void makeEdgesFromLeader(List<Agent> agents) {
         int temp;
         for (Agent ag : agents) {
-            // agがメンバの場合
+            // agがリーダーの場合
             if (ag.e_member < ag.e_leader) {
                 // idは相手のid
                 for (int id = 0; id < AGENT_NUM; id++) {
@@ -63,5 +63,12 @@ public class Edge implements SetParam {
         }
     }
 
+    public void reset(){
+        from_id.clear();
+        to_id.clear();
+        delays.clear();
+        times.clear();
+        isRecipro.clear();
+    }
 
 }
