@@ -40,7 +40,7 @@ public class OutPut implements SetParam {
     static int[] finishedTasksInPopulatedAreaArray = new int[WRITING_TIMES];
     static int[] tempTaskExecutionTimeArray = new int[WRITING_TIMES];
     static int[] taskExecutionTimeArray = new int[WRITING_TIMES];
-    static int   taskExecutionTimes = 0;
+    static int taskExecutionTimes = 0;
 
     static void aggregateAgentData(List<Agent> agents) {
         leaderNumArray[index] += Agent._leader_num;
@@ -82,6 +82,7 @@ public class OutPut implements SetParam {
         }
 //        System.out.println(tempTaskExecutionTimeArray[index] + ", " + taskExecutionTimes);
     }
+
 
     static void indexIncrement() {
         if( taskExecutionTimes != 0 ){
@@ -144,10 +145,9 @@ public class OutPut implements SetParam {
     static void checkAgent(List<Agent> agents) {
         List<Agent> temp = new ArrayList<>(agents);
         System.out.println("Total Agents is " + Agent._id);
-        System.out.println("Leaders is " + Agent._leader_num + ", Members is " + Agent._member_num);
+        System.out.println("Leaders is " + Agent._leader_num + ", Members is " + Agent._member_num + ", Resources : ");
 
         for (Agent agent : agents) {
-            System.out.print("ID: " + agent.id + ", Role: " + agent.role + ", Res: ");
             for (int i = 0; i < RESOURCE_TYPES; i++) System.out.print(agent.res[i] + ", ");
             System.out.println();
         }
@@ -208,7 +208,7 @@ public class OutPut implements SetParam {
         String fileName = st.getClass().getName();
         try {
             String currentPath = System.getProperty("user.dir");
-            fw = new FileWriter(currentPath + "/out/results/" + fileName + ", λ=" + String.format("%.2f", (double)ADDITIONAL_TASK_NUM/TASK_ADDITION_SPAN) + ".csv", false);
+            fw = new FileWriter(currentPath + "/out/results/" + fileName + ", λ=" + String.format("%.2f", (double) ADDITIONAL_TASK_NUM / TASK_ADDITION_SPAN) + new Date().toString()+ ".csv", false);
             bw = new BufferedWriter(fw);
             pw = new PrintWriter(bw);
 
@@ -253,7 +253,7 @@ public class OutPut implements SetParam {
     }
 
     static void writeResultsX(Strategy st) throws FileNotFoundException, IOException {
-        String outputFilePath = _singleton.setPath("results", st.getClass().getName() );
+        String outputFilePath = _singleton.setPath("results", st.getClass().getName() +  " " + new Date().toString() + ".xlsx");
 
         try {
             book = new SXSSFWorkbook();
@@ -399,7 +399,7 @@ public class OutPut implements SetParam {
 
     static void writeGraphInformation(List<Agent> agents, String fp) throws FileNotFoundException, IOException {
         String currentPath = System.getProperty("user.dir");
-        String outputFilePath = currentPath + "/out/relationships/" + fp + ".xlsx";
+        String outputFilePath = currentPath + "/out/relationships/" + fp + " " + new Date().toString() + ".xlsx";
         Edge edge = new Edge();
         edge.makeEdge(agents);
         try {
@@ -469,7 +469,6 @@ public class OutPut implements SetParam {
 
             Row row;
             int rowNumber;
-            Cell cell;
             int colNumber;
 
 
@@ -490,81 +489,30 @@ public class OutPut implements SetParam {
                 colNumber = 0;
 
                 row = sheet.createRow(rowNumber);
-                cell = row.createCell(colNumber++);
-                cell.setCellStyle(style_header);
-                cell.setCellType(CellType.STRING);
-                if (i == 0) cell.setCellValue("Node id");
-                else cell.setCellValue("Edge id");
 
-                cell = row.createCell(colNumber++);
-                cell.setCellStyle(style_header);
-                cell.setCellType(CellType.STRING);
-                if (i == 0) cell.setCellValue("Node color");
-                else cell.setCellValue("Source Node id");
+                if (i == 0) _singleton.writeCell(row, colNumber++, style_header, "Node id");
+                else        _singleton.writeCell(row, colNumber++, style_header, "Edge id");
 
-                cell = row.createCell(colNumber++);
-                cell.setCellStyle(style_header);
-                cell.setCellType(CellType.STRING);
-                if (i == 0) cell.setCellValue("Node shape");
-                else cell.setCellValue("Target Node id");
+                if (i == 0) _singleton.writeCell(row, colNumber++, style_header, "Node color");
+                else       _singleton.writeCell(row, colNumber++, style_header, "Source Node id");
+
+
+                if (i == 0) _singleton.writeCell(row, colNumber++, style_header, "Node shape");
+                else        _singleton.writeCell(row, colNumber++, style_header, "Target Node id");
 
                 if (i == 0) {
-                    cell = row.createCell(colNumber++);
-                    cell.setCellStyle(style_header);
-                    cell.setCellType(CellType.STRING);
-                    cell.setCellValue(" x-coordinate ");
-
-                    cell = row.createCell(colNumber++);
-                    cell.setCellStyle(style_header);
-                    cell.setCellType(CellType.STRING);
-                    cell.setCellValue(" y-coordinate ");
-/*
-                    cell = row.createCell(colNumber++);
-                    cell.setCellStyle(style_header);
-                    cell.setCellType(CellType.STRING);
-                    cell.setCellValue(" leader id");
-// */
-                    cell = row.createCell(colNumber++);
-                    cell.setCellStyle(style_header);
-                    cell.setCellType(CellType.STRING);
-                    cell.setCellValue(" delay to leader ");
-/*
-                    cell = row.createCell(colNumber++);
-                    cell.setCellStyle(style_header);
-                    cell.setCellType(CellType.STRING);
-                    cell.setCellValue(" is lonely or not");
-
-                    cell = row.createCell(colNumber++);
-                    cell.setCellStyle(style_header);
-                    cell.setCellType(CellType.STRING);
-                    cell.setCellValue(" is accompanied or not");
-// */
-                    for( int j = 0; j < RESOURCE_TYPES; j++ ) {
-                        cell = row.createCell(colNumber++);
-                        cell.setCellStyle(style_header);
-                        cell.setCellType(CellType.STRING);
-                        cell.setCellValue(" Resources " + j );
-                    }
-                    cell = row.createCell(colNumber++);
-                    cell.setCellStyle(style_header);
-                    cell.setCellType(CellType.NUMERIC);
-                    cell.setCellValue(" Times ");
-
+                    _singleton.writeCell(row, colNumber++, style_header, " x-coordinate ");
+                    _singleton.writeCell(row, colNumber++, style_header, " y-coordinate ");
+//                    _singleton.writeCell(row, colNumber++, style_header, " leader id");
+                    _singleton.writeCell(row, colNumber++, style_header, " delay to leader ");
+//                    _singleton.writeCell(row, colNumber++, style_header, " is lonely or not");
+//                    _singleton.writeCell(row, colNumber++, style_header, " is accompanied or not");
+                    for (int j = 0; j < RESOURCE_TYPES; j++) _singleton.writeCell(row, colNumber++, style_header, " Resources " + j);
+                    _singleton.writeCell(row, colNumber++, style_header, " Times ");
                 } else {
-                    cell = row.createCell(colNumber++);
-                    cell.setCellStyle(style_header);
-                    cell.setCellType(CellType.STRING);
-                    cell.setCellValue(" length ");
-
-                    cell = row.createCell(colNumber++);
-                    cell.setCellStyle(style_header);
-                    cell.setCellType(CellType.STRING);
-                    cell.setCellValue(" times ");
-
-                    cell = row.createCell(colNumber++);
-                    cell.setCellStyle(style_header);
-                    cell.setCellType(CellType.STRING);
-                    cell.setCellValue("Target Node id again");
+                    _singleton.writeCell(row, colNumber++, style_header, " length ");
+                    _singleton.writeCell(row, colNumber++, style_header, " times ");
+                    _singleton.writeCell(row, colNumber++, style_header, "Target Node id again");
                 }
 
                 //ウィンドウ枠の固定
@@ -584,68 +532,33 @@ public class OutPut implements SetParam {
                         rowNumber++;
                         colNumber = 0;
                         row = sheet.createRow(rowNumber);
-                        cell = row.createCell(colNumber++);
-                        cell.setCellStyle(style_int);
-                        cell.setCellType(CellType.NUMERIC);
-                        cell.setCellValue(agent.id);
+                        _singleton.writeCell(row, colNumber++, style_int, agent.id);
 
-                        cell = row.createCell(colNumber++);
-                        cell.setCellStyle(style_string);
-                        cell.setCellType(CellType.STRING);
-                        if (agent.e_leader > agent.e_member) cell.setCellValue("Red");
-                        else if (agent.principle == RATIONAL) cell.setCellValue("Green");
-                        else if (agent.principle == RECIPROCAL) cell.setCellValue("Blue");
 
-                        cell = row.createCell(colNumber++);
-                        cell.setCellStyle(style_string_wrap);
-                        cell.setCellType(CellType.STRING);
-                        if (agent.e_leader > agent.e_member) cell.setCellValue("Circle");
-                        else if (agent.principle == RATIONAL) cell.setCellValue("Square");
-                        else if (agent.principle == RECIPROCAL) cell.setCellValue("Triangle");
+                        if (agent.e_leader > agent.e_member)    _singleton.writeCell(row, colNumber++, style_string, "Red");
+                        else if (agent.principle == RATIONAL)   _singleton.writeCell(row, colNumber++, style_string, "Green");
+                        else if (agent.principle == RECIPROCAL) _singleton.writeCell(row, colNumber++, style_string, "Blue");
 
-                        cell = row.createCell(colNumber++);
-                        cell.setCellStyle(style_string);
-                        cell.setCellType(CellType.NUMERIC);
-                        cell.setCellValue(agent.x * 10);
 
-                        cell = row.createCell(colNumber++);
-                        cell.setCellStyle(style_string);
-                        cell.setCellType(CellType.NUMERIC);
-                        cell.setCellValue(agent.y * 10);
+                        if (agent.e_leader > agent.e_member)    _singleton.writeCell(row, colNumber++, style_string, "Circle");
+                        else if (agent.principle == RATIONAL)   _singleton.writeCell(row, colNumber++, style_string, "Square");
+                        else if (agent.principle == RECIPROCAL) _singleton.writeCell(row, colNumber++, style_string, "Triangle");
 
-                        /*
-                        cell = row.createCell(colNumber++);
-                        cell.setCellStyle(style_string);
-                        cell.setCellType(CellType.NUMERIC);
-                        if (agent.e_leader > agent.e_member) cell.setCellValue(agent.id * 3);
-                        else if (agent.leader != null) cell.setCellValue(agent.leader.id * 3);
-// */
-                        cell = row.createCell(colNumber++);
-                        cell.setCellStyle(style_string);
-                        cell.setCellType(CellType.NUMERIC);
-                        if (agent.e_leader > agent.e_member) cell.setCellValue(0);
-                        else if (agent.leader != null) cell.setCellValue(Manager.delays[agent.id][agent.leader.id] );
+                        _singleton.writeCell(row, colNumber++, style_int, agent.x * 10);
+                        _singleton.writeCell(row, colNumber++, style_int, agent.y * 10);
+
+//                        if (agent.e_leader > agent.e_member) _singleton.writeCell(row, colNumber++, style_int,agent.id * 3);
+//                        else if (agent.leader != null) _singleton.writeCell(row, colNumber++, style_int,agent.leader.id * 3);
+
+                        if (agent.e_leader > agent.e_member || agent.leader == null) _singleton.writeCell(row, colNumber++, style_int, 0);
+                        else                                                         _singleton.writeCell(row, colNumber++, style_int, Manager.delays[agent.id][agent.leader.id]);
 /*
-                        cell = row.createCell(colNumber++);
-                        cell.setCellStyle(style_string);
-                        cell.setCellType(CellType.NUMERIC);
-                        cell.setCellValue(agent.isLonely);
-
-                        cell = row.createCell(colNumber++);
-                        cell.setCellStyle(style_string);
-                        cell.setCellType(CellType.NUMERIC);
-                        cell.setCellValue(agent.isAccompanied);
+                        _singleton.writeCell(row, colNumber++, style_int,agent.isLonely);
+                        _singleton.writeCell(row, colNumber++, style_int,agent.isAccompanied);
 // */
-                        for( int j = 0; j < RESOURCE_TYPES; j++ ) {
-                            cell = row.createCell(colNumber++);
-                            cell.setCellStyle(style_string);
-                            cell.setCellType(CellType.NUMERIC);
-                            cell.setCellValue(agent.res[j]);
-                        }
-                        cell = row.createCell(colNumber++);
-                        cell.setCellStyle(style_string);
-                        cell.setCellType(CellType.NUMERIC);
-                        cell.setCellValue(agent.didTasksAsMember);
+                        for (int j = 0; j < RESOURCE_TYPES; j++) _singleton.writeCell(row, colNumber++, style_int, agent.res[j]);
+
+                        _singleton.writeCell(row, colNumber++, style_int, agent.didTasksAsMember);
 
                         //列幅の自動調整
                         for (int k = 0; k <= colNumber; k++) {
@@ -659,36 +572,12 @@ public class OutPut implements SetParam {
                         rowNumber++;
                         colNumber = 0;
                         row = sheet.createRow(rowNumber);
-
-                        cell = row.createCell(colNumber++);
-                        cell.setCellStyle(style_int);
-                        cell.setCellType(CellType.NUMERIC);
-                        cell.setCellValue(j);
-
-                        cell = row.createCell(colNumber++);
-                        cell.setCellStyle(style_string);
-                        cell.setCellType(CellType.NUMERIC);
-                        cell.setCellValue(edge.from_id.get(j));
-
-                        cell = row.createCell(colNumber++);
-                        cell.setCellStyle(style_string_wrap);
-                        cell.setCellType(CellType.NUMERIC);
-                        cell.setCellValue(edge.to_id.get(j));
-
-                        cell = row.createCell(colNumber++);
-                        cell.setCellStyle(style_string_wrap);
-                        cell.setCellType(CellType.NUMERIC);
-                        cell.setCellValue(edge.delays.get(j));
-
-                        cell = row.createCell(colNumber++);
-                        cell.setCellStyle(style_string_wrap);
-                        cell.setCellType(CellType.NUMERIC);
-                        cell.setCellValue(edge.times.get(j));
-
-                        cell = row.createCell(colNumber++);
-                        cell.setCellStyle(style_string_wrap);
-                        cell.setCellType(CellType.NUMERIC);
-                        cell.setCellValue(edge.to_id.get(j));
+                        _singleton.writeCell(row, colNumber++, style_int, j);
+                        _singleton.writeCell(row, colNumber++, style_int, edge.from_id.get(j));
+                        _singleton.writeCell(row, colNumber++, style_int, edge.to_id.get(j));
+                        _singleton.writeCell(row, colNumber++, style_int, edge.delays.get(j));
+                        _singleton.writeCell(row, colNumber++, style_int, edge.times.get(j));
+                        _singleton.writeCell(row, colNumber++, style_int, edge.to_id.get(j));
 
 
                         //列幅の自動調整
@@ -702,35 +591,12 @@ public class OutPut implements SetParam {
                         rowNumber++;
                         colNumber = 0;
                         row = sheet.createRow(rowNumber);
-                        cell = row.createCell(colNumber++);
-                        cell.setCellStyle(style_int);
-                        cell.setCellType(CellType.NUMERIC);
-                        cell.setCellValue(j);
-
-                        cell = row.createCell(colNumber++);
-                        cell.setCellStyle(style_string);
-                        cell.setCellType(CellType.NUMERIC);
-                        cell.setCellValue(edge.from_id.get(j));
-
-                        cell = row.createCell(colNumber++);
-                        cell.setCellStyle(style_string_wrap);
-                        cell.setCellType(CellType.NUMERIC);
-                        cell.setCellValue(edge.to_id.get(j));
-
-                        cell = row.createCell(colNumber++);
-                        cell.setCellStyle(style_string_wrap);
-                        cell.setCellType(CellType.NUMERIC);
-                        cell.setCellValue(edge.delays.get(j));
-
-                        cell = row.createCell(colNumber++);
-                        cell.setCellStyle(style_string_wrap);
-                        cell.setCellType(CellType.NUMERIC);
-                        cell.setCellValue(edge.times.get(j));
-
-                        cell = row.createCell(colNumber++);
-                        cell.setCellStyle(style_string_wrap);
-                        cell.setCellType(CellType.NUMERIC);
-                        cell.setCellValue(edge.to_id.get(j));
+                        _singleton.writeCell(row, colNumber++, style_int, j);
+                        _singleton.writeCell(row, colNumber++, style_int, edge.from_id.get(j));
+                        _singleton.writeCell(row, colNumber++, style_int, edge.to_id.get(j));
+                        _singleton.writeCell(row, colNumber++, style_int, edge.delays.get(j));
+                        _singleton.writeCell(row, colNumber++, style_int, edge.times.get(j));
+                        _singleton.writeCell(row, colNumber++, style_int, edge.to_id.get(j));
 
                         //列幅の自動調整
                         for (int k = 0; k <= colNumber; k++) {
@@ -739,6 +605,82 @@ public class OutPut implements SetParam {
                     }
                 }
             }
+
+
+            // ここからリーダーからのエッジ生成
+            edge.makeEdgesFromLeader(agents);
+            for (int i = 0; i < 2; i++) {
+                sheet = book.createSheet();
+                if (sheet instanceof SXSSFSheet) {
+                    ((SXSSFSheet) sheet).trackAllColumnsForAutoSizing();
+                }
+                if( i == 0 ) book.setSheetName(i + 3, "EdgesFromLeader");
+                else         book.setSheetName(i + 3, "reciprocalEdgesFromLeader");
+
+                //ヘッダ行の作成
+                rowNumber = 0;
+                colNumber = 0;
+
+                row = sheet.createRow(rowNumber);
+
+                _singleton.writeCell(row, colNumber++, style_string, "Edge id");
+                _singleton.writeCell(row, colNumber++, style_string, "Source Node id");
+                _singleton.writeCell(row, colNumber++, style_string, "Target Node id");
+                _singleton.writeCell(row, colNumber++, style_string, " length ");
+                _singleton.writeCell(row, colNumber++, style_string, " times ");
+                _singleton.writeCell(row, colNumber++, style_string, "Target Node id again");
+
+                //ウィンドウ枠の固定
+                sheet.createFreezePane(1, 1);
+
+                //ヘッダ行にオートフィルタの設定
+                sheet.setAutoFilter(new CellRangeAddress(0, 0, 0, colNumber));
+
+                //列幅の自動調整
+                for (int j = 0; j <= colNumber; j++) {
+                    sheet.autoSizeColumn(j, true);
+                }
+
+                if (i == 0) {
+                    for (int j = 0; j < edge.from_id.size(); j++) {
+                        rowNumber++;
+                        colNumber = 0;
+                        row = sheet.createRow(rowNumber);
+                        _singleton.writeCell(row, colNumber++, style_int, j);
+                        _singleton.writeCell(row, colNumber++, style_int, edge.from_id.get(j));
+                        _singleton.writeCell(row, colNumber++, style_int, edge.to_id.get(j));
+                        _singleton.writeCell(row, colNumber++, style_int, edge.delays.get(j));
+                        _singleton.writeCell(row, colNumber++, style_int, edge.times.get(j));
+                        _singleton.writeCell(row, colNumber++, style_int, edge.to_id.get(j));
+
+
+                        //列幅の自動調整
+                        for (int k = 0; k <= colNumber; k++) {
+                            sheet.autoSizeColumn(k, true);
+                        }
+                    }
+                } else if (i == 1) {
+                    for (int j = 0; j < edge.from_id.size(); j++) {
+                        if (edge.isRecipro.get(j) != true) continue;
+                        rowNumber++;
+                        colNumber = 0;
+                        row = sheet.createRow(rowNumber);
+                        _singleton.writeCell(row, colNumber++, style_int, j);
+                        _singleton.writeCell(row, colNumber++, style_int, edge.from_id.get(j));
+                        _singleton.writeCell(row, colNumber++, style_int, edge.to_id.get(j));
+                        _singleton.writeCell(row, colNumber++, style_int, edge.delays.get(j));
+                        _singleton.writeCell(row, colNumber++, style_int, edge.times.get(j));
+                        _singleton.writeCell(row, colNumber++, style_int, edge.to_id.get(j));
+
+                        //列幅の自動調整
+                        for (int k = 0; k <= colNumber; k++) {
+                            sheet.autoSizeColumn(k, true);
+                        }
+                    }
+                }
+            }
+
+
             //ファイル出力
             fout = new FileOutputStream(outputFilePath);
             book.write(fout);
@@ -769,7 +711,7 @@ public class OutPut implements SetParam {
         PrintWriter pw;
         try {
             String currentPath = System.getProperty("user.dir");
-            fw = new FileWriter(currentPath + "/out/results/communicationDelay=" + MAX_DELAY + ".csv", false);
+            fw = new FileWriter(currentPath + "/out/results/communicationDelay=" + MAX_DELAY + new Date().toString() + ".csv", false);
             bw = new BufferedWriter(fw);
             pw = new PrintWriter(bw);
 
@@ -805,7 +747,7 @@ public class OutPut implements SetParam {
 
         try {
             String currentPath = System.getProperty("user.dir");
-            fw = new FileWriter(currentPath + "/out/results/d&r " + fileName + ".csv", false);
+            fw = new FileWriter(currentPath + "/out/results/d&r " + fileName + new Date().toString()+ ".csv", false);
             bw = new BufferedWriter(fw);
             pw = new PrintWriter(bw);
 
@@ -849,7 +791,7 @@ public class OutPut implements SetParam {
         String fileName = st.getClass().getName();
         try {
             String currentPath = System.getProperty("user.dir");
-            fw = new FileWriter(currentPath + "/out/results/rel" + fileName + ", λ=" +  String.format("%.2f", (double)ADDITIONAL_TASK_NUM/TASK_ADDITION_SPAN)+ ".csv", false);
+            fw = new FileWriter(currentPath + "/out/results/rel" + fileName + ", λ=" + String.format("%.2f", (double) ADDITIONAL_TASK_NUM / TASK_ADDITION_SPAN) + new Date().toString()+ ".csv", false);
             bw = new BufferedWriter(fw);
             pw = new PrintWriter(bw);
             // 列番号入れる部分
@@ -932,7 +874,7 @@ public class OutPut implements SetParam {
 
     private String setPath( String dir_name, String file_name ){
         String currentPath = System.getProperty("user.dir");
-        String outputFilePath = currentPath + "/out/" + dir_name + "/" + file_name + ",λ=" +  String.format("%.2f", (double)ADDITIONAL_TASK_NUM/TASK_ADDITION_SPAN) + ".xlsx";
+        String outputFilePath = currentPath + "/out/" + dir_name + "/" + file_name + ",λ=" + String.format("%.2f", (double) ADDITIONAL_TASK_NUM / TASK_ADDITION_SPAN) + new Date().toString()+ ".xlsx";
         return outputFilePath;
     }
 

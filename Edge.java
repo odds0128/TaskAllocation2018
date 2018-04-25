@@ -42,28 +42,26 @@ public class Edge implements SetParam {
         }
     }
 
-    /*
-    public void makeEdgeFromLonelyAgent(List<Agent> agents){
-        for( Agent ag: agents ){
-            if( ag.isLonely == 1 ){
-                for(  )
-            }
-        }
-    }
-    // */
-
-    public void makeCoalitionEdges(List<Agent> agents) {
+    public void makeEdgesFromLeader(List<Agent> agents) {
+        int temp;
         for (Agent ag : agents) {
-            if (ag.e_member > ag.e_leader) {
-                for (int i = 0; i < AGENT_NUM; i++) {
-                    if (ag.workWithAsM[i] >= THRESHOLD_FOR_COALITION) {
+            // agがメンバの場合
+            if (ag.e_member < ag.e_leader) {
+                // idは相手のid
+                for (int id = 0; id < AGENT_NUM; id++) {
+                    temp = ag.workWithAsL[id] ;
+                    if ( temp >= THRESHOLD_FOR_COALITION) {
                         from_id.add(ag.id);
-                        to_id.add(i);
-                        if (ag.principle == RECIPROCAL) isRecipro.add(true);
+                        to_id.add(id);
+                        delays.add(Manager.delays[ag.id][id]);
+                        times.add(temp);
+                        if (agents.get(id).principle == RECIPROCAL) isRecipro.add(true);
                         else isRecipro.add(false);
                     }
                 }
             }
         }
     }
+
+
 }

@@ -9,18 +9,9 @@ import java.io.IOException;
 import java.util.*;
 
 public class Manager implements SetParam {
-// private static Strategy strategy = new ProposedMethodA();     // 最短終了時間優先信頼度更新式
-//    private static Strategy strategy = new ProposedMethodA_2();     // 最短終了時間優先信頼度更新式
-//    private static Strategy strategy = new ProposedMethodB();     // 最短終了時間優先信頼度更新式
-//    private static Strategy strategy = new ProposedMethodB_2();     // 最短終了時間優先信頼度更新式
-//    private static Strategy strategy = new ComparativeMethod1();   // 最短応答優先手法
-//    private static Strategy strategy = new ComparativeMethod2();     // 最短応答優先信頼度更新で役割更新なし
-//    private static Strategy strategy = new ComparativeMethod3();   // 最短応答優先信頼度更新で役割更新あり
-//    private static Strategy strategy = new RoundRobin();           // ラウンドロビン
-//    private static Strategy strategy = new Rational();
-//    private static Strategy strategy = new ProposedMethodForSingapore();
+    private static Strategy strategy = new ProposedMethodForSingapore();
 //   private static Strategy strategy = new RewardOrientedStrategy();
-   private static Strategy strategy   = new CNP();
+//   private static Strategy strategy   = new CNP();
 
     static private long    _seed ;
     private static Random _randSeed;
