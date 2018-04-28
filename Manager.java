@@ -9,9 +9,11 @@ import java.io.IOException;
 import java.util.*;
 
 public class Manager implements SetParam {
-    private static Strategy strategy = new ProposedMethodForSingapore();
+//    private static Strategy strategy = new ProposedMethodForSingapore();
 //   private static Strategy strategy = new RewardOrientedStrategy();
 //   private static Strategy strategy   = new CNP();
+    private static Strategy strategy   = new CNP_area_restricted();
+
 
     static private long    _seed ;
     private static Random _randSeed;
@@ -225,7 +227,7 @@ public class Manager implements SetParam {
             }
         }
         // 学習なし手法で距離依存の場合(学習なしでは信頼度は使わないが便宜上定義する)
-        else if (strategy.getClass().getName() == "RoundRobin" || strategy.getClass().getName() == "ComparativeMethod1") {
+        else if (strategy.getClass().getName().startsWith("CNP_") || strategy.getClass().getName() == "ComparativeMethod1") {
             Agent agent;
             for (int i = 0; i < AGENT_NUM; ) {
                 agent = agents.get(i);
@@ -238,13 +240,12 @@ public class Manager implements SetParam {
                         tempList.add(agents.get(j));
                     }
                 }
-                agent.relRanking.addAll(tempList);
-                // 距離が1のエージェントだけを信頼エージェントとする
-                if (dist == 1) agent.relAgents.addAll(tempList);
-                tempList.clear();
-                if (agent.relRanking.size() == AGENT_NUM - 1) {
+                // 近い方から100体ほどのエージェントを信頼エージェントとする
+                if( tempList.size() >= 100 ){
+                    agent.relAgents.addAll(tempList);
                     i++;
                     dist = 0;
+                    tempList.clear();
                 }
             }
         }

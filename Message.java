@@ -6,6 +6,7 @@ import java.io.DataOutput;
  */
 
 class Message implements SetParam{
+
     private Agent from;
     private Agent to;
     private int   messageType;

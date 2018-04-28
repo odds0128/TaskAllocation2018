@@ -2,15 +2,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-/**
- *
- */
-
-public class CNP implements Strategy, SetParam {
+public class CNP_area_restricted implements SetParam, Strategy {
     static final int reception_span = 3;
-    int[] reception_time = new int[AGENT_NUM];
 
-    CNP() {
+    int[] reception_time = new int[AGENT_NUM];
+    Agent[] publigationTargets = new Agent[AGENT_NUM];
+
+
+    CNP_area_restricted() {
         for (int i = 0; i < AGENT_NUM; i++) {
             reception_time[i] = reception_span;
         }
@@ -29,12 +28,12 @@ public class CNP implements Strategy, SetParam {
         else if (agent.phase == PHASE3) execute(agent);
     }
 
-    // publicizeメソッド ... 全エージェントに広報する
+    // publicizeメソッド ... 近い方から約100体のエージェントに広報する
     private void publicize(Agent le) {
         le.ourTask = Manager.getTask();
         if (le.ourTask == null) return;
         le.selectSubTask();
-        for (Agent ag : Manager.getAgents()) {
+        for (Agent ag : le.relAgents ) {
             TransmissionPath.sendMessage(new Message(le, ag, PUBLICITY, le.ourTask, null));
         }
 //        System.out.println("ID: " + le.id + " published " + le.ourTask);
@@ -68,7 +67,7 @@ public class CNP implements Strategy, SetParam {
         // 下の配列はそれぞれ添え字がサブタスクのインデックスに対応する
         // そのサブタスクを割り当てる暫定のエージェントを格納する配列とその実行時間を格納する配列
         Agent[] bestAllocations = new Agent[le.restSubTask];
-        int[]   bestEstimations = new int[le.restSubTask];
+        int[] bestEstimations = new int[le.restSubTask];
         for (int i = 0; i < le.restSubTask; i++) {
             bestEstimations[i] = Integer.MAX_VALUE;
             bestAllocations[i] = le;
@@ -102,14 +101,14 @@ public class CNP implements Strategy, SetParam {
                 for (Agent allo : bestAllocations) {
                     TransmissionPath.sendMessage(new Message(le, allo, BID_RESULT, null, null));
                 }
-                this.inactivate( le, 0 );
+                this.inactivate(le, 0);
                 return;
             }
         }
         // 割り当てが決まったらそいつらに実際にサブタスクを割り当てる
         for (int i = 0; i < le.restSubTask; i++) {
             le.teamMembers.add(bestAllocations[i]);
-            le.preAllocations.put(bestAllocations[i],le.ourTask.subTasks.get(i) );
+            le.preAllocations.put(bestAllocations[i], le.ourTask.subTasks.get(i));
             TransmissionPath.sendMessage(new Message(le, bestAllocations[i], BID_RESULT, le.ourTask.subTasks.get(i), null));
         }
 //        System.out.println("ID: " + le.id + " with " + le.teamMembers);
@@ -127,12 +126,12 @@ public class CNP implements Strategy, SetParam {
         // サブタスクがもらえたなら実行フェイズへ移る.
         if (mem.mySubTask != null) {
             mem.executionTime = mem.calcExecutionTime(mem, mem.mySubTask);
-      //      System.out.println("ID:" + mem.id + "'s subtask will be executed in " + mem.executionTime);
+            //      System.out.println("ID:" + mem.id + "'s subtask will be executed in " + mem.executionTime);
             this.nextPhase(mem);
         }
         // サブタスクが割り当てられなかったら信頼度を0で更新し, inactivate
         else {
-            this.inactivate(mem,0);
+            this.inactivate(mem, 0);
         }
     }
 
@@ -146,7 +145,7 @@ public class CNP implements Strategy, SetParam {
                         for (Agent agent : ag.teamMembers) ag.workWithAsL[agent.id]++;
                     }
                     Manager.finishTask(ag);
-                    for( Message m: ag.messages ){
+                    for (Message m : ag.messages) {
                         ag.preAllocations.remove(m.getFrom());
                     }
                     this.inactivate(ag, 1);
@@ -180,7 +179,7 @@ public class CNP implements Strategy, SetParam {
             Message m = mem.messages.remove(0);
 
             int tempStIndex = selectBestSt(mem, m.getBidTask());
-            if (tempStIndex < 0){
+            if (tempStIndex < 0) {
                 TransmissionPath.sendMessage(new Message(mem, m.getFrom(), BIDDINGorNOT, -1, 0));
                 continue;
             }
@@ -309,21 +308,21 @@ public class CNP implements Strategy, SetParam {
             } else if (ag.phase == lPHASE2) {
                 ag.phase = PHASE3;
             }
-        }else{
+        } else {
             if (ag.phase == mPHASE1) {
                 ag.phase = mPHASE2;
-            }else if (ag.phase == mPHASE2){
+            } else if (ag.phase == mPHASE2) {
                 ag.phase = PHASE3;
             }
         }
     }
 
     void inactivate(Agent ag, int success) {
-        if( ag.role == LEADER ){
+        if (ag.role == LEADER) {
             ag.phase = lPHASE1;
             ag.teamMembers.clear();        // すでにサブタスクを送っていてメンバの選定から外すエージェントのリスト
             ag.ourTask = null;
-        }else if( ag.role == MEMBER ){
+        } else if (ag.role == MEMBER) {
             ag.phase = mPHASE1;
             ag.leader = null;
         }
@@ -340,3 +339,4 @@ public class CNP implements Strategy, SetParam {
         }
     }
 }
+

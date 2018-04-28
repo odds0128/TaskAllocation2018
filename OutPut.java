@@ -4,6 +4,7 @@ import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.xmlbeans.impl.xb.xsdschema.All;
+import java.text.SimpleDateFormat;
 
 import java.io.*;
 import java.util.*;
@@ -59,10 +60,11 @@ public class OutPut implements SetParam {
 
     static void aggregateData(int ft, int dt, int ot, int rm, int ftida, int ftipa) {
         finishedTasksArray[index] += ft;
+        messagesArray[index] += TransmissionPath.getMessageNum();
         communicationDelayArray[index] += TransmissionPath.getCT();
         disposedTasksArray[index] += dt;
         overflownTasksArray[index] += ot;
-        /* messagesArray[index] += TransmissionPath.messageNum;
+        /*
         reciprocalistsArray[index] += Agent._recipro_num;
         rationalistsArray[index] += Agent._rational_num;
         reciprocalMembersArray[index] += rm;
@@ -144,12 +146,13 @@ public class OutPut implements SetParam {
      */
     static void checkAgent(List<Agent> agents) {
         List<Agent> temp = new ArrayList<>(agents);
-        System.out.println("Total Agents is " + Agent._id);
-        System.out.println("Leaders is " + Agent._leader_num + ", Members is " + Agent._member_num + ", Resources : ");
+        System.out.println("Total Agents is " + agents.size());
+        System.out.println("Leaders is " + Agent._leader_num + ", Members is " + Agent._member_num );
 
         for (Agent agent : agents) {
+            System.out.print( "ID: " + agent.id + " Resources : ");
             for (int i = 0; i < RESOURCE_TYPES; i++) System.out.print(agent.res[i] + ", ");
-            System.out.println();
+            System.out.println(" Reliable Agents: " + agent.relAgents.size());
         }
 // */
 
@@ -163,7 +166,7 @@ public class OutPut implements SetParam {
         }
 // */
 
-        Collections.sort(temp, new AgentComparator());
+//        Collections.sort(temp, new AgentComparator());
 
 /*
         for (int i = 0; i < AGENT_NUM; i++) {
@@ -208,13 +211,16 @@ public class OutPut implements SetParam {
         String fileName = st.getClass().getName();
         try {
             String currentPath = System.getProperty("user.dir");
-            fw = new FileWriter(currentPath + "/out/results/" + fileName + ", λ=" + String.format("%.2f", (double) ADDITIONAL_TASK_NUM / TASK_ADDITION_SPAN) + new Date().toString()+ ".csv", false);
+            Date             date = new Date();
+            SimpleDateFormat sdf1 = new SimpleDateFormat(",yyyy:MM:dd,HH:mm:ss");
+            fw = new FileWriter(currentPath + "/out/results/" + fileName + ", λ=" + String.format("%.2f", (double) ADDITIONAL_TASK_NUM / TASK_ADDITION_SPAN) + sdf1.format(date) +  ".csv", false);
             bw = new BufferedWriter(fw);
             pw = new PrintWriter(bw);
 
             pw.println("turn" + ", "
                             + "FinishedTasks" + ", " + "DisposedTasks" + ", " + "OverflownTasks" + ", "
-                            + "CommunicationTime" + ", " + "ExecutionTime" + ","
+                            + "Success rate" + ", "
+                            + "CommunicationTime" + ", " + "Messages"  + ", " + "ExecutionTime" + ","
                             + "Leader" + ", " // + "Member"                            + ", "
                             + "NEET Members" + ", "
                     // + "Lonely leaders"                    + ", " + "Lonely members"                    + ", "
@@ -223,12 +229,14 @@ public class OutPut implements SetParam {
                     // + "FinishedTasks in depopulated area" + ", " + "FinishedTasks in populated area"   + ", "
             );
             for (int i = 0; i < WRITING_TIMES; i++) {
-                pw.println((i + 1) * (MAX_TURN_NUM / WRITING_TIMES) + ", "
-                                + finishedTasksArray[i] / EXECUTION_TIMES + ", "
-                                + disposedTasksArray[i] / EXECUTION_TIMES + ", "
-                                + overflownTasksArray[i] / EXECUTION_TIMES + ", "
-                                + communicationDelayArray[i] / (double) EXECUTION_TIMES + ", "
-                                + (double) taskExecutionTimeArray[i]  / EXECUTION_TIMES + ", "
+                pw.println((i + 1) * (MAX_TURN_NUM                     / WRITING_TIMES) + ", "
+                                + finishedTasksArray[i]                / EXECUTION_TIMES + ", "
+                                + disposedTasksArray[i]                / EXECUTION_TIMES + ", "
+                                + overflownTasksArray[i]               / EXECUTION_TIMES + ", "
+                                + (double) finishedTasksArray[i]       / (finishedTasksArray[i] + disposedTasksArray[i]  ) + ", "
+                                + communicationDelayArray[i]           / EXECUTION_TIMES + ", "
+                                + messagesArray[i]                     / EXECUTION_TIMES + ", "
+                                + (double) taskExecutionTimeArray[i]   / EXECUTION_TIMES + ", "
                                 + leaderNumArray[i] / EXECUTION_TIMES + ", "
                                 + neetMembersArray[i] / EXECUTION_TIMES + ", "
                         /*                    + memberNumArray[i]                      / EXECUTION_TIMES + ", "
@@ -253,7 +261,9 @@ public class OutPut implements SetParam {
     }
 
     static void writeResultsX(Strategy st) throws FileNotFoundException, IOException {
-        String outputFilePath = _singleton.setPath("results", st.getClass().getName() +  " " + new Date().toString() + ".xlsx");
+        Date             date = new Date();
+        SimpleDateFormat sdf1 = new SimpleDateFormat(",yyyy:MM:dd,HH:mm:ss");
+        String outputFilePath = _singleton.setPath("results", st.getClass().getName() +  " " +sdf1.format(date) + ".xlsx");
 
         try {
             book = new SXSSFWorkbook();
@@ -399,7 +409,9 @@ public class OutPut implements SetParam {
 
     static void writeGraphInformation(List<Agent> agents, String fp) throws FileNotFoundException, IOException {
         String currentPath = System.getProperty("user.dir");
-        String outputFilePath = currentPath + "/out/relationships/" + fp + " " + new Date().toString() + ".xlsx";
+        Date             date = new Date();
+        SimpleDateFormat sdf1 = new SimpleDateFormat(",yyyy:MM:dd,HH:mm:ss");
+        String outputFilePath = currentPath + "/out/relationships/" + fp + " " + sdf1.format(date) + ".xlsx";
         Edge edge = new Edge();
         edge.makeEdge(agents);
         try {
@@ -712,7 +724,9 @@ public class OutPut implements SetParam {
         PrintWriter pw;
         try {
             String currentPath = System.getProperty("user.dir");
-            fw = new FileWriter(currentPath + "/out/results/communicationDelay=" + MAX_DELAY + new Date().toString() + ".csv", false);
+            Date             date = new Date();
+            SimpleDateFormat sdf1 = new SimpleDateFormat(",yyyy:MM:dd,HH:mm:ss");
+            fw = new FileWriter(currentPath + "/out/results/communicationDelay=" + MAX_DELAY + sdf1.format(date) + ".csv", false);
             bw = new BufferedWriter(fw);
             pw = new PrintWriter(bw);
 
@@ -748,7 +762,9 @@ public class OutPut implements SetParam {
 
         try {
             String currentPath = System.getProperty("user.dir");
-            fw = new FileWriter(currentPath + "/out/results/d&r " + fileName + new Date().toString()+ ".csv", false);
+            Date             date = new Date();
+            SimpleDateFormat sdf1 = new SimpleDateFormat(",yyyy:MM:dd,HH:mm:ss");
+            fw = new FileWriter(currentPath + "/out/results/d&r " + fileName + sdf1.format(date) + ".csv", false);
             bw = new BufferedWriter(fw);
             pw = new PrintWriter(bw);
 
@@ -792,7 +808,9 @@ public class OutPut implements SetParam {
         String fileName = st.getClass().getName();
         try {
             String currentPath = System.getProperty("user.dir");
-            fw = new FileWriter(currentPath + "/out/results/rel" + fileName + ", λ=" + String.format("%.2f", (double) ADDITIONAL_TASK_NUM / TASK_ADDITION_SPAN) + new Date().toString()+ ".csv", false);
+            Date             date = new Date();
+            SimpleDateFormat sdf1 = new SimpleDateFormat(",yyyy:MM:dd,HH:mm:ss");
+            fw = new FileWriter(currentPath + "/out/results/rel" + fileName + ", λ=" + String.format("%.2f", (double) ADDITIONAL_TASK_NUM / TASK_ADDITION_SPAN) + sdf1.format(date) + ".csv", false);
             bw = new BufferedWriter(fw);
             pw = new PrintWriter(bw);
             // 列番号入れる部分
@@ -875,7 +893,9 @@ public class OutPut implements SetParam {
 
     private String setPath( String dir_name, String file_name ){
         String currentPath = System.getProperty("user.dir");
-        String outputFilePath = currentPath + "/out/" + dir_name + "/" + file_name + ",λ=" + String.format("%.2f", (double) ADDITIONAL_TASK_NUM / TASK_ADDITION_SPAN) + new Date().toString()+ ".xlsx";
+        Date             date = new Date();
+        SimpleDateFormat sdf1 = new SimpleDateFormat(",yyyy:MM:dd,HH:mm:ss");
+        String outputFilePath = currentPath + "/out/" + dir_name + "/" + file_name + ",λ=" + String.format("%.2f", (double) ADDITIONAL_TASK_NUM / TASK_ADDITION_SPAN) + sdf1.format(date) + ".xlsx";
         return outputFilePath;
     }
 

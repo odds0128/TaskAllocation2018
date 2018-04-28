@@ -74,7 +74,7 @@ public class Agent implements SetParam , Cloneable{
         this.strategy = strategy;
         setResource(UNIFORM);
         Arrays.fill(reliabilities, INITIAL_VALUE_OF_DEC);
-        if (strategy.getClass().getName() == "CNP") {
+        if (strategy.getClass().getName().startsWith("CNP")) {
             selectRoleWithoutLearning();
         } else {
             selectRole();
@@ -92,7 +92,7 @@ public class Agent implements SetParam , Cloneable{
         this.strategy = strategy;
         setResource(UNIFORM);
         Arrays.fill(reliabilities, INITIAL_VALUE_OF_DEC);
-        if (strategy.getClass().getName() == "CNP") {
+        if (strategy.getClass().getName().startsWith("CNP")) {
             selectRoleWithoutLearning();
         } else {
             selectRole();
@@ -194,7 +194,6 @@ public class Agent implements SetParam , Cloneable{
         }
     }
     void selectRoleWithoutLearning() {
-        validatedTicks = Manager.getTicks();
         int ran = _randSeed.nextInt(5);
         if (ran == 0) {
             role = LEADER;

@@ -84,6 +84,10 @@ class TransmissionPath implements SetParam {
         messageNum++;
     }
 
+    public static int getMessageNum() {
+        return messageNum;
+    }
+
     static public double getCT(){
         int ct = communicationTime, mn = messageNum;
         assert (ct > 0 && mn > 0) || (ct == 0 && mn == 0) : "ghost message was sent";
