@@ -8,7 +8,6 @@ public class CNP_area_restricted implements SetParam, Strategy {
     int[] reception_time = new int[AGENT_NUM];
     Agent[] publigationTargets = new Agent[AGENT_NUM];
 
-
     CNP_area_restricted() {
         for (int i = 0; i < AGENT_NUM; i++) {
             reception_time[i] = reception_span;
@@ -60,7 +59,7 @@ public class CNP_area_restricted implements SetParam, Strategy {
     // organizeメソッド ... 入札者の中から落札者を選びチームを編成する
     private void organize(Agent le) {
         // 入札・非入札メッセージが全員から返って来たか確認する
-        if (le.messages.size() < AGENT_NUM - 1) return;
+        if (le.messages.size() < le.relAgents.size()) return;
 
         // 全員分のメッセージが確認できたら割り当てを考える
         // 割り当ては，実行時間が短い方を優先する

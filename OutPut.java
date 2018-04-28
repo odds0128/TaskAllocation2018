@@ -17,7 +17,6 @@ import java.util.*;
 public class OutPut implements SetParam {
     static Workbook book = null;
     static FileOutputStream fout = null;
-
     static OutPut _singleton = new OutPut();
 
     static int index = 0;

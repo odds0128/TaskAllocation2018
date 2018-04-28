@@ -346,7 +346,7 @@ public class Manager implements SetParam {
         leader.ourTask = null;
     }
     static void finishTask(Agent leader) {
-//      OutPut.checkTeam(leader);
+      OutPut.checkTeam(leader);
         OutPut.aggregateTaskExecutionTime(leader);
         leader.ourTask = null;
 /*        if( leader.isLonely == 1 )      finishedTasksInDepopulatedArea++;
