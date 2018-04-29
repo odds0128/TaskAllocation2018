@@ -17,6 +17,7 @@ import java.util.Map;
  * 役割更新機構あり
  */
 
+
 public class ProposedMethodForSingapore implements Strategy, SetParam {
     static final double γ = γ_r;
     Map<Agent, AllocatedSubTask>[] teamHistory = new HashMap[AGENT_NUM];
@@ -48,7 +49,6 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
     }
 
     private void proposeAsL(Agent leader) {
-
         leader.ourTask = Manager.getTask();
         if (leader.ourTask == null) {
             leader.inactivate(0);
@@ -224,6 +224,7 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
         // サブタスクがもらえたなら信頼度をプラスに更新し, 実行フェイズへ移る.
         if (member.mySubTask != null) {
             member.start = Manager.getTicks();
+            member.allocated[member.leader.id][member.mySubTask.resType]++;
             member.executionTime = member.calcExecutionTime(member, member.mySubTask);
             member.nextPhase();
         }
@@ -243,6 +244,7 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
                     for (Agent ag : agent.teamMembers) agent.workWithAsL[ag.id]++;
             } else {
                 agent.sendMessage(agent, agent.leader, DONE, agent.start);
+                agent.required[agent.mySubTask.resType]++;
                 agent.relAgents = renewRel(agent, agent.leader, (double)agent.mySubTask.reqRes[agent.mySubTask.resType]/agent.calcExecutionTime(agent, agent.mySubTask));
                 if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN)
                     agent.workWithAsM[agent.leader.id]++;

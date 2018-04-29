@@ -123,6 +123,7 @@ public class CNP implements Strategy, SetParam {
         // サブタスクがもらえたなら実行フェイズへ移る.
         if (mem.mySubTask != null) {
             mem.executionTime = mem.calcExecutionTime(mem, mem.mySubTask);
+            mem.allocated[mem.leader.id][mem.mySubTask.resType]++;
             //      System.out.println("ID:" + mem.id + "'s subtask will be executed in " + mem.executionTime);
             this.nextPhase(mem);
         }
@@ -153,6 +154,8 @@ public class CNP implements Strategy, SetParam {
                     ag.workWithAsM[ag.leader.id]++;
                 }
                 ag.sendMessage(ag, ag.leader, DONE, 0);
+                ag.required[ag.mySubTask.resType]++;
+
                 // 自分のサブタスクが終わったら非活性状態へ
                 this.inactivate(ag, 1);
                 ag.validatedTicks = Manager.getTicks();

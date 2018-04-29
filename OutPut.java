@@ -514,11 +514,16 @@ public class OutPut implements SetParam {
                 if (i == 0) {
                     _singleton.writeCell(row, colNumber++, style_header, " x-coordinate ");
                     _singleton.writeCell(row, colNumber++, style_header, " y-coordinate ");
-//                    _singleton.writeCell(row, colNumber++, style_header, " leader id");
+                    _singleton.writeCell(row, colNumber++, style_header, " leader id");
                     _singleton.writeCell(row, colNumber++, style_header, " delay to leader ");
 //                    _singleton.writeCell(row, colNumber++, style_header, " is lonely or not");
 //                    _singleton.writeCell(row, colNumber++, style_header, " is accompanied or not");
-                    for (int j = 0; j < RESOURCE_TYPES; j++) _singleton.writeCell(row, colNumber++, style_header, " Resources " + j);
+                    for (int j = 0; j < RESOURCE_TYPES; j++){
+                        _singleton.writeCell(row, colNumber++, style_header, " Resources " + j);
+                        _singleton.writeCell(row, colNumber++, style_header, " Required "  + j);
+                        _singleton.writeCell(row, colNumber++, style_header, " Allocated "  + j);
+                    }
+                    _singleton.writeCell(row, colNumber++, style_header, " Excellence ");
                     _singleton.writeCell(row, colNumber++, style_header, " Times ");
                 } else {
                     _singleton.writeCell(row, colNumber++, style_header, " length ");
@@ -546,28 +551,45 @@ public class OutPut implements SetParam {
                         _singleton.writeCell(row, colNumber++, style_int, agent.id);
 
 
-                        if (agent.e_leader > agent.e_member)    _singleton.writeCell(row, colNumber++, style_string, "Red");
-                        else if (agent.principle == RATIONAL)   _singleton.writeCell(row, colNumber++, style_string, "Green");
-                        else if (agent.principle == RECIPROCAL) _singleton.writeCell(row, colNumber++, style_string, "Blue");
-
-
-                        if (agent.e_leader > agent.e_member)    _singleton.writeCell(row, colNumber++, style_string, "Circle");
-                        else if (agent.principle == RATIONAL)   _singleton.writeCell(row, colNumber++, style_string, "Square");
-                        else if (agent.principle == RECIPROCAL) _singleton.writeCell(row, colNumber++, style_string, "Triangle");
+                        if (agent.e_leader > agent.e_member){
+                            _singleton.writeCell(row, colNumber++, style_string, "Red");
+                            _singleton.writeCell(row, colNumber++, style_string, "Circle");
+                        }
+                        else if (agent.principle == RATIONAL){
+                            _singleton.writeCell(row, colNumber++, style_string, "Green");
+                            _singleton.writeCell(row, colNumber++, style_string, "Square");
+                        }
+                        else if (agent.principle == RECIPROCAL){
+                            _singleton.writeCell(row, colNumber++, style_string, "Blue");
+                            _singleton.writeCell(row, colNumber++, style_string, "Triangle");
+                        }
 
                         _singleton.writeCell(row, colNumber++, style_int, agent.x * 10);
                         _singleton.writeCell(row, colNumber++, style_int, agent.y * 10);
 
-//                        if (agent.e_leader > agent.e_member) _singleton.writeCell(row, colNumber++, style_int,agent.id * 3);
-//                        else if (agent.leader != null) _singleton.writeCell(row, colNumber++, style_int,agent.leader.id * 3);
+                        if (agent.e_leader > agent.e_member)   _singleton.writeCell(row, colNumber++, style_int, -1 );
+                        else if( agent.relRanking.size() > 0 ) _singleton.writeCell(row, colNumber++, style_int,agent.relRanking.get(0).id );
+                        else                                   _singleton.writeCell(row, colNumber++, style_int, -1 );
 
-                        if (agent.e_leader > agent.e_member || agent.leader == null) _singleton.writeCell(row, colNumber++, style_int, 0);
-                        else                                                         _singleton.writeCell(row, colNumber++, style_int, Manager.delays[agent.id][agent.leader.id]);
-/*
+                        if (agent.e_leader > agent.e_member )  _singleton.writeCell(row, colNumber++, style_int, 0);
+                        else if( agent.relRanking.size() > 0 ) _singleton.writeCell(row, colNumber++, style_int, Manager.delays[agent.id][agent.relRanking.get(0).id]);
+                        else                                   _singleton.writeCell(row, colNumber++, style_int, -1 );
+
+                        /*
                         _singleton.writeCell(row, colNumber++, style_int,agent.isLonely);
                         _singleton.writeCell(row, colNumber++, style_int,agent.isAccompanied);
 // */
-                        for (int j = 0; j < RESOURCE_TYPES; j++) _singleton.writeCell(row, colNumber++, style_int, agent.res[j]);
+                        int temp, count = 0, sum = 0;
+                        for (int j = 0; j < RESOURCE_TYPES; j++){
+                            temp = agent.res[j];
+                            if( temp > 0 ) count++;
+                            sum += temp;
+                            _singleton.writeCell(row, colNumber++, style_int, agent.res[j]);
+                            _singleton.writeCell(row, colNumber++, style_int, agent.required[j]);
+                            if( agent.relRanking.size() > 0 ) _singleton.writeCell(row, colNumber++, style_int, agent.allocated[agent.relRanking.get(0).id][j]);
+                            else                              _singleton.writeCell(row, colNumber++, style_int, -1);
+                        }
+                        _singleton.writeCell(row, colNumber++, style_double, (double) sum/count);
 
                         _singleton.writeCell(row, colNumber++, style_int, agent.didTasksAsMember);
 

@@ -224,9 +224,10 @@ public class RewardOrientedStrategy implements Strategy, SetParam {
         member.totalResponseTicks += rt;
         member.meanRT = (double)member.totalResponseTicks/(double)member.totalOffers;
 // */
-        // サブタスクがもらえたなら信頼度をプラスに更新し, 実行フェイズへ移る.
+        // サブタスクがもらえたら実行フェイズへ移る.
         if (member.mySubTask != null) {
             member.start = Manager.getTicks();
+            member.allocated[member.leader.id][member.mySubTask.resType]++;
             member.executionTime = member.calcExecutionTime(member, member.mySubTask);
             member.nextPhase();
         }
@@ -246,6 +247,7 @@ public class RewardOrientedStrategy implements Strategy, SetParam {
                     for (Agent ag : agent.teamMembers) agent.workWithAsL[ag.id]++;
             } else {
                 agent.sendMessage(agent, agent.leader, DONE, agent.start);
+                agent.required[agent.mySubTask.resType]++;
                 agent.relAgents = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / (double)denominator);
                 if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN)
                     agent.workWithAsM[agent.leader.id]++;

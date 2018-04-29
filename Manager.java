@@ -9,10 +9,10 @@ import java.io.IOException;
 import java.util.*;
 
 public class Manager implements SetParam {
-//    private static Strategy strategy = new ProposedMethodForSingapore();
+    //   private static Strategy strategy = new ProposedMethodForSingapore();
 //   private static Strategy strategy = new RewardOrientedStrategy();
-//   private static Strategy strategy   = new CNP();
-    private static Strategy strategy   = new CNP_area_restricted();
+// private static Strategy strategy   = new CNP();
+   private static Strategy strategy   = new CNP_area_restricted();
 
 
     static private long    _seed ;
@@ -346,7 +346,7 @@ public class Manager implements SetParam {
         leader.ourTask = null;
     }
     static void finishTask(Agent leader) {
-      OutPut.checkTeam(leader);
+//      OutPut.checkTeam(leader);
         OutPut.aggregateTaskExecutionTime(leader);
         leader.ourTask = null;
 /*        if( leader.isLonely == 1 )      finishedTasksInDepopulatedArea++;

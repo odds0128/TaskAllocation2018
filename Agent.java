@@ -40,9 +40,12 @@ public class Agent implements SetParam , Cloneable{
     List<Agent> relRanking = new ArrayList<>();
     int principle = RATIONAL;
     int executionTime = 0;
-    int start = 0;                 // その時のチーム参加要請を送った時刻
-    int isLonely = 0;              // 過疎地域のエージェントだったら1
-    int isAccompanied = 0;         // 過密地域のエージェントだったら1
+    int start = 0;                                          // その時のチーム参加要請を送った時刻
+    int isLonely = 0;                                       // 過疎地域のエージェントだったら1
+    int isAccompanied = 0;                                  // 過密地域のエージェントだったら1
+    int[]   required  = new int[RESOURCE_TYPES];            // そのリソースを要求するサブタスクが割り当てられた回数
+    int[][] allocated = new int[AGENT_NUM][RESOURCE_TYPES]; // そのエージェントからそのリソースを要求するサブタスクが割り当てられた回数
+
     // リーダーエージェントが持つパラメータ
     List<Agent> candidates;         // これからチームへの参加を要請するエージェントのリスト
     List<Agent> teamMembers;        // すでにサブタスクを送っていてメンバの選定から外すエージェントのリスト
