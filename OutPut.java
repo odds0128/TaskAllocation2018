@@ -72,18 +72,75 @@ public class OutPut implements SetParam {
 // */
     }
 
-    static void aggregateTaskExecutionTime(Agent leader){
-        if( leader.mySubTask != null ){
+    static void aggregateTaskExecutionTime(Agent leader) {
+        if (leader.mySubTask != null) {
             tempTaskExecutionTimeArray[index] += leader.calcExecutionTime(leader, leader.mySubTask);
             taskExecutionTimes++;
         }
-        for ( Agent tm: leader.teamMembers ) {
+        for (Agent tm : leader.teamMembers) {
             tempTaskExecutionTimeArray[index] += leader.calcExecutionTime(tm, leader.preAllocations.get(tm));
             taskExecutionTimes++;
         }
 //        System.out.println(tempTaskExecutionTimeArray[index] + ", " + taskExecutionTimes);
     }
 
+    static int[] leadersArray = new int[EXECUTION_TIMES];
+    static int[] agentsLessThanAveArray = new int[EXECUTION_TIMES];
+    static int[] leadersLessThanAveArray = new int[EXECUTION_TIMES];
+    static int[] agentsLessThanQuaArray = new int[EXECUTION_TIMES];
+    static int[] leadersLessThanQuaArray = new int[EXECUTION_TIMES];
+    static double[] agentsExcAveArray = new double[EXECUTION_TIMES];
+    static double[] leadersExcAveArray = new double[EXECUTION_TIMES];
+    static double[] membersExcAveArray = new double[EXECUTION_TIMES];
+
+    static void aggregateDataOnce(List<Agent> agents, int times) {
+        times --;
+        for (Agent ag : agents) {
+            agentsExcAveArray[times] += ag.excellence;
+            if (ag.e_leader > ag.e_member) {
+                leadersArray[times]++;
+                leadersExcAveArray[times] += ag.excellence;
+            } else {
+                membersExcAveArray[times] += ag.excellence;
+            }
+        }
+        agentsExcAveArray[times] /= AGENT_NUM;
+        leadersExcAveArray[times] /= leadersArray[times];
+        membersExcAveArray[times] /= (AGENT_NUM - leadersArray[times]);
+
+        // agentをexcellenceごとにソート
+        List<Agent> temp = new ArrayList<>();
+        for (Agent a : agents) {
+            temp.add(a.clone());
+        }
+        System.out.println();
+        Collections.sort(temp, new AgentExceComparator());
+
+        // 平均及び四分位点以下のexcellenceのエージェントを集計する
+        int temp2 = 0;
+        double quartile = Integer.MAX_VALUE, ave = Integer.MAX_VALUE;
+        for( Agent ag: temp ){
+            temp2++;
+            // 下から数えて4分の1に達したらその時のexcellenceが四分位点
+            if( temp2 == AGENT_NUM/4 ) quartile = ag.excellence;
+            if( temp2 == AGENT_NUM/2 ) ave      = ag.excellence;
+            if( ag.excellence <= quartile ){
+                agentsLessThanQuaArray[times]++;
+                if (ag.e_leader > ag.e_member) {
+                    leadersLessThanQuaArray[times]++;
+                }
+            }
+            if( ag.excellence <= ave ){
+                agentsLessThanAveArray[times]++;
+                if (ag.e_leader > ag.e_member) {
+                    leadersLessThanAveArray[times]++;
+                }
+            }else{
+                break;
+            }
+        }
+        temp.clear();
+    }
 
     static void indexIncrement() {
         if( taskExecutionTimes != 0 ){
@@ -165,7 +222,7 @@ public class OutPut implements SetParam {
         }
 // */
 
-//        Collections.sort(temp, new AgentComparator());
+//        Collections.sort(temp, new AgentIDcomparator());
 
 /*
         for (int i = 0; i < AGENT_NUM; i++) {
@@ -406,7 +463,156 @@ public class OutPut implements SetParam {
         }
     }
 
-    static void writeGraphInformation(List<Agent> agents, String fp) throws FileNotFoundException, IOException {
+    static void writeAgentsInformationX(Strategy st) throws FileNotFoundException, IOException {
+        Date             date = new Date();
+        SimpleDateFormat sdf1 = new SimpleDateFormat(",yyyy:MM:dd,HH:mm:ss");
+        String outputFilePath = _singleton.setPath("agentInfo", st.getClass().getName() +  " " +sdf1.format(date) + ".xlsx");
+
+        try {
+            book = new SXSSFWorkbook();
+            Font font = book.createFont();
+            font.setFontName("ＭＳ ゴシック");
+            font.setFontHeightInPoints((short) 9);
+
+            DataFormat format = book.createDataFormat();
+
+            //ヘッダ文字列用のスタイル
+            CellStyle style_header = book.createCellStyle();
+            style_header.setBorderBottom(BorderStyle.THIN);
+            OutPut.setBorder(style_header, BorderStyle.THIN);
+            style_header.setFillForegroundColor(HSSFColor.HSSFColorPredefined.LIGHT_CORNFLOWER_BLUE.getIndex());
+            style_header.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            style_header.setVerticalAlignment(VerticalAlignment.TOP);
+            style_header.setFont(font);
+
+            //文字列用のスタイル
+            CellStyle style_string = book.createCellStyle();
+            OutPut.setBorder(style_string, BorderStyle.THIN);
+            style_string.setVerticalAlignment(VerticalAlignment.TOP);
+            style_string.setFont(font);
+
+            //改行が入った文字列用のスタイル
+            CellStyle style_string_wrap = book.createCellStyle();
+            OutPut.setBorder(style_string_wrap, BorderStyle.THIN);
+            style_string_wrap.setVerticalAlignment(VerticalAlignment.TOP);
+            style_string_wrap.setWrapText(true);
+            style_string_wrap.setFont(font);
+
+            //整数用のスタイル
+            CellStyle style_int = book.createCellStyle();
+            OutPut.setBorder(style_int, BorderStyle.THIN);
+            style_int.setDataFormat(format.getFormat("###0;-###0"));
+            style_int.setVerticalAlignment(VerticalAlignment.TOP);
+            style_int.setFont(font);
+
+            //小数用のスタイル
+            CellStyle style_double = book.createCellStyle();
+            OutPut.setBorder(style_double, BorderStyle.THIN);
+            style_double.setDataFormat(format.getFormat("###0.0;-###0.0"));
+            style_double.setVerticalAlignment(VerticalAlignment.TOP);
+            style_double.setFont(font);
+
+            //円表示用のスタイル
+            CellStyle style_yen = book.createCellStyle();
+            OutPut.setBorder(style_yen, BorderStyle.THIN);
+            style_yen.setDataFormat(format.getFormat("\"\\\"###0;\"\\\"-###0"));
+            style_yen.setVerticalAlignment(VerticalAlignment.TOP);
+            style_yen.setFont(font);
+
+            //パーセント表示用のスタイル
+            CellStyle style_percent = book.createCellStyle();
+            OutPut.setBorder(style_percent, BorderStyle.THIN);
+            style_percent.setDataFormat(format.getFormat("0.0%"));
+            style_percent.setVerticalAlignment(VerticalAlignment.TOP);
+            style_percent.setFont(font);
+
+            //日時表示用のスタイル
+            CellStyle style_datetime = book.createCellStyle();
+            OutPut.setBorder(style_datetime, BorderStyle.THIN);
+            style_datetime.setDataFormat(format.getFormat("yyyy/mm/dd hh:mm:ss"));
+            style_datetime.setVerticalAlignment(VerticalAlignment.TOP);
+            style_datetime.setFont(font);
+
+            Row row;
+            int rowNumber = 0;
+            int colNumber = 0;
+
+            Sheet sheet;
+
+            sheet = book.createSheet();
+            if (sheet instanceof SXSSFSheet) {
+                ((SXSSFSheet) sheet).trackAllColumnsForAutoSizing();
+            }
+            //シート名称の設定
+            book.setSheetName(0, st.getClass().getName());
+
+            row = sheet.createRow(rowNumber);
+            _singleton.writeCell(row, colNumber++, style_header, "Trials");
+            _singleton.writeCell(row, colNumber++, style_header, "Leader Num");
+            _singleton.writeCell(row, colNumber++, style_header, "Agents  less than ave");
+            _singleton.writeCell(row, colNumber++, style_header, "Leaders less than ave");
+            _singleton.writeCell(row, colNumber++, style_header, "Agents  less than quartile");
+            _singleton.writeCell(row, colNumber++, style_header, "Leaders less than quartile");
+            _singleton.writeCell(row, colNumber++, style_header, "Agents  excellence ave");
+            _singleton.writeCell(row, colNumber++, style_header, "Leaders excellence ave");
+            _singleton.writeCell(row, colNumber++, style_header, "Members excellence ave");
+
+            //ウィンドウ枠の固定
+            sheet.createFreezePane(1, 1);
+
+            //ヘッダ行にオートフィルタの設定
+            sheet.setAutoFilter(new CellRangeAddress(0, 0, 0, colNumber));
+
+            //列幅の自動調整
+            for (int j = 0; j <= colNumber; j++) {
+                sheet.autoSizeColumn(j, true);
+            }
+
+            // 結果を書き込んでいく
+            for (int wt = 0; wt < EXECUTION_TIMES; wt++) {
+                rowNumber++;
+                colNumber = 0;
+                row = sheet.createRow(rowNumber);
+
+                _singleton.writeCell(row, colNumber++, style_int,    (wt + 1));
+                _singleton.writeCell(row, colNumber++, style_int,    leadersArray[wt]);
+                _singleton.writeCell(row, colNumber++, style_int,    agentsLessThanAveArray[wt] );
+                _singleton.writeCell(row, colNumber++, style_int,    leadersLessThanAveArray[wt]);
+                _singleton.writeCell(row, colNumber++, style_int,    agentsLessThanQuaArray[wt] );
+                _singleton.writeCell(row, colNumber++, style_int,    leadersLessThanQuaArray[wt]);
+                _singleton.writeCell(row, colNumber++, style_double, agentsExcAveArray[wt] );
+                _singleton.writeCell(row, colNumber++, style_double, leadersExcAveArray[wt]);
+                _singleton.writeCell(row, colNumber++, style_double, membersExcAveArray[wt]);
+
+                //列幅の自動調整
+                for (int k = 0; k <= colNumber; k++) {
+                    sheet.autoSizeColumn(k, true);
+                }
+            }
+            //ファイル出力
+            fout = new FileOutputStream(outputFilePath);
+            book.write(fout);
+        } finally {
+            if (fout != null) {
+                try {
+                    fout.close();
+                } catch (IOException e) {
+                }
+            }
+            if (book != null) {
+                try {
+                    /*
+                        SXSSFWorkbookはメモリ空間を節約する代わりにテンポラリファイルを大量に生成するため、
+                        不要になった段階でdisposeしてテンポラリファイルを削除する必要がある
+                     */
+                    ((SXSSFWorkbook) book).dispose();
+                } catch (Exception e) {
+                }
+            }
+        }
+    }
+
+    static void writeGraphInformationX(List<Agent> agents, String fp) throws FileNotFoundException, IOException {
         String currentPath = System.getProperty("user.dir");
         Date             date = new Date();
         SimpleDateFormat sdf1 = new SimpleDateFormat(",yyyy:MM:dd,HH:mm:ss");
@@ -579,17 +785,13 @@ public class OutPut implements SetParam {
                         _singleton.writeCell(row, colNumber++, style_int,agent.isLonely);
                         _singleton.writeCell(row, colNumber++, style_int,agent.isAccompanied);
 // */
-                        int temp, count = 0, sum = 0;
                         for (int j = 0; j < RESOURCE_TYPES; j++){
-                            temp = agent.res[j];
-                            if( temp > 0 ) count++;
-                            sum += temp;
                             _singleton.writeCell(row, colNumber++, style_int, agent.res[j]);
                             _singleton.writeCell(row, colNumber++, style_int, agent.required[j]);
                             if( agent.relRanking.size() > 0 ) _singleton.writeCell(row, colNumber++, style_int, agent.allocated[agent.relRanking.get(0).id][j]);
                             else                              _singleton.writeCell(row, colNumber++, style_int, -1);
                         }
-                        _singleton.writeCell(row, colNumber++, style_double, (double) sum/count);
+                        _singleton.writeCell(row, colNumber++, style_double, agent.excellence);
 
                         _singleton.writeCell(row, colNumber++, style_int, agent.didTasksAsMember);
 

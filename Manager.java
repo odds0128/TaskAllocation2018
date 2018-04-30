@@ -9,10 +9,10 @@ import java.io.IOException;
 import java.util.*;
 
 public class Manager implements SetParam {
-    //   private static Strategy strategy = new ProposedMethodForSingapore();
+       private static Strategy strategy = new ProposedMethodForSingapore();
 //   private static Strategy strategy = new RewardOrientedStrategy();
 // private static Strategy strategy   = new CNP();
-   private static Strategy strategy   = new CNP_area_restricted();
+//   private static Strategy strategy   = new CNP_area_restricted();
 
 
     static private long    _seed ;
@@ -68,7 +68,7 @@ public class Manager implements SetParam {
 // */
                     addNewTasksToQueue();
                     actFreeLancer();
-                    if (turn % writeResultsSpan == 0) {
+                    if (turn % writeResultsSpan == 0 && CHECK_RESULTS) {
                         OutPut.aggregateAgentData(agents);
                     }
 
@@ -83,7 +83,7 @@ public class Manager implements SetParam {
 
                     actLeadersAndMembers();
 
-                    if (turn % writeResultsSpan == 0) {
+                    if (turn % writeResultsSpan == 0 && CHECK_RESULTS) {
                         int rmNum = Agent.countReciprocalMember(agents);
                         OutPut.aggregateData(finishedTasks, disposedTasks, overflowTasks, rmNum, finishedTasksInDepopulatedArea, finishedTasksInPopulatedArea);
                         OutPut.indexIncrement();
@@ -92,15 +92,17 @@ public class Manager implements SetParam {
                 // ここが1tickの最後の部分．次のtickまでにやることあったらここで．
                 }
                 // ↑ 一回の実験のカッコ．以下は実験の合間で作業する部分
+                if( CHECK_AGENTS )OutPut.aggregateDataOnce(agents, num);
                 if (num == EXECUTION_TIMES) break;
                 clearAll();
             }
             // ↑ 全実験の終了のカッコ．以下は後処理
-            OutPut.writeResults(strategy);
+            if( CHECK_RESULTS ) OutPut.writeResults(strategy);
+            if( CHECK_AGENTS )  OutPut.writeAgentsInformationX(strategy);
 //            OutPut.writeDelays(delays);
 //            OutPut.writeReliabilities(agents, strategy);
 //            OutPut.writeDelaysAndRels(delays, agents, strategy);
-            if( CHECK_RELATIONSHIPS ) OutPut.writeGraphInformation(agents, "graph" + strategy.getClass().getName());
+            if( CHECK_RELATIONSHIPS ) OutPut.writeGraphInformationX(agents, "graph" + strategy.getClass().getName());
 // */
             br.close();
         } catch (FileNotFoundException e) {
@@ -347,7 +349,7 @@ public class Manager implements SetParam {
     }
     static void finishTask(Agent leader) {
 //      OutPut.checkTeam(leader);
-        OutPut.aggregateTaskExecutionTime(leader);
+        if( CHECK_RESULTS ) OutPut.aggregateTaskExecutionTime(leader);
         leader.ourTask = null;
 /*        if( leader.isLonely == 1 )      finishedTasksInDepopulatedArea++;
         if( leader.isAccompanied == 1 ) finishedTasksInPopulatedArea++;

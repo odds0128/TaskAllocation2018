@@ -24,8 +24,9 @@ public class Agent implements SetParam , Cloneable{
     int role = JONE_DOE;
     int phase = SELECT_ROLE;
     Strategy strategy;
-    int resSize = 0;
+    int resSum = 0, resCount = 0;
     int res[] = new int[RESOURCE_TYPES];
+    double excellence;
     int didTasksAsLeader = 0;
     int didTasksAsMember = 0;
     int[] workWithAsL = new int[AGENT_NUM];
@@ -111,13 +112,15 @@ public class Agent implements SetParam , Cloneable{
             }
 */
         } else {
-            while (resSize == 0) {
+            while (resSum == 0) {
                 for (int i = 0; i < RESOURCE_TYPES; i++) {
                     int rand = _randSeed.nextInt(MAX_AGENT_RESOURCE_SIZE - MIN_AGENT_RESOURCE_SIZE + 1) + MIN_AGENT_RESOURCE_SIZE;
                     res[i]   =  rand;
-                    resSize +=  rand;
+                    if( rand > 0 ) resCount++;
+                    resSum += rand;
                 }
             }
+            excellence = (double) resSum/resCount;
         }
     }
 
