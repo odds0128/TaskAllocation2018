@@ -3,6 +3,8 @@
  * @version 2.0
  */
 
+import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
+
 import java.util.*;
 
 public class Agent implements SetParam , Cloneable{
@@ -17,6 +19,7 @@ public class Agent implements SetParam , Cloneable{
     static int _coalition_check_end_time = SNAPSHOT_TIME;
     static List<Integer> _lonelyAgents = new ArrayList<>();
     static List<Integer> _accompaniedAgents = new ArrayList<>();
+    static double ε = INITIAL_ε;
 
     // リーダーもメンバも持つパラメータ
     int id;
@@ -444,6 +447,16 @@ public class Agent implements SetParam , Cloneable{
         _randSeed = new Random(_seed);
     }
 
+    static void renewEpsilonLenear(double difference, double floor){
+        ε -= difference;
+        if( ε < floor ) ε = floor;
+    }
+
+    static void renewEpsilonExponential(double rate, double floor){
+        ε =  (ε - floor) * rate;
+        ε += floor;
+    }
+
     static void clearA() {
         _id = 0;
         _leader_num = 0;
@@ -453,6 +466,7 @@ public class Agent implements SetParam , Cloneable{
         _coalition_check_end_time = SNAPSHOT_TIME;
         _lonelyAgents.clear();
         _accompaniedAgents.clear();
+        ε = INITIAL_ε;
         for (int i = 0; i < RESOURCE_TYPES; i++) resSizeArray[i] = 0;
     }
 
