@@ -43,7 +43,7 @@ interface SetParam {
     double INITIAL_VALUE_OF_DSL =  0.5;
     double INITIAL_VALUE_OF_DSM =  0.5;
     double α = 0.05;
-    double ε = 0.01;
+    double ε = 0.05;
     double γ_r = INITIAL_VALUE_OF_DEC/(double)MAX_TURN_NUM;
     double THRESHOLD_FOR_DEPENDABILITY = 0.5;
     double THRESHOLD_FOR_RECIPROCITY   = 0.5;
