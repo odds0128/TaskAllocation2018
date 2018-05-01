@@ -9,9 +9,11 @@ import java.io.IOException;
 import java.util.*;
 
 public class Manager implements SetParam {
-       private static Strategy strategy = new ProposedMethodForSingapore();
+//       private static Strategy strategy = new ProposedMethodForSingapore();
 //   private static Strategy strategy = new RewardOrientedStrategy();
-// private static Strategy strategy   = new CNP();
+//    private static Strategy strategy = new ROwithRationalOnly();
+    private static Strategy strategy = new ROwithoutRoleRenewal();
+    // private static Strategy strategy   = new CNP();
 //   private static Strategy strategy   = new CNP_area_restricted();
 
 
@@ -173,12 +175,12 @@ public class Manager implements SetParam {
         Agent.makeLonelyORAccompaniedAgentList(tempList);
         return tempList;
     }
-    static Agent getAgentRandomly(Agent self, List<Agent> exceptions) {
-        int random = _randSeed.nextInt(agents.size());
-        Agent candidate = agents.get(random);
+    static Agent getAgentRandomly(Agent self, List<Agent> exceptions, List<Agent> targets) {
+        int random = _randSeed.nextInt(targets.size());
+        Agent candidate = targets.get(random);
         while (candidate.equals(self) || self.inTheList(candidate, exceptions) > 0) {
-            random = _randSeed.nextInt(agents.size());
-            candidate = agents.get(random);
+            random = _randSeed.nextInt(targets.size());
+            candidate = targets.get(random);
         }
         return candidate;
     }
@@ -226,24 +228,8 @@ public class Manager implements SetParam {
         }
 
         // 信頼エージェントの初期化
-        // ランダム手法の場合
-        if (strategy.getClass().getName() == "RandomStrategy") {
-            Agent agent;
-            for (int i = 0; i < AGENT_NUM; i++) {
-                agent = agents.get(i);
-                Agent candidate;
-                // ランダムで信頼エージェントとする
-                for (int j = 0; j < MAX_RELIABLE_AGENTS; ) {
-                    candidate = getAgentRandomly(agent, agent.relAgents);
-                    if (inTheList(candidate, agent.relAgents) < 0) {
-                        agent.relAgents.add(candidate);
-                        j++;
-                    }
-                }
-            }
-        }
         // 学習なし手法で距離依存の場合(学習なしでは信頼度は使わないが便宜上定義する)
-        else if (strategy.getClass().getName().startsWith("CNP_") || strategy.getClass().getName() == "ComparativeMethod1") {
+        if (strategy.getClass().getName().endsWith("_area_restricted") ) {
             Agent agent;
             for (int i = 0; i < AGENT_NUM; ) {
                 agent = agents.get(i);
@@ -256,9 +242,9 @@ public class Manager implements SetParam {
                         tempList.add(agents.get(j));
                     }
                 }
-                // 近い方から100体ほどのエージェントを信頼エージェントとする
-                if( tempList.size() >= 100 ){
-                    agent.relAgents.addAll(tempList);
+                // 近い方から100体ほどのエージェントを信頼ランキングとする
+                if( tempList.size() >= AREA_LIMIT ){
+                    agent.relRanking.addAll(tempList);
                     i++;
                     dist = 0;
                     tempList.clear();

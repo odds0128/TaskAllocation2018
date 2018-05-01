@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * RewardOrientedStrategy クラス
+ * ROwithRationalOnly クラス
  * 提案手法と違い，通信や応答時間を考えずに報酬の大きさだけを考慮した手法
  * 1. j(自分)がメンバでi(相手)がリーダーの場合，
  * 　a. 成功(サブタスク割り当て)時　　　　　　　　δ = そのサブタスクの要求リソース / 定数
@@ -16,12 +16,12 @@ import java.util.Map;
  * 役割更新機構あり
  */
 
-public class RewardOrientedStrategy implements Strategy, SetParam {
+public class ROwithRationalOnly implements Strategy, SetParam {
     static final double γ = γ_r;
-    static final int    denominator = 10;
+    static final int denominator = 10;
     Map<Agent, AllocatedSubTask>[] teamHistory = new HashMap[AGENT_NUM];
 
-    RewardOrientedStrategy () {
+    ROwithRationalOnly() {
         for (int i = 0; i < AGENT_NUM; i++) {
             teamHistory[i] = new HashMap<>();
         }
@@ -30,7 +30,6 @@ public class RewardOrientedStrategy implements Strategy, SetParam {
 
     // */
     public void actAsLeader(Agent agent) {
-        setPrinciple(agent);
         if (agent.phase == PROPOSITION) proposeAsL(agent);
         else if (agent.phase == REPORT) reportAsL(agent);
         else if (agent.phase == EXECUTION) execute(agent);
@@ -42,7 +41,6 @@ public class RewardOrientedStrategy implements Strategy, SetParam {
             agent.inactivate(0);
             return;
         }
-        setPrinciple(agent);
         if (agent.phase == REPLY) replyAsM(agent);
         else if (agent.phase == RECEPTION) receiveAsM(agent);
         else if (agent.phase == EXECUTION) execute(agent);
@@ -50,7 +48,6 @@ public class RewardOrientedStrategy implements Strategy, SetParam {
     }
 
     private void proposeAsL(Agent leader) {
-
         leader.ourTask = Manager.getTask();
         if (leader.ourTask == null) {
             leader.inactivate(0);
@@ -59,7 +56,7 @@ public class RewardOrientedStrategy implements Strategy, SetParam {
         leader.restSubTask = leader.ourTask.subTaskNum;                       // 残りサブタスク数を設定
         leader.selectSubTask();
         leader.candidates = selectMembers(leader, leader.ourTask.subTasks);   // メッセージ送信
-        if( leader.candidates == null ){
+        if (leader.candidates == null) {
             leader.candidates = new ArrayList<>();
             leader.inactivate(0);
             return;
@@ -102,7 +99,7 @@ public class RewardOrientedStrategy implements Strategy, SetParam {
             if (reply.getReply() != ACCEPT) {
                 from = reply.getFrom();
                 int i = leader.inTheList(from, leader.candidates);
-                if( i == -1 ) System.out.println("ファーーーーーーーーー");
+                if (i == -1) System.out.println("ファーーーーーーーーー");
                 assert i >= 0 : "alert: Leader got reply from a ghost." + i;
                 leader.candidates.set(i, null);
                 leader.relAgents = renewRel(leader, from, 0);
@@ -248,7 +245,7 @@ public class RewardOrientedStrategy implements Strategy, SetParam {
             } else {
                 agent.sendMessage(agent, agent.leader, DONE, agent.start);
                 agent.required[agent.mySubTask.resType]++;
-                agent.relAgents = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / (double)denominator);
+                agent.relAgents = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / (double) denominator);
                 if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN)
                     agent.workWithAsM[agent.leader.id]++;
             }
@@ -307,7 +304,7 @@ public class RewardOrientedStrategy implements Strategy, SetParam {
      * メンバがどのリーダーの要請を受けるかを判断する
      * 信頼エージェントのリストにあるリーダーエージェントからの要請を受ける
      */
-    // 互恵主義と合理主義のどちらかによって行動を変える
+    // 合理主義のみ
     public Agent selectLeader(Agent member, List<Message> messages) {
         int size = messages.size();
         Message message;
@@ -342,13 +339,7 @@ public class RewardOrientedStrategy implements Strategy, SetParam {
                     member.sendMessage(member, from, REPLY, REJECT);
                 }
             }
-            if (member.principle == RATIONAL) {
-                myLeader = temp;
-            } else {
-                if (member.inTheList(temp, member.relAgents) > -1) {
-                    myLeader = temp;
-                } else member.sendMessage(member, temp, REPLY, REJECT);
-            }
+            myLeader = temp;
         }
         return myLeader;
     }
@@ -445,39 +436,6 @@ public class RewardOrientedStrategy implements Strategy, SetParam {
         return tmp;
     }
 
-    private void setPrinciple(Agent agent) {
-        if (agent.role == MEMBER) {
-            if (agent.relAgents.size() > 0 && agent.e_member > THRESHOLD_FOR_RECIPROCITY) {
-                if (agent.principle == RATIONAL) {
-                    Agent._recipro_num++;
-                    Agent._rational_num--;
-                }
-                agent.principle = RECIPROCAL;
-            } else {
-                if (agent.principle == RECIPROCAL) {
-                    Agent._recipro_num--;
-                    Agent._rational_num++;
-                }
-                agent.principle = RATIONAL;
-            }
-        } else if (agent.role == LEADER) {
-            if (agent.relAgents.size() > 0 && agent.e_leader > THRESHOLD_FOR_RECIPROCITY) {
-                if (agent.principle == RATIONAL) {
-                    Agent._recipro_num++;
-                    Agent._rational_num--;
-                }
-                agent.principle = RECIPROCAL;
-            } else {
-                if (agent.principle == RECIPROCAL) {
-                    Agent._recipro_num--;
-                    Agent._rational_num++;
-                }
-                agent.principle = RATIONAL;
-            }
-        }
-
-    }
-
     public void checkMessages(Agent ag) {
         int size = ag.messages.size();
         Message m;
@@ -492,7 +450,7 @@ public class RewardOrientedStrategy implements Strategy, SetParam {
                 int rt = Manager.getTicks() - as.getAllocatedTime();
                 int reward = as.getRequiredResources();
                 //                System.out.println(rt);
-                ag.relAgents = renewRel(ag, m.getFrom(), (double) reward / (double)denominator);
+                ag.relAgents = renewRel(ag, m.getFrom(), (double) reward / (double) denominator);
             } else {
                 ag.messages.add(m); // 違うメッセージだったら戻す
             }

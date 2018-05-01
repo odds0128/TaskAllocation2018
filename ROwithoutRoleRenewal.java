@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * RewardOrientedStrategy クラス
+ * ROwithoutRoleRenewal クラス
  * 提案手法と違い，通信や応答時間を考えずに報酬の大きさだけを考慮した手法
  * 1. j(自分)がメンバでi(相手)がリーダーの場合，
  * 　a. 成功(サブタスク割り当て)時　　　　　　　　δ = そのサブタスクの要求リソース / 定数
@@ -16,12 +16,12 @@ import java.util.Map;
  * 役割更新機構あり
  */
 
-public class RewardOrientedStrategy implements Strategy, SetParam {
+public class ROwithoutRoleRenewal implements Strategy, SetParam {
     static final double γ = γ_r;
     static final int    denominator = 10;
     Map<Agent, AllocatedSubTask>[] teamHistory = new HashMap[AGENT_NUM];
 
-    RewardOrientedStrategy () {
+    ROwithoutRoleRenewal () {
         for (int i = 0; i < AGENT_NUM; i++) {
             teamHistory[i] = new HashMap<>();
         }
@@ -38,10 +38,6 @@ public class RewardOrientedStrategy implements Strategy, SetParam {
     }
 
     public void actAsMember(Agent agent) {
-        if (Manager.getTicks() - agent.validatedTicks > ROLE_RENEWAL_TICKS) {
-            agent.inactivate(0);
-            return;
-        }
         setPrinciple(agent);
         if (agent.phase == REPLY) replyAsM(agent);
         else if (agent.phase == RECEPTION) receiveAsM(agent);

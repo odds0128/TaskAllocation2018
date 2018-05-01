@@ -32,7 +32,7 @@ public class CNP_area_restricted implements SetParam, Strategy {
         le.ourTask = Manager.getTask();
         if (le.ourTask == null) return;
         le.selectSubTask();
-        for (Agent ag : le.relAgents ) {
+        for (Agent ag : le.relRanking ) {
             TransmissionPath.sendMessage(new Message(le, ag, PUBLICITY, le.ourTask, null));
         }
 //        System.out.println("ID: " + le.id + " published " + le.ourTask);
@@ -59,7 +59,7 @@ public class CNP_area_restricted implements SetParam, Strategy {
     // organizeメソッド ... 入札者の中から落札者を選びチームを編成する
     private void organize(Agent le) {
         // 入札・非入札メッセージが全員から返って来たか確認する
-        if (le.messages.size() < le.relAgents.size()) return;
+        if (le.messages.size() < le.relRanking.size()) return;
 
         // 全員分のメッセージが確認できたら割り当てを考える
         // 割り当ては，実行時間が短い方を優先する

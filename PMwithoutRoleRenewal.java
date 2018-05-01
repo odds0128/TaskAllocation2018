@@ -3,32 +3,31 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+
 /**
- * RewardOrientedStrategy クラス
- * 提案手法と違い，通信や応答時間を考えずに報酬の大きさだけを考慮した手法
+ * PMwithoutRoleRenewal クラス
+ * サブタスクの要求リソースに量を設けたことにより，"報酬"を適切に考える必要が生じた
+ * そこで報酬はサブタスクの要求リソースに依存するものとし，信頼度更新式 e^i_j = (1-α)e^i_j + δ * α を
  * 1. j(自分)がメンバでi(相手)がリーダーの場合，
- * 　a. 成功(サブタスク割り当て)時　　　　　　　　δ = そのサブタスクの要求リソース / 定数
+ * 　a. 成功(サブタスク割り当て)時　　　　　　　　δ = そのサブタスクの要求リソース / 実行時間
  * 　b. 失敗(サブタスクみ割り当て)時　　　　　　　δ = 0
  * 2. j(自分)がリーダーでi(相手)がメンバの場合，
- * 　a. 成功(チーム編成成功)後，終了連絡受理時　　δ = そのサブタスクの要求リソース / 定数
+ * 　a. 成功(チーム編成成功)後，終了連絡受理時　　δ = そのサブタスクの要求リソース / 応答時間(= メッセージ往復時間 + サブタスク実行時間)
  * 　b. 失敗(チーム参加要請拒否受理)時，　　　　　δ = 0
  * によって更新する．
- * 役割更新機構あり
+ * 役割更新機構なし
  */
 
-public class RewardOrientedStrategy implements Strategy, SetParam {
+public class PMwithoutRoleRenewal implements Strategy, SetParam {
     static final double γ = γ_r;
-    static final int    denominator = 10;
     Map<Agent, AllocatedSubTask>[] teamHistory = new HashMap[AGENT_NUM];
 
-    RewardOrientedStrategy () {
+    PMwithoutRoleRenewal() {
         for (int i = 0; i < AGENT_NUM; i++) {
             teamHistory[i] = new HashMap<>();
         }
     }
 
-
-    // */
     public void actAsLeader(Agent agent) {
         setPrinciple(agent);
         if (agent.phase == PROPOSITION) proposeAsL(agent);
@@ -38,10 +37,6 @@ public class RewardOrientedStrategy implements Strategy, SetParam {
     }
 
     public void actAsMember(Agent agent) {
-        if (Manager.getTicks() - agent.validatedTicks > ROLE_RENEWAL_TICKS) {
-            agent.inactivate(0);
-            return;
-        }
         setPrinciple(agent);
         if (agent.phase == REPLY) replyAsM(agent);
         else if (agent.phase == RECEPTION) receiveAsM(agent);
@@ -50,7 +45,6 @@ public class RewardOrientedStrategy implements Strategy, SetParam {
     }
 
     private void proposeAsL(Agent leader) {
-
         leader.ourTask = Manager.getTask();
         if (leader.ourTask == null) {
             leader.inactivate(0);
@@ -59,7 +53,7 @@ public class RewardOrientedStrategy implements Strategy, SetParam {
         leader.restSubTask = leader.ourTask.subTaskNum;                       // 残りサブタスク数を設定
         leader.selectSubTask();
         leader.candidates = selectMembers(leader, leader.ourTask.subTasks);   // メッセージ送信
-        if( leader.candidates == null ){
+        if (leader.candidates == null) {
             leader.candidates = new ArrayList<>();
             leader.inactivate(0);
             return;
@@ -102,8 +96,7 @@ public class RewardOrientedStrategy implements Strategy, SetParam {
             if (reply.getReply() != ACCEPT) {
                 from = reply.getFrom();
                 int i = leader.inTheList(from, leader.candidates);
-                if( i == -1 ) System.out.println("ファーーーーーーーーー");
-                assert i >= 0 : "alert: Leader got reply from a ghost." + i;
+                assert i >= 0 : "alert: Leader got reply from a ghost.";
                 leader.candidates.set(i, null);
                 leader.relAgents = renewRel(leader, from, 0);
             }
@@ -224,7 +217,7 @@ public class RewardOrientedStrategy implements Strategy, SetParam {
         member.totalResponseTicks += rt;
         member.meanRT = (double)member.totalResponseTicks/(double)member.totalOffers;
 // */
-        // サブタスクがもらえたら実行フェイズへ移る.
+        // サブタスクがもらえたなら信頼度をプラスに更新し, 実行フェイズへ移る.
         if (member.mySubTask != null) {
             member.start = Manager.getTicks();
             member.allocated[member.leader.id][member.mySubTask.resType]++;
@@ -248,7 +241,7 @@ public class RewardOrientedStrategy implements Strategy, SetParam {
             } else {
                 agent.sendMessage(agent, agent.leader, DONE, agent.start);
                 agent.required[agent.mySubTask.resType]++;
-                agent.relAgents = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / (double)denominator);
+                agent.relAgents = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / agent.calcExecutionTime(agent, agent.mySubTask));
                 if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN)
                     agent.workWithAsM[agent.leader.id]++;
             }
@@ -282,11 +275,12 @@ public class RewardOrientedStrategy implements Strategy, SetParam {
                 int j = 0;
                 while (true) {
                     // エージェント1から全走査
-                    candidate = leader.relRanking.get(j++);
                     if (j >= AGENT_NUM - 1) {
                         System.out.println("It can't be executed.");
                         return null;
                     }
+                    candidate = leader.relRanking.get(j++);
+
                     // そいつがまだ候補に入っていなくて，かつ最近サブタスクを割り振っていなくて，
                     // さらにそのサブタスクをこなせそうなら
                     if (leader.inTheList(candidate, t) < 0 &&
@@ -492,7 +486,7 @@ public class RewardOrientedStrategy implements Strategy, SetParam {
                 int rt = Manager.getTicks() - as.getAllocatedTime();
                 int reward = as.getRequiredResources();
                 //                System.out.println(rt);
-                ag.relAgents = renewRel(ag, m.getFrom(), (double) reward / (double)denominator);
+                ag.relAgents = renewRel(ag, m.getFrom(), (double) reward / rt);
             } else {
                 ag.messages.add(m); // 違うメッセージだったら戻す
             }
@@ -544,3 +538,4 @@ public class RewardOrientedStrategy implements Strategy, SetParam {
         }
     }
 }
+
