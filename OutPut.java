@@ -4,6 +4,8 @@ import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.xmlbeans.impl.xb.xsdschema.All;
+import org.omg.CORBA.SystemException;
+
 import java.text.SimpleDateFormat;
 
 import java.io.*;
@@ -261,15 +263,14 @@ public class OutPut implements SetParam {
     }
 
     static void writeResults(Strategy st) {
+        String outputFilePath = _singleton.setPath("results", st.getClass().getName() , "csv" );
+
         FileWriter fw;
         BufferedWriter bw;
         PrintWriter pw;
         String fileName = st.getClass().getName();
         try {
-            String currentPath = System.getProperty("user.dir");
-            Date             date = new Date();
-            SimpleDateFormat sdf1 = new SimpleDateFormat(",yyyy:MM:dd,HH:mm:ss");
-            fw = new FileWriter(currentPath + "/out/results/" + fileName + ", λ=" + String.format("%.2f", (double) ADDITIONAL_TASK_NUM / TASK_ADDITION_SPAN) + sdf1.format(date) +  ".csv", false);
+            fw = new FileWriter(outputFilePath, false);
             bw = new BufferedWriter(fw);
             pw = new PrintWriter(bw);
 
@@ -317,9 +318,7 @@ public class OutPut implements SetParam {
     }
 
     static void writeResultsX(Strategy st) throws FileNotFoundException, IOException {
-        Date             date = new Date();
-        SimpleDateFormat sdf1 = new SimpleDateFormat(",yyyy:MM:dd,HH:mm:ss");
-        String outputFilePath = _singleton.setPath("results", st.getClass().getName() +  " " +sdf1.format(date) + ".xlsx");
+        String outputFilePath = _singleton.setPath("results", st.getClass().getName()  , "xlsx");
 
         try {
             book = new SXSSFWorkbook();
@@ -464,10 +463,7 @@ public class OutPut implements SetParam {
     }
 
     static void writeAgentsInformationX(Strategy st) throws FileNotFoundException, IOException {
-        Date             date = new Date();
-        SimpleDateFormat sdf1 = new SimpleDateFormat(",yyyy:MM:dd,HH:mm:ss");
-        String outputFilePath = _singleton.setPath("agentInfo", st.getClass().getName() +  " " +sdf1.format(date) + ".xlsx");
-
+        String outputFilePath = _singleton.setPath("agentInfo", st.getClass().getName() , "xlsx");
         try {
             book = new SXSSFWorkbook();
             Font font = book.createFont();
@@ -612,11 +608,8 @@ public class OutPut implements SetParam {
         }
     }
 
-    static void writeGraphInformationX(List<Agent> agents, String fp) throws FileNotFoundException, IOException {
-        String currentPath = System.getProperty("user.dir");
-        Date             date = new Date();
-        SimpleDateFormat sdf1 = new SimpleDateFormat(",yyyy:MM:dd,HH:mm:ss");
-        String outputFilePath = currentPath + "/out/relationships/" + fp + " " + sdf1.format(date) + ".xlsx";
+    static void writeGraphInformationX(List<Agent> agents, Strategy st) throws FileNotFoundException, IOException {
+        String outputFilePath = _singleton.setPath("relationships", st.getClass().getName() , "xlsx");
         Edge edge = new Edge();
         edge.makeEdge(agents);
         try {
@@ -1114,12 +1107,12 @@ public class OutPut implements SetParam {
             "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"
     };
 
-    private String setPath( String dir_name, String file_name ){
+    private String setPath( String dir_name, String file_name, String extension ){
         String currentPath = System.getProperty("user.dir");
         Date             date = new Date();
         SimpleDateFormat sdf1 = new SimpleDateFormat(",yyyy:MM:dd,HH:mm:ss");
-        String outputFilePath = currentPath + "/out/" + dir_name + "/" + file_name + ",λ=" + String.format("%.2f", (double) ADDITIONAL_TASK_NUM / TASK_ADDITION_SPAN) + sdf1.format(date) + ".xlsx";
-        return outputFilePath;
+        System.out.println("Writing on " + dir_name + "/" + file_name + ",λ=" + String.format("%.2f", (double) ADDITIONAL_TASK_NUM / TASK_ADDITION_SPAN) + sdf1.format(date) + "." + extension);
+        return currentPath + "/out/" + dir_name + "/" + file_name + ",λ=" + String.format("%.2f", (double) ADDITIONAL_TASK_NUM / TASK_ADDITION_SPAN) + sdf1.format(date) + "." + extension;
     }
 
     private void prepareExcelSheet(  ){

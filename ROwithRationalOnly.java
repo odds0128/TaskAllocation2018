@@ -274,7 +274,7 @@ public class ROwithRationalOnly implements Strategy, SetParam {
         for (int i = 0; i / RESEND_TIMES < subtasks.size(); i++) {
             subtask = subtasks.get(i / RESEND_TIMES);
             if (leader.epsilonGreedy()) {
-                candidate = Manager.getAgentRandomly(leader, t, leader.relRanking);
+                candidate = Manager.getAgentRandomly(leader, t, Manager.getAgents());
             } else {
                 int j = 0;
                 while (true) {

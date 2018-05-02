@@ -9,10 +9,10 @@ import java.io.IOException;
 import java.util.*;
 
 public class Manager implements SetParam {
-//       private static Strategy strategy = new ProposedMethodForSingapore();
+       private static Strategy strategy = new ProposedMethodForSingapore();
 //   private static Strategy strategy = new RewardOrientedStrategy();
 //    private static Strategy strategy = new ROwithRationalOnly();
-    private static Strategy strategy = new ROwithoutRoleRenewal();
+//    private static Strategy strategy = new ROwithoutRoleRenewal();
     // private static Strategy strategy   = new CNP();
 //   private static Strategy strategy   = new CNP_area_restricted();
 
@@ -65,7 +65,7 @@ public class Manager implements SetParam {
                 // εの下限と差分と蒸発率
                 double floor      = 0.05;
                 double difference = (INITIAL_ε - floor)/(MAX_TURN_NUM * 0.9);
-                double rate       = 0.99996;   // rateはマジでちゃんと計算して気をつけて思ったより早く収束するから
+                double rate       = 0.9995;   // rateはマジでちゃんと計算して気をつけて思ったより早く収束するから
 
                 // ターンの進行
                 for (turn = 1; turn <= MAX_TURN_NUM; turn++) {
@@ -118,7 +118,7 @@ public class Manager implements SetParam {
 //            OutPut.writeDelays(delays);
 //            OutPut.writeReliabilities(agents, strategy);
 //            OutPut.writeDelaysAndRels(delays, agents, strategy);
-            if( CHECK_RELATIONSHIPS ) OutPut.writeGraphInformationX(agents, "graph" + strategy.getClass().getName());
+            if( CHECK_RELATIONSHIPS ) OutPut.writeGraphInformationX(agents, strategy);
 // */
             br.close();
         } catch (FileNotFoundException e) {

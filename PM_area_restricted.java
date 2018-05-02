@@ -279,7 +279,7 @@ public class PM_area_restricted implements Strategy, SetParam {
                 int j = 0;
                 while (true) {
                     // エージェント1から全走査
-                    if ( j >= AGENT_NUM - 1 ) {
+                    if ( j >= leader.relRanking.size() - 1 ) {
                         System.out.println("It can't be executed.");
                         return null;
                     }
@@ -389,7 +389,7 @@ public class PM_area_restricted implements Strategy, SetParam {
         // 下がった場合は下のやつと比較して入れ替えていく
         else {
             int index = agent.inTheList(target, agent.relRanking) + 1;    // targetの現在順位の下を持ってくる
-            while (index < AGENT_NUM - 1) {
+            while (index < agent.relRanking.size() - 1) {
                 // 順位が下のやつよりも信頼度が低くなったなら
                 if (agent.reliabilities[agent.relRanking.get(index).id] > agent.reliabilities[target.id]) {
                     Agent tmp = agent.relRanking.get(index);
