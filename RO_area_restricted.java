@@ -61,7 +61,6 @@ public class RO_area_restricted implements Strategy, SetParam {
             leader.inactivate(0);
             return;
         }
-        leader.start = Manager.getTicks();
         leader.nextPhase();  // 次のフェイズへ
     }
 
@@ -242,7 +241,7 @@ public class RO_area_restricted implements Strategy, SetParam {
                 if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN)
                     for (Agent ag : agent.teamMembers) agent.workWithAsL[ag.id]++;
             } else {
-                agent.sendMessage(agent, agent.leader, DONE, agent.start);
+                agent.sendMessage(agent, agent.leader, DONE, 0);
                 agent.required[agent.mySubTask.resType]++;
                 agent.relAgents = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / (double)denominator);
                 if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN)
@@ -273,17 +272,23 @@ public class RO_area_restricted implements Strategy, SetParam {
         for (int i = 0; i / RESEND_TIMES < subtasks.size(); i++) {
             subtask = subtasks.get(i / RESEND_TIMES);
             if (leader.epsilonGreedy()) {
-                candidate = Manager.getAgentRandomly(leader, t, leader.relRanking);
+                candidate = Manager.getAgentRandomly(leader, t, leader.canReach);
             } else {
-                int j = 0;
+                int j = 0, k = 0;  // jは信頼ランキングのインデックス．kはcanReachのインデックス
                 while (true) {
-                    // エージェント1から全走査
-                    candidate = leader.relRanking.get(j++);
-                    if ( j >= leader.relRanking.size() - 1 ) {
+                    if ( k >= leader.canReach.size() || j >= AGENT_NUM - 1 ) {
                         System.out.println("It can't be executed.");
                         return null;
                     }
-                    // そいつがまだ候補に入っていなくて，かつ最近サブタスクを割り振っていなくて，
+                    candidate = leader.relRanking.get(j++);
+                    // まずそのエージェントを知っているか．知らなかったら飛ばす
+                    if( leader.inTheList(candidate, leader.canReach) < 0 ){
+                        continue;
+                    }
+                    k++;
+                    // candidateを知っていて，
+                    // それはまだ候補に入っていなくて，
+                    // かつ最近サブタスクを割り振っていなくて，
                     // さらにそのサブタスクをこなせそうなら
                     if (leader.inTheList(candidate, t) < 0 &&
                             leader.calcExecutionTime(candidate, subtask) > 0) {
@@ -387,7 +392,7 @@ public class RO_area_restricted implements Strategy, SetParam {
         // 下がった場合は下のやつと比較して入れ替えていく
         else {
             int index = agent.inTheList(target, agent.relRanking) + 1;    // targetの現在順位の下を持ってくる
-            while (index < agent.relRanking.size() - 1) {
+            while (index < AGENT_NUM - 1) {
                 // 順位が下のやつよりも信頼度が低くなったなら
                 if (agent.reliabilities[agent.relRanking.get(index).id] > agent.reliabilities[target.id]) {
                     Agent tmp = agent.relRanking.get(index);

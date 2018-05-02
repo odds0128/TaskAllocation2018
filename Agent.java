@@ -49,6 +49,7 @@ public class Agent implements SetParam , Cloneable{
     int isAccompanied = 0;                                  // 過密地域のエージェントだったら1
     int[]   required  = new int[RESOURCE_TYPES];            // そのリソースを要求するサブタスクが割り当てられた回数
     int[][] allocated = new int[AGENT_NUM][RESOURCE_TYPES]; // そのエージェントからそのリソースを要求するサブタスクが割り当てられた回数
+    List<Agent> canReach = new ArrayList<>();
 
     // リーダーエージェントが持つパラメータ
     List<Agent> candidates;         // これからチームへの参加を要請するエージェントのリスト
