@@ -62,11 +62,6 @@ public class Manager implements SetParam {
                     continue;
                 }
 
-                // εの下限と差分と蒸発率
-                double floor      = 0.05;
-                double difference = (INITIAL_ε - floor)/(MAX_TURN_NUM * 0.9);
-                double rate       = 0.9995;   // rateはマジでちゃんと計算して気をつけて思ったより早く収束するから
-
                 // ターンの進行
                 for (turn = 1; turn <= MAX_TURN_NUM; turn++) {
 /*                    if( turn > 1000 ) {
@@ -79,8 +74,8 @@ public class Manager implements SetParam {
                     // 徐々に小さくして安定させる
                     // 上が定数を引いて行くもので下が指数で減少させるもの．
                     // いずれも下限を設定できる
-                    if     ( HOW_EPSILON == "linear"      ) Agent.renewEpsilonLenear( difference, floor );
-                    else if( HOW_EPSILON == "exponential" ) Agent.renewEpsilonExponential( rate, floor );
+                    if     ( HOW_EPSILON == "linear"      ) Agent.renewEpsilonLenear( );
+                    else if( HOW_EPSILON == "exponential" ) Agent.renewEpsilonExponential( );
 
                     addNewTasksToQueue();
                     actFreeLancer();

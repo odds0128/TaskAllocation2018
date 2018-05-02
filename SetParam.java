@@ -16,6 +16,9 @@ interface SetParam {
 
     String HOW_EPSILON = "exponential";   // 定数:constant, 線形減少:linear, 指数減少:exponential で指定
     double INITIAL_ε  = 0.5;
+    double FLOOR       = 0.05;
+    double DIFFERENCE  = (INITIAL_ε - FLOOR)/(MAX_TURN_NUM * 0.9);
+    double RATE        = 0.9995;   // rateはマジでちゃんと計算して気をつけて思ったより早く収束するから
 
     // 結果表示のためのパラメータ
     int  COALITION_CHECK_SPAN = 5000;          // 協調関係ができているか確認するための最後の方のターム

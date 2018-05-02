@@ -447,14 +447,14 @@ public class Agent implements SetParam , Cloneable{
         _randSeed = new Random(_seed);
     }
 
-    static void renewEpsilonLenear(double difference, double floor){
-        ε -= difference;
-        if( ε < floor ) ε = floor;
+    static void renewEpsilonLenear(){
+        ε -= DIFFERENCE;
+        if( ε < FLOOR ) ε = FLOOR;
     }
 
-    static void renewEpsilonExponential(double rate, double floor){
-        ε =  (ε - floor) * rate;
-        ε += floor;
+    static void renewEpsilonExponential(){
+        ε =  (ε - FLOOR) * RATE;
+        ε += FLOOR;
     }
 
     static void clearA() {
