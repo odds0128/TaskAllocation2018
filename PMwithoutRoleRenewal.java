@@ -58,7 +58,6 @@ public class PMwithoutRoleRenewal implements Strategy, SetParam {
             leader.inactivate(0);
             return;
         }
-        leader.start = Manager.getTicks();
         leader.nextPhase();  // 次のフェイズへ
     }
 
@@ -74,7 +73,6 @@ public class PMwithoutRoleRenewal implements Strategy, SetParam {
         // どっかには参加するのなら交渉2フェイズへ
         if (member.joined) {
             member.totalOffers++;
-            member.start = Manager.getTicks();
             member.nextPhase();
         }
         // どこにも参加しないのであれば, 役割適正値を更新するようにする
@@ -212,14 +210,12 @@ public class PMwithoutRoleRenewal implements Strategy, SetParam {
         message = member.messages.remove(0);
         member.mySubTask = message.getSubTask();
 
-        int rt = Manager.getTicks() - member.start;
 /*
         member.totalResponseTicks += rt;
         member.meanRT = (double)member.totalResponseTicks/(double)member.totalOffers;
 // */
         // サブタスクがもらえたなら信頼度をプラスに更新し, 実行フェイズへ移る.
         if (member.mySubTask != null) {
-            member.start = Manager.getTicks();
             member.allocated[member.leader.id][member.mySubTask.resType]++;
             member.executionTime = member.calcExecutionTime(member, member.mySubTask);
             member.nextPhase();
@@ -239,7 +235,7 @@ public class PMwithoutRoleRenewal implements Strategy, SetParam {
                 if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN)
                     for (Agent ag : agent.teamMembers) agent.workWithAsL[ag.id]++;
             } else {
-                agent.sendMessage(agent, agent.leader, DONE, agent.start);
+                agent.sendMessage(agent, agent.leader, DONE, 0);
                 agent.required[agent.mySubTask.resType]++;
                 agent.relAgents = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / agent.calcExecutionTime(agent, agent.mySubTask));
                 if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN)
@@ -351,7 +347,6 @@ public class PMwithoutRoleRenewal implements Strategy, SetParam {
      * renewRelメソッド
      * 信頼度を更新し, 同時に信頼エージェントも更新する
      * agentのtargetに対する信頼度をevaluationによって更新し, 同時に信頼エージェントを更新する
-     *
      * @param agent
      */
     private List<Agent> renewRel(Agent agent, Agent target, double evaluation) {

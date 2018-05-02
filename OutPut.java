@@ -1110,7 +1110,7 @@ public class OutPut implements SetParam {
     private String setPath( String dir_name, String file_name, String extension ){
         String currentPath = System.getProperty("user.dir");
         Date             date = new Date();
-        SimpleDateFormat sdf1 = new SimpleDateFormat(",yyyy:MM:dd,HH:mm:ss");
+        SimpleDateFormat sdf1 = new SimpleDateFormat(",yyyy_MM_dd,HH_mm_ss");
         System.out.println("Writing on " + dir_name + "/" + file_name + ",λ=" + String.format("%.2f", (double) ADDITIONAL_TASK_NUM / TASK_ADDITION_SPAN) + sdf1.format(date) + "." + extension);
         return currentPath + "/out/" + dir_name + "/" + file_name + ",λ=" + String.format("%.2f", (double) ADDITIONAL_TASK_NUM / TASK_ADDITION_SPAN) + sdf1.format(date) + "." + extension;
     }

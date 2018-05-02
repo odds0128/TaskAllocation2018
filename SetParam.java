@@ -5,20 +5,23 @@
 
 interface SetParam {
     // 環境の設定( 変更していく部分 )
-    int EXECUTION_TIMES = 10;             // 実験の回数
+    int EXECUTION_TIMES = 1;             // 実験の回数
     int MAX_TURN_NUM    = 1000000;         // 一回の実験のターン数
-    int WRITING_TIMES   = 10000;           // データのファイルへの出力回数
-    boolean CHECK_RELATIONSHIPS = false;  // エージェント関係の協調関係を録るか
+    int WRITING_TIMES   = 1000;           // データのファイルへの出力回数
+    boolean CHECK_RELATIONSHIPS = true;  // エージェント関係の協調関係を録るか
     boolean CHECK_INITIATION    = false;  // エージェントやタスクの初期設定を確認するか
     boolean CHECK_RESULTS       = true;  // チーム編成成功数などを確認するか
     boolean CHECK_AGENTS        = false;   // エージェントの情報を確認するか
 
 
-    String HOW_EPSILON = "exponential";   // 定数:constant, 線形減少:linear, 指数減少:exponential で指定
-    double INITIAL_ε  = 0.5;
+    String HOW_EPSILON = "constant";      // 定数:constant, 線形減少:linear, 指数減少:exponential で指定
+//    String HOW_EPSILON = "linear";          // 定数:constant, 線形減少:linear, 指数減少:exponential で指定
+//    String HOW_EPSILON = "exponential";   // 定数:constant, 線形減少:linear, 指数減少:exponential で指定
+//    double INITIAL_ε  = 0.5;
+    double INITIAL_ε  = 0.05;
     double FLOOR       = 0.05;
     double DIFFERENCE  = (INITIAL_ε - FLOOR)/(MAX_TURN_NUM * 0.9);
-    double RATE        = 0.9995;   // rateはマジでちゃんと計算して気をつけて思ったより早く収束するから
+    double RATE        = 0.99996;   // rateはマジでちゃんと計算して気をつけて思ったより早く収束するから
 
     // 結果表示のためのパラメータ
     int  COALITION_CHECK_SPAN = 5000;          // 協調関係ができているか確認するための最後の方のターム

@@ -10,10 +10,13 @@ import java.util.*;
 
 public class Manager implements SetParam {
        private static Strategy strategy = new ProposedMethodForSingapore();
+//    private static Strategy strategy = new PMwithRationalOnly();
+//    private static Strategy strategy = new PMwithoutRoleRenewal();
+//   private static Strategy strategy   = new PM_area_restricted();
 //   private static Strategy strategy = new RewardOrientedStrategy();
 //    private static Strategy strategy = new ROwithRationalOnly();
 //    private static Strategy strategy = new ROwithoutRoleRenewal();
-    // private static Strategy strategy   = new CNP();
+//    private static Strategy strategy   = new RO_area_restricted();
 //   private static Strategy strategy   = new CNP_area_restricted();
 
 
@@ -50,7 +53,7 @@ public class Manager implements SetParam {
             String line;
 
             int num = 0;
-            System.out.println(strategy.getClass().getName() + ", λ=" + (double)ADDITIONAL_TASK_NUM/TASK_ADDITION_SPAN + ", ε: " + HOW_EPSILON);
+            System.out.println(strategy.getClass().getName() + ", λ=" + (double)ADDITIONAL_TASK_NUM/TASK_ADDITION_SPAN + ", ε:" + INITIAL_ε + ": " + HOW_EPSILON);
 
             // num回実験
             while ((line = br.readLine()) != null) {
@@ -226,10 +229,11 @@ public class Manager implements SetParam {
         // 学習なし手法で距離依存の場合(学習なしでは信頼度は使わないが便宜上定義する)
         if (strategy.getClass().getName().endsWith("_area_restricted") ) {
             Agent agent;
+            System.out.println("area_restricted");
             for (int i = 0; i < AGENT_NUM; ) {
                 agent = agents.get(i);
                 dist++;
-                assert dist < 11 : "alert 8: " + dist;
+                assert dist <= MAX_DELAY  : "alert 8: " + dist;
                 // 距離に基づいて信頼エージェントを設定する
                 for (int j = 0; j < AGENT_NUM; j++) {
                     // 距離がdistなら信頼エージェント候補とする

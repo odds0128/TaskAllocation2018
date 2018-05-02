@@ -62,7 +62,6 @@ public class PM_area_restricted implements Strategy, SetParam {
             leader.inactivate(0);
             return;
         }
-        leader.start = Manager.getTicks();
         leader.nextPhase();  // 次のフェイズへ
     }
 
@@ -283,9 +282,9 @@ public class PM_area_restricted implements Strategy, SetParam {
                         System.out.println("It can't be executed.");
                         return null;
                     }
-                    candidate = leader.relRanking.get(j++);
-
-                    // そいつがまだ候補に入っていなくて，かつ最近サブタスクを割り振っていなくて，
+                    candidate = leader.relRanking.get(j);
+                    j++;
+                    // candidateがまだ候補に入っていなくて，かつ最近サブタスクを割り振っていなくて，
                     // さらにそのサブタスクをこなせそうなら
                     if (leader.inTheList(candidate, t) < 0 &&
                             leader.calcExecutionTime(candidate, subtask) > 0) {

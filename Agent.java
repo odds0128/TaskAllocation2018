@@ -341,49 +341,7 @@ public class Agent implements SetParam , Cloneable{
      * それ以外はネガティブな返事をする
      */
     void checkMessages(Agent self) {
-        if( strategy.getClass().getName().startsWith( "ProposedMethod" ) || strategy.getClass().getName().startsWith( "CNP" ) || strategy.getClass().getName().startsWith( "RewardOrientedStrategy" )) {
             strategy.checkMessages(self);
-            return;
-        }
-        int size = messages.size();
-        Message m;
-        if (size == 0) return;
-        //        System.out.println("ID: " + self.id + ", Phase: " + self.phase + " message:  "+ self.messages);
-        // リーダーでPROPOSITION or 誰でもEXECUTION → 誰からのメッセージも期待していない
-        if (self.phase == PROPOSITION || self.phase == EXECUTION) {
-            for (int i = 0; i < size; i++) {
-                m = messages.remove(0);
-                sendNegative(self, m.getFrom(), m.getMessageType(), m.getSubTask());
-            }
-            // メンバでWAITING → PROPOSALを期待している
-        } else if (self.phase == WAITING) {
-            for (int i = 0; i < size; i++) {
-                m = messages.remove(0);
-                // PROPOSALで, 要求されているリソースを自分が持つならmessagesに追加
-                if (m.getMessageType() == PROPOSAL && self.res[m.getResType()] != 0) {
-                    messages.add(m);
-                    // 違かったらsendNegative
-                } else sendNegative(self, m.getFrom(), m.getMessageType(), m.getSubTask());
-            }
-        }
-        // リーダーでREPORT → REPLYを期待している
-        else if (self.phase == REPORT) {
-            for (int i = 0; i < size; i++) {
-                m = messages.remove(0);
-                Agent from = m.getFrom();
-                if (m.getMessageType() == REPLY && inTheList(from, self.candidates) > -1) replies.add(m);
-                else sendNegative(self, m.getFrom(), m.getMessageType(), m.getSubTask());
-            }
-            // メンバでRECEPTION → リーダーからのRESULT(サブタスク割り当て)を期待している
-        } else if (self.phase == RECEPTION) {
-            for (int i = 0; i < size; i++) {
-                m = messages.remove(0);
-                if (m.getMessageType() == RESULT && m.getFrom() == self.leader) {
-                    messages.add(m);
-                    // 違かったらsendNegative
-                } else sendNegative(self, m.getFrom(), m.getMessageType(), m.getSubTask());
-            }
-        }
     }
     /**
      * inTheListメソッド
