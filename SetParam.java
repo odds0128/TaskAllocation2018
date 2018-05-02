@@ -5,13 +5,17 @@
 
 interface SetParam {
     // 環境の設定( 変更していく部分 )
-    int EXECUTION_TIMES = 1;             // 実験の回数
-    int MAX_TURN_NUM    = 100000;         // 一回の実験のターン数
-    int WRITING_TIMES   = 1000;           // データのファイルへの出力回数
-    boolean CHECK_RELATIONSHIPS = true;  // エージェント関係の協調関係を録るか
+    int EXECUTION_TIMES = 10;             // 実験の回数
+    int MAX_TURN_NUM    = 1000000;         // 一回の実験のターン数
+    int WRITING_TIMES   = 10000;           // データのファイルへの出力回数
+    boolean CHECK_RELATIONSHIPS = false;  // エージェント関係の協調関係を録るか
     boolean CHECK_INITIATION    = false;  // エージェントやタスクの初期設定を確認するか
     boolean CHECK_RESULTS       = true;  // チーム編成成功数などを確認するか
-    boolean CHECK_AGENTS        = true;   // エージェントの情報を確認するか
+    boolean CHECK_AGENTS        = false;   // エージェントの情報を確認するか
+
+
+    String HOW_EPSILON = "exponential";   // 定数:constant, 線形減少:linear, 指数減少:exponential で指定
+    double INITIAL_ε  = 0.5;
 
     // 結果表示のためのパラメータ
     int  COALITION_CHECK_SPAN = 5000;          // 協調関係ができているか確認するための最後の方のターム
@@ -43,7 +47,6 @@ interface SetParam {
     double INITIAL_VALUE_OF_DSL =  0.5;
     double INITIAL_VALUE_OF_DSM =  0.5;
     double α = 0.05;
-    double INITIAL_ε = 0.5;
     double γ_r = INITIAL_VALUE_OF_DEC/(double)MAX_TURN_NUM;
     double THRESHOLD_FOR_DEPENDABILITY = 0.5;
     double THRESHOLD_FOR_RECIPROCITY   = 0.5;

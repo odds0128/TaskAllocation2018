@@ -704,7 +704,7 @@ public class OutPut implements SetParam {
                 else        _singleton.writeCell(row, colNumber++, style_header, "Edge id");
 
                 if (i == 0) _singleton.writeCell(row, colNumber++, style_header, "Node color");
-                else       _singleton.writeCell(row, colNumber++, style_header, "Source Node id");
+                else       _singleton.writeCell(row, colNumber++, style_header,  "Source Node id");
 
 
                 if (i == 0) _singleton.writeCell(row, colNumber++, style_header, "Node shape");

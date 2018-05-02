@@ -50,7 +50,7 @@ public class Manager implements SetParam {
             String line;
 
             int num = 0;
-            System.out.println(strategy.getClass().getName() + ", λ=" + (double)ADDITIONAL_TASK_NUM/TASK_ADDITION_SPAN);
+            System.out.println(strategy.getClass().getName() + ", λ=" + (double)ADDITIONAL_TASK_NUM/TASK_ADDITION_SPAN + ", ε: " + HOW_EPSILON);
 
             // num回実験
             while ((line = br.readLine()) != null) {
@@ -79,8 +79,8 @@ public class Manager implements SetParam {
                     // 徐々に小さくして安定させる
                     // 上が定数を引いて行くもので下が指数で減少させるもの．
                     // いずれも下限を設定できる
- //                   Agent.renewEpsilonLenear( difference, floor );
-                    Agent.renewEpsilonExponential( rate, floor );
+                    if     ( HOW_EPSILON == "linear"      ) Agent.renewEpsilonLenear( difference, floor );
+                    else if( HOW_EPSILON == "exponential" ) Agent.renewEpsilonExponential( rate, floor );
 
                     addNewTasksToQueue();
                     actFreeLancer();
