@@ -230,6 +230,7 @@ public class PMwithoutRoleRenewal implements Strategy, SetParam {
 
     private void execute(Agent agent) {
         agent.executionTime--;
+        agent.validatedTicks = Manager.getTicks();
         if (agent.executionTime == 0) {
             if (agent.role == LEADER) {
                 if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN)
@@ -254,42 +255,69 @@ public class PMwithoutRoleRenewal implements Strategy, SetParam {
      * @param subtasks
      */
     public List<Agent> selectMembers(Agent leader, List<SubTask> subtasks) {
-        List<Agent> temp = new ArrayList<>();
-        Agent candidate;
-        SubTask subtask;
+        List<Agent> memberCandidates = new ArrayList<>();
+        Agent candidate = null;
 
-        List<Agent> t = new ArrayList<>();
-        for (Map.Entry<Agent, AllocatedSubTask> ex : teamHistory[leader.id].entrySet()) {
-            t.add(ex.getKey());
+/*
+        System.out.println(leader + ", " );
+        for( Agent ag: leader.relRanking ){
+            System.out.print(ag.id + ", ");
         }
-// この時点でtにはかつての仲間たちが入っている
-        for (int i = 0; i / RESEND_TIMES < subtasks.size(); i++) {
-            subtask = subtasks.get(i / RESEND_TIMES);
-            if (leader.epsilonGreedy()) {
-                candidate = Manager.getAgentRandomly(leader, t, Manager.getAgents());
-            } else {
-                int j = 0;
-                while (true) {
-                    // エージェント1から全走査
-                    if (j >= AGENT_NUM - 1) {
-                        System.out.println("It can't be executed.");
-                        return null;
-                    }
-                    candidate = leader.relRanking.get(j++);
+        System.out.println();
+// */
 
-                    // そいつがまだ候補に入っていなくて，かつ最近サブタスクを割り振っていなくて，
-                    // さらにそのサブタスクをこなせそうなら
-                    if (leader.inTheList(candidate, t) < 0 &&
-                            leader.calcExecutionTime(candidate, subtask) > 0) {
-                        break;
+        List<Agent> exceptions = new ArrayList<>();
+        for (Map.Entry<Agent, AllocatedSubTask> ex : teamHistory[leader.id].entrySet()) {
+            exceptions.add(ex.getKey());
+        }
+        // この時点でtにはかつての仲間たちが入っている
+        // 一つのタスクについてRESEND_TIMES周する
+        for (int i = 0; i < RESEND_TIMES; i++) {
+            for (SubTask st : subtasks) {
+//                System.out.print(st);
+                // 一つ目のサブタスク(報酬が最も高い)から割り当てていく
+                // 信頼度の一番高いやつから割り当てる
+                // εの確率でランダムに割り振る
+                if (leader.epsilonGreedy()) {
+                    do {
+                        candidate = Manager.getAgentRandomly(leader, exceptions, Manager.getAgents());
+                    }while(leader.calcExecutionTime(candidate, st) < 0 );
+                } else {
+                    // 信頼度ランキングの上から割り当てを試みる．
+                    // 1. 能力的にできない
+                    // 2. すでにチームに参加してもらっていて，まだ終了連絡がこない
+                    // 3. すでに別のサブタスクを割り当てる予定がある
+                    // に当てはまらなければ割り当て候補とする．
+                    int rankingSize = leader.relRanking.size();
+                    for (int relRank = 0; relRank < rankingSize; relRank++) {
+                        candidate = leader.relRanking.get(relRank);
+                        // 上記1~3の項目を満たさないか確認する
+                        // 満たしていなければ要請を送る確定の候補とし，ループから抜ける
+                        if (leader.inTheList(candidate, exceptions) < 0 &&
+                                leader.calcExecutionTime(candidate, st) > 0) {
+                            break;
+                        }
+                        // 満たしていれば，候補として相応しくないので次に行く．
+                        else {
+                            candidate = null;
+                        }
                     }
                 }
+                // 候補が見つかれば，チーム要請対象者リストに入れ，参加要請を送る
+                if (!candidate.equals(null)) {
+                    exceptions.add(candidate);
+                    memberCandidates.add(candidate);
+//                    System.out.println(candidate);
+                    leader.sendMessage(leader, candidate, PROPOSAL, st);
+                }
+                // 候補が見つからないサブタスクがあったら直ちにチーム編成を失敗とする
+                else {
+                    System.out.println("It can't be executed.");
+                    return null;
+                }
             }
-            t.add(candidate);
-            temp.add(candidate);
-            leader.sendMessage(leader, candidate, PROPOSAL, subtask.resType);
         }
-        return temp;
+        return memberCandidates;
     }
 
     /**

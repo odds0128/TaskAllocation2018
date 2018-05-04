@@ -45,7 +45,7 @@ public class Task implements SetParam{
         subTasks.add(new SubTask( RESET, seed) );
         for(int i = 1; i < subTaskNum; i++) subTasks.add( new SubTask(CONT) );
         Collections.sort(subTasks, new SubtaskRewardComparator() );
-        System.out.println(subTasks);
+//        System.out.println(subTasks);
     }
 
     /**
@@ -69,7 +69,7 @@ public class Task implements SetParam{
         subTasks.add(new SubTask( RESET ) );
         for(int i = 1; i < subTaskNum; i++) subTasks.add( new SubTask(CONT) );
         Collections.sort(subTasks, new SubtaskRewardComparator() );
-        System.out.println(subTasks);
+//        System.out.println(subTasks);
     }
 
     static void setSeed(long seed){

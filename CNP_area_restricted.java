@@ -337,7 +337,6 @@ public class CNP_area_restricted implements SetParam, Strategy {
     public void clearStrategy() {
         for (int i = 0; i < AGENT_NUM; i++) {
             reception_time[i] = reception_span;
-            ;
         }
     }
 }

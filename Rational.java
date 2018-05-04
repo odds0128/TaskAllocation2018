@@ -4,32 +4,22 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * ProposedMethodForSingapore クラス
- * サブタスクの要求リソースに量を設けたことにより，"報酬"を適切に考える必要が生じた
- * そこで報酬はサブタスクの要求リソースに依存するものとし，信頼度更新式 e^i_j = (1-α)e^i_j + δ * α を
- * 1. j(自分)がメンバでi(相手)がリーダーの場合，
- * 　a. 成功(サブタスク割り当て)時　　　　　　　　δ = そのサブタスクの要求リソース / 実行時間
- * 　b. 失敗(サブタスクみ割り当て)時　　　　　　　δ = 0
- * 2. j(自分)がリーダーでi(相手)がメンバの場合，
- * 　a. 成功(チーム編成成功)後，終了連絡受理時　　δ = そのサブタスクの要求リソース / 応答時間(= メッセージ往復時間 + サブタスク実行時間)
- * 　b. 失敗(チーム参加要請拒否受理)時，　　　　　δ = 0
- *  によって更新する．
- * 役割更新機構あり
+ * Rational クラス
+ * 役割を固定し，
+ * リーダーは信頼度を元にメンバを選定するが，
+ * メンバは受理要請の中から最も報酬(サブタスクの要求リソース/実行時間)が高いものを選択する手法
  */
-
-
-public class ProposedMethodForSingapore implements Strategy, SetParam {
+public class Rational implements Strategy, SetParam {
     static final double γ = γ_r;
     Map<Agent, AllocatedSubTask>[] teamHistory = new HashMap[AGENT_NUM];
 
-    ProposedMethodForSingapore() {
+    Rational() {
         for (int i = 0; i < AGENT_NUM; i++) {
             teamHistory[i] = new HashMap<>();
         }
     }
 
     public void actAsLeader(Agent agent) {
-        setPrinciple(agent);
         if (agent.phase == PROPOSITION) proposeAsL(agent);
         else if (agent.phase == REPORT) reportAsL(agent);
         else if (agent.phase == EXECUTION) execute(agent);
@@ -37,21 +27,15 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
     }
 
     public void actAsMember(Agent agent) {
-        if (Manager.getTicks() - agent.validatedTicks > ROLE_RENEWAL_TICKS) {
-            agent.inactivate(0);
-            return;
-        }
-        setPrinciple(agent);
         if (agent.phase == REPLY) replyAsM(agent);
         else if (agent.phase == RECEPTION) receiveAsM(agent);
         else if (agent.phase == EXECUTION) execute(agent);
-        decreaseDEC(agent);
     }
 
     private void proposeAsL(Agent leader) {
         leader.ourTask = Manager.getTask();
         if (leader.ourTask == null) {
-            leader.inactivate(0);
+            inactivate(leader,0);
             return;
         }
         leader.restSubTask = leader.ourTask.subTaskNum;                       // 残りサブタスク数を設定
@@ -59,7 +43,7 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
         leader.candidates = selectMembers(leader, leader.ourTask.subTasks);   // メッセージ送信
         if (leader.candidates == null) {
             leader.candidates = new ArrayList<>();
-            leader.inactivate(0);
+            inactivate(leader,0);
             return;
         }
         leader.nextPhase();  // 次のフェイズへ
@@ -81,7 +65,7 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
         }
         // どこにも参加しないのであれば, 役割適正値を更新するようにする
         else {
-            member.inactivate(0);
+            inactivate(member,0);
         }
 // */
     }
@@ -200,7 +184,7 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
                     leader.sendMessage(leader, ls, RESULT, null);
                 }
                 Manager.disposeTask(leader);
-                leader.inactivate(0);
+                inactivate(leader, 0);
                 return;
             }
         }
@@ -228,7 +212,7 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
         else {
             //       System.out.println(" ID: " + member.id + ", " + member.leader + " is unreliable");
             member.relAgents = renewRel(member, member.leader, 0);
-            member.inactivate(0);
+            inactivate(member,0);
         }
     }
 
@@ -247,7 +231,7 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
                     agent.workWithAsM[agent.leader.id]++;
             }
             // 自分のサブタスクが終わったら役割適応度を1で更新して非活性状態へ
-            agent.inactivate(1);
+            inactivate(agent,1);
         }
     }
 
@@ -326,10 +310,8 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
 
     /**
      * selectLeaderメソッド
-     * メンバがどのリーダーの要請を受けるかを判断する
-     * 信頼エージェントのリストにあるリーダーエージェントからの要請を受ける
-     */
-    // 互恵主義と合理主義のどちらかによって行動を変える
+     * 一番報酬の大きいサブタスクをくれるリーダーを優先する
+     * */
     public Agent selectLeader(Agent member, List<Message> messages) {
         int size = messages.size();
         Message message;
@@ -558,6 +540,22 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
             }
         }
     }
+
+    void inactivate(Agent ag, int success) {
+        if (ag.role == LEADER) {
+            ag.phase = lPHASE1;
+            ag.teamMembers.clear();        // すでにサブタスクを送っていてメンバの選定から外すエージェントのリスト
+            ag.ourTask = null;
+        } else if (ag.role == MEMBER) {
+            ag.phase = mPHASE1;
+            ag.leader = null;
+        }
+        ag.mySubTask = null;
+        ag.messages.clear();
+        ag.executionTime = 0;
+        ag.validatedTicks = Manager.getTicks();
+    }
+
 
     public void clearStrategy() {
         for (int i = 0; i < AGENT_NUM; i++) {

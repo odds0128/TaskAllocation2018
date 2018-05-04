@@ -488,11 +488,9 @@ public class Agent implements SetParam , Cloneable{
         int neetM = 0;
         int now = Manager.getTicks();
         for( Agent ag: agents ){
-            if( ag.e_member > ag.e_leader ){
                 if ( now - ag.validatedTicks > span) {
                     neetM++;
                 }
-            }
         }
         return neetM;
     }

@@ -13,7 +13,7 @@ class Message implements SetParam{
     // メッセージにサブタスクを載せること自体は悪いことじゃないことに注意. 最終的には渡さないといけない
 
     // 提案手法チックな手法で使う変数とコンストラクタ．引数4つ
-    private int resType;
+    private SubTask proposedSubtask;
     private int reply;
     private SubTask subtask;  // チーム編成が成功したら, 割り当てるサブタスクが入る. 失敗したらnull
     private int timeSTarrived;
@@ -23,7 +23,7 @@ class Message implements SetParam{
         this.to   = to;
         this.messageType = type;
         if( type == PROPOSAL ){
-            this.resType = (int) o;
+            this.proposedSubtask = (SubTask) o;
         }else if( type == REPLY ){
             this.reply       = (int) o;
         }else if( type == RESULT ){
@@ -73,7 +73,8 @@ class Message implements SetParam{
     int getReply( ) {
         return reply;
     }
-    int getResType(){ return resType; }
+    int getResType(){ return proposedSubtask.resType; }
+    SubTask getProposedSubtask(){ return proposedSubtask; }
     int getTimeSTarrived() { return timeSTarrived; }
 
     Task getBidTask(){
@@ -95,7 +96,7 @@ class Message implements SetParam{
         str.append(", to: " + to.id);
         str.append(", type: " + messageType );
         if( messageType == PROPOSAL ){
-            str.append(", " + resType);
+            str.append(", " + proposedSubtask.resType);
         }else if( messageType == REPLY ){
             str.append(", " + reply);
         }else if( messageType == RESULT ){
