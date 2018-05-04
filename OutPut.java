@@ -704,7 +704,7 @@ public class OutPut implements SetParam {
                 else        _singleton.writeCell(row, colNumber++, style_header, "Edge id");
 
                 if (i == 0) _singleton.writeCell(row, colNumber++, style_header, "Node color");
-                else       _singleton.writeCell(row, colNumber++, style_header,  "Source Node id");
+                else        _singleton.writeCell(row, colNumber++, style_header, "Source Node id");
 
 
                 if (i == 0) _singleton.writeCell(row, colNumber++, style_header, "Node shape");
@@ -815,17 +815,17 @@ public class OutPut implements SetParam {
                     }
                 } else if (i == 2) {
                     for (int j = 0; j < edge.from_id.size(); j++) {
-                        if (edge.isRecipro.get(j) != true) continue;
-                        rowNumber++;
-                        colNumber = 0;
-                        row = sheet.createRow(rowNumber);
-                        _singleton.writeCell(row, colNumber++, style_int, j);
-                        _singleton.writeCell(row, colNumber++, style_int, edge.from_id.get(j));
-                        _singleton.writeCell(row, colNumber++, style_int, edge.to_id.get(j));
-                        _singleton.writeCell(row, colNumber++, style_int, edge.delays.get(j));
-                        _singleton.writeCell(row, colNumber++, style_int, edge.times.get(j));
-                        _singleton.writeCell(row, colNumber++, style_int, edge.to_id.get(j));
-
+                        if (edge.isRecipro.get(j) == true ) {
+                            rowNumber++;
+                            colNumber = 0;
+                            row = sheet.createRow(rowNumber);
+                            _singleton.writeCell(row, colNumber++, style_int, j);
+                            _singleton.writeCell(row, colNumber++, style_int, edge.from_id.get(j));
+                            _singleton.writeCell(row, colNumber++, style_int, edge.to_id.get(j));
+                            _singleton.writeCell(row, colNumber++, style_int, edge.delays.get(j));
+                            _singleton.writeCell(row, colNumber++, style_int, edge.times.get(j));
+                            _singleton.writeCell(row, colNumber++, style_int, edge.to_id.get(j));
+                        }
                         //列幅の自動調整
                         for (int k = 0; k <= colNumber; k++) {
                             sheet.autoSizeColumn(k, true);

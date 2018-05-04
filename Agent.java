@@ -16,7 +16,7 @@ public class Agent implements SetParam , Cloneable{
     static long _seed;
     static Random _randSeed;
     static int[] resSizeArray = new int[RESOURCE_TYPES + 1];
-    static int _coalition_check_end_time = SNAPSHOT_TIME;
+    static int _coalition_check_end_time = MAX_TURN_NUM;
     static List<Integer> _lonelyAgents = new ArrayList<>();
     static List<Integer> _accompaniedAgents = new ArrayList<>();
     static double ε = INITIAL_ε;

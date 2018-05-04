@@ -10,16 +10,10 @@ import java.io.IOException;
 import java.util.*;
 
 public class Manager implements SetParam {
-//    private static Strategy strategy = new ProposedMethodForSingapore();
+    private static Strategy strategy = new ProposedMethodForSingapore();
 //    private static Strategy strategy = new PMwithRationalOnly();
 //    private static Strategy strategy = new PMwithoutRoleRenewal();
-//   private static Strategy strategy   = new PM_area_restricted();
-//   private static Strategy strategy = new RewardOrientedStrategy();
-//    private static Strategy strategy = new ROwithRationalOnly();
-//    private static Strategy strategy = new ROwithoutRoleRenewal();
-//    private static Strategy strategy   = new RO_area_restricted();
-   private static Strategy strategy   = new CNP_area_restricted();
-
+//    private static Strategy strategy   = new Rational();
 
     static private long _seed;
     private static Random _randSeed;

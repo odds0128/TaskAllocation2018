@@ -4,6 +4,7 @@
  */
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -34,6 +35,7 @@ public class Task implements SetParam{
         totalSubTasks++;
         setSubTasks(seed);
     }
+
     /**
      * setSubTasksメソッド
      * パラメータで指定されたseedのサブタスクを指定数作成する.
@@ -42,6 +44,8 @@ public class Task implements SetParam{
     private void setSubTasks(long seed){
         subTasks.add(new SubTask( RESET, seed) );
         for(int i = 1; i < subTaskNum; i++) subTasks.add( new SubTask(CONT) );
+        Collections.sort(subTasks, new SubtaskRewardComparator() );
+        System.out.println(subTasks);
     }
 
     /**
@@ -64,6 +68,8 @@ public class Task implements SetParam{
     private void setSubTasks(){
         subTasks.add(new SubTask( RESET ) );
         for(int i = 1; i < subTaskNum; i++) subTasks.add( new SubTask(CONT) );
+        Collections.sort(subTasks, new SubtaskRewardComparator() );
+        System.out.println(subTasks);
     }
 
     static void setSeed(long seed){
