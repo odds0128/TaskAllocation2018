@@ -61,6 +61,10 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
             leader.candidates = new ArrayList<>();
             leader.inactivate(0);
             return;
+        }else {
+            for ( int i = 0; i < leader.candidates.size(); i++ ) {
+                leader.sendMessage(leader, leader.candidates.get(i), PROPOSAL, leader.ourTask.subTasks.get(i%leader.restSubTask));
+            }
         }
         leader.nextPhase();  // 次のフェイズへ
     }
@@ -312,7 +316,6 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
                     exceptions.add(candidate);
                     memberCandidates.add(candidate);
 //                    System.out.println(candidate);
-                    leader.sendMessage(leader, candidate, PROPOSAL, st);
                 }
                 // 候補が見つからないサブタスクがあったら直ちにチーム編成を失敗とする
                 else {

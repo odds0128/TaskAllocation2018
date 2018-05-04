@@ -45,6 +45,10 @@ public class Rational implements Strategy, SetParam {
             leader.candidates = new ArrayList<>();
             inactivate(leader, 0);
             return;
+        } else {
+            for ( int i = 0; i < leader.candidates.size(); i++ ) {
+                leader.sendMessage(leader, leader.candidates.get(i), PROPOSAL, leader.ourTask.subTasks.get(i%leader.restSubTask));
+            }
         }
         leader.nextPhase();  // 次のフェイズへ
     }
@@ -82,7 +86,7 @@ public class Rational implements Strategy, SetParam {
                 from = reply.getFrom();
                 int i = leader.inTheList(from, leader.candidates);
                 assert i >= 0 : "alert: Leader got reply from a ghost.";
-                if( i < 0 ){
+                if (i < 0) {
                     System.out.println();
                 }
                 leader.candidates.set(i, null);
@@ -255,6 +259,7 @@ public class Rational implements Strategy, SetParam {
         }
         System.out.println();
 // */
+        if (leader.id == 397) System.out.println(leader.ourTask);
 
         List<Agent> exceptions = new ArrayList<>();
         for (Map.Entry<Agent, AllocatedSubTask> ex : teamHistory[leader.id].entrySet()) {
@@ -298,7 +303,7 @@ public class Rational implements Strategy, SetParam {
                     exceptions.add(candidate);
                     memberCandidates.add(candidate);
 //                    System.out.println(candidate);
-                    leader.sendMessage(leader, candidate, PROPOSAL, st);
+                    if (leader.id == 397) System.out.println(candidate);
                 }
                 // 候補が見つからないサブタスクがあったら直ちにチーム編成を失敗とする
                 else {
@@ -307,6 +312,7 @@ public class Rational implements Strategy, SetParam {
                 }
             }
         }
+        System.out.println();
         return memberCandidates;
     }
 
@@ -319,7 +325,7 @@ public class Rational implements Strategy, SetParam {
         Message message;
         Agent from;
         Agent tempLeader;
-        double expectedReward ;  // 単位時間あたりの報酬(サブタスクの要求リソーズの大きさ÷実行時間)
+        double expectedReward;  // 単位時間あたりの報酬(サブタスクの要求リソーズの大きさ÷実行時間)
 
         // 有効なメッセージがなければリターンする
         if (size == 0) return null;
@@ -330,9 +336,9 @@ public class Rational implements Strategy, SetParam {
         expectedReward = message.getResSize() / member.calcExecutionTime(member, message.getProposedSubtask());
         for (int i = 0; i < size - 1; i++) {
             message = messages.remove(0);
-            from    = message.getFrom();
+            from = message.getFrom();
             // もし暫定信頼度一位のやつより単位時間あたりの報酬が高いやついたら, 暫定のやつを断って今のやつを暫定(ryに入れる
-            if ( expectedReward < message.getResSize() / member.calcExecutionTime(member, message.getProposedSubtask()) ) {
+            if (expectedReward < message.getResSize() / member.calcExecutionTime(member, message.getProposedSubtask())) {
                 member.sendMessage(member, tempLeader, REPLY, REJECT);
                 expectedReward = message.getResSize() / member.calcExecutionTime(member, message.getProposedSubtask());
                 tempLeader = from;
