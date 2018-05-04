@@ -13,6 +13,7 @@ public class Manager implements SetParam {
 //    private static Strategy strategy = new ProposedMethodForSingapore();
 //    private static Strategy strategy = new PMwithRationalOnly();
 //    private static Strategy strategy = new PMwithoutRoleRenewal();
+//    private static Strategy strategy = new PMwithoutReallocation();
     private static Strategy strategy   = new Rational();
 
     static private long _seed;

@@ -82,6 +82,9 @@ public class Rational implements Strategy, SetParam {
                 from = reply.getFrom();
                 int i = leader.inTheList(from, leader.candidates);
                 assert i >= 0 : "alert: Leader got reply from a ghost.";
+                if( i < 0 ){
+                    System.out.println();
+                }
                 leader.candidates.set(i, null);
                 leader.relAgents = renewRel(leader, from, 0);
             }
