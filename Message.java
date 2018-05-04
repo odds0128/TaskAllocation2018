@@ -74,6 +74,7 @@ class Message implements SetParam{
         return reply;
     }
     int getResType(){ return proposedSubtask.resType; }
+    int getResSize(){ return proposedSubtask.reqRes[proposedSubtask.resType]; }
     SubTask getProposedSubtask(){ return proposedSubtask; }
     int getTimeSTarrived() { return timeSTarrived; }
 

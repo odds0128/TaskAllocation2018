@@ -82,7 +82,7 @@ public class Agent implements SetParam , Cloneable{
         this.strategy = strategy;
         setResource(UNIFORM);
         Arrays.fill(reliabilities, INITIAL_VALUE_OF_DEC);
-        if (strategy.getClass().getName().startsWith("CNP")) {
+        if (strategy.getClass().getName().startsWith("CNP") || strategy.getClass().getName().startsWith("Rational")) {
             selectRoleWithoutLearning();
         } else {
             selectRole();
@@ -100,7 +100,7 @@ public class Agent implements SetParam , Cloneable{
         this.strategy = strategy;
         setResource(UNIFORM);
         Arrays.fill(reliabilities, INITIAL_VALUE_OF_DEC);
-        if (strategy.getClass().getName().startsWith("CNP")) {
+        if (strategy.getClass().getName().startsWith("CNP") || strategy.getClass().getName().startsWith("Rational")) {
             selectRoleWithoutLearning();
         } else {
             selectRole();

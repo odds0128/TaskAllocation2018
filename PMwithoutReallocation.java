@@ -3,39 +3,40 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Rational クラス
- * 役割を固定し，
- * リーダーは信頼度を元にメンバを選定するが，
- * メンバは受理要請の中から最も報酬(サブタスクの要求リソース/実行時間)が高いものを選択する手法
- */
-public class Rational implements Strategy, SetParam {
+public class PMwithoutReallocation implements Strategy, SetParam {
     static final double γ = γ_r;
     Map<Agent, AllocatedSubTask>[] teamHistory = new HashMap[AGENT_NUM];
 
-    Rational() {
+    PMwithoutReallocation() {
         for (int i = 0; i < AGENT_NUM; i++) {
             teamHistory[i] = new HashMap<>();
         }
     }
 
     public void actAsLeader(Agent agent) {
-        if (agent.phase == lPHASE1) proposeAsL(agent);
-        else if (agent.phase == lPHASE2) reportAsL(agent);
-        else if (agent.phase == PHASE3) execute(agent);
+        setPrinciple(agent);
+        if (agent.phase == PROPOSITION) proposeAsL(agent);
+        else if (agent.phase == REPORT) reportAsL(agent);
+        else if (agent.phase == EXECUTION) execute(agent);
         decreaseDEC(agent);
     }
 
     public void actAsMember(Agent agent) {
-        if (agent.phase == mPHASE1) replyAsM(agent);
-        else if (agent.phase == mPHASE2) receiveAsM(agent);
-        else if (agent.phase == PHASE3) execute(agent);
+        if (Manager.getTicks() - agent.validatedTicks > ROLE_RENEWAL_TICKS) {
+            agent.inactivate(0);
+            return;
+        }
+        setPrinciple(agent);
+        if (agent.phase == REPLY) replyAsM(agent);
+        else if (agent.phase == RECEPTION) receiveAsM(agent);
+        else if (agent.phase == EXECUTION) execute(agent);
+        decreaseDEC(agent);
     }
 
     private void proposeAsL(Agent leader) {
         leader.ourTask = Manager.getTask();
         if (leader.ourTask == null) {
-            inactivate(leader, 0);
+            leader.inactivate(0);
             return;
         }
         leader.restSubTask = leader.ourTask.subTaskNum;                       // 残りサブタスク数を設定
@@ -43,7 +44,7 @@ public class Rational implements Strategy, SetParam {
         leader.candidates = selectMembers(leader, leader.ourTask.subTasks);   // メッセージ送信
         if (leader.candidates == null) {
             leader.candidates = new ArrayList<>();
-            inactivate(leader, 0);
+            leader.inactivate(0);
             return;
         }
         leader.nextPhase();  // 次のフェイズへ
@@ -65,7 +66,7 @@ public class Rational implements Strategy, SetParam {
         }
         // どこにも参加しないのであれば, 役割適正値を更新するようにする
         else {
-            inactivate(member, 0);
+            member.inactivate(0);
         }
 // */
     }
@@ -73,6 +74,7 @@ public class Rational implements Strategy, SetParam {
     private void reportAsL(Agent leader) {
         // 有効なReplyメッセージがなければreturn
         if (leader.replies.size() == 0) return;
+        // 2017/12/06 ICARRTに揃えるために, チーム編成が成功してからサブタスクの実行指示をだすことに
 
         Agent from;
         for (Message reply : leader.replies) {
@@ -88,8 +90,6 @@ public class Rational implements Strategy, SetParam {
         }
         int index;
         Agent A, B;
-        List<Agent> losers = new ArrayList<>();
-        List<SubTask> reallocations = new ArrayList<>();
 
         // if 全candidatesから返信が返ってきてタスクが実行可能なら割り当てを考えていく
         if (leader.replyNum == leader.candidates.size()) {
@@ -97,24 +97,23 @@ public class Rational implements Strategy, SetParam {
                 index = 2 * i;
                 A = leader.candidates.get(index);
                 B = leader.candidates.get(index + 1);
-                // 両方ダメだったら再割り当てを考える
+                // 両方ダメだったらオワコン
+
                 if (A == null && B == null) {
-                    reallocations.add(leader.ourTask.subTasks.get(i));
                     continue;
                 }
+
                 // もし両方から受理が返ってきたら, 信頼度の高い方に割り当てる
                 else if (A != null && B != null) {
                     // Bの方がAより信頼度が高い場合
                     if (leader.reliabilities[A.id] < leader.reliabilities[B.id]) {
                         leader.candidates.set(index + 1, null);
-                        losers.add(A);
                         leader.preAllocations.put(B, leader.ourTask.subTasks.get(i));
                         leader.teamMembers.add(B);
                     }
                     // Aの方がBより信頼度が高い場合
                     else {
                         leader.candidates.set(index, null);
-                        losers.add(B);
                         leader.preAllocations.put(A, leader.ourTask.subTasks.get(i));
                         leader.teamMembers.add(A);
                     }
@@ -135,55 +134,23 @@ public class Rational implements Strategy, SetParam {
                     }
                 }
             }
-            // 未割り当てのサブタスクがあっても最後のチャンス
-            SubTask st;
-            Agent lo;
-            int flag;
-            if (reallocations.size() > 0 && losers.size() > 0) {
-                // 未割り当てのサブタスクひとつひとつに対して
-                for (int i = 0; i < reallocations.size(); i++) {
-                    flag = 0;
-                    st = reallocations.remove(0);
-                    // 受理を返したのに競合のせいでサブタスクが割り当てられなかったいい奴らの中から割り当てを探す
-                    for (int j = 0; j < losers.size(); j++) {
-                        lo = losers.remove(0);
-                        if (leader.calcExecutionTime(lo, st) > 0) {
-                            leader.restSubTask--;
-                            leader.preAllocations.put(lo, st);
-                            leader.teamMembers.add(lo);
-                            flag++;
-                            break;
-                        } else {
-                            losers.add(lo);
-                        }
-                    }
-                    // 誰にもできなかったら
-                    if (flag == 0) reallocations.add(st);
-                }
-            }
 
-            // 未割り当てが残っていないのならば負け犬どもに引導を渡して実行へ
-            if (reallocations.size() == 0) {
+            // 未割り当てが残っていないのなら実行へ
+            if ( leader.teamMembers.size() == leader.restSubTask ) {
                 for (Agent tm : leader.teamMembers) {
                     teamHistory[leader.id].put(tm, new AllocatedSubTask(leader.preAllocations.get(tm), Manager.getTicks()));
                     leader.sendMessage(leader, tm, RESULT, leader.preAllocations.get(tm));
                 }
-                for (Agent ls : losers) {
-                    leader.sendMessage(leader, ls, RESULT, null);
-                }
                 Manager.finishTask(leader);
                 leader.nextPhase();
             }
-            // 未割り当てのサブタスクが残っているにもかかわらず再割当先の候補がなければ失敗
+            // 未割り当てのサブタスクが残っていれば失敗
             else {
                 for (Agent tm : leader.teamMembers) {
                     leader.sendMessage(leader, tm, RESULT, null);
                 }
-                for (Agent ls : losers) {
-                    leader.sendMessage(leader, ls, RESULT, null);
-                }
                 Manager.disposeTask(leader);
-                inactivate(leader, 0);
+                leader.inactivate(0);
                 return;
             }
         }
@@ -211,7 +178,7 @@ public class Rational implements Strategy, SetParam {
         else {
             //       System.out.println(" ID: " + member.id + ", " + member.leader + " is unreliable");
             member.relAgents = renewRel(member, member.leader, 0);
-            inactivate(member, 0);
+            member.inactivate(0);
         }
     }
 
@@ -230,7 +197,7 @@ public class Rational implements Strategy, SetParam {
                     agent.workWithAsM[agent.leader.id]++;
             }
             // 自分のサブタスクが終わったら役割適応度を1で更新して非活性状態へ
-            inactivate(agent, 1);
+            agent.inactivate(1);
         }
     }
 
@@ -268,7 +235,7 @@ public class Rational implements Strategy, SetParam {
                 if (leader.epsilonGreedy()) {
                     do {
                         candidate = Manager.getAgentRandomly(leader, exceptions, Manager.getAgents());
-                    } while (leader.calcExecutionTime(candidate, st) < 0);
+                    }while(leader.calcExecutionTime(candidate, st) < 0 );
                 } else {
                     // 信頼度ランキングの上から割り当てを試みる．
                     // 1. 能力的にできない
@@ -309,44 +276,59 @@ public class Rational implements Strategy, SetParam {
 
     /**
      * selectLeaderメソッド
-     * 一番報酬の大きいサブタスクをくれるリーダーを優先する
+     * メンバがどのリーダーの要請を受けるかを判断する
+     * 信頼エージェントのリストにあるリーダーエージェントからの要請を受ける
      */
+    // 互恵主義と合理主義のどちらかによって行動を変える
     public Agent selectLeader(Agent member, List<Message> messages) {
         int size = messages.size();
         Message message;
+        Agent myLeader = null;
         Agent from;
-        Agent tempLeader;
-        double expectedReward ;  // 単位時間あたりの報酬(サブタスクの要求リソーズの大きさ÷実行時間)
+        Agent temp;
 
         // 有効なメッセージがなければリターンする
         if (size == 0) return null;
 
-        // messageキューに溜まっている参加要請を確認し, 参加するチームを選ぶ
-        message = messages.remove(0);
-        tempLeader = message.getFrom();
-        expectedReward = message.getResSize() / member.calcExecutionTime(member, message.getProposedSubtask());
-        for (int i = 0; i < size - 1; i++) {
-            message = messages.remove(0);
-            from    = message.getFrom();
-            // もし暫定信頼度一位のやつより単位時間あたりの報酬が高いやついたら, 暫定のやつを断って今のやつを暫定(ryに入れる
-            if ( expectedReward < message.getResSize() / member.calcExecutionTime(member, message.getProposedSubtask()) ) {
-                member.sendMessage(member, tempLeader, REPLY, REJECT);
-                expectedReward = message.getResSize() / member.calcExecutionTime(member, message.getProposedSubtask());
-                tempLeader = from;
-            }
-            // 暫定一位がその座を守れば挑戦者を断る
-            else {
-                member.sendMessage(member, from, REPLY, REJECT);
+        // あったらεグリーディーで選択する
+        if (member.epsilonGreedy()) {
+            myLeader = messages.remove(member._randSeed.nextInt(messages.size())).getFrom();
+            for (int i = 0; i < size - 1; i++) {
+                member.sendMessage(member, messages.remove(0).getFrom(), REPLY, REJECT);
             }
         }
-        return tempLeader;
+        // messageキューに溜まっている参加要請を確認し, 参加するチームを選ぶ
+        else {
+            message = messages.remove(0);
+            temp = message.getFrom();
+            for (int i = 0; i < size - 1; i++) {
+                message = messages.remove(0);
+                from = message.getFrom();
+                // もし暫定信頼度一位のやつより信頼度高いやついたら, 暫定のやつを断って今のやつを暫定(ryに入れる
+                if (member.reliabilities[temp.id] < member.reliabilities[from.id]) {
+                    member.sendMessage(member, temp, REPLY, REJECT);
+                    temp = from;
+                }
+                // 暫定一位がその座を守れば挑戦者を断る
+                else {
+                    member.sendMessage(member, from, REPLY, REJECT);
+                }
+            }
+            if (member.principle == RATIONAL) {
+                myLeader = temp;
+            } else {
+                if (member.inTheList(temp, member.relAgents) > -1) {
+                    myLeader = temp;
+                } else member.sendMessage(member, temp, REPLY, REJECT);
+            }
+        }
+        return myLeader;
     }
 
     /**
      * renewRelメソッド
      * 信頼度を更新し, 同時に信頼エージェントも更新する
      * agentのtargetに対する信頼度をevaluationによって更新し, 同時に信頼エージェントを更新する
-     *
      * @param agent
      */
     private List<Agent> renewRel(Agent agent, Agent target, double evaluation) {
@@ -481,7 +463,7 @@ public class Rational implements Strategy, SetParam {
                 int rt = Manager.getTicks() - as.getAllocatedTime();
                 int reward = as.getRequiredResources();
                 //                System.out.println(rt);
-                ag.relAgents = renewRel(ag, m.getFrom(), (double) reward / rt);
+                ag.relAgents = renewRel(ag, m.getFrom(), (double) reward / rt );
             } else {
                 ag.messages.add(m); // 違うメッセージだったら戻す
             }
@@ -526,54 +508,6 @@ public class Rational implements Strategy, SetParam {
             }
         }
     }
-
-    void inactivate(Agent ag, int success) {
-        if (ag.role == LEADER) {
-            ag.phase = lPHASE1;
-            ag.teamMembers.clear();        // すでにサブタスクを送っていてメンバの選定から外すエージェントのリスト
-            ag.ourTask = null;
-            ag.candidates.clear();
-            ag.replyNum = 0;
-            ag.preAllocations.clear();
-        } else if (ag.role == MEMBER) {
-            ag.phase = mPHASE1;
-            ag.leader = null;
-        }
-        ag.mySubTask = null;
-        ag.messages.clear();
-        ag.executionTime = 0;
-        ag.validatedTicks = Manager.getTicks();
-    }
-/*
-    void inactivate(double success) {
-            candidates.clear();
-            teamMembers.clear();
-            preAllocations.clear();
-            replies.clear();
-            results.clear();
-            restSubTask = 0;
-            replyNum = 0;
-        } else {
-            if (success == 1) didTasksAsMember++;
-            _member_num--;
-        }
-        joined = false;
-        role = JONE_DOE;
-        phase = SELECT_ROLE;
-        leader = null;
-        mySubTask = null;
-        executionTime = 0;
-        if (strategy.getClass().getName() != "RoundRobin") {
-            index = 0;
-        } else {
-            prevIndex = index % relAgents.size();
-            index = prevIndex;
-        }
-        this.validatedTicks = Manager.getTicks();
-    }
-
-*/
-
 
     public void clearStrategy() {
         for (int i = 0; i < AGENT_NUM; i++) {
