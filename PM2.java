@@ -244,6 +244,11 @@ public class PM2 implements Strategy, SetParam {
             exceptions.add(ex.getKey());
         }
         // この時点でtにはかつての仲間たちが入っている
+
+        // 信頼エージェントについて割り当てを試みる
+        for( Agent ag: leader.relAgents ){
+        }
+
         // 一つのタスクについてRESEND_TIMES周する
         for (int i = 0; i < RESEND_TIMES; i++) {
             SubTask st;

@@ -142,7 +142,7 @@ public class Rational implements Strategy, SetParam {
                     leader.sendMessage(leader, tm, RESULT, leader.preAllocations.get(tm));
                 }
                 Manager.finishTask(leader);
-                leader.nextPhase();
+                nextPhase(leader);
             }
             // 未割り当てのサブタスクが残っていれば失敗
             else {
@@ -150,7 +150,7 @@ public class Rational implements Strategy, SetParam {
                     leader.sendMessage(leader, tm, RESULT, null);
                 }
                 Manager.disposeTask(leader);
-                leader.inactivate(0);
+                inactivate(leader,0);
                 return;
             }
         }
