@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * PMwithRationalOnly クラス
+ * PM2 クラス
  * サブタスクの要求リソースに量を設けたことにより，"報酬"を適切に考える必要が生じた
  * そこで報酬はサブタスクの要求リソースに依存するものとし，信頼度更新式 e^i_j = (1-α)e^i_j + δ * α を
  * 1. j(自分)がメンバでi(相手)がリーダーの場合，
@@ -13,22 +13,24 @@ import java.util.Map;
  * 2. j(自分)がリーダーでi(相手)がメンバの場合，
  * 　a. 成功(チーム編成成功)後，終了連絡受理時　　δ = そのサブタスクの要求リソース / 応答時間(= メッセージ往復時間 + サブタスク実行時間)
  * 　b. 失敗(チーム参加要請拒否受理)時，　　　　　δ = 0
- * によって更新する．
+ *  によって更新する．
  * 役割更新機構あり
+ * リーダーの信頼度順に割り当てる，DASCバージョン
  */
 
 
-public class PMwithRationalOnly implements Strategy, SetParam {
+public class PM2 implements Strategy, SetParam {
     static final double γ = γ_r;
     Map<Agent, AllocatedSubTask>[] teamHistory = new HashMap[AGENT_NUM];
 
-    PMwithRationalOnly() {
+    PM2() {
         for (int i = 0; i < AGENT_NUM; i++) {
             teamHistory[i] = new HashMap<>();
         }
     }
 
     public void actAsLeader(Agent agent) {
+        setPrinciple(agent);
         if (agent.phase == PROPOSITION) proposeAsL(agent);
         else if (agent.phase == REPORT) reportAsL(agent);
         else if (agent.phase == EXECUTION) execute(agent);
@@ -40,6 +42,7 @@ public class PMwithRationalOnly implements Strategy, SetParam {
             agent.inactivate(0);
             return;
         }
+        setPrinciple(agent);
         if (agent.phase == REPLY) replyAsM(agent);
         else if (agent.phase == RECEPTION) receiveAsM(agent);
         else if (agent.phase == EXECUTION) execute(agent);
@@ -61,11 +64,12 @@ public class PMwithRationalOnly implements Strategy, SetParam {
             return;
         }else {
             for ( int i = 0; i < leader.candidates.size(); i++ ) {
-                leader.proposalNum++;
-                leader.sendMessage(leader, leader.candidates.get(i), PROPOSAL, leader.ourTask.subTasks.get(i%leader.restSubTask));
+                if( leader.candidates.get(i) != null ) {
+                    leader.proposalNum++;
+                    leader.sendMessage(leader, leader.candidates.get(i), PROPOSAL, leader.ourTask.subTasks.get(i%leader.restSubTask));
+                }
             }
         }
-        leader.start = Manager.getTicks();
         leader.nextPhase();  // 次のフェイズへ
     }
 
@@ -81,7 +85,6 @@ public class PMwithRationalOnly implements Strategy, SetParam {
         // どっかには参加するのなら交渉2フェイズへ
         if (member.joined) {
             member.totalOffers++;
-            member.start = Manager.getTicks();
             member.nextPhase();
         }
         // どこにも参加しないのであれば, 役割適正値を更新するようにする
@@ -179,14 +182,12 @@ public class PMwithRationalOnly implements Strategy, SetParam {
         message = member.messages.remove(0);
         member.mySubTask = message.getSubTask();
 
-        int rt = Manager.getTicks() - member.start;
 /*
         member.totalResponseTicks += rt;
         member.meanRT = (double)member.totalResponseTicks/(double)member.totalOffers;
 // */
         // サブタスクがもらえたなら信頼度をプラスに更新し, 実行フェイズへ移る.
         if (member.mySubTask != null) {
-            member.start = Manager.getTicks();
             member.allocated[member.leader.id][member.mySubTask.resType]++;
             member.executionTime = member.calcExecutionTime(member, member.mySubTask);
             member.nextPhase();
@@ -207,7 +208,7 @@ public class PMwithRationalOnly implements Strategy, SetParam {
                 if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN)
                     for (Agent ag : agent.teamMembers) agent.workWithAsL[ag.id]++;
             } else {
-                agent.sendMessage(agent, agent.leader, DONE, agent.start);
+                agent.sendMessage(agent, agent.leader, DONE, 0);
                 agent.required[agent.mySubTask.resType]++;
                 agent.relAgents = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / agent.calcExecutionTime(agent, agent.mySubTask));
                 if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN)
@@ -228,6 +229,7 @@ public class PMwithRationalOnly implements Strategy, SetParam {
     public List<Agent> selectMembers(Agent leader, List<SubTask> subtasks) {
         List<Agent> memberCandidates = new ArrayList<>();
         Agent candidate = null;
+        List<SubTask> skips = new ArrayList<>();  // 互恵エージェントがいるために他のエージェントに要請を送らないサブタスクを格納
 
 /*
         System.out.println(leader + ", " );
@@ -244,7 +246,14 @@ public class PMwithRationalOnly implements Strategy, SetParam {
         // この時点でtにはかつての仲間たちが入っている
         // 一つのタスクについてRESEND_TIMES周する
         for (int i = 0; i < RESEND_TIMES; i++) {
-            for (SubTask st : subtasks) {
+            SubTask st;
+            for ( int stIndex = 0; stIndex < subtasks.size(); stIndex++ ) {
+                st = subtasks.get(stIndex);
+                // すでにそのサブタスクを互恵エージェントに割り当てる予定ならやめて次のサブタスクへ
+                if( leader.inTheList(st, skips) >= 0 ){
+                    memberCandidates.add(null);
+                    continue;
+                }
 //                System.out.print(st);
                 // 一つ目のサブタスク(報酬が最も高い)から割り当てていく
                 // 信頼度の一番高いやつから割り当てる
@@ -274,11 +283,28 @@ public class PMwithRationalOnly implements Strategy, SetParam {
                         }
                     }
                 }
-                // 候補が見つかれば，チーム要請対象者リストに入れ，参加要請を送る
+                // 候補が見つかれば，チーム参加要請対象者リストに入れ，参加要請を送る
                 if (!candidate.equals(null)) {
-                    exceptions.add(candidate);
-                    memberCandidates.add(candidate);
+                    // もしその候補者が互恵エージェントであり，自分を信頼してくれているのであればそいつにしか送らない
+                    if (candidate.principle == RECIPROCAL && candidate.inTheList(leader,candidate.relAgents) > 0) {
+                        // もし先に割り当てる予定だったやつがいたらそいつがいたところにnullを入れる
+                        if( i > 0 ){
+                            for( int j = 0 ; j < i; j++ ){
+                                exceptions.remove(memberCandidates.get(j * subtasks.size() + stIndex));
+                                memberCandidates.set( j * subtasks.size() + stIndex, null);
+                            }
+                        }
+                        exceptions.add(candidate);
+                        memberCandidates.add(candidate);
+                        skips.add(st);
+
 //                    System.out.println(candidate);
+                    }
+                    // 違ったら普通に候補としてリストに入れる
+                    else{
+                        exceptions.add(candidate);
+                        memberCandidates.add(candidate);
+                    }
                 }
                 // 候補が見つからないサブタスクがあったら直ちにチーム編成を失敗とする
                 else {
@@ -295,7 +321,7 @@ public class PMwithRationalOnly implements Strategy, SetParam {
      * メンバがどのリーダーの要請を受けるかを判断する
      * 信頼エージェントのリストにあるリーダーエージェントからの要請を受ける
      */
-    // 合理主義のみ
+    // 互恵主義と合理主義のどちらかによって行動を変える
     public Agent selectLeader(Agent member, List<Message> messages) {
         int size = messages.size();
         Message message;
@@ -330,7 +356,13 @@ public class PMwithRationalOnly implements Strategy, SetParam {
                     member.sendMessage(member, from, REPLY, REJECT);
                 }
             }
-            myLeader = temp;
+            if (member.principle == RATIONAL) {
+                myLeader = temp;
+            } else {
+                if (member.inTheList(temp, member.relAgents) > -1) {
+                    myLeader = temp;
+                } else member.sendMessage(member, temp, REPLY, REJECT);
+            }
         }
         return myLeader;
     }
@@ -339,7 +371,6 @@ public class PMwithRationalOnly implements Strategy, SetParam {
      * renewRelメソッド
      * 信頼度を更新し, 同時に信頼エージェントも更新する
      * agentのtargetに対する信頼度をevaluationによって更新し, 同時に信頼エージェントを更新する
-     *
      * @param agent
      */
     private List<Agent> renewRel(Agent agent, Agent target, double evaluation) {
@@ -427,6 +458,39 @@ public class PMwithRationalOnly implements Strategy, SetParam {
         return tmp;
     }
 
+    private void setPrinciple(Agent agent) {
+        if (agent.role == MEMBER) {
+            if (agent.relAgents.size() > 0 && agent.e_member > THRESHOLD_FOR_RECIPROCITY) {
+                if (agent.principle == RATIONAL) {
+                    Agent._recipro_num++;
+                    Agent._rational_num--;
+                }
+                agent.principle = RECIPROCAL;
+            } else {
+                if (agent.principle == RECIPROCAL) {
+                    Agent._recipro_num--;
+                    Agent._rational_num++;
+                }
+                agent.principle = RATIONAL;
+            }
+        } else if (agent.role == LEADER) {
+            if (agent.relAgents.size() > 0 && agent.e_leader > THRESHOLD_FOR_RECIPROCITY) {
+                if (agent.principle == RATIONAL) {
+                    Agent._recipro_num++;
+                    Agent._rational_num--;
+                }
+                agent.principle = RECIPROCAL;
+            } else {
+                if (agent.principle == RECIPROCAL) {
+                    Agent._recipro_num--;
+                    Agent._rational_num++;
+                }
+                agent.principle = RATIONAL;
+            }
+        }
+
+    }
+
     public void checkMessages(Agent ag) {
         int size = ag.messages.size();
         Message m;
@@ -441,7 +505,7 @@ public class PMwithRationalOnly implements Strategy, SetParam {
                 int rt = Manager.getTicks() - as.getAllocatedTime();
                 int reward = as.getRequiredResources();
                 //                System.out.println(rt);
-                ag.relAgents = renewRel(ag, m.getFrom(), (double) reward / rt);
+                ag.relAgents = renewRel(ag, m.getFrom(), (double) reward / rt );
             } else {
                 ag.messages.add(m); // 違うメッセージだったら戻す
             }

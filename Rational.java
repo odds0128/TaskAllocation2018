@@ -47,6 +47,7 @@ public class Rational implements Strategy, SetParam {
             return;
         } else {
             for ( int i = 0; i < leader.candidates.size(); i++ ) {
+                leader.proposalNum++;
                 leader.sendMessage(leader, leader.candidates.get(i), PROPOSAL, leader.ourTask.subTasks.get(i%leader.restSubTask));
             }
         }
@@ -75,8 +76,7 @@ public class Rational implements Strategy, SetParam {
     }
 
     private void reportAsL(Agent leader) {
-        // 有効なReplyメッセージがなければreturn
-        if ( leader.replies.size() != leader.candidates.size() ) return;
+        if (leader.replies.size() != leader.proposalNum ) return;
 
         Agent from;
         for (Message reply : leader.replies) {
@@ -90,31 +90,31 @@ public class Rational implements Strategy, SetParam {
                 leader.relAgents = renewRel(leader, from, 0);
             }
         }
-        int index;
+
         Agent A, B;
 
         // if 全candidatesから返信が返ってきてタスクが実行可能なら割り当てを考えていく
-        if (leader.replyNum == leader.candidates.size()) {
-            for (int i = 0; i < leader.restSubTask; i++) {
-                index = 2 * i;
-                A = leader.candidates.get(index);
-                B = leader.candidates.get(index + 1);
+        if (leader.replyNum == leader.proposalNum) {
+            for (int indexA = 0, indexB = leader.restSubTask; indexA < leader.restSubTask; indexA++, indexB++) {
+                A = leader.candidates.get(indexA);
+                B = leader.candidates.get(indexB);
                 // 両方ダメだったらオワコン
                 if (A == null && B == null) {
                     continue;
                 }
+
                 // もし両方から受理が返ってきたら, 信頼度の高い方に割り当てる
                 else if (A != null && B != null) {
                     // Bの方がAより信頼度が高い場合
                     if (leader.reliabilities[A.id] < leader.reliabilities[B.id]) {
-                        leader.candidates.set(index + 1, null);
-                        leader.preAllocations.put(B, leader.ourTask.subTasks.get(i));
+                        leader.candidates.set(indexA , null);
+                        leader.preAllocations.put(B, leader.ourTask.subTasks.get(indexA));
                         leader.teamMembers.add(B);
                     }
                     // Aの方がBより信頼度が高い場合
                     else {
-                        leader.candidates.set(index, null);
-                        leader.preAllocations.put(A, leader.ourTask.subTasks.get(i));
+                        leader.candidates.set(indexB, null);
+                        leader.preAllocations.put(A, leader.ourTask.subTasks.get(indexA));
                         leader.teamMembers.add(A);
                     }
                 }
@@ -122,27 +122,27 @@ public class Rational implements Strategy, SetParam {
                 else {
                     // Bだけ受理してくれた
                     if (A == null) {
-                        leader.candidates.set(index + 1, null);
-                        leader.preAllocations.put(B, leader.ourTask.subTasks.get(i));
+                        leader.candidates.set(indexB, null);
+                        leader.preAllocations.put(B, leader.ourTask.subTasks.get(indexA));
                         leader.teamMembers.add(B);
                     }
                     // Aだけ受理してくれた
                     else {
-                        leader.candidates.set(index, null);
-                        leader.preAllocations.put(A, leader.ourTask.subTasks.get(i));
+                        leader.candidates.set(indexA, null);
+                        leader.preAllocations.put(A, leader.ourTask.subTasks.get(indexA));
                         leader.teamMembers.add(A);
                     }
                 }
             }
 
             // 未割り当てが残っていないのなら実行へ
-            if ( leader.teamMembers.size() == leader.restSubTask) {
+            if ( leader.teamMembers.size() == leader.restSubTask ) {
                 for (Agent tm : leader.teamMembers) {
                     teamHistory[leader.id].put(tm, new AllocatedSubTask(leader.preAllocations.get(tm), Manager.getTicks()));
                     leader.sendMessage(leader, tm, RESULT, leader.preAllocations.get(tm));
                 }
                 Manager.finishTask(leader);
-                nextPhase(leader);
+                leader.nextPhase();
             }
             // 未割り当てのサブタスクが残っていれば失敗
             else {
@@ -150,7 +150,7 @@ public class Rational implements Strategy, SetParam {
                     leader.sendMessage(leader, tm, RESULT, null);
                 }
                 Manager.disposeTask(leader);
-                inactivate(leader,0);
+                leader.inactivate(0);
                 return;
             }
         }

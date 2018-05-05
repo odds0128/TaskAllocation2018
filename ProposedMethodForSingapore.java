@@ -15,6 +15,7 @@ import java.util.Map;
  * 　b. 失敗(チーム参加要請拒否受理)時，　　　　　δ = 0
  *  によって更新する．
  * 役割更新機構あり
+ * メンバが互恵かどうかを気にするバージョン
  */
 
 
@@ -63,7 +64,10 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
             return;
         }else {
             for ( int i = 0; i < leader.candidates.size(); i++ ) {
-                leader.sendMessage(leader, leader.candidates.get(i), PROPOSAL, leader.ourTask.subTasks.get(i%leader.restSubTask));
+                if( leader.candidates.get(i) != null ) {
+                    leader.proposalNum++;
+                    leader.sendMessage(leader, leader.candidates.get(i), PROPOSAL, leader.ourTask.subTasks.get(i%leader.restSubTask));
+                }
             }
         }
         leader.nextPhase();  // 次のフェイズへ
@@ -91,9 +95,7 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
     }
 
     private void reportAsL(Agent leader) {
-        // 有効なReplyメッセージがなければreturn
-        if (leader.replies.size() != leader.candidates.size() ) return;
-        // 2017/12/06 ICARRTに揃えるために, チーム編成が成功してからサブタスクの実行指示をだすことに
+        if (leader.replies.size() != leader.proposalNum ) return;
 
         Agent from;
         for (Message reply : leader.replies) {
@@ -107,15 +109,14 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
                 leader.relAgents = renewRel(leader, from, 0);
             }
         }
-        int index;
+
         Agent A, B;
 
         // if 全candidatesから返信が返ってきてタスクが実行可能なら割り当てを考えていく
-        if (leader.replyNum == leader.candidates.size()) {
-            for (int i = 0; i < leader.restSubTask; i++) {
-                index = 2 * i;
-                A = leader.candidates.get(index);
-                B = leader.candidates.get(index + 1);
+        if (leader.replyNum == leader.proposalNum) {
+            for (int indexA = 0, indexB = leader.restSubTask; indexA < leader.restSubTask; indexA++, indexB++) {
+                A = leader.candidates.get(indexA);
+                B = leader.candidates.get(indexB);
                 // 両方ダメだったらオワコン
                 if (A == null && B == null) {
                     continue;
@@ -125,14 +126,14 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
                 else if (A != null && B != null) {
                     // Bの方がAより信頼度が高い場合
                     if (leader.reliabilities[A.id] < leader.reliabilities[B.id]) {
-                        leader.candidates.set(index + 1, null);
-                        leader.preAllocations.put(B, leader.ourTask.subTasks.get(i));
+                        leader.candidates.set(indexA , null);
+                        leader.preAllocations.put(B, leader.ourTask.subTasks.get(indexA));
                         leader.teamMembers.add(B);
                     }
                     // Aの方がBより信頼度が高い場合
                     else {
-                        leader.candidates.set(index, null);
-                        leader.preAllocations.put(A, leader.ourTask.subTasks.get(i));
+                        leader.candidates.set(indexB, null);
+                        leader.preAllocations.put(A, leader.ourTask.subTasks.get(indexA));
                         leader.teamMembers.add(A);
                     }
                 }
@@ -140,14 +141,14 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
                 else {
                     // Bだけ受理してくれた
                     if (A == null) {
-                        leader.candidates.set(index + 1, null);
-                        leader.preAllocations.put(B, leader.ourTask.subTasks.get(i));
+                        leader.candidates.set(indexB, null);
+                        leader.preAllocations.put(B, leader.ourTask.subTasks.get(indexA));
                         leader.teamMembers.add(B);
                     }
                     // Aだけ受理してくれた
                     else {
-                        leader.candidates.set(index, null);
-                        leader.preAllocations.put(A, leader.ourTask.subTasks.get(i));
+                        leader.candidates.set(indexA, null);
+                        leader.preAllocations.put(A, leader.ourTask.subTasks.get(indexA));
                         leader.teamMembers.add(A);
                     }
                 }
@@ -172,7 +173,6 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
                 return;
             }
         }
-        leader.replies.clear();
     }
 
     private void receiveAsM(Agent member) {
@@ -229,6 +229,7 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
     public List<Agent> selectMembers(Agent leader, List<SubTask> subtasks) {
         List<Agent> memberCandidates = new ArrayList<>();
         Agent candidate = null;
+        List<SubTask> skips = new ArrayList<>();  // 互恵エージェントがいるために他のエージェントに要請を送らないサブタスクを格納
 
 /*
         System.out.println(leader + ", " );
@@ -245,7 +246,14 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
         // この時点でtにはかつての仲間たちが入っている
         // 一つのタスクについてRESEND_TIMES周する
         for (int i = 0; i < RESEND_TIMES; i++) {
-            for (SubTask st : subtasks) {
+            SubTask st;
+            for ( int stIndex = 0; stIndex < subtasks.size(); stIndex++ ) {
+                st = subtasks.get(stIndex);
+                // すでにそのサブタスクを互恵エージェントに割り当てる予定ならやめて次のサブタスクへ
+                if( leader.inTheList(st, skips) >= 0 ){
+                    memberCandidates.add(null);
+                    continue;
+                }
 //                System.out.print(st);
                 // 一つ目のサブタスク(報酬が最も高い)から割り当てていく
                 // 信頼度の一番高いやつから割り当てる
@@ -275,11 +283,28 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
                         }
                     }
                 }
-                // 候補が見つかれば，チーム要請対象者リストに入れ，参加要請を送る
+                // 候補が見つかれば，チーム参加要請対象者リストに入れ，参加要請を送る
                 if (!candidate.equals(null)) {
-                    exceptions.add(candidate);
-                    memberCandidates.add(candidate);
+                    // もしその候補者が互恵エージェントであり，自分を信頼してくれているのであればそいつにしか送らない
+                    if (candidate.principle == RECIPROCAL && candidate.inTheList(leader,candidate.relAgents) > 0) {
+                        // もし先に割り当てる予定だったやつがいたらそいつがいたところにnullを入れる
+                        if( i > 0 ){
+                            for( int j = 0 ; j < i; j++ ){
+                                exceptions.remove(memberCandidates.get(j * subtasks.size() + stIndex));
+                                memberCandidates.set( j * subtasks.size() + stIndex, null);
+                            }
+                        }
+                        exceptions.add(candidate);
+                        memberCandidates.add(candidate);
+                        skips.add(st);
+
 //                    System.out.println(candidate);
+                    }
+                    // 違ったら普通に候補としてリストに入れる
+                    else{
+                        exceptions.add(candidate);
+                        memberCandidates.add(candidate);
+                    }
                 }
                 // 候補が見つからないサブタスクがあったら直ちにチーム編成を失敗とする
                 else {

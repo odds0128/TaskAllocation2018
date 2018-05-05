@@ -53,6 +53,7 @@ public class Agent implements SetParam , Cloneable{
 
     // リーダーエージェントが持つパラメータ
     List<Agent> candidates;         // これからチームへの参加を要請するエージェントのリスト
+    int proposalNum = 0;            // 送ったproposalの数を覚えておく
     List<Agent> teamMembers;        // すでにサブタスクを送っていてメンバの選定から外すエージェントのリスト
     Map<Agent, SubTask> preAllocations;       // サブタスクの割り当て候補を< agent, subtask >のHashMapで保持
     List<Message> replies;
@@ -247,6 +248,7 @@ public class Agent implements SetParam , Cloneable{
             replies.clear();
             results.clear();
             restSubTask = 0;
+            proposalNum = 0;
             replyNum = 0;
         } else {
             if (success == 1) didTasksAsMember++;
@@ -348,9 +350,9 @@ public class Agent implements SetParam , Cloneable{
      * inTheListメソッド
      * 引数のエージェントが引数のリスト内にあればその索引を, いなければ-1を返す
      */
-    protected int inTheList(Agent a, List<Agent> agentsList) {
-        for (int i = 0; i < agentsList.size(); i++) {
-            if( a.equals(agentsList.get(i)) ) return i;
+    protected int inTheList(Object a, List List) {
+        for (int i = 0; i < List.size(); i++) {
+            if( a.equals(List.get(i)) ) return i;
         }
         return -1;
     }
