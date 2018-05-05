@@ -88,7 +88,7 @@ public class PMwithoutRoleRenewal implements Strategy, SetParam {
 
     private void reportAsL(Agent leader) {
         // 有効なReplyメッセージがなければreturn
-        if (leader.replies.size() == 0) return;
+        if (leader.replies.size() != leader.candidates.size() ) return;
         // 2017/12/06 ICARRTに揃えるために, チーム編成が成功してからサブタスクの実行指示をだすことに
 
         Agent from;
@@ -105,8 +105,6 @@ public class PMwithoutRoleRenewal implements Strategy, SetParam {
         }
         int index;
         Agent A, B;
-        List<Agent> losers = new ArrayList<>();
-        List<SubTask> reallocations = new ArrayList<>();
 
         // if 全candidatesから返信が返ってきてタスクが実行可能なら割り当てを考えていく
         if (leader.replyNum == leader.candidates.size()) {
@@ -114,24 +112,22 @@ public class PMwithoutRoleRenewal implements Strategy, SetParam {
                 index = 2 * i;
                 A = leader.candidates.get(index);
                 B = leader.candidates.get(index + 1);
-                // 両方ダメだったら再割り当てを考える
+                // 両方ダメだったらオワコン
                 if (A == null && B == null) {
-                    reallocations.add(leader.ourTask.subTasks.get(i));
                     continue;
                 }
+
                 // もし両方から受理が返ってきたら, 信頼度の高い方に割り当てる
                 else if (A != null && B != null) {
                     // Bの方がAより信頼度が高い場合
                     if (leader.reliabilities[A.id] < leader.reliabilities[B.id]) {
                         leader.candidates.set(index + 1, null);
-                        losers.add(A);
                         leader.preAllocations.put(B, leader.ourTask.subTasks.get(i));
                         leader.teamMembers.add(B);
                     }
                     // Aの方がBより信頼度が高い場合
                     else {
                         leader.candidates.set(index, null);
-                        losers.add(B);
                         leader.preAllocations.put(A, leader.ourTask.subTasks.get(i));
                         leader.teamMembers.add(A);
                     }
@@ -152,52 +148,20 @@ public class PMwithoutRoleRenewal implements Strategy, SetParam {
                     }
                 }
             }
-            // 未割り当てのサブタスクがあっても最後のチャンス
-            SubTask st;
-            Agent lo;
-            int flag;
-            if (reallocations.size() > 0 && losers.size() > 0) {
-                // 未割り当てのサブタスクひとつひとつに対して
-                for (int i = 0; i < reallocations.size(); i++) {
-                    flag = 0;
-                    st = reallocations.remove(0);
-                    // 受理を返したのに競合のせいでサブタスクが割り当てられなかったいい奴らの中から割り当てを探す
-                    for (int j = 0; j < losers.size(); j++) {
-                        lo = losers.remove(0);
-                        if (leader.calcExecutionTime(lo, st) > 0) {
-                            leader.restSubTask--;
-                            leader.preAllocations.put(lo, st);
-                            leader.teamMembers.add(lo);
-                            flag++;
-                            break;
-                        } else {
-                            losers.add(lo);
-                        }
-                    }
-                    // 誰にもできなかったら
-                    if (flag == 0) reallocations.add(st);
-                }
-            }
 
-            // 未割り当てが残っていないのならば負け犬どもに引導を渡して実行へ
-            if (reallocations.size() == 0) {
+            // 未割り当てが残っていないのなら実行へ
+            if ( leader.teamMembers.size() == leader.restSubTask ) {
                 for (Agent tm : leader.teamMembers) {
                     teamHistory[leader.id].put(tm, new AllocatedSubTask(leader.preAllocations.get(tm), Manager.getTicks()));
                     leader.sendMessage(leader, tm, RESULT, leader.preAllocations.get(tm));
                 }
-                for (Agent ls : losers) {
-                    leader.sendMessage(leader, ls, RESULT, null);
-                }
                 Manager.finishTask(leader);
                 leader.nextPhase();
             }
-            // 未割り当てのサブタスクが残っているにもかかわらず再割当先の候補がなければ失敗
+            // 未割り当てのサブタスクが残っていれば失敗
             else {
                 for (Agent tm : leader.teamMembers) {
                     leader.sendMessage(leader, tm, RESULT, null);
-                }
-                for (Agent ls : losers) {
-                    leader.sendMessage(leader, ls, RESULT, null);
                 }
                 Manager.disposeTask(leader);
                 leader.inactivate(0);
