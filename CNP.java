@@ -13,7 +13,6 @@ public class CNP implements Strategy, SetParam {
     }
 
     public void actAsLeader(Agent agent) {
-        int time = 0;
         if (agent.phase == lPHASE1) publicize(agent);
         else if (agent.phase == lPHASE2) organize(agent);
         else if (agent.phase == PHASE3) execute(agent);

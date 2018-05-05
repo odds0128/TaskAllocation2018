@@ -156,6 +156,7 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
                     }
                 }
             }
+
             // 未割り当てのサブタスクがあっても最後のチャンス
             SubTask st;
             Agent lo;
@@ -208,7 +209,6 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
                 return;
             }
         }
-        leader.replies.clear();
     }
 
     private void receiveAsM(Agent member) {

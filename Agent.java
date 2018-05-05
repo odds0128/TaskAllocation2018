@@ -348,9 +348,9 @@ public class Agent implements SetParam , Cloneable{
      * inTheListメソッド
      * 引数のエージェントが引数のリスト内にあればその索引を, いなければ-1を返す
      */
-    protected int inTheList(Agent a, List<Agent> agents) {
-        for (int i = 0; i < agents.size(); i++) {
-            if( a.equals(agents.get(i)) ) return i;
+    protected int inTheList(Agent a, List<Agent> agentsList) {
+        for (int i = 0; i < agentsList.size(); i++) {
+            if( a.equals(agentsList.get(i)) ) return i;
         }
         return -1;
     }

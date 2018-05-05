@@ -240,12 +240,12 @@ public class Manager implements SetParam {
                 assert dist <= MAX_DELAY : "alert 8: " + dist;
                 // 距離に基づいて信頼エージェントを設定する
                 for (int j = 0; j < AGENT_NUM; j++) {
-                    // 距離がdistなら信頼エージェント候補とする
+                    // 距離がdistなら既知エージェント候補とする
                     if (delays[i][j] == dist) {
                         tempList.add(agents.get(j));
                     }
                 }
-                // 近い方から100体ほどのエージェントを信頼ランキングとする
+                // 近い方から100体ほどのエージェントを既知エージェントとする
                 if (tempList.size() >= AREA_LIMIT) {
                     agent.canReach.addAll(tempList);
                     i++;
