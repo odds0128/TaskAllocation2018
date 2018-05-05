@@ -76,7 +76,7 @@ public class Rational implements Strategy, SetParam {
 
     private void reportAsL(Agent leader) {
         // 有効なReplyメッセージがなければreturn
-        if (leader.replies.size() == 0) return;
+        if (leader.replies.size() != leader.candidates.size() ) return;
         // 2017/12/06 ICARRTに揃えるために, チーム編成が成功してからサブタスクの実行指示をだすことに
 
         Agent from;
