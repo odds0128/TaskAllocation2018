@@ -57,10 +57,12 @@ public class PMwithoutRoleRenewal implements Strategy, SetParam {
             leader.candidates = new ArrayList<>();
             leader.inactivate(0);
             return;
-        }else {
-            for ( int i = 0; i < leader.candidates.size(); i++ ) {
-                leader.proposalNum++;
-                leader.sendMessage(leader, leader.candidates.get(i), PROPOSAL, leader.ourTask.subTasks.get(i%leader.restSubTask));
+        } else {
+            for (int i = 0; i < leader.candidates.size(); i++) {
+                if (leader.candidates.get(i) != null) {
+                    leader.proposalNum++;
+                    leader.sendMessage(leader, leader.candidates.get(i), PROPOSAL, leader.ourTask.subTasks.get(i % leader.restSubTask));
+                }
             }
         }
         leader.nextPhase();  // 次のフェイズへ
@@ -88,7 +90,7 @@ public class PMwithoutRoleRenewal implements Strategy, SetParam {
     }
 
     private void reportAsL(Agent leader) {
-        if (leader.replies.size() != leader.proposalNum ) return;
+        if (leader.replies.size() != leader.proposalNum) return;
 
         Agent from;
         for (Message reply : leader.replies) {
@@ -119,7 +121,7 @@ public class PMwithoutRoleRenewal implements Strategy, SetParam {
                 else if (A != null && B != null) {
                     // Bの方がAより信頼度が高い場合
                     if (leader.reliabilities[A.id] < leader.reliabilities[B.id]) {
-                        leader.candidates.set(indexA , null);
+                        leader.candidates.set(indexA, null);
                         leader.preAllocations.put(B, leader.ourTask.subTasks.get(indexA));
                         leader.teamMembers.add(B);
                     }
@@ -148,7 +150,7 @@ public class PMwithoutRoleRenewal implements Strategy, SetParam {
             }
 
             // 未割り当てが残っていないのなら実行へ
-            if ( leader.teamMembers.size() == leader.restSubTask ) {
+            if (leader.teamMembers.size() == leader.restSubTask) {
                 for (Agent tm : leader.teamMembers) {
                     teamHistory[leader.id].put(tm, new AllocatedSubTask(leader.preAllocations.get(tm), Manager.getTicks()));
                     leader.sendMessage(leader, tm, RESULT, leader.preAllocations.get(tm));
@@ -247,10 +249,10 @@ public class PMwithoutRoleRenewal implements Strategy, SetParam {
         // 一つのタスクについてRESEND_TIMES周する
         for (int i = 0; i < RESEND_TIMES; i++) {
             SubTask st;
-            for ( int stIndex = 0; stIndex < subtasks.size(); stIndex++ ) {
+            for (int stIndex = 0; stIndex < subtasks.size(); stIndex++) {
                 st = subtasks.get(stIndex);
                 // すでにそのサブタスクを互恵エージェントに割り当てる予定ならやめて次のサブタスクへ
-                if( leader.inTheList(st, skips) >= 0 ){
+                if (leader.inTheList(st, skips) >= 0) {
                     memberCandidates.add(null);
                     continue;
                 }
@@ -261,7 +263,7 @@ public class PMwithoutRoleRenewal implements Strategy, SetParam {
                 if (leader.epsilonGreedy()) {
                     do {
                         candidate = Manager.getAgentRandomly(leader, exceptions, Manager.getAgents());
-                    }while(leader.calcExecutionTime(candidate, st) < 0 );
+                    } while (leader.calcExecutionTime(candidate, st) < 0);
                 } else {
                     // 信頼度ランキングの上から割り当てを試みる．
                     // 1. 能力的にできない
@@ -286,12 +288,12 @@ public class PMwithoutRoleRenewal implements Strategy, SetParam {
                 // 候補が見つかれば，チーム参加要請対象者リストに入れ，参加要請を送る
                 if (!candidate.equals(null)) {
                     // もしその候補者が互恵エージェントであり，自分を信頼してくれているのであればそいつにしか送らない
-                    if (candidate.principle == RECIPROCAL && candidate.inTheList(leader,candidate.relAgents) > 0) {
+                    if (candidate.principle == RECIPROCAL && candidate.inTheList(leader, candidate.relAgents) > 0) {
                         // もし先に割り当てる予定だったやつがいたらそいつがいたところにnullを入れる
-                        if( i > 0 ){
-                            for( int j = 0 ; j < i; j++ ){
+                        if (i > 0) {
+                            for (int j = 0; j < i; j++) {
                                 exceptions.remove(memberCandidates.get(j * subtasks.size() + stIndex));
-                                memberCandidates.set( j * subtasks.size() + stIndex, null);
+                                memberCandidates.set(j * subtasks.size() + stIndex, null);
                             }
                         }
                         exceptions.add(candidate);
@@ -301,7 +303,7 @@ public class PMwithoutRoleRenewal implements Strategy, SetParam {
 //                    System.out.println(candidate);
                     }
                     // 違ったら普通に候補としてリストに入れる
-                    else{
+                    else {
                         exceptions.add(candidate);
                         memberCandidates.add(candidate);
                     }
@@ -371,6 +373,7 @@ public class PMwithoutRoleRenewal implements Strategy, SetParam {
      * renewRelメソッド
      * 信頼度を更新し, 同時に信頼エージェントも更新する
      * agentのtargetに対する信頼度をevaluationによって更新し, 同時に信頼エージェントを更新する
+     *
      * @param agent
      */
     private List<Agent> renewRel(Agent agent, Agent target, double evaluation) {

@@ -61,10 +61,11 @@ public class PMwithRationalOnly implements Strategy, SetParam {
             return;
         }else {
             for ( int i = 0; i < leader.candidates.size(); i++ ) {
-                leader.proposalNum++;
-                leader.sendMessage(leader, leader.candidates.get(i), PROPOSAL, leader.ourTask.subTasks.get(i%leader.restSubTask));
+                if (leader.candidates.get(i) != null) {
+                    leader.proposalNum++;
+                    leader.sendMessage(leader, leader.candidates.get(i), PROPOSAL, leader.ourTask.subTasks.get(i % leader.restSubTask));
+                }
             }
-        }
         leader.start = Manager.getTicks();
         leader.nextPhase();  // 次のフェイズへ
     }
