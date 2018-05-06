@@ -219,9 +219,17 @@ public class PMwithoutRoleRenewal implements Strategy, SetParam {
      *
      * @param subtasks
      */
+    /**
+     * selectMembersメソッド
+     * 優先度の高いエージェントから(すなわち添字の若い信頼エージェントから)選択する
+     * ε-greedyを導入
+     *
+     * @param subtasks
+     */
     public List<Agent> selectMembers(Agent leader, List<SubTask> subtasks) {
         List<Agent> memberCandidates = new ArrayList<>();
         Agent candidate = null;
+        List<SubTask> skips = new ArrayList<>();  // 互恵エージェントがいるために他のエージェントに要請を送らないサブタスクを格納
 
 /*
         System.out.println(leader + ", " );
@@ -238,7 +246,14 @@ public class PMwithoutRoleRenewal implements Strategy, SetParam {
         // この時点でtにはかつての仲間たちが入っている
         // 一つのタスクについてRESEND_TIMES周する
         for (int i = 0; i < RESEND_TIMES; i++) {
-            for (SubTask st : subtasks) {
+            SubTask st;
+            for ( int stIndex = 0; stIndex < subtasks.size(); stIndex++ ) {
+                st = subtasks.get(stIndex);
+                // すでにそのサブタスクを互恵エージェントに割り当てる予定ならやめて次のサブタスクへ
+                if( leader.inTheList(st, skips) >= 0 ){
+                    memberCandidates.add(null);
+                    continue;
+                }
 //                System.out.print(st);
                 // 一つ目のサブタスク(報酬が最も高い)から割り当てていく
                 // 信頼度の一番高いやつから割り当てる
@@ -268,11 +283,28 @@ public class PMwithoutRoleRenewal implements Strategy, SetParam {
                         }
                     }
                 }
-                // 候補が見つかれば，チーム要請対象者リストに入れ，参加要請を送る
+                // 候補が見つかれば，チーム参加要請対象者リストに入れ，参加要請を送る
                 if (!candidate.equals(null)) {
-                    exceptions.add(candidate);
-                    memberCandidates.add(candidate);
+                    // もしその候補者が互恵エージェントであり，自分を信頼してくれているのであればそいつにしか送らない
+                    if (candidate.principle == RECIPROCAL && candidate.inTheList(leader,candidate.relAgents) > 0) {
+                        // もし先に割り当てる予定だったやつがいたらそいつがいたところにnullを入れる
+                        if( i > 0 ){
+                            for( int j = 0 ; j < i; j++ ){
+                                exceptions.remove(memberCandidates.get(j * subtasks.size() + stIndex));
+                                memberCandidates.set( j * subtasks.size() + stIndex, null);
+                            }
+                        }
+                        exceptions.add(candidate);
+                        memberCandidates.add(candidate);
+                        skips.add(st);
+
 //                    System.out.println(candidate);
+                    }
+                    // 違ったら普通に候補としてリストに入れる
+                    else{
+                        exceptions.add(candidate);
+                        memberCandidates.add(candidate);
+                    }
                 }
                 // 候補が見つからないサブタスクがあったら直ちにチーム編成を失敗とする
                 else {

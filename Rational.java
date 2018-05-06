@@ -23,7 +23,7 @@ public class Rational implements Strategy, SetParam {
         if (agent.phase == lPHASE1) proposeAsL(agent);
         else if (agent.phase == lPHASE2) reportAsL(agent);
         else if (agent.phase == PHASE3) execute(agent);
-        decreaseDEC(agent);
+//        decreaseDEC(agent);
     }
 
     public void actAsMember(Agent agent) {
@@ -80,7 +80,6 @@ public class Rational implements Strategy, SetParam {
 
         Agent from;
         for (Message reply : leader.replies) {
-            leader.replyNum++;
             // 拒否ならそのエージェントを候補リストから外し, 信頼度を0で更新する
             if (reply.getReply() != ACCEPT) {
                 from = reply.getFrom();
@@ -94,8 +93,8 @@ public class Rational implements Strategy, SetParam {
         Agent A, B;
 
         // if 全candidatesから返信が返ってきてタスクが実行可能なら割り当てを考えていく
-        if (leader.replyNum == leader.proposalNum) {
-            for (int indexA = 0, indexB = leader.restSubTask; indexA < leader.restSubTask; indexA++, indexB++) {
+
+        for (int indexA = 0, indexB = leader.restSubTask; indexA < leader.restSubTask; indexA++, indexB++) {
                 A = leader.candidates.get(indexA);
                 B = leader.candidates.get(indexB);
                 // 両方ダメだったらオワコン
@@ -107,13 +106,11 @@ public class Rational implements Strategy, SetParam {
                 else if (A != null && B != null) {
                     // Bの方がAより信頼度が高い場合
                     if (leader.reliabilities[A.id] < leader.reliabilities[B.id]) {
-                        leader.candidates.set(indexA , null);
                         leader.preAllocations.put(B, leader.ourTask.subTasks.get(indexA));
                         leader.teamMembers.add(B);
                     }
                     // Aの方がBより信頼度が高い場合
                     else {
-                        leader.candidates.set(indexB, null);
                         leader.preAllocations.put(A, leader.ourTask.subTasks.get(indexA));
                         leader.teamMembers.add(A);
                     }
@@ -122,13 +119,11 @@ public class Rational implements Strategy, SetParam {
                 else {
                     // Bだけ受理してくれた
                     if (A == null) {
-                        leader.candidates.set(indexB, null);
                         leader.preAllocations.put(B, leader.ourTask.subTasks.get(indexA));
                         leader.teamMembers.add(B);
                     }
                     // Aだけ受理してくれた
                     else {
-                        leader.candidates.set(indexA, null);
                         leader.preAllocations.put(A, leader.ourTask.subTasks.get(indexA));
                         leader.teamMembers.add(A);
                     }
@@ -136,13 +131,14 @@ public class Rational implements Strategy, SetParam {
             }
 
             // 未割り当てが残っていないのなら実行へ
-            if ( leader.teamMembers.size() == leader.restSubTask ) {
+            if ( leader.teamMembers.size() == leader.ourTask.subTaskNum ) {
                 for (Agent tm : leader.teamMembers) {
                     teamHistory[leader.id].put(tm, new AllocatedSubTask(leader.preAllocations.get(tm), Manager.getTicks()));
                     leader.sendMessage(leader, tm, RESULT, leader.preAllocations.get(tm));
                 }
                 Manager.finishTask(leader);
                 nextPhase(leader);
+                return;
             }
             // 未割り当てのサブタスクが残っていれば失敗
             else {
@@ -153,7 +149,6 @@ public class Rational implements Strategy, SetParam {
                 inactivate(leader,0);
                 return;
             }
-        }
     }
 
     private void receiveAsM(Agent member) {
@@ -488,6 +483,7 @@ public class Rational implements Strategy, SetParam {
             ag.preAllocations.clear();
             ag.restSubTask = 0;
             ag.role = LEADER;
+            ag.proposalNum = 0;
         } else if (ag.role == MEMBER) {
             ag.phase = mPHASE1;
             ag.role = MEMBER;
