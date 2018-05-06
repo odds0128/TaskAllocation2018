@@ -5,7 +5,7 @@
 
 interface SetParam {
     // 環境の設定( 変更していく部分 )
-    int EXECUTION_TIMES = 20;             // 実験の回数
+    int EXECUTION_TIMES = 1;             // 実験の回数
     int MAX_TURN_NUM    = 200000;         // 一回の実験のターン数
     int WRITING_TIMES   = 1000;           // データのファイルへの出力回数
     boolean CHECK_RELATIONSHIPS = false;  // エージェント関係の協調関係を録るか
@@ -45,7 +45,7 @@ interface SetParam {
     int MIN_SUBTASK_RESOURCE_SIZE = 50;
 
     int RESEND_TIMES   = 2;              // あるサブタスクについて要請を出すエージェントの数
-    int MAX_RELIABLE_AGENTS = 5;         // 信頼エージェントの数
+    int MAX_RELIABLE_AGENTS = 1;         // 信頼エージェントの数
     int ROLE_RENEWAL_TICKS  = 50;
 
     // パラメータ

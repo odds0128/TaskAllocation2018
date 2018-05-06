@@ -523,7 +523,6 @@ public class Agent implements SetParam , Cloneable{
             str.append(", the delay: " + Manager.delays[this.id][relRanking.get(0).id]);
         }
 // */
-        str.append(", " + principle);
         str.append("[");
         for (int i = 0; i < RESOURCE_TYPES; i++) str.append( String.format("%3d",res[i]) + "," );
         str.append("]");

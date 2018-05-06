@@ -90,11 +90,14 @@ public class PMwithoutRoleRenewal implements Strategy, SetParam {
     }
 
     private void reportAsL(Agent leader) {
-        if (leader.replies.size() != leader.proposalNum) return;
-
+        if (leader.replies.size() != leader.proposalNum ) return;
+        /*if ( Manager.getTicks() > 50000 ){
+            System.out.println(leader + ", subtasks: " + leader.ourTask.subTasks);
+            System.out.println("exCandidates" + leader.candidates);
+            System.out.println("replies" + leader.replies);
+        }*/
         Agent from;
         for (Message reply : leader.replies) {
-            leader.replyNum++;
             // 拒否ならそのエージェントを候補リストから外し, 信頼度を0で更新する
             if (reply.getReply() != ACCEPT) {
                 from = reply.getFrom();
@@ -107,66 +110,70 @@ public class PMwithoutRoleRenewal implements Strategy, SetParam {
 
         Agent A, B;
 
+/*
+        if ( Manager.getTicks() > 50000 ){
+            System.out.println(leader + ", candidates: " + leader.candidates);
+        }
+*/
+
         // if 全candidatesから返信が返ってきてタスクが実行可能なら割り当てを考えていく
-        if (leader.replyNum == leader.proposalNum) {
-            for (int indexA = 0, indexB = leader.restSubTask; indexA < leader.restSubTask; indexA++, indexB++) {
-                A = leader.candidates.get(indexA);
-                B = leader.candidates.get(indexB);
-                // 両方ダメだったらオワコン
-                if (A == null && B == null) {
-                    continue;
-                }
 
-                // もし両方から受理が返ってきたら, 信頼度の高い方に割り当てる
-                else if (A != null && B != null) {
-                    // Bの方がAより信頼度が高い場合
-                    if (leader.reliabilities[A.id] < leader.reliabilities[B.id]) {
-                        leader.candidates.set(indexA, null);
-                        leader.preAllocations.put(B, leader.ourTask.subTasks.get(indexA));
-                        leader.teamMembers.add(B);
-                    }
-                    // Aの方がBより信頼度が高い場合
-                    else {
-                        leader.candidates.set(indexB, null);
-                        leader.preAllocations.put(A, leader.ourTask.subTasks.get(indexA));
-                        leader.teamMembers.add(A);
-                    }
+        for (int indexA = 0, indexB = leader.restSubTask; indexA < leader.restSubTask; indexA++, indexB++) {
+            A = leader.candidates.get(indexA);
+            B = leader.candidates.get(indexB);
+            // 両方ダメだったらオワコン
+            if (A == null && B == null) {
+                continue;
+            }
+
+            // もし両方から受理が返ってきたら, 信頼度の高い方に割り当てる
+            else if (A != null && B != null) {
+                // Bの方がAより信頼度が高い場合
+                if (leader.reliabilities[A.id] < leader.reliabilities[B.id]) {
+                    leader.preAllocations.put(B, leader.ourTask.subTasks.get(indexA));
+                    leader.sendMessage(leader, A, RESULT, null);
+                    leader.teamMembers.add(B);
                 }
-                // もし片っぽしか受理しなければそいつがチームメンバーとなる
+                // Aの方がBより信頼度が高い場合
                 else {
-                    // Bだけ受理してくれた
-                    if (A == null) {
-                        leader.candidates.set(indexB, null);
-                        leader.preAllocations.put(B, leader.ourTask.subTasks.get(indexA));
-                        leader.teamMembers.add(B);
-                    }
-                    // Aだけ受理してくれた
-                    else {
-                        leader.candidates.set(indexA, null);
-                        leader.preAllocations.put(A, leader.ourTask.subTasks.get(indexA));
-                        leader.teamMembers.add(A);
-                    }
+                    leader.preAllocations.put(A, leader.ourTask.subTasks.get(indexA));
+                    leader.sendMessage(leader, B, RESULT, null);
+                    leader.teamMembers.add(A);
                 }
             }
-
-            // 未割り当てが残っていないのなら実行へ
-            if (leader.teamMembers.size() == leader.restSubTask) {
-                for (Agent tm : leader.teamMembers) {
-                    teamHistory[leader.id].put(tm, new AllocatedSubTask(leader.preAllocations.get(tm), Manager.getTicks()));
-                    leader.sendMessage(leader, tm, RESULT, leader.preAllocations.get(tm));
-                }
-                Manager.finishTask(leader);
-                leader.nextPhase();
-            }
-            // 未割り当てのサブタスクが残っていれば失敗
+            // もし片っぽしか受理しなければそいつがチームメンバーとなる
             else {
-                for (Agent tm : leader.teamMembers) {
-                    leader.sendMessage(leader, tm, RESULT, null);
+                // Bだけ受理してくれた
+                if (A == null) {
+                    leader.preAllocations.put(B, leader.ourTask.subTasks.get(indexA));
+                    leader.teamMembers.add(B);
                 }
-                Manager.disposeTask(leader);
-                leader.inactivate(0);
-                return;
+                // Aだけ受理してくれた
+                else {
+                    leader.preAllocations.put(A, leader.ourTask.subTasks.get(indexA));
+                    leader.teamMembers.add(A);
+                }
             }
+        }
+
+        // 未割り当てが残っていないのなら実行へ
+        if ( leader.teamMembers.size() == leader.ourTask.subTaskNum ) {
+            for (Agent tm : leader.teamMembers) {
+                teamHistory[leader.id].put(tm, new AllocatedSubTask(leader.preAllocations.get(tm), Manager.getTicks()));
+                leader.sendMessage(leader, tm, RESULT, leader.preAllocations.get(tm));
+            }
+            Manager.finishTask(leader);
+            leader.nextPhase();
+            return;
+        }
+        // 未割り当てのサブタスクが残っていれば失敗
+        else {
+            for (Agent tm : leader.teamMembers) {
+                leader.sendMessage(leader, tm, RESULT, null);
+            }
+            Manager.disposeTask(leader);
+            leader.inactivate(0);
+            return;
         }
     }
 

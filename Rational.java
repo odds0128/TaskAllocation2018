@@ -56,6 +56,7 @@ public class Rational implements Strategy, SetParam {
 
     private void replyAsM(Agent member) {
         if (member.messages.size() == 0) return;     // メッセージをチェック
+
         member.leader = selectLeader(member, member.messages);
         if (member.leader != null) {
             member.joined = true;
@@ -77,7 +78,11 @@ public class Rational implements Strategy, SetParam {
 
     private void reportAsL(Agent leader) {
         if (leader.replies.size() != leader.proposalNum ) return;
-
+        /*if ( Manager.getTicks() > 50000 ){
+            System.out.println(leader + ", subtasks: " + leader.ourTask.subTasks);
+            System.out.println("exCandidates" + leader.candidates);
+            System.out.println("replies" + leader.replies);
+        }*/
         Agent from;
         for (Message reply : leader.replies) {
             // 拒否ならそのエージェントを候補リストから外し, 信頼度を0で更新する
@@ -91,6 +96,12 @@ public class Rational implements Strategy, SetParam {
         }
 
         Agent A, B;
+
+/*
+        if ( Manager.getTicks() > 50000 ){
+            System.out.println(leader + ", candidates: " + leader.candidates);
+        }
+*/
 
         // if 全candidatesから返信が返ってきてタスクが実行可能なら割り当てを考えていく
 
@@ -107,11 +118,13 @@ public class Rational implements Strategy, SetParam {
                     // Bの方がAより信頼度が高い場合
                     if (leader.reliabilities[A.id] < leader.reliabilities[B.id]) {
                         leader.preAllocations.put(B, leader.ourTask.subTasks.get(indexA));
+                        leader.sendMessage(leader, A, RESULT, null);
                         leader.teamMembers.add(B);
                     }
                     // Aの方がBより信頼度が高い場合
                     else {
                         leader.preAllocations.put(A, leader.ourTask.subTasks.get(indexA));
+                        leader.sendMessage(leader, B, RESULT, null);
                         leader.teamMembers.add(A);
                     }
                 }
@@ -259,7 +272,6 @@ public class Rational implements Strategy, SetParam {
                 }
             }
         }
-
         return memberCandidates;
     }
 
@@ -297,6 +309,11 @@ public class Rational implements Strategy, SetParam {
                 member.sendMessage(member, from, REPLY, REJECT);
             }
         }
+/*
+        if( Manager.getTicks() > 50000 ){
+            System.out.println();
+        }
+*/
         return tempLeader;
     }
 
@@ -421,7 +438,7 @@ public class Rational implements Strategy, SetParam {
                 for( int i = 0; i < size; i++ ){
                     m = ag.messages.remove(0);
                     assert m.getMessageType() == PROPOSITION: "来るとしてもチーム参加要請しかありえない";
-                    TransmissionPath.sendMessage(new Message(ag, m.getFrom(), REPLY, REJECT_FOR_DOING_YOUR_ST));
+                    TransmissionPath.sendMessage(new Message(ag, m.getFrom(), REPLY, REJECT));
                 }
             }
             // phase2(チーム編成時)には要請を送ったエージェントからの返事を待っている
@@ -430,7 +447,7 @@ public class Rational implements Strategy, SetParam {
                     m = ag.messages.remove(0);
                     assert m.getMessageType() == PROPOSITION || m.getMessageType() == REPLY: "来るとしてもチーム参加要請かチーム参加要請に対する返事しかありえない";
                     if( m.getMessageType() == PROPOSITION ){
-                        TransmissionPath.sendMessage(new Message(ag, m.getFrom(), REPLY, REJECT_FOR_DOING_YOUR_ST));
+                        TransmissionPath.sendMessage(new Message(ag, m.getFrom(), REPLY, REJECT));
                     }else{
                         ag.replies.add(m);
                     }
@@ -454,7 +471,7 @@ public class Rational implements Strategy, SetParam {
                     m = ag.messages.remove(0);
                     assert m.getMessageType() == PROPOSITION || m.getMessageType() == RESULT: "来るとしてもチーム参加要請かチーム編成の可否報告しかありえない";
                     if( m.getMessageType() == PROPOSITION ){
-                        TransmissionPath.sendMessage(new Message(ag, m.getFrom(), REPLY, REJECT_FOR_DOING_YOUR_ST));
+                        TransmissionPath.sendMessage(new Message(ag, m.getFrom(), REPLY, REJECT));
                     }else{
                         ag.messages.add(m);
                     }
@@ -465,7 +482,7 @@ public class Rational implements Strategy, SetParam {
                 for (int i = 0; i < size; i++) {
                     m = ag.messages.remove(0);
                     assert m.getMessageType() == PROPOSITION : "来るとしてもチーム参加要請しかありえない";
-                    if (m.getMessageType() == PROPOSITION) TransmissionPath.sendMessage(new Message(ag, m.getFrom(), REPLY, REJECT_FOR_DOING_YOUR_ST));
+                    if (m.getMessageType() == PROPOSITION) TransmissionPath.sendMessage(new Message(ag, m.getFrom(), REPLY, REJECT));
                 }
             }
         }

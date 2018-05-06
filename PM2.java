@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * PM2 クラス
+ * ProposedMethodForSingapore クラス
  * サブタスクの要求リソースに量を設けたことにより，"報酬"を適切に考える必要が生じた
  * そこで報酬はサブタスクの要求リソースに依存するものとし，信頼度更新式 e^i_j = (1-α)e^i_j + δ * α を
  * 1. j(自分)がメンバでi(相手)がリーダーの場合，
@@ -13,9 +13,9 @@ import java.util.Map;
  * 2. j(自分)がリーダーでi(相手)がメンバの場合，
  * 　a. 成功(チーム編成成功)後，終了連絡受理時　　δ = そのサブタスクの要求リソース / 応答時間(= メッセージ往復時間 + サブタスク実行時間)
  * 　b. 失敗(チーム参加要請拒否受理)時，　　　　　δ = 0
- *  によって更新する．
+ * によって更新する．
  * 役割更新機構あり
- * リーダーの信頼度順に割り当てる，DASCバージョン
+ * メンバが互恵かどうかを気にするバージョン
  */
 
 
@@ -62,11 +62,11 @@ public class PM2 implements Strategy, SetParam {
             leader.candidates = new ArrayList<>();
             leader.inactivate(0);
             return;
-        }else {
-            for ( int i = 0; i < leader.candidates.size(); i++ ) {
-                if( leader.candidates.get(i) != null ) {
+        } else {
+            for (int i = 0; i < leader.candidates.size(); i++) {
+                if (leader.candidates.get(i) != null) {
                     leader.proposalNum++;
-                    leader.sendMessage(leader, leader.candidates.get(i), PROPOSAL, leader.ourTask.subTasks.get(i%leader.restSubTask));
+                    leader.sendMessage(leader, leader.candidates.get(i), PROPOSAL, leader.ourTask.subTasks.get(i % leader.restSubTask));
                 }
             }
         }
@@ -96,10 +96,13 @@ public class PM2 implements Strategy, SetParam {
 
     private void reportAsL(Agent leader) {
         if (leader.replies.size() != leader.proposalNum ) return;
-
+        /*if ( Manager.getTicks() > 50000 ){
+            System.out.println(leader + ", subtasks: " + leader.ourTask.subTasks);
+            System.out.println("exCandidates" + leader.candidates);
+            System.out.println("replies" + leader.replies);
+        }*/
         Agent from;
         for (Message reply : leader.replies) {
-            leader.replyNum++;
             // 拒否ならそのエージェントを候補リストから外し, 信頼度を0で更新する
             if (reply.getReply() != ACCEPT) {
                 from = reply.getFrom();
@@ -112,66 +115,70 @@ public class PM2 implements Strategy, SetParam {
 
         Agent A, B;
 
+/*
+        if ( Manager.getTicks() > 50000 ){
+            System.out.println(leader + ", candidates: " + leader.candidates);
+        }
+*/
+
         // if 全candidatesから返信が返ってきてタスクが実行可能なら割り当てを考えていく
-        if (leader.replyNum == leader.proposalNum) {
-            for (int indexA = 0, indexB = leader.restSubTask; indexA < leader.restSubTask; indexA++, indexB++) {
-                A = leader.candidates.get(indexA);
-                B = leader.candidates.get(indexB);
-                // 両方ダメだったらオワコン
-                if (A == null && B == null) {
-                    continue;
-                }
 
-                // もし両方から受理が返ってきたら, 信頼度の高い方に割り当てる
-                else if (A != null && B != null) {
-                    // Bの方がAより信頼度が高い場合
-                    if (leader.reliabilities[A.id] < leader.reliabilities[B.id]) {
-                        leader.candidates.set(indexA , null);
-                        leader.preAllocations.put(B, leader.ourTask.subTasks.get(indexA));
-                        leader.teamMembers.add(B);
-                    }
-                    // Aの方がBより信頼度が高い場合
-                    else {
-                        leader.candidates.set(indexB, null);
-                        leader.preAllocations.put(A, leader.ourTask.subTasks.get(indexA));
-                        leader.teamMembers.add(A);
-                    }
+        for (int indexA = 0, indexB = leader.restSubTask; indexA < leader.restSubTask; indexA++, indexB++) {
+            A = leader.candidates.get(indexA);
+            B = leader.candidates.get(indexB);
+            // 両方ダメだったらオワコン
+            if (A == null && B == null) {
+                continue;
+            }
+
+            // もし両方から受理が返ってきたら, 信頼度の高い方に割り当てる
+            else if (A != null && B != null) {
+                // Bの方がAより信頼度が高い場合
+                if (leader.reliabilities[A.id] < leader.reliabilities[B.id]) {
+                    leader.preAllocations.put(B, leader.ourTask.subTasks.get(indexA));
+                    leader.sendMessage(leader, A, RESULT, null);
+                    leader.teamMembers.add(B);
                 }
-                // もし片っぽしか受理しなければそいつがチームメンバーとなる
+                // Aの方がBより信頼度が高い場合
                 else {
-                    // Bだけ受理してくれた
-                    if (A == null) {
-                        leader.candidates.set(indexB, null);
-                        leader.preAllocations.put(B, leader.ourTask.subTasks.get(indexA));
-                        leader.teamMembers.add(B);
-                    }
-                    // Aだけ受理してくれた
-                    else {
-                        leader.candidates.set(indexA, null);
-                        leader.preAllocations.put(A, leader.ourTask.subTasks.get(indexA));
-                        leader.teamMembers.add(A);
-                    }
+                    leader.preAllocations.put(A, leader.ourTask.subTasks.get(indexA));
+                    leader.sendMessage(leader, B, RESULT, null);
+                    leader.teamMembers.add(A);
                 }
             }
-
-            // 未割り当てが残っていないのなら実行へ
-            if ( leader.teamMembers.size() == leader.restSubTask ) {
-                for (Agent tm : leader.teamMembers) {
-                    teamHistory[leader.id].put(tm, new AllocatedSubTask(leader.preAllocations.get(tm), Manager.getTicks()));
-                    leader.sendMessage(leader, tm, RESULT, leader.preAllocations.get(tm));
-                }
-                Manager.finishTask(leader);
-                leader.nextPhase();
-            }
-            // 未割り当てのサブタスクが残っていれば失敗
+            // もし片っぽしか受理しなければそいつがチームメンバーとなる
             else {
-                for (Agent tm : leader.teamMembers) {
-                    leader.sendMessage(leader, tm, RESULT, null);
+                // Bだけ受理してくれた
+                if (A == null) {
+                    leader.preAllocations.put(B, leader.ourTask.subTasks.get(indexA));
+                    leader.teamMembers.add(B);
                 }
-                Manager.disposeTask(leader);
-                leader.inactivate(0);
-                return;
+                // Aだけ受理してくれた
+                else {
+                    leader.preAllocations.put(A, leader.ourTask.subTasks.get(indexA));
+                    leader.teamMembers.add(A);
+                }
             }
+        }
+
+        // 未割り当てが残っていないのなら実行へ
+        if ( leader.teamMembers.size() == leader.ourTask.subTaskNum ) {
+            for (Agent tm : leader.teamMembers) {
+                teamHistory[leader.id].put(tm, new AllocatedSubTask(leader.preAllocations.get(tm), Manager.getTicks()));
+                leader.sendMessage(leader, tm, RESULT, leader.preAllocations.get(tm));
+            }
+            Manager.finishTask(leader);
+            leader.nextPhase();
+            return;
+        }
+        // 未割り当てのサブタスクが残っていれば失敗
+        else {
+            for (Agent tm : leader.teamMembers) {
+                leader.sendMessage(leader, tm, RESULT, null);
+            }
+            Manager.disposeTask(leader);
+            leader.inactivate(0);
+            return;
         }
     }
 
@@ -231,31 +238,32 @@ public class PM2 implements Strategy, SetParam {
         Agent candidate = null;
         List<SubTask> skips = new ArrayList<>();  // 互恵エージェントがいるために他のエージェントに要請を送らないサブタスクを格納
 
-/*
-        System.out.println(leader + ", " );
-        for( Agent ag: leader.relRanking ){
-            System.out.print(ag.id + ", ");
-        }
-        System.out.println();
-// */
-
         List<Agent> exceptions = new ArrayList<>();
         for (Map.Entry<Agent, AllocatedSubTask> ex : teamHistory[leader.id].entrySet()) {
             exceptions.add(ex.getKey());
         }
         // この時点でtにはかつての仲間たちが入っている
+        // 先に信頼エージェントに対して割り当てを試みる
+        for( Agent relAg: leader.relAgents ){
+            // その信頼エージェントがexcepttionsにいなければ，可能な最大報酬のサブタスクを割り当てる
+            if( leader.inTheList(relAg, exceptions) >= 0 ) {
+                continue;
+            }else{
+                for( SubTask st: subtasks ){
+                    if( relAg.calcExecutionTime(relAg, st) > 0 ){
 
-        // 信頼エージェントについて割り当てを試みる
-        for( Agent ag: leader.relAgents ){
+                    }
+                }
+            }
         }
 
         // 一つのタスクについてRESEND_TIMES周する
         for (int i = 0; i < RESEND_TIMES; i++) {
             SubTask st;
-            for ( int stIndex = 0; stIndex < subtasks.size(); stIndex++ ) {
+            for (int stIndex = 0; stIndex < subtasks.size(); stIndex++) {
                 st = subtasks.get(stIndex);
                 // すでにそのサブタスクを互恵エージェントに割り当てる予定ならやめて次のサブタスクへ
-                if( leader.inTheList(st, skips) >= 0 ){
+                if (leader.inTheList(st, skips) >= 0) {
                     memberCandidates.add(null);
                     continue;
                 }
@@ -266,7 +274,7 @@ public class PM2 implements Strategy, SetParam {
                 if (leader.epsilonGreedy()) {
                     do {
                         candidate = Manager.getAgentRandomly(leader, exceptions, Manager.getAgents());
-                    }while(leader.calcExecutionTime(candidate, st) < 0 );
+                    } while (leader.calcExecutionTime(candidate, st) < 0);
                 } else {
                     // 信頼度ランキングの上から割り当てを試みる．
                     // 1. 能力的にできない
@@ -291,12 +299,12 @@ public class PM2 implements Strategy, SetParam {
                 // 候補が見つかれば，チーム参加要請対象者リストに入れ，参加要請を送る
                 if (!candidate.equals(null)) {
                     // もしその候補者が互恵エージェントであり，自分を信頼してくれているのであればそいつにしか送らない
-                    if (candidate.principle == RECIPROCAL && candidate.inTheList(leader,candidate.relAgents) > 0) {
+                    if (candidate.principle == RECIPROCAL && candidate.inTheList(leader, candidate.relAgents) > 0) {
                         // もし先に割り当てる予定だったやつがいたらそいつがいたところにnullを入れる
-                        if( i > 0 ){
-                            for( int j = 0 ; j < i; j++ ){
+                        if (i > 0) {
+                            for (int j = 0; j < i; j++) {
                                 exceptions.remove(memberCandidates.get(j * subtasks.size() + stIndex));
-                                memberCandidates.set( j * subtasks.size() + stIndex, null);
+                                memberCandidates.set(j * subtasks.size() + stIndex, null);
                             }
                         }
                         exceptions.add(candidate);
@@ -306,7 +314,7 @@ public class PM2 implements Strategy, SetParam {
 //                    System.out.println(candidate);
                     }
                     // 違ったら普通に候補としてリストに入れる
-                    else{
+                    else {
                         exceptions.add(candidate);
                         memberCandidates.add(candidate);
                     }
@@ -376,6 +384,7 @@ public class PM2 implements Strategy, SetParam {
      * renewRelメソッド
      * 信頼度を更新し, 同時に信頼エージェントも更新する
      * agentのtargetに対する信頼度をevaluationによって更新し, 同時に信頼エージェントを更新する
+     *
      * @param agent
      */
     private List<Agent> renewRel(Agent agent, Agent target, double evaluation) {
@@ -510,7 +519,7 @@ public class PM2 implements Strategy, SetParam {
                 int rt = Manager.getTicks() - as.getAllocatedTime();
                 int reward = as.getRequiredResources();
                 //                System.out.println(rt);
-                ag.relAgents = renewRel(ag, m.getFrom(), (double) reward / rt );
+                ag.relAgents = renewRel(ag, m.getFrom(), (double) reward / rt);
             } else {
                 ag.messages.add(m); // 違うメッセージだったら戻す
             }

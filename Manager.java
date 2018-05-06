@@ -10,11 +10,11 @@ import java.io.IOException;
 import java.util.*;
 
 public class Manager implements SetParam {
-    private static Strategy strategy = new ProposedMethodForSingapore();
+//    private static Strategy strategy = new ProposedMethodForSingapore();
 //    private static Strategy strategy = new PMwithRationalOnly();
 //    private static Strategy strategy = new PMwithoutRoleRenewal();
 //    private static Strategy strategy = new PMwithReallocation();
-//    private static Strategy strategy   = new Rational();
+    private static Strategy strategy   = new Rational();
 
     static private long _seed;
     private static Random _randSeed;
@@ -49,7 +49,7 @@ public class Manager implements SetParam {
             String line;
 
             int num = 0;
-            System.out.println(strategy.getClass().getName() + ", λ=" + (double) ADDITIONAL_TASK_NUM / TASK_ADDITION_SPAN + ", ε:" + INITIAL_ε + ": " + HOW_EPSILON);
+            System.out.println(strategy.getClass().getName() + ", λ=" + (double) ADDITIONAL_TASK_NUM / TASK_ADDITION_SPAN + ", ε:" + INITIAL_ε + ": " + HOW_EPSILON + ", XF: " + MAX_RELIABLE_AGENTS );
 
             // num回実験
             while ((line = br.readLine()) != null) {
@@ -68,6 +68,10 @@ public class Manager implements SetParam {
                         System.out.println("Turn: " + turn);
                     }
 // */
+                    if( turn == 50000 ){
+                        System.out.println(turn);
+                    }
+
                     // ターンの最初にεを調整する
                     // 最初は大きくしてトライアルを多くするともに，
                     // 徐々に小さくして安定させる
