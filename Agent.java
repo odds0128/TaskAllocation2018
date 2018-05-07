@@ -85,7 +85,7 @@ public class Agent implements SetParam , Cloneable{
         this.strategy = strategy;
         setResource(UNIFORM);
         Arrays.fill(reliabilities, INITIAL_VALUE_OF_DEC);
-        threshold_for_reciprocity = (double)resSum/resCount * 0.7;
+        threshold_for_reciprocity = (double)resSum/resCount * THRESHOLD_FOR_RECIPROCITY_RATE;
         if (strategy.getClass().getName().startsWith("CNP") || strategy.getClass().getName().startsWith("Rational")) {
             selectRoleWithoutLearning();
         } else {
@@ -104,7 +104,7 @@ public class Agent implements SetParam , Cloneable{
         this.strategy = strategy;
         setResource(UNIFORM);
         Arrays.fill(reliabilities, INITIAL_VALUE_OF_DEC);
-        threshold_for_reciprocity = (double)resSum/resCount * 0.7;
+        threshold_for_reciprocity = (double)resSum/resCount * THRESHOLD_FOR_RECIPROCITY_RATE;
         if (strategy.getClass().getName().startsWith("CNP") || strategy.getClass().getName().startsWith("Rational")) {
             selectRoleWithoutLearning();
         } else {
