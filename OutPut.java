@@ -463,6 +463,8 @@ public class OutPut implements SetParam {
         }
     }
 
+
+
     static void writeAgentsInformationX(Strategy st) throws FileNotFoundException, IOException {
         String outputFilePath = _singleton.setPath("agentInfo", st.getClass().getName() , "xlsx");
         try {
@@ -725,6 +727,8 @@ public class OutPut implements SetParam {
                     }
                     _singleton.writeCell(row, colNumber++, style_header, " Excellence ");
                     _singleton.writeCell(row, colNumber++, style_header, " Times ");
+                    _singleton.writeCell(row, colNumber++, style_header, " e_leader");
+                    _singleton.writeCell(row, colNumber++, style_header, " e_member ");
                 } else {
                     _singleton.writeCell(row, colNumber++, style_header, " length ");
                     _singleton.writeCell(row, colNumber++, style_header, " times ");
@@ -786,8 +790,10 @@ public class OutPut implements SetParam {
                             else                              _singleton.writeCell(row, colNumber++, style_int, -1);
                         }
                         _singleton.writeCell(row, colNumber++, style_double, agent.excellence);
-
                         _singleton.writeCell(row, colNumber++, style_int, agent.didTasksAsMember);
+                        _singleton.writeCell(row, colNumber++, style_double, agent.e_leader);
+                        _singleton.writeCell(row, colNumber++, style_double, agent.e_member);
+
 
                         //列幅の自動調整
                         for (int k = 0; k <= colNumber; k++) {
