@@ -49,7 +49,7 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
         leader.ourTask = Manager.getTask();
         if (leader.ourTask == null) {
             leader.role_renewal_counter++;
-            if ( leader.role_renewal_counter >= THRESHOLD_FOR_ROLE_RENEWAL) {
+            if (leader.role_renewal_counter >= THRESHOLD_FOR_ROLE_RENEWAL) {
                 leader.inactivate(0);
             }
             return;
@@ -73,9 +73,9 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
     }
 
     private void replyAsM(Agent member) {
-        if (member.messages.size() == 0){
+        if (member.messages.size() == 0) {
             member.role_renewal_counter++;
-            if ( member.role_renewal_counter >= THRESHOLD_FOR_ROLE_RENEWAL) {
+            if (member.role_renewal_counter >= THRESHOLD_FOR_ROLE_RENEWAL) {
                 member.inactivate(0);
             }
             return;     // メッセージをチェック
@@ -93,18 +93,10 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
             member.start = Manager.getTicks();
             member.nextPhase();
         }
-        // どこにも参加しないのであれば, 役割適正値を更新するようにする
-        else {
-            member.role_renewal_counter++;
-            if ( member.role_renewal_counter >= THRESHOLD_FOR_ROLE_RENEWAL) {
-                member.inactivate(0);
-            }
-        }
-// */
     }
 
     private void reportAsL(Agent leader) {
-        if (leader.replies.size() != leader.proposalNum ) return;
+        if (leader.replies.size() != leader.proposalNum) return;
         /*if ( Manager.getTicks() > 50000 ){
             System.out.println(leader + ", subtasks: " + leader.ourTask.subTasks);
             System.out.println("exCandidates" + leader.candidates);
@@ -171,7 +163,7 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
         }
 
         // 未割り当てが残っていないのなら実行へ
-        if ( leader.teamMembers.size() == leader.ourTask.subTaskNum ) {
+        if (leader.teamMembers.size() == leader.ourTask.subTaskNum) {
             for (Agent tm : leader.teamMembers) {
                 teamHistory[leader.id].put(tm, new AllocatedSubTask(leader.preAllocations.get(tm), Manager.getTicks()));
                 leader.sendMessage(leader, tm, RESULT, leader.preAllocations.get(tm));
@@ -226,7 +218,7 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
             } else {
                 agent.sendMessage(agent, agent.leader, DONE, 0);
                 agent.required[agent.mySubTask.resType]++;
-                agent.relAgents = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / (double) (Manager.getTicks() - agent.start) );
+                agent.relAgents = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / (double) (Manager.getTicks() - agent.start));
                 if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN)
                     agent.workWithAsM[agent.leader.id]++;
             }

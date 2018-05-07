@@ -394,6 +394,7 @@ public class Agent implements SetParam , Cloneable{
         }
         else if (this.phase == RECEPTION) this.phase = EXECUTION;
         this.validatedTicks = Manager.getTicks();
+        this.role_renewal_counter=0;
     }
     protected boolean canDo(Agent agent, SubTask st) {
         if (agent.res[st.resType] == st.reqRes[st.resType]) return true;
