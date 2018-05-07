@@ -118,6 +118,8 @@ public class Manager implements SetParam {
                 clearAll();
             }
             // ↑ 全実験の終了のカッコ．以下は後処理
+            System.out.println("leader role renewal: " + ProposedMethodForSingapore.leader_role_renewal/EXECUTION_TIMES);
+            System.out.println("member role renewal: " + ProposedMethodForSingapore.member_role_renewal/EXECUTION_TIMES);
             if (CHECK_RESULTS) OutPut.writeResults(strategy);
             if (CHECK_AGENTS) OutPut.writeAgentsInformationX(strategy);
 //            OutPut.writeDelays(delays);

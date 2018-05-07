@@ -21,6 +21,8 @@ import java.util.Map;
 
 public class ProposedMethodForSingapore implements Strategy, SetParam {
     static final double γ = γ_r;
+    static int leader_role_renewal = 0;
+    static int member_role_renewal = 0;
     Map<Agent, AllocatedSubTask>[] teamHistory = new HashMap[AGENT_NUM];
 
     ProposedMethodForSingapore() {
@@ -50,6 +52,7 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
         if (leader.ourTask == null) {
             leader.role_renewal_counter++;
             if (leader.role_renewal_counter >= THRESHOLD_FOR_ROLE_RENEWAL) {
+                leader_role_renewal++;
                 leader.inactivate(0);
             }
             return;
@@ -76,6 +79,7 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
         if (member.messages.size() == 0) {
             member.role_renewal_counter++;
             if (member.role_renewal_counter >= THRESHOLD_FOR_ROLE_RENEWAL) {
+                member_role_renewal++;
                 member.inactivate(0);
             }
             return;     // メッセージをチェック
