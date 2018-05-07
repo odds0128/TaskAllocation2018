@@ -65,9 +65,8 @@ public class OutPut implements SetParam {
         communicationDelayArray[index] += TransmissionPath.getCT();
         disposedTasksArray[index] += dt;
         overflownTasksArray[index] += ot;
-        /*
         reciprocalistsArray[index] += Agent._recipro_num;
-        rationalistsArray[index] += Agent._rational_num;
+/*        rationalistsArray[index] += Agent._rational_num;
         reciprocalMembersArray[index] += rm;
         finishedTasksInDepopulatedAreaArray[index] += ftida ;
         finishedTasksInPopulatedAreaArray[index]   += ftipa ;
@@ -283,7 +282,8 @@ public class OutPut implements SetParam {
                             + "NEET Members" + ", "
                     // + "Lonely leaders"                    + ", " + "Lonely members"                    + ", "
                     // + "Accompanied leaders"               + ", " + "Accompanied members"               + ", "
-                    // + "Reciprocal"                        + ", " + "Rational"                          + ", " + "ReciprocalMembers" + ","
+                     + "Reciprocal"
+//                            + ", " + "Rational"                          + ", " + "ReciprocalMembers" + ","
                     // + "FinishedTasks in depopulated area" + ", " + "FinishedTasks in populated area"   + ", "
             );
             for (int i = 0; i < WRITING_TIMES; i++) {
@@ -297,12 +297,12 @@ public class OutPut implements SetParam {
                                 + (double) taskExecutionTimeArray[i]   / EXECUTION_TIMES + ", "
                                 + leaderNumArray[i] / EXECUTION_TIMES + ", "
                                 + neetMembersArray[i] / EXECUTION_TIMES + ", "
+                                + reciprocalistsArray[i]                 / EXECUTION_TIMES + ", "
                         /*                    + memberNumArray[i]                      / EXECUTION_TIMES + ", "
                     + leaderNumInDepopulatedAreaArray[i]     / EXECUTION_TIMES + ", "
                     + memberNumInDepopulatedAreaArray[i]     / EXECUTION_TIMES + ", "
                     + leaderNumInPopulatedAreaArray[i]       / EXECUTION_TIMES + ", "
                     + memberNumInPopulatedAreaArray[i]       / EXECUTION_TIMES + ", "
-                    + reciprocalistsArray[i]                 / EXECUTION_TIMES + ", "
                     + rationalistsArray[i]                   / EXECUTION_TIMES + ", "
                     + reciprocalMembersArray[i]              / EXECUTION_TIMES + ", "
                     + finishedTasksInDepopulatedAreaArray[i] / EXECUTION_TIMES + ", "
