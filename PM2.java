@@ -95,13 +95,13 @@ public class PM2 implements Strategy, SetParam {
     }
 
     private void reportAsL(Agent leader) {
-        if (leader.replies.size() != leader.proposalNum ) return;
-        /*if ( Manager.getTicks() > 50000 ){
-            System.out.println(leader + ", subtasks: " + leader.ourTask.subTasks);
-            System.out.println("exCandidates" + leader.candidates);
-            System.out.println("replies" + leader.replies);
-        }*/
+        if (leader.replies.size() != leader.proposalNum) return;
+
         Agent from;
+/*
+        System.out.println(leader + ", candidates" + leader.candidates);
+        System.out.println("subtasks: " + leader.ourTask.subTasks);
+*/
         for (Message reply : leader.replies) {
             // 拒否ならそのエージェントを候補リストから外し, 信頼度を0で更新する
             if (reply.getReply() != ACCEPT) {
@@ -112,14 +112,9 @@ public class PM2 implements Strategy, SetParam {
                 leader.relAgents = renewRel(leader, from, 0);
             }
         }
+//        System.out.println("candidates: " + leader.candidates);
 
         Agent A, B;
-
-/*
-        if ( Manager.getTicks() > 50000 ){
-            System.out.println(leader + ", candidates: " + leader.candidates);
-        }
-*/
 
         // if 全candidatesから返信が返ってきてタスクが実行可能なら割り当てを考えていく
 
@@ -162,7 +157,7 @@ public class PM2 implements Strategy, SetParam {
         }
 
         // 未割り当てが残っていないのなら実行へ
-        if ( leader.teamMembers.size() == leader.ourTask.subTaskNum ) {
+        if (leader.teamMembers.size() == leader.ourTask.subTaskNum) {
             for (Agent tm : leader.teamMembers) {
                 teamHistory[leader.id].put(tm, new AllocatedSubTask(leader.preAllocations.get(tm), Manager.getTicks()));
                 leader.sendMessage(leader, tm, RESULT, leader.preAllocations.get(tm));
@@ -189,10 +184,6 @@ public class PM2 implements Strategy, SetParam {
         message = member.messages.remove(0);
         member.mySubTask = message.getSubTask();
 
-/*
-        member.totalResponseTicks += rt;
-        member.meanRT = (double)member.totalResponseTicks/(double)member.totalOffers;
-// */
         // サブタスクがもらえたなら信頼度をプラスに更新し, 実行フェイズへ移る.
         if (member.mySubTask != null) {
             member.allocated[member.leader.id][member.mySubTask.resType]++;
@@ -201,7 +192,6 @@ public class PM2 implements Strategy, SetParam {
         }
         // サブタスクが割り当てられなかったら信頼度を0で更新し, inactivate
         else {
-            //       System.out.println(" ID: " + member.id + ", " + member.leader + " is unreliable");
             member.relAgents = renewRel(member, member.leader, 0);
             member.inactivate(0);
         }
@@ -238,21 +228,30 @@ public class PM2 implements Strategy, SetParam {
         Agent candidate = null;
         List<SubTask> skips = new ArrayList<>();  // 互恵エージェントがいるために他のエージェントに要請を送らないサブタスクを格納
 
+        for (SubTask st : subtasks) {
+            for (int i = 0; i < RESEND_TIMES; i++) {
+                memberCandidates.add(null);
+            }
+        }
+
         List<Agent> exceptions = new ArrayList<>();
         for (Map.Entry<Agent, AllocatedSubTask> ex : teamHistory[leader.id].entrySet()) {
             exceptions.add(ex.getKey());
         }
         // この時点でtにはかつての仲間たちが入っている
         // 先に信頼エージェントに対して割り当てを試みる
-        for( Agent relAg: leader.relAgents ){
-            // その信頼エージェントがexcepttionsにいなければ，可能な最大報酬のサブタスクを割り当てる
-            if( leader.inTheList(relAg, exceptions) >= 0 ) {
-                continue;
-            }else{
-                for( SubTask st: subtasks ){
-                    if( relAg.calcExecutionTime(relAg, st) > 0 ){
-
-                    }
+        for (Agent relAg : leader.relAgents) {
+            SubTask st;
+            // 上位からサブタスクを持って来て
+            // そのサブタスクが上位の信頼エージェントに可能かつまださらに上位の信頼エージェントに割り振られていないなら
+            // そいつに割り当てることにしてそいつをexceptionsに，そのサブタスクをskipsに入れる
+            for (int stIndex = 0; stIndex < subtasks.size(); stIndex++) {
+                st = subtasks.get(stIndex);
+                if (relAg.calcExecutionTime(relAg, st) > 0 && leader.inTheList(st, skips) < 0 && leader.inTheList(relAg, exceptions) < 0) {
+                    memberCandidates.set(stIndex, relAg);
+                    exceptions.add(relAg);
+                    skips.add(st);
+                    break;
                 }
             }
         }
@@ -264,7 +263,6 @@ public class PM2 implements Strategy, SetParam {
                 st = subtasks.get(stIndex);
                 // すでにそのサブタスクを互恵エージェントに割り当てる予定ならやめて次のサブタスクへ
                 if (leader.inTheList(st, skips) >= 0) {
-                    memberCandidates.add(null);
                     continue;
                 }
 //                System.out.print(st);
@@ -298,26 +296,8 @@ public class PM2 implements Strategy, SetParam {
                 }
                 // 候補が見つかれば，チーム参加要請対象者リストに入れ，参加要請を送る
                 if (!candidate.equals(null)) {
-                    // もしその候補者が互恵エージェントであり，自分を信頼してくれているのであればそいつにしか送らない
-                    if (candidate.principle == RECIPROCAL && candidate.inTheList(leader, candidate.relAgents) > 0) {
-                        // もし先に割り当てる予定だったやつがいたらそいつがいたところにnullを入れる
-                        if (i > 0) {
-                            for (int j = 0; j < i; j++) {
-                                exceptions.remove(memberCandidates.get(j * subtasks.size() + stIndex));
-                                memberCandidates.set(j * subtasks.size() + stIndex, null);
-                            }
-                        }
-                        exceptions.add(candidate);
-                        memberCandidates.add(candidate);
-                        skips.add(st);
-
-//                    System.out.println(candidate);
-                    }
-                    // 違ったら普通に候補としてリストに入れる
-                    else {
-                        exceptions.add(candidate);
-                        memberCandidates.add(candidate);
-                    }
+                    exceptions.add(candidate);
+                    memberCandidates.set(stIndex + i * subtasks.size(), candidate);
                 }
                 // 候補が見つからないサブタスクがあったら直ちにチーム編成を失敗とする
                 else {

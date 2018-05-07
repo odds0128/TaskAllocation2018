@@ -11,10 +11,12 @@ import java.util.*;
 
 public class Manager implements SetParam {
 //    private static Strategy strategy = new ProposedMethodForSingapore();
+    private static Strategy strategy = new PM2();
+
 //    private static Strategy strategy = new PMwithRationalOnly();
 //    private static Strategy strategy = new PMwithoutRoleRenewal();
 //    private static Strategy strategy = new PMwithReallocation();
-    private static Strategy strategy   = new Rational();
+//    private static Strategy strategy   = new Rational();
 
     static private long _seed;
     private static Random _randSeed;
@@ -68,10 +70,6 @@ public class Manager implements SetParam {
                         System.out.println("Turn: " + turn);
                     }
 // */
-                    if( turn == 50000 ){
-                        System.out.println(turn);
-                    }
-
                     // ターンの最初にεを調整する
                     // 最初は大きくしてトライアルを多くするともに，
                     // 徐々に小さくして安定させる

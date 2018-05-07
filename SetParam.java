@@ -25,7 +25,7 @@ interface SetParam {
 
     // 結果表示のためのパラメータ
     int  COALITION_CHECK_SPAN = 5000;          // 協調関係ができているか確認するための最後の方のターム
-    double THRESHOLD_FOR_COALITION = 30;
+    double THRESHOLD_FOR_COALITION = 20;
     int THRESHOLD_FOR_NEET = 5000;
     int SNAPSHOT_TIME = MAX_TURN_NUM;
 
@@ -36,7 +36,7 @@ interface SetParam {
     int COLUMN = 50;                // 列数
     int MAX_DELAY = 10;
 
-    int TASK_ADDITION_SPAN = 4;          // タスクキューにタスクを追加するスパン
+    int TASK_ADDITION_SPAN = 2;          // タスクキューにタスクを追加するスパン
     int ADDITIONAL_TASK_NUM  = 1;        // タスクを追加するタイミングで, タスクキューに追加するタスクの個数(=λ)
     int RESOURCE_TYPES = 3;
     int MAX_AGENT_RESOURCE_SIZE   = 5;
