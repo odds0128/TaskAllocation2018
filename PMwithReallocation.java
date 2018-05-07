@@ -37,10 +37,6 @@ public class PMwithReallocation implements Strategy, SetParam {
     }
 
     public void actAsMember(Agent agent) {
-        if (Manager.getTicks() - agent.validatedTicks > ROLE_RENEWAL_TICKS) {
-            agent.inactivate(0);
-            return;
-        }
         setPrinciple(agent);
         if (agent.phase == REPLY) replyAsM(agent);
         else if (agent.phase == RECEPTION) receiveAsM(agent);
@@ -81,6 +77,7 @@ public class PMwithReallocation implements Strategy, SetParam {
         // どっかには参加するのなら交渉2フェイズへ
         if (member.joined) {
             member.totalOffers++;
+            member.start = Manager.getTicks();
             member.nextPhase();
         }
         // どこにも参加しないのであれば, 役割適正値を更新するようにする
@@ -246,7 +243,7 @@ public class PMwithReallocation implements Strategy, SetParam {
             } else {
                 agent.sendMessage(agent, agent.leader, DONE, 0);
                 agent.required[agent.mySubTask.resType]++;
-                agent.relAgents = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / agent.calcExecutionTime(agent, agent.mySubTask));
+                agent.relAgents = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / (double) (Manager.getTicks() - agent.start) );
                 if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN)
                     agent.workWithAsM[agent.leader.id]++;
             }
@@ -432,7 +429,7 @@ public class PMwithReallocation implements Strategy, SetParam {
         Agent ag;
         for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
             ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > THRESHOLD_FOR_DEPENDABILITY) {
+            if (agent.reliabilities[ag.id] > agent.threshold_for_reciprocity) {
                 tmp.add(ag);
             } else {
                 break;
@@ -460,7 +457,7 @@ public class PMwithReallocation implements Strategy, SetParam {
         Agent ag;
         for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
             ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > THRESHOLD_FOR_DEPENDABILITY) {
+            if (agent.reliabilities[ag.id] > agent.threshold_for_reciprocity) {
                 tmp.add(ag);
             } else {
                 break;

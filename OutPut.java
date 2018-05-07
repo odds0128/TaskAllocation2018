@@ -211,6 +211,7 @@ public class OutPut implements SetParam {
             System.out.print( "ID: " + agent.id + " Resources : ");
             for (int i = 0; i < RESOURCE_TYPES; i++) System.out.print(agent.res[i] + ", ");
             System.out.println(" Reliable Agents: " + agent.relAgents.size());
+            System.out.println("Threshold: " + agent.threshold_for_reciprocity);
         }
 // */
 
@@ -1067,7 +1068,7 @@ public class OutPut implements SetParam {
         }
 // */
         for (Agent agent : agents) {
-            if (agent.reliabilities[agent.relRanking.get(0).id] > THRESHOLD_FOR_DEPENDABILITY && (agent.e_member > THRESHOLD_FOR_RECIPROCITY || agent.e_leader > THRESHOLD_FOR_RECIPROCITY))
+            if (agent.reliabilities[agent.relRanking.get(0).id] > agent.threshold_for_reciprocity && (agent.e_member > THRESHOLD_FOR_RECIPROCITY || agent.e_leader > THRESHOLD_FOR_RECIPROCITY))
                 temp++;
         }
         return temp;
@@ -1090,7 +1091,7 @@ public class OutPut implements SetParam {
         }
 // */
         for (Agent agent : agents) {
-            if (agent.reliabilities[agent.relRanking.get(0).id] > THRESHOLD_FOR_DEPENDABILITY && agent.e_member > THRESHOLD_FOR_RECIPROCITY && agent.e_member > agent.e_leader)
+            if (agent.reliabilities[agent.relRanking.get(0).id] > agent.threshold_for_reciprocity && agent.e_member > THRESHOLD_FOR_RECIPROCITY && agent.e_member > agent.e_leader)
                 temp++;
         }
         return temp;

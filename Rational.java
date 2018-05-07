@@ -23,7 +23,7 @@ public class Rational implements Strategy, SetParam {
         if (agent.phase == lPHASE1) proposeAsL(agent);
         else if (agent.phase == lPHASE2) reportAsL(agent);
         else if (agent.phase == PHASE3) execute(agent);
-//        decreaseDEC(agent);
+        decreaseDEC(agent);
     }
 
     public void actAsMember(Agent agent) {
@@ -372,7 +372,7 @@ public class Rational implements Strategy, SetParam {
         Agent ag;
         for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
             ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > THRESHOLD_FOR_DEPENDABILITY) {
+            if (agent.reliabilities[ag.id] > agent.threshold_for_reciprocity) {
                 tmp.add(ag);
             } else {
                 break;
@@ -400,7 +400,7 @@ public class Rational implements Strategy, SetParam {
         Agent ag;
         for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
             ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > THRESHOLD_FOR_DEPENDABILITY) {
+            if (agent.reliabilities[ag.id] > agent.threshold_for_reciprocity) {
                 tmp.add(ag);
             } else {
                 break;

@@ -50,6 +50,8 @@ public class Agent implements SetParam , Cloneable{
     int[]   required  = new int[RESOURCE_TYPES];            // そのリソースを要求するサブタスクが割り当てられた回数
     int[][] allocated = new int[AGENT_NUM][RESOURCE_TYPES]; // そのエージェントからそのリソースを要求するサブタスクが割り当てられた回数
     List<Agent> canReach = new ArrayList<>();
+    double threshold_for_reciprocity;
+    int role_renewal_counter = 0;
 
     // リーダーエージェントが持つパラメータ
     List<Agent> candidates;         // これからチームへの参加を要請するエージェントのリスト
@@ -83,6 +85,7 @@ public class Agent implements SetParam , Cloneable{
         this.strategy = strategy;
         setResource(UNIFORM);
         Arrays.fill(reliabilities, INITIAL_VALUE_OF_DEC);
+        threshold_for_reciprocity = (double)resSum/resCount * 0.7;
         if (strategy.getClass().getName().startsWith("CNP") || strategy.getClass().getName().startsWith("Rational")) {
             selectRoleWithoutLearning();
         } else {
@@ -101,6 +104,7 @@ public class Agent implements SetParam , Cloneable{
         this.strategy = strategy;
         setResource(UNIFORM);
         Arrays.fill(reliabilities, INITIAL_VALUE_OF_DEC);
+        threshold_for_reciprocity = (double)resSum/resCount * 0.7;
         if (strategy.getClass().getName().startsWith("CNP") || strategy.getClass().getName().startsWith("Rational")) {
             selectRoleWithoutLearning();
         } else {
@@ -254,6 +258,7 @@ public class Agent implements SetParam , Cloneable{
             if (success == 1) didTasksAsMember++;
             _member_num--;
         }
+        role_renewal_counter=0;
         joined = false;
         role = JONE_DOE;
         phase = SELECT_ROLE;

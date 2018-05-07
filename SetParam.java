@@ -46,7 +46,8 @@ interface SetParam {
 
     int RESEND_TIMES   = 2;              // あるサブタスクについて要請を出すエージェントの数
     int MAX_RELIABLE_AGENTS = 1;         // 信頼エージェントの数
-    int ROLE_RENEWAL_TICKS  = 50;
+    int THRESHOLD_FOR_ROLE_RENEWAL  = 10;
+//    int THRESHOLD_FOR_ROLE_RENEWAL  = 1;
 
     // パラメータ
     double INITIAL_VALUE_OF_DEC =  0.1;
@@ -54,7 +55,6 @@ interface SetParam {
     double INITIAL_VALUE_OF_DSM =  0.5;
     double α = 0.05;
     double γ_r = INITIAL_VALUE_OF_DEC/(double)MAX_TURN_NUM;
-    double THRESHOLD_FOR_DEPENDABILITY = 0.5;
     double THRESHOLD_FOR_RECIPROCITY   = 0.5;
     int BIAS = 0;
     int UNIFORM = 1;

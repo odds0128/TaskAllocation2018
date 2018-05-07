@@ -10,8 +10,8 @@ import java.io.IOException;
 import java.util.*;
 
 public class Manager implements SetParam {
-//    private static Strategy strategy = new ProposedMethodForSingapore();
-    private static Strategy strategy = new PM2();
+    private static Strategy strategy = new ProposedMethodForSingapore();
+//    private static Strategy strategy = new PM2();
 
 //    private static Strategy strategy = new PMwithRationalOnly();
 //    private static Strategy strategy = new PMwithoutRoleRenewal();
@@ -51,7 +51,12 @@ public class Manager implements SetParam {
             String line;
 
             int num = 0;
-            System.out.println(strategy.getClass().getName() + ", λ=" + (double) ADDITIONAL_TASK_NUM / TASK_ADDITION_SPAN + ", ε:" + INITIAL_ε + ": " + HOW_EPSILON + ", XF: " + MAX_RELIABLE_AGENTS );
+            System.out.println(strategy.getClass().getName() + ", λ=" +
+                    (double) ADDITIONAL_TASK_NUM / TASK_ADDITION_SPAN +
+                    ", ε:" + INITIAL_ε + ": " + HOW_EPSILON +
+                    ", XF: " + MAX_RELIABLE_AGENTS +
+                    ", Role_renewal: " + THRESHOLD_FOR_ROLE_RENEWAL
+            );
 
             // num回実験
             while ((line = br.readLine()) != null) {
@@ -116,7 +121,7 @@ public class Manager implements SetParam {
             if (CHECK_RESULTS) OutPut.writeResults(strategy);
             if (CHECK_AGENTS) OutPut.writeAgentsInformationX(strategy);
 //            OutPut.writeDelays(delays);
-//            OutPut.writeReliabilities(agents, strategy);
+            OutPut.writeReliabilities(agents, strategy);
 //            OutPut.writeDelaysAndRels(delays, agents, strategy);
             if (CHECK_RELATIONSHIPS) OutPut.writeGraphInformationX(agents, strategy);
 // */

@@ -80,6 +80,7 @@ public class PMwithoutRoleRenewal implements Strategy, SetParam {
         // どっかには参加するのなら交渉2フェイズへ
         if (member.joined) {
             member.totalOffers++;
+            member.start = Manager.getTicks();
             member.nextPhase();
         }
         // どこにも参加しないのであれば, 役割適正値を更新するようにする
@@ -212,7 +213,7 @@ public class PMwithoutRoleRenewal implements Strategy, SetParam {
             } else {
                 agent.sendMessage(agent, agent.leader, DONE, 0);
                 agent.required[agent.mySubTask.resType]++;
-                agent.relAgents = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / agent.calcExecutionTime(agent, agent.mySubTask));
+                agent.relAgents = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / (double) (Manager.getTicks() - agent.start) );
                 if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN)
                     agent.workWithAsM[agent.leader.id]++;
             }
@@ -295,19 +296,10 @@ public class PMwithoutRoleRenewal implements Strategy, SetParam {
                 // 候補が見つかれば，チーム参加要請対象者リストに入れ，参加要請を送る
                 if (!candidate.equals(null)) {
                     // もしその候補者が互恵エージェントであり，自分を信頼してくれているのであればそいつにしか送らない
-                    if (candidate.principle == RECIPROCAL && candidate.inTheList(leader, candidate.relAgents) > 0) {
-                        // もし先に割り当てる予定だったやつがいたらそいつがいたところにnullを入れる
-                        if (i > 0) {
-                            for (int j = 0; j < i; j++) {
-                                exceptions.remove(memberCandidates.get(j * subtasks.size() + stIndex));
-                                memberCandidates.set(j * subtasks.size() + stIndex, null);
-                            }
-                        }
+                    if (candidate.principle == RECIPROCAL && candidate.inTheList(leader, candidate.relAgents) > 0 && i == 0) {
                         exceptions.add(candidate);
                         memberCandidates.add(candidate);
                         skips.add(st);
-
-//                    System.out.println(candidate);
                     }
                     // 違ったら普通に候補としてリストに入れる
                     else {
@@ -431,7 +423,7 @@ public class PMwithoutRoleRenewal implements Strategy, SetParam {
         Agent ag;
         for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
             ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > THRESHOLD_FOR_DEPENDABILITY) {
+            if (agent.reliabilities[ag.id] > agent.threshold_for_reciprocity) {
                 tmp.add(ag);
             } else {
                 break;
@@ -459,7 +451,7 @@ public class PMwithoutRoleRenewal implements Strategy, SetParam {
         Agent ag;
         for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
             ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > THRESHOLD_FOR_DEPENDABILITY) {
+            if (agent.reliabilities[ag.id] > agent.threshold_for_reciprocity) {
                 tmp.add(ag);
             } else {
                 break;

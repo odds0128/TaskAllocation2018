@@ -38,10 +38,6 @@ public class RewardOrientedStrategy implements Strategy, SetParam {
     }
 
     public void actAsMember(Agent agent) {
-        if (Manager.getTicks() - agent.validatedTicks > ROLE_RENEWAL_TICKS) {
-            agent.inactivate(0);
-            return;
-        }
         setPrinciple(agent);
         if (agent.phase == REPLY) replyAsM(agent);
         else if (agent.phase == RECEPTION) receiveAsM(agent);
@@ -408,7 +404,7 @@ public class RewardOrientedStrategy implements Strategy, SetParam {
         Agent ag;
         for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
             ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > THRESHOLD_FOR_DEPENDABILITY) {
+            if (agent.reliabilities[ag.id] > agent.threshold_for_reciprocity) {
                 tmp.add(ag);
             } else {
                 break;
@@ -436,7 +432,7 @@ public class RewardOrientedStrategy implements Strategy, SetParam {
         Agent ag;
         for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
             ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > THRESHOLD_FOR_DEPENDABILITY) {
+            if (agent.reliabilities[ag.id] > agent.threshold_for_reciprocity) {
                 tmp.add(ag);
             } else {
                 break;

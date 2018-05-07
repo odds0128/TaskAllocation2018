@@ -38,10 +38,6 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
     }
 
     public void actAsMember(Agent agent) {
-        if (Manager.getTicks() - agent.validatedTicks > ROLE_RENEWAL_TICKS) {
-            agent.inactivate(0);
-            return;
-        }
         setPrinciple(agent);
         if (agent.phase == REPLY) replyAsM(agent);
         else if (agent.phase == RECEPTION) receiveAsM(agent);
@@ -52,7 +48,10 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
     private void proposeAsL(Agent leader) {
         leader.ourTask = Manager.getTask();
         if (leader.ourTask == null) {
-            leader.inactivate(0);
+            leader.role_renewal_counter++;
+            if ( leader.role_renewal_counter >= THRESHOLD_FOR_ROLE_RENEWAL) {
+                leader.inactivate(0);
+            }
             return;
         }
         leader.restSubTask = leader.ourTask.subTaskNum;                       // 残りサブタスク数を設定
@@ -74,7 +73,13 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
     }
 
     private void replyAsM(Agent member) {
-        if (member.messages.size() == 0) return;     // メッセージをチェック
+        if (member.messages.size() == 0){
+            member.role_renewal_counter++;
+            if ( member.role_renewal_counter >= THRESHOLD_FOR_ROLE_RENEWAL) {
+                member.inactivate(0);
+            }
+            return;     // メッセージをチェック
+        }
         member.leader = selectLeader(member, member.messages);
         if (member.leader != null) {
             member.joined = true;
@@ -85,11 +90,15 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
         // どっかには参加するのなら交渉2フェイズへ
         if (member.joined) {
             member.totalOffers++;
+            member.start = Manager.getTicks();
             member.nextPhase();
         }
         // どこにも参加しないのであれば, 役割適正値を更新するようにする
         else {
-            member.inactivate(0);
+            member.role_renewal_counter++;
+            if ( member.role_renewal_counter >= THRESHOLD_FOR_ROLE_RENEWAL) {
+                member.inactivate(0);
+            }
         }
 // */
     }
@@ -217,7 +226,7 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
             } else {
                 agent.sendMessage(agent, agent.leader, DONE, 0);
                 agent.required[agent.mySubTask.resType]++;
-                agent.relAgents = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / agent.calcExecutionTime(agent, agent.mySubTask));
+                agent.relAgents = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / (double) (Manager.getTicks() - agent.start) );
                 if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN)
                     agent.workWithAsM[agent.leader.id]++;
             }
@@ -293,18 +302,10 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
                 // 候補が見つかれば，チーム参加要請対象者リストに入れ，参加要請を送る
                 if (!candidate.equals(null)) {
                     // もしその候補者が互恵エージェントであり，自分を信頼してくれているのであればそいつにしか送らない
-                    if (candidate.principle == RECIPROCAL && candidate.inTheList(leader, candidate.relAgents) > 0) {
-                        // もし先に割り当てる予定だったやつがいたらそいつがいたところにnullを入れる
-                        if (i > 0) {
-                            for (int j = 0; j < i; j++) {
-                                exceptions.remove(memberCandidates.get(j * subtasks.size() + stIndex));
-                                memberCandidates.set(j * subtasks.size() + stIndex, null);
-                            }
-                        }
+                    if (candidate.principle == RECIPROCAL && candidate.inTheList(leader, candidate.relAgents) > 0 && i == 0) {
                         exceptions.add(candidate);
                         memberCandidates.add(candidate);
                         skips.add(st);
-
 //                    System.out.println(candidate);
                     }
                     // 違ったら普通に候補としてリストに入れる
@@ -429,7 +430,7 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
         Agent ag;
         for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
             ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > THRESHOLD_FOR_DEPENDABILITY) {
+            if (agent.reliabilities[ag.id] > agent.threshold_for_reciprocity) {
                 tmp.add(ag);
             } else {
                 break;
@@ -457,7 +458,7 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
         Agent ag;
         for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
             ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > THRESHOLD_FOR_DEPENDABILITY) {
+            if (agent.reliabilities[ag.id] > agent.threshold_for_reciprocity) {
                 tmp.add(ag);
             } else {
                 break;

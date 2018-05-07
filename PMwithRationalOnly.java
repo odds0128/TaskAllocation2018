@@ -36,10 +36,6 @@ public class PMwithRationalOnly implements Strategy, SetParam {
     }
 
     public void actAsMember(Agent agent) {
-        if (Manager.getTicks() - agent.validatedTicks > ROLE_RENEWAL_TICKS) {
-            agent.inactivate(0);
-            return;
-        }
         if (agent.phase == REPLY) replyAsM(agent);
         else if (agent.phase == RECEPTION) receiveAsM(agent);
         else if (agent.phase == EXECUTION) execute(agent);
@@ -49,7 +45,10 @@ public class PMwithRationalOnly implements Strategy, SetParam {
     private void proposeAsL(Agent leader) {
         leader.ourTask = Manager.getTask();
         if (leader.ourTask == null) {
-            leader.inactivate(0);
+            leader.role_renewal_counter++;
+            if ( leader.role_renewal_counter >= THRESHOLD_FOR_ROLE_RENEWAL) {
+                leader.inactivate(0);
+            }
             return;
         }
         leader.restSubTask = leader.ourTask.subTaskNum;                       // 残りサブタスク数を設定
@@ -59,7 +58,7 @@ public class PMwithRationalOnly implements Strategy, SetParam {
             leader.candidates = new ArrayList<>();
             leader.inactivate(0);
             return;
-        }else {
+        } else {
             for (int i = 0; i < leader.candidates.size(); i++) {
                 if (leader.candidates.get(i) != null) {
                     leader.proposalNum++;
@@ -71,7 +70,13 @@ public class PMwithRationalOnly implements Strategy, SetParam {
     }
 
     private void replyAsM(Agent member) {
-        if (member.messages.size() == 0) return;     // メッセージをチェック
+        if (member.messages.size() == 0){
+            member.role_renewal_counter++;
+            if ( member.role_renewal_counter >= THRESHOLD_FOR_ROLE_RENEWAL) {
+                member.inactivate(0);
+            }
+            return;     // メッセージをチェック
+        }
         member.leader = selectLeader(member, member.messages);
         if (member.leader != null) {
             member.joined = true;
@@ -87,7 +92,10 @@ public class PMwithRationalOnly implements Strategy, SetParam {
         }
         // どこにも参加しないのであれば, 役割適正値を更新するようにする
         else {
-            member.inactivate(0);
+            member.role_renewal_counter++;
+            if ( member.role_renewal_counter >= THRESHOLD_FOR_ROLE_RENEWAL) {
+                member.inactivate(0);
+            }
         }
 // */
     }
@@ -217,7 +225,7 @@ public class PMwithRationalOnly implements Strategy, SetParam {
             } else {
                 agent.sendMessage(agent, agent.leader, DONE, agent.start);
                 agent.required[agent.mySubTask.resType]++;
-                agent.relAgents = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / agent.calcExecutionTime(agent, agent.mySubTask));
+                agent.relAgents = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / (double) (Manager.getTicks() - agent.start) );
                 if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN)
                     agent.workWithAsM[agent.leader.id]++;
             }
@@ -398,7 +406,7 @@ public class PMwithRationalOnly implements Strategy, SetParam {
         Agent ag;
         for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
             ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > THRESHOLD_FOR_DEPENDABILITY) {
+            if (agent.reliabilities[ag.id] > agent.threshold_for_reciprocity) {
                 tmp.add(ag);
             } else {
                 break;
@@ -426,7 +434,7 @@ public class PMwithRationalOnly implements Strategy, SetParam {
         Agent ag;
         for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
             ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > THRESHOLD_FOR_DEPENDABILITY) {
+            if (agent.reliabilities[ag.id] > agent.threshold_for_reciprocity) {
                 tmp.add(ag);
             } else {
                 break;
