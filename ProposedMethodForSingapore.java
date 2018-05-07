@@ -51,10 +51,12 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
         leader.ourTask = Manager.getTask();
         if (leader.ourTask == null) {
             leader.role_renewal_counter++;
+            /*
             if (leader.role_renewal_counter >= THRESHOLD_FOR_ROLE_RENEWAL) {
                 leader_role_renewal++;
-                leader.inactivate(0);
-            }
+*/
+            leader.inactivate(0);
+//            }
             return;
         }
         leader.restSubTask = leader.ourTask.subTaskNum;                       // 残りサブタスク数を設定
