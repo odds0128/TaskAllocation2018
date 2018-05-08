@@ -123,7 +123,7 @@ public class Manager implements SetParam {
             if (CHECK_RESULTS) OutPut.writeResults(strategy);
             if (CHECK_AGENTS) OutPut.writeAgentsInformationX(strategy);
 //            OutPut.writeDelays(delays);
-            OutPut.writeReliabilities(agents, strategy);
+//            OutPut.writeReliabilities(agents, strategy);
 //            OutPut.writeDelaysAndRels(delays, agents, strategy);
             if (CHECK_RELATIONSHIPS) OutPut.writeGraphInformationX(agents, strategy);
 // */

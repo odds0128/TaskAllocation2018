@@ -38,6 +38,7 @@ public class Rational implements Strategy, SetParam {
             inactivate(leader, 0);
             return;
         }
+
         leader.restSubTask = leader.ourTask.subTaskNum;                       // 残りサブタスク数を設定
         leader.selectSubTask();
         leader.candidates = selectMembers(leader, leader.ourTask.subTasks);   // メッセージ送信
@@ -60,7 +61,7 @@ public class Rational implements Strategy, SetParam {
         member.leader = selectLeader(member, member.messages);
         if (member.leader != null) {
             member.joined = true;
-            System.out.println("ID: "+ member.id + ", my leader is " + member.leader.id );
+  //          System.out.println("ID: "+ member.id + ", my leader is " + member.leader.id );
             member.sendMessage(member, member.leader, REPLY, ACCEPT);
         }
         // どのリーダーからの要請も受けないのならinactivate
@@ -99,7 +100,7 @@ public class Rational implements Strategy, SetParam {
 */
 
         // if 全candidatesから返信が返ってきてタスクが実行可能なら割り当てを考えていく
-        System.out.println(leader + ", candidates: " + leader.candidates);
+   //     System.out.println(leader + ", candidates: " + leader.candidates);
         for (int indexA = 0, indexB = leader.restSubTask; indexA < leader.restSubTask; indexA++, indexB++) {
                 A = leader.candidates.get(indexA);
                 B = leader.candidates.get(indexB);
@@ -424,8 +425,8 @@ public class Rational implements Strategy, SetParam {
             }
         }
 
-        if( size == 0 ) return;
         size = ag.messages.size();
+        if( size == 0 ) return;
         // リーダーなら
         if( ag.role == LEADER ){
             // phase1(チーム参加要請送信時)とphase3(タスク実行時)には何も待っていない．
