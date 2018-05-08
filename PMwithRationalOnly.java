@@ -20,6 +20,8 @@ import java.util.Map;
 
 public class PMwithRationalOnly implements Strategy, SetParam {
     static final double γ = γ_r;
+    static int leader_role_renewal = 0;
+    static int member_role_renewal = 0;
     Map<Agent, AllocatedSubTask>[] teamHistory = new HashMap[AGENT_NUM];
 
     PMwithRationalOnly() {
@@ -45,10 +47,15 @@ public class PMwithRationalOnly implements Strategy, SetParam {
     private void proposeAsL(Agent leader) {
         leader.ourTask = Manager.getTask();
         if (leader.ourTask == null) {
+            leader_role_renewal++;
+
+/*
             leader.role_renewal_counter++;
-            if ( leader.role_renewal_counter >= THRESHOLD_FOR_ROLE_RENEWAL) {
+            if (leader.role_renewal_counter >= THRESHOLD_FOR_ROLE_RENEWAL) {
                 leader.inactivate(0);
             }
+*/
+            leader.inactivate(0);
             return;
         }
         leader.restSubTask = leader.ourTask.subTaskNum;                       // 残りサブタスク数を設定
@@ -73,6 +80,7 @@ public class PMwithRationalOnly implements Strategy, SetParam {
         if (member.messages.size() == 0){
             member.role_renewal_counter++;
             if ( member.role_renewal_counter >= THRESHOLD_FOR_ROLE_RENEWAL) {
+                member_role_renewal++;
                 member.inactivate(0);
             }
             return;     // メッセージをチェック
@@ -90,23 +98,10 @@ public class PMwithRationalOnly implements Strategy, SetParam {
             member.start = Manager.getTicks();
             member.nextPhase();
         }
-        // どこにも参加しないのであれば, 役割適正値を更新するようにする
-        else {
-            member.role_renewal_counter++;
-            if ( member.role_renewal_counter >= THRESHOLD_FOR_ROLE_RENEWAL) {
-                member.inactivate(0);
-            }
-        }
-// */
     }
 
     private void reportAsL(Agent leader) {
         if (leader.replies.size() != leader.proposalNum ) return;
-        /*if ( Manager.getTicks() > 50000 ){
-            System.out.println(leader + ", subtasks: " + leader.ourTask.subTasks);
-            System.out.println("exCandidates" + leader.candidates);
-            System.out.println("replies" + leader.replies);
-        }*/
         Agent from;
         for (Message reply : leader.replies) {
             // 拒否ならそのエージェントを候補リストから外し, 信頼度を0で更新する
@@ -120,12 +115,6 @@ public class PMwithRationalOnly implements Strategy, SetParam {
         }
 
         Agent A, B;
-
-/*
-        if ( Manager.getTicks() > 50000 ){
-            System.out.println(leader + ", candidates: " + leader.candidates);
-        }
-*/
 
         // if 全candidatesから返信が返ってきてタスクが実行可能なら割り当てを考えていく
 
@@ -195,14 +184,12 @@ public class PMwithRationalOnly implements Strategy, SetParam {
         message = member.messages.remove(0);
         member.mySubTask = message.getSubTask();
 
-        int rt = Manager.getTicks() - member.start;
 /*
         member.totalResponseTicks += rt;
         member.meanRT = (double)member.totalResponseTicks/(double)member.totalOffers;
 // */
         // サブタスクがもらえたなら信頼度をプラスに更新し, 実行フェイズへ移る.
         if (member.mySubTask != null) {
-            member.start = Manager.getTicks();
             member.allocated[member.leader.id][member.mySubTask.resType]++;
             member.executionTime = member.calcExecutionTime(member, member.mySubTask);
             member.nextPhase();
@@ -223,7 +210,7 @@ public class PMwithRationalOnly implements Strategy, SetParam {
                 if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN)
                     for (Agent ag : agent.teamMembers) agent.workWithAsL[ag.id]++;
             } else {
-                agent.sendMessage(agent, agent.leader, DONE, agent.start);
+                agent.sendMessage(agent, agent.leader, DONE, 0);
                 agent.required[agent.mySubTask.resType]++;
                 agent.relAgents = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / (double) (Manager.getTicks() - agent.start) );
                 if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN)

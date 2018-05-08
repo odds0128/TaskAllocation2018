@@ -8,6 +8,7 @@ import java.util.Map;
  * リーダーは信頼度を元にメンバを選定するが，
  * メンバは受理要請の中から最も報酬(サブタスクの要求リソース/実行時間)が高いものを選択する手法
  * こちらは役割を更新する
+ * ただし，現状(2018/05/08)メンバ側の能動的役割更新はなしとする
  */
 public class RationalWithRoleRenewal implements Strategy, SetParam {
     static final double γ = γ_r;
@@ -56,7 +57,10 @@ public class RationalWithRoleRenewal implements Strategy, SetParam {
     }
 
     private void replyAsM(Agent member) {
-        if (member.messages.size() == 0) return;     // メッセージをチェック
+        if (member.messages.size() == 0) {
+            // 能動的役割更新が必要ならここに入れる
+            return;
+        }
 
         member.leader = selectLeader(member, member.messages);
         if (member.leader != null) {
@@ -486,7 +490,7 @@ public class RationalWithRoleRenewal implements Strategy, SetParam {
 
     void inactivate(Agent ag, int success) {
         if (ag.role == LEADER) {
-            ag.phase = lPHASE1;
+            ag.e_leader = (1.0-α) * ag.e_leader + success;
             ag.teamMembers.clear();        // すでにサブタスクを送っていてメンバの選定から外すエージェントのリスト
             ag.ourTask = null;
             ag.candidates.clear();
@@ -495,17 +499,17 @@ public class RationalWithRoleRenewal implements Strategy, SetParam {
             ag.results.clear();
             ag.preAllocations.clear();
             ag.restSubTask = 0;
-            ag.role = LEADER;
             ag.proposalNum = 0;
         } else if (ag.role == MEMBER) {
-            ag.phase = mPHASE1;
-            ag.role = MEMBER;
+            ag.leader = null;
+            ag.e_member = (1.0-α) * ag.e_member + success;
         }
         ag.mySubTask = null;
         ag.messages.clear();
         ag.executionTime = 0;
-        ag.leader = null;
         ag.validatedTicks = Manager.getTicks();
+        ag.role  = JONE_DOE;
+        ag.phase = SELECT_ROLE;
     }
 
     protected void nextPhase(Agent ag) {
