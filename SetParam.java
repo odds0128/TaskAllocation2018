@@ -14,11 +14,11 @@ interface SetParam {
     boolean CHECK_AGENTS        = false;   // エージェントの情報を確認するか
 
 
-//    String HOW_EPSILON = "constant";      // 定数:constant, 線形減少:linear, 指数減少:exponential で指定
+    String HOW_EPSILON = "constant";      // 定数:constant, 線形減少:linear, 指数減少:exponential で指定
 //    String HOW_EPSILON = "linear";          // 定数:constant, 線形減少:linear, 指数減少:exponential で指定
-    String HOW_EPSILON = "exponential";   // 定数:constant, 線形減少:linear, 指数減少:exponential で指定
-    double INITIAL_ε  = 0.5;
-//    double INITIAL_ε  = 0.05;
+//    String HOW_EPSILON = "exponential";   // 定数:constant, 線形減少:linear, 指数減少:exponential で指定
+//    double INITIAL_ε  = 0.5;
+    double INITIAL_ε  = 0.05;
     double FLOOR       = 0.05;
     double DIFFERENCE  = (INITIAL_ε - FLOOR)/(MAX_TURN_NUM * 0.9);
     double RATE        = 0.99996;   // rateはマジでちゃんと計算して気をつけて思ったより早く収束するから
@@ -48,13 +48,15 @@ interface SetParam {
     int RESEND_TIMES   = 2;              // あるサブタスクについて要請を出すエージェントの数
     int MAX_RELIABLE_AGENTS = 1;         // 信頼エージェントの数
 //    int THRESHOLD_FOR_ROLE_RENEWAL  = 10;
-    int THRESHOLD_FOR_ROLE_RENEWAL  = 1;
+//    int THRESHOLD_FOR_ROLE_RENEWAL  = 1;
+//int THRESHOLD_FOR_ROLE_RENEWAL  = 100;
+    int THRESHOLD_FOR_ROLE_RENEWAL  = 50;
 
     // パラメータ
     double INITIAL_VALUE_OF_DEC =  1.0;
     double INITIAL_VALUE_OF_DSL =  0.5;
     double INITIAL_VALUE_OF_DSM =  0.5;
-    double α = 0.05;
+    double α = 0.01;
     double γ_r = INITIAL_VALUE_OF_DEC/(double)MAX_TURN_NUM;
     double THRESHOLD_FOR_RECIPROCITY   = 0.5;
     int BIAS = 0;

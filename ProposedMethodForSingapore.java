@@ -50,13 +50,15 @@ public class ProposedMethodForSingapore implements Strategy, SetParam {
     private void proposeAsL(Agent leader) {
         leader.ourTask = Manager.getTask();
         if (leader.ourTask == null) {
+            leader_role_renewal++;
+
+/*
             leader.role_renewal_counter++;
-            /*
             if (leader.role_renewal_counter >= THRESHOLD_FOR_ROLE_RENEWAL) {
-                leader_role_renewal++;
+                leader.inactivate(0);
+            }
 */
             leader.inactivate(0);
-//            }
             return;
         }
         leader.restSubTask = leader.ourTask.subTaskNum;                       // 残りサブタスク数を設定

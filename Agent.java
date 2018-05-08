@@ -235,11 +235,20 @@ public class Agent implements SetParam , Cloneable{
     void inactivate(double success) {
         if (role == LEADER) {
             e_leader = e_leader * (1.0 - α) + α * success;
+
+//            e_member = 1.0 -e_leader;
+
             assert e_leader <= 1 && e_leader >= 0 : "Illegal adaption to role";
         } else {
             e_member = e_member * (1.0 - α) + α * success;
+
+//            e_leader = 1.0 - e_member;
+
             assert e_member <= 1 && e_member >= 0 : "Illegal adaption to role";
         }
+
+//        if( (e_member + e_leader) != 1.0  ) System.out.println("Illegal renewal ");
+
         if (role == LEADER) {
             if (success == 1) {
                 didTasksAsLeader++;

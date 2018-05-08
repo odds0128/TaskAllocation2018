@@ -60,7 +60,7 @@ public class Rational implements Strategy, SetParam {
         member.leader = selectLeader(member, member.messages);
         if (member.leader != null) {
             member.joined = true;
-//            System.out.println("ID: "+ member.id + ", my leader is " + member.leader.id );
+            System.out.println("ID: "+ member.id + ", my leader is " + member.leader.id );
             member.sendMessage(member, member.leader, REPLY, ACCEPT);
         }
         // どのリーダーからの要請も受けないのならinactivate
@@ -69,20 +69,15 @@ public class Rational implements Strategy, SetParam {
             member.totalOffers++;
             nextPhase(member);
         }
-        // どこにも参加しないのであれば, 役割適正値を更新するようにする
-        else {
-            inactivate(member, 0);
-        }
-// */
     }
 
     private void reportAsL(Agent leader) {
         if (leader.replies.size() != leader.proposalNum ) return;
-        /*if ( Manager.getTicks() > 50000 ){
+        // /*if ( Manager.getTicks() > 50000 ){
             System.out.println(leader + ", subtasks: " + leader.ourTask.subTasks);
             System.out.println("exCandidates" + leader.candidates);
             System.out.println("replies" + leader.replies);
-        }*/
+
         Agent from;
         for (Message reply : leader.replies) {
             // 拒否ならそのエージェントを候補リストから外し, 信頼度を0で更新する
@@ -104,7 +99,7 @@ public class Rational implements Strategy, SetParam {
 */
 
         // if 全candidatesから返信が返ってきてタスクが実行可能なら割り当てを考えていく
-
+        System.out.println(leader + ", candidates: " + leader.candidates);
         for (int indexA = 0, indexB = leader.restSubTask; indexA < leader.restSubTask; indexA++, indexB++) {
                 A = leader.candidates.get(indexA);
                 B = leader.candidates.get(indexB);
