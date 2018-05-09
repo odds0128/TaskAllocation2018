@@ -8,11 +8,11 @@ interface SetParam {
     int EXECUTION_TIMES = 1;             // 実験の回数
     int MAX_TURN_NUM    = 200000;         // 一回の実験のターン数
     int WRITING_TIMES   = 2000;           // データのファイルへの出力回数
-    boolean CHECK_RELATIONSHIPS = true;  // エージェント関係の協調関係を録るか
-    boolean CHECK_INITIATION    = false;  // エージェントやタスクの初期設定を確認するか
-    boolean CHECK_RESULTS       = true;  // チーム編成成功数などを確認するか
-    boolean CHECK_AGENTS        = false;   // エージェントの情報を確認するか
-
+    boolean CHECK_RELATIONSHIPS   = true;  // エージェント関係の協調関係を録るか
+    boolean CHECK_INITIATION      = false;  // エージェントやタスクの初期設定を確認するか
+    boolean CHECK_RESULTS         = true;  // チーム編成成功数などを確認するか
+    boolean CHECK_AGENTS          = false;   // エージェントの情報を確認するか
+    boolean CHECK_Eleader_Emember = false;
 
     String HOW_EPSILON = "constant";      // 定数:constant, 線形減少:linear, 指数減少:exponential で指定
 //    String HOW_EPSILON = "linear";          // 定数:constant, 線形減少:linear, 指数減少:exponential で指定
@@ -27,7 +27,7 @@ interface SetParam {
     int  COALITION_CHECK_SPAN = 5000;          // 協調関係ができているか確認するための最後の方のターム
     double THRESHOLD_FOR_COALITION = 20;
     int THRESHOLD_FOR_NEET = 5000;
-    double THRESHOLD_FOR_RECIPROCITY_RATE = 0.5;
+    double THRESHOLD_FOR_RECIPROCITY_RATE = 0.7;
     int SNAPSHOT_TIME = MAX_TURN_NUM;
 
     int INITIAL_TASK_NUM = 0;       // 最初のタスク数

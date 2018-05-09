@@ -21,6 +21,7 @@ public class RationalWithRoleRenewal implements Strategy, SetParam {
     }
 
     public void actAsLeader(Agent agent) {
+
         if (agent.phase == lPHASE1) proposeAsL(agent);
         else if (agent.phase == lPHASE2) reportAsL(agent);
         else if (agent.phase == PHASE3) execute(agent);
@@ -78,10 +79,6 @@ public class RationalWithRoleRenewal implements Strategy, SetParam {
 
     private void reportAsL(Agent leader) {
         if (leader.replies.size() != leader.proposalNum ) return;
-        // /*if ( Manager.getTicks() > 50000 ){
-        System.out.println(leader + ", subtasks: " + leader.ourTask.subTasks);
-        System.out.println("exCandidates" + leader.candidates);
-        System.out.println("replies" + leader.replies);
 
         Agent from;
         for (Message reply : leader.replies) {
@@ -491,6 +488,7 @@ public class RationalWithRoleRenewal implements Strategy, SetParam {
     void inactivate(Agent ag, int success) {
         if (ag.role == LEADER) {
             ag.e_leader = (1.0-α) * ag.e_leader + success;
+            if (ag.ourTask != null) Manager.disposeTask(ag);
             ag.teamMembers.clear();        // すでにサブタスクを送っていてメンバの選定から外すエージェントのリスト
             ag.ourTask = null;
             ag.candidates.clear();
@@ -500,14 +498,17 @@ public class RationalWithRoleRenewal implements Strategy, SetParam {
             ag.preAllocations.clear();
             ag.restSubTask = 0;
             ag.proposalNum = 0;
+            Agent._leader_num--;
         } else if (ag.role == MEMBER) {
             ag.leader = null;
+            Agent._member_num--;
             ag.e_member = (1.0-α) * ag.e_member + success;
         }
         ag.mySubTask = null;
         ag.messages.clear();
         ag.executionTime = 0;
         ag.validatedTicks = Manager.getTicks();
+        ag.role_renewal_counter = 0;
         ag.role  = JONE_DOE;
         ag.phase = SELECT_ROLE;
     }

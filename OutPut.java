@@ -95,7 +95,7 @@ public class OutPut implements SetParam {
     static double[] membersExcAveArray = new double[EXECUTION_TIMES];
 
     static void aggregateDataOnce(List<Agent> agents, int times) {
-        times --;
+        times--;
         for (Agent ag : agents) {
             agentsExcAveArray[times] += ag.excellence;
             if (ag.e_leader > ag.e_member) {
@@ -120,23 +120,23 @@ public class OutPut implements SetParam {
         // 平均及び四分位点以下のexcellenceのエージェントを集計する
         int temp2 = 0;
         double quartile = Integer.MAX_VALUE, ave = Integer.MAX_VALUE;
-        for( Agent ag: temp ){
+        for (Agent ag : temp) {
             temp2++;
             // 下から数えて4分の1に達したらその時のexcellenceが四分位点
-            if( temp2 == AGENT_NUM/4 ) quartile = ag.excellence;
-            if( temp2 == AGENT_NUM/2 ) ave      = ag.excellence;
-            if( ag.excellence <= quartile ){
+            if (temp2 == AGENT_NUM / 4) quartile = ag.excellence;
+            if (temp2 == AGENT_NUM / 2) ave = ag.excellence;
+            if (ag.excellence <= quartile) {
                 agentsLessThanQuaArray[times]++;
                 if (ag.e_leader > ag.e_member) {
                     leadersLessThanQuaArray[times]++;
                 }
             }
-            if( ag.excellence <= ave ){
+            if (ag.excellence <= ave) {
                 agentsLessThanAveArray[times]++;
                 if (ag.e_leader > ag.e_member) {
                     leadersLessThanAveArray[times]++;
                 }
-            }else{
+            } else {
                 break;
             }
         }
@@ -144,8 +144,8 @@ public class OutPut implements SetParam {
     }
 
     static void indexIncrement() {
-        if( taskExecutionTimes != 0 ){
-            taskExecutionTimeArray[index] += tempTaskExecutionTimeArray[index]/taskExecutionTimes;
+        if (taskExecutionTimes != 0) {
+            taskExecutionTimeArray[index] += tempTaskExecutionTimeArray[index] / taskExecutionTimes;
 //            System.out.println(taskExecutionTimeArray[index]);
         }
         tempTaskExecutionTimeArray[index] = 0;
@@ -204,10 +204,10 @@ public class OutPut implements SetParam {
     static void checkAgent(List<Agent> agents) {
         List<Agent> temp = new ArrayList<>(agents);
         System.out.println("Total Agents is " + agents.size());
-        System.out.println("Leaders is " + Agent._leader_num + ", Members is " + Agent._member_num );
+        System.out.println("Leaders is " + Agent._leader_num + ", Members is " + Agent._member_num);
 
         for (Agent agent : agents) {
-            System.out.print( "ID: " + agent.id + " Resources : ");
+            System.out.print("ID: " + agent.id + " Resources : ");
             for (int i = 0; i < RESOURCE_TYPES; i++) System.out.print(agent.res[i] + ", ");
             System.out.println(" Reliable Agents: " + agent.relAgents.size());
             System.out.println("Threshold: " + agent.threshold_for_reciprocity);
@@ -245,7 +245,7 @@ public class OutPut implements SetParam {
     }
 
     static void checkTeam(Agent leader) {
-        System.out.print("Time: " + Manager.getTicks() + ", " +  leader.id + " and ");
+        System.out.print("Time: " + Manager.getTicks() + ", " + leader.id + " and ");
         for (Agent mem : leader.teamMembers) {
             System.out.print(mem.id + ", ");
         }
@@ -256,14 +256,14 @@ public class OutPut implements SetParam {
         } else {
             System.out.println(" leader: " + leader);
         }
-        for ( Map.Entry<Agent, SubTask> al : leader.preAllocations.entrySet()) {
+        for (Map.Entry<Agent, SubTask> al : leader.preAllocations.entrySet()) {
             System.out.println(" member: " + al.getKey() + "→" + al.getValue() + ": " + leader.calcExecutionTime(al.getKey(), al.getValue()) + "[tick(s)]");
         }
         // */
     }
 
     static void writeResults(Strategy st) {
-        String outputFilePath = _singleton.setPath("results", st.getClass().getName() , "csv" );
+        String outputFilePath = _singleton.setPath("results", st.getClass().getName(), "csv");
 
         FileWriter fw;
         BufferedWriter bw;
@@ -277,27 +277,27 @@ public class OutPut implements SetParam {
             pw.println("turn" + ", "
                             + "FinishedTasks" + ", " + "DisposedTasks" + ", " + "OverflownTasks" + ", "
                             + "Success rate" + ", "
-                            + "CommunicationTime" + ", " + "Messages"  + ", " + "ExecutionTime" + ","
+                            + "CommunicationTime" + ", " + "Messages" + ", " + "ExecutionTime" + ","
                             + "Leader" + ", " // + "Member"                            + ", "
                             + "NEET Members" + ", "
-                    // + "Lonely leaders"                    + ", " + "Lonely members"                    + ", "
-                    // + "Accompanied leaders"               + ", " + "Accompanied members"               + ", "
-                     + "Reciprocal"
+                            // + "Lonely leaders"                    + ", " + "Lonely members"                    + ", "
+                            // + "Accompanied leaders"               + ", " + "Accompanied members"               + ", "
+                            + "Reciprocal"
 //                            + ", " + "Rational"                          + ", " + "ReciprocalMembers" + ","
                     // + "FinishedTasks in depopulated area" + ", " + "FinishedTasks in populated area"   + ", "
             );
             for (int i = 0; i < WRITING_TIMES; i++) {
-                pw.println((i + 1) * (MAX_TURN_NUM                     / WRITING_TIMES) + ", "
-                                + finishedTasksArray[i]                / EXECUTION_TIMES + ", "
-                                + disposedTasksArray[i]                / EXECUTION_TIMES + ", "
-                                + overflownTasksArray[i]               / EXECUTION_TIMES + ", "
-                                + (double) finishedTasksArray[i]       / (finishedTasksArray[i] + disposedTasksArray[i]  ) + ", "
-                                + communicationDelayArray[i]           / EXECUTION_TIMES + ", "
-                                + messagesArray[i]                     / EXECUTION_TIMES + ", "
-                                + (double) taskExecutionTimeArray[i]   / EXECUTION_TIMES + ", "
+                pw.println((i + 1) * (MAX_TURN_NUM / WRITING_TIMES) + ", "
+                                + finishedTasksArray[i] / EXECUTION_TIMES + ", "
+                                + disposedTasksArray[i] / EXECUTION_TIMES + ", "
+                                + overflownTasksArray[i] / EXECUTION_TIMES + ", "
+                                + (double) finishedTasksArray[i] / (finishedTasksArray[i] + disposedTasksArray[i]) + ", "
+                                + communicationDelayArray[i] / EXECUTION_TIMES + ", "
+                                + messagesArray[i] / EXECUTION_TIMES + ", "
+                                + (double) taskExecutionTimeArray[i] / EXECUTION_TIMES + ", "
                                 + leaderNumArray[i] / EXECUTION_TIMES + ", "
                                 + neetMembersArray[i] / EXECUTION_TIMES + ", "
-                                + reciprocalistsArray[i]                 / EXECUTION_TIMES + ", "
+                                + reciprocalistsArray[i] / EXECUTION_TIMES + ", "
                         /*                    + memberNumArray[i]                      / EXECUTION_TIMES + ", "
                     + leaderNumInDepopulatedAreaArray[i]     / EXECUTION_TIMES + ", "
                     + memberNumInDepopulatedAreaArray[i]     / EXECUTION_TIMES + ", "
@@ -319,7 +319,7 @@ public class OutPut implements SetParam {
     }
 
     static void writeResultsX(Strategy st) throws FileNotFoundException, IOException {
-        String outputFilePath = _singleton.setPath("results", st.getClass().getName()  , "xlsx");
+        String outputFilePath = _singleton.setPath("results", st.getClass().getName(), "xlsx");
 
         try {
             book = new SXSSFWorkbook();
@@ -426,14 +426,14 @@ public class OutPut implements SetParam {
                 colNumber = 0;
                 row = sheet.createRow(rowNumber);
 
-                _singleton.writeCell(row, colNumber++, style_int, (wt + 1) * (MAX_TURN_NUM    / WRITING_TIMES));
-                _singleton.writeCell(row, colNumber++, style_int, finishedTasksArray[wt]      / EXECUTION_TIMES);
-                _singleton.writeCell(row, colNumber++, style_int, disposedTasksArray[wt]      / EXECUTION_TIMES);
-                _singleton.writeCell(row, colNumber++, style_int, overflownTasksArray[wt]     / EXECUTION_TIMES);
+                _singleton.writeCell(row, colNumber++, style_int, (wt + 1) * (MAX_TURN_NUM / WRITING_TIMES));
+                _singleton.writeCell(row, colNumber++, style_int, finishedTasksArray[wt] / EXECUTION_TIMES);
+                _singleton.writeCell(row, colNumber++, style_int, disposedTasksArray[wt] / EXECUTION_TIMES);
+                _singleton.writeCell(row, colNumber++, style_int, overflownTasksArray[wt] / EXECUTION_TIMES);
                 _singleton.writeCell(row, colNumber++, style_double, communicationDelayArray[wt] / (double) EXECUTION_TIMES);
-                _singleton.writeCell(row, colNumber++, style_double, (double) taskExecutionTimeArray[wt]  / EXECUTION_TIMES );
-                _singleton.writeCell(row, colNumber++, style_int, leaderNumArray[wt]          / EXECUTION_TIMES);
-                _singleton.writeCell(row, colNumber++, style_int, neetMembersArray[wt]        / EXECUTION_TIMES);
+                _singleton.writeCell(row, colNumber++, style_double, (double) taskExecutionTimeArray[wt] / EXECUTION_TIMES);
+                _singleton.writeCell(row, colNumber++, style_int, leaderNumArray[wt] / EXECUTION_TIMES);
+                _singleton.writeCell(row, colNumber++, style_int, neetMembersArray[wt] / EXECUTION_TIMES);
 
                 //列幅の自動調整
                 for (int k = 0; k <= colNumber; k++) {
@@ -463,10 +463,8 @@ public class OutPut implements SetParam {
         }
     }
 
-
-
     static void writeAgentsInformationX(Strategy st) throws FileNotFoundException, IOException {
-        String outputFilePath = _singleton.setPath("agentInfo", st.getClass().getName() , "xlsx");
+        String outputFilePath = _singleton.setPath("agentInfo", st.getClass().getName(), "xlsx");
         try {
             book = new SXSSFWorkbook();
             Font font = book.createFont();
@@ -573,13 +571,13 @@ public class OutPut implements SetParam {
                 colNumber = 0;
                 row = sheet.createRow(rowNumber);
 
-                _singleton.writeCell(row, colNumber++, style_int,    (wt + 1));
-                _singleton.writeCell(row, colNumber++, style_int,    leadersArray[wt]);
-                _singleton.writeCell(row, colNumber++, style_int,    agentsLessThanAveArray[wt] );
-                _singleton.writeCell(row, colNumber++, style_int,    leadersLessThanAveArray[wt]);
-                _singleton.writeCell(row, colNumber++, style_int,    agentsLessThanQuaArray[wt] );
-                _singleton.writeCell(row, colNumber++, style_int,    leadersLessThanQuaArray[wt]);
-                _singleton.writeCell(row, colNumber++, style_double, agentsExcAveArray[wt] );
+                _singleton.writeCell(row, colNumber++, style_int, (wt + 1));
+                _singleton.writeCell(row, colNumber++, style_int, leadersArray[wt]);
+                _singleton.writeCell(row, colNumber++, style_int, agentsLessThanAveArray[wt]);
+                _singleton.writeCell(row, colNumber++, style_int, leadersLessThanAveArray[wt]);
+                _singleton.writeCell(row, colNumber++, style_int, agentsLessThanQuaArray[wt]);
+                _singleton.writeCell(row, colNumber++, style_int, leadersLessThanQuaArray[wt]);
+                _singleton.writeCell(row, colNumber++, style_double, agentsExcAveArray[wt]);
                 _singleton.writeCell(row, colNumber++, style_double, leadersExcAveArray[wt]);
                 _singleton.writeCell(row, colNumber++, style_double, membersExcAveArray[wt]);
 
@@ -612,7 +610,7 @@ public class OutPut implements SetParam {
     }
 
     static void writeGraphInformationX(List<Agent> agents, Strategy st) throws FileNotFoundException, IOException {
-        String outputFilePath = _singleton.setPath("relationships", st.getClass().getName() , "xlsx");
+        String outputFilePath = _singleton.setPath("relationships", st.getClass().getName(), "xlsx");
         Edge edge = new Edge();
         edge.makeEdge(agents);
         try {
@@ -704,14 +702,14 @@ public class OutPut implements SetParam {
                 row = sheet.createRow(rowNumber);
 
                 if (i == 0) _singleton.writeCell(row, colNumber++, style_header, "Node id");
-                else        _singleton.writeCell(row, colNumber++, style_header, "Edge id");
+                else _singleton.writeCell(row, colNumber++, style_header, "Edge id");
 
                 if (i == 0) _singleton.writeCell(row, colNumber++, style_header, "Node color");
-                else        _singleton.writeCell(row, colNumber++, style_header, "Source Node id");
+                else _singleton.writeCell(row, colNumber++, style_header, "Source Node id");
 
 
                 if (i == 0) _singleton.writeCell(row, colNumber++, style_header, "Node shape");
-                else        _singleton.writeCell(row, colNumber++, style_header, "Target Node id");
+                else _singleton.writeCell(row, colNumber++, style_header, "Target Node id");
 
                 if (i == 0) {
                     _singleton.writeCell(row, colNumber++, style_header, " x-coordinate ");
@@ -720,10 +718,10 @@ public class OutPut implements SetParam {
                     _singleton.writeCell(row, colNumber++, style_header, " delay to leader ");
 //                    _singleton.writeCell(row, colNumber++, style_header, " is lonely or not");
 //                    _singleton.writeCell(row, colNumber++, style_header, " is accompanied or not");
-                    for (int j = 0; j < RESOURCE_TYPES; j++){
+                    for (int j = 0; j < RESOURCE_TYPES; j++) {
                         _singleton.writeCell(row, colNumber++, style_header, " Resources " + j);
-                        _singleton.writeCell(row, colNumber++, style_header, " Required "  + j);
-                        _singleton.writeCell(row, colNumber++, style_header, " Allocated "  + j);
+                        _singleton.writeCell(row, colNumber++, style_header, " Required " + j);
+                        _singleton.writeCell(row, colNumber++, style_header, " Allocated " + j);
                     }
                     _singleton.writeCell(row, colNumber++, style_header, " Excellence ");
                     _singleton.writeCell(row, colNumber++, style_header, " Times ");
@@ -755,15 +753,13 @@ public class OutPut implements SetParam {
                         _singleton.writeCell(row, colNumber++, style_int, agent.id);
 
 
-                        if (agent.e_leader > agent.e_member){
+                        if (agent.e_leader > agent.e_member) {
                             _singleton.writeCell(row, colNumber++, style_string, "Red");
                             _singleton.writeCell(row, colNumber++, style_string, "Circle");
-                        }
-                        else if (agent.principle == RATIONAL){
+                        } else if (agent.principle == RATIONAL) {
                             _singleton.writeCell(row, colNumber++, style_string, "Green");
                             _singleton.writeCell(row, colNumber++, style_string, "Square");
-                        }
-                        else if (agent.principle == RECIPROCAL){
+                        } else if (agent.principle == RECIPROCAL) {
                             _singleton.writeCell(row, colNumber++, style_string, "Blue");
                             _singleton.writeCell(row, colNumber++, style_string, "Triangle");
                         }
@@ -771,23 +767,26 @@ public class OutPut implements SetParam {
                         _singleton.writeCell(row, colNumber++, style_int, agent.x * 10);
                         _singleton.writeCell(row, colNumber++, style_int, agent.y * 10);
 
-                        if (agent.e_leader > agent.e_member)   _singleton.writeCell(row, colNumber++, style_int, -1 );
-                        else if( agent.relRanking.size() > 0 ) _singleton.writeCell(row, colNumber++, style_int,agent.relRanking.get(0).id );
-                        else                                   _singleton.writeCell(row, colNumber++, style_int, -1 );
+                        if (agent.e_leader > agent.e_member) _singleton.writeCell(row, colNumber++, style_int, -1);
+                        else if (agent.relRanking.size() > 0)
+                            _singleton.writeCell(row, colNumber++, style_int, agent.relRanking.get(0).id);
+                        else _singleton.writeCell(row, colNumber++, style_int, -1);
 
-                        if (agent.e_leader > agent.e_member )  _singleton.writeCell(row, colNumber++, style_int, 0);
-                        else if( agent.relRanking.size() > 0 ) _singleton.writeCell(row, colNumber++, style_int, Manager.delays[agent.id][agent.relRanking.get(0).id]);
-                        else                                   _singleton.writeCell(row, colNumber++, style_int, -1 );
+                        if (agent.e_leader > agent.e_member) _singleton.writeCell(row, colNumber++, style_int, 0);
+                        else if (agent.relRanking.size() > 0)
+                            _singleton.writeCell(row, colNumber++, style_int, Manager.delays[agent.id][agent.relRanking.get(0).id]);
+                        else _singleton.writeCell(row, colNumber++, style_int, -1);
 
                         /*
                         _singleton.writeCell(row, colNumber++, style_int,agent.isLonely);
                         _singleton.writeCell(row, colNumber++, style_int,agent.isAccompanied);
 // */
-                        for (int j = 0; j < RESOURCE_TYPES; j++){
+                        for (int j = 0; j < RESOURCE_TYPES; j++) {
                             _singleton.writeCell(row, colNumber++, style_int, agent.res[j]);
                             _singleton.writeCell(row, colNumber++, style_int, agent.required[j]);
-                            if( agent.relRanking.size() > 0 ) _singleton.writeCell(row, colNumber++, style_int, agent.allocated[agent.relRanking.get(0).id][j]);
-                            else                              _singleton.writeCell(row, colNumber++, style_int, -1);
+                            if (agent.relRanking.size() > 0)
+                                _singleton.writeCell(row, colNumber++, style_int, agent.allocated[agent.relRanking.get(0).id][j]);
+                            else _singleton.writeCell(row, colNumber++, style_int, -1);
                         }
                         _singleton.writeCell(row, colNumber++, style_double, agent.excellence);
                         _singleton.writeCell(row, colNumber++, style_int, agent.didTasksAsMember);
@@ -822,7 +821,7 @@ public class OutPut implements SetParam {
                     }
                 } else if (i == 2) {
                     for (int j = 0; j < edge.from_id.size(); j++) {
-                        if (edge.isRecipro.get(j) == true ) {
+                        if (edge.isRecipro.get(j) == true) {
                             rowNumber++;
                             colNumber = 0;
                             row = sheet.createRow(rowNumber);
@@ -850,8 +849,8 @@ public class OutPut implements SetParam {
                 if (sheet instanceof SXSSFSheet) {
                     ((SXSSFSheet) sheet).trackAllColumnsForAutoSizing();
                 }
-                if( i == 0 ) book.setSheetName(i + 3, "EdgesFromLeader");
-                else         book.setSheetName(i + 3, "reciprocalEdgesFromLeader");
+                if (i == 0) book.setSheetName(i + 3, "EdgesFromLeader");
+                else book.setSheetName(i + 3, "reciprocalEdgesFromLeader");
 
                 //ヘッダ行の作成
                 rowNumber = 0;
@@ -947,7 +946,7 @@ public class OutPut implements SetParam {
         PrintWriter pw;
         try {
             String currentPath = System.getProperty("user.dir");
-            Date             date = new Date();
+            Date date = new Date();
             SimpleDateFormat sdf1 = new SimpleDateFormat(",yyyy:MM:dd,HH:mm:ss");
             fw = new FileWriter(currentPath + "/out/results/communicationDelay=" + MAX_DELAY + sdf1.format(date) + ".csv", false);
             bw = new BufferedWriter(fw);
@@ -985,7 +984,7 @@ public class OutPut implements SetParam {
 
         try {
             String currentPath = System.getProperty("user.dir");
-            Date             date = new Date();
+            Date date = new Date();
             SimpleDateFormat sdf1 = new SimpleDateFormat(",yyyy:MM:dd,HH:mm:ss");
             fw = new FileWriter(currentPath + "/out/results/d&r " + fileName + sdf1.format(date) + ".csv", false);
             bw = new BufferedWriter(fw);
@@ -1031,7 +1030,7 @@ public class OutPut implements SetParam {
         String fileName = st.getClass().getName();
         try {
             String currentPath = System.getProperty("user.dir");
-            Date             date = new Date();
+            Date date = new Date();
             SimpleDateFormat sdf1 = new SimpleDateFormat(",yyyy:MM:dd,HH:mm:ss");
             fw = new FileWriter(currentPath + "/out/results/rel" + fileName + ", λ=" + String.format("%.2f", (double) ADDITIONAL_TASK_NUM / TASK_ADDITION_SPAN) + sdf1.format(date) + ".csv", false);
             bw = new BufferedWriter(fw);
@@ -1114,37 +1113,37 @@ public class OutPut implements SetParam {
             "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"
     };
 
-    private String setPath( String dir_name, String file_name, String extension ){
+    private String setPath(String dir_name, String file_name, String extension) {
         String currentPath = System.getProperty("user.dir");
-        Date             date = new Date();
+        Date date = new Date();
         SimpleDateFormat sdf1 = new SimpleDateFormat(",yyyy_MM_dd,HH_mm_ss");
         System.out.println("Writing on " + dir_name + "/" + file_name + ",λ=" + String.format("%.2f", (double) ADDITIONAL_TASK_NUM / TASK_ADDITION_SPAN) + sdf1.format(date) + "." + extension);
         return currentPath + "/out/" + dir_name + "/" + file_name + ",λ=" + String.format("%.2f", (double) ADDITIONAL_TASK_NUM / TASK_ADDITION_SPAN) + sdf1.format(date) + "." + extension;
     }
 
-    private void prepareExcelSheet(  ){
+    private void prepareExcelSheet() {
 
     }
 
     // あるrowのcolumn列にoを書き込むメソッド
     // 返り値は
-    private Cell writeCell( Row row, int col_number, CellStyle style, Object o){
+    private Cell writeCell(Row row, int col_number, CellStyle style, Object o) {
         Cell cell;
-        if( o.getClass().getName() == "java.lang.String" ){
+        if (o.getClass().getName() == "java.lang.String") {
             cell = row.createCell(col_number++);
             cell.setCellStyle(style);
             cell.setCellType(CellType.STRING);
-            cell.setCellValue( o.toString() );
-        }else if( o.getClass().getName() == "java.lang.Integer" ){
+            cell.setCellValue(o.toString());
+        } else if (o.getClass().getName() == "java.lang.Integer") {
             cell = row.createCell(col_number++);
             cell.setCellStyle(style);
             cell.setCellType(CellType.NUMERIC);
-            cell.setCellValue( (int) o );
-        }else{
+            cell.setCellValue((int) o);
+        } else {
             cell = row.createCell(col_number++);
             cell.setCellStyle(style);
             cell.setCellType(CellType.NUMERIC);
-            cell.setCellValue( (double) o );
+            cell.setCellValue((double) o);
         }
         return cell;
     }

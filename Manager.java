@@ -3,20 +3,18 @@
  * @version 2.0
  */
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 
 public class Manager implements SetParam {
-    private static Strategy strategy = new ProposedMethodForSingapore();
+//    private static Strategy strategy = new ProposedMethodForSingapore();
 //    private static Strategy strategy = new PM2();
-
+    private static Strategy strategy = new PMwithRoleFixed();
 //    private static Strategy strategy = new PMwithRationalOnly();
 //    private static Strategy strategy = new PMwithoutRoleRenewal();
 //    private static Strategy strategy = new PMwithReallocation();
 //    private static Strategy strategy   = new Rational();
+//    private static Strategy strategy   = new RationalWithRoleRenewal();
 
     static private long _seed;
     private static Random _randSeed;
@@ -50,6 +48,11 @@ public class Manager implements SetParam {
             BufferedReader br = new BufferedReader(fr);
             String line;
 
+            FileWriter fw;
+            BufferedWriter bw;
+            PrintWriter pw;
+            int start, end;
+
             int num = 0;
             System.out.println(strategy.getClass().getName() + ", λ=" +
                     (double) ADDITIONAL_TASK_NUM / TASK_ADDITION_SPAN +
@@ -57,6 +60,23 @@ public class Manager implements SetParam {
                     ", XF: " + MAX_RELIABLE_AGENTS +
                     ", Role_renewal: " + THRESHOLD_FOR_ROLE_RENEWAL
             );
+
+            if (CHECK_Eleader_Emember) {
+                String fileName = strategy.getClass().getName();
+                fw = new FileWriter(currentPath + "/out/role" + fileName + ".csv", false);
+                bw = new BufferedWriter(fw);
+                pw = new PrintWriter(bw);
+                start = 0;
+                end = 20;
+                for (int i = start; i < end; i++) {
+                    pw.print(i + ", " + " " + ", ");
+                }
+                pw.println();
+                for (int i = start; i < end; i++) {
+                    pw.print("e_leader, e_member, ");
+                }
+                pw.println();
+            }
 
             // num回実験
             while ((line = br.readLine()) != null) {
@@ -109,6 +129,14 @@ public class Manager implements SetParam {
                         overflowTasks = 0;
                         finishedTasksInDepopulatedArea = 0;
                         finishedTasksInPopulatedArea = 0;
+
+                        if (CHECK_Eleader_Emember && turn % writeResultsSpan == 0) {
+                            pw.print(turn + ", ");
+                            for (Agent ag : agents.subList(start, end)) {
+                                pw.print(String.format("%.5f", ag.e_leader) + ", " + String.format("%.5f", ag.e_member) + ", ");
+                            }
+                            pw.println();
+                        }
                     }
                     // ここが1tickの最後の部分．次のtickまでにやることあったらここで．
                 }
@@ -118,8 +146,8 @@ public class Manager implements SetParam {
                 clearAll();
             }
             // ↑ 全実験の終了のカッコ．以下は後処理
-            System.out.println("leader role renewal: " + ProposedMethodForSingapore.leader_role_renewal/EXECUTION_TIMES);
-            System.out.println("member role renewal: " + ProposedMethodForSingapore.member_role_renewal/EXECUTION_TIMES);
+            System.out.println("leader role renewal: " + ProposedMethodForSingapore.leader_role_renewal / EXECUTION_TIMES);
+            System.out.println("member role renewal: " + ProposedMethodForSingapore.member_role_renewal / EXECUTION_TIMES);
             if (CHECK_RESULTS) OutPut.writeResults(strategy);
             if (CHECK_AGENTS) OutPut.writeAgentsInformationX(strategy);
 //            OutPut.writeDelays(delays);
@@ -127,6 +155,7 @@ public class Manager implements SetParam {
 //            OutPut.writeDelaysAndRels(delays, agents, strategy);
             if (CHECK_RELATIONSHIPS) OutPut.writeGraphInformationX(agents, strategy);
 // */
+            if (CHECK_Eleader_Emember) pw.close();
             br.close();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -134,7 +163,6 @@ public class Manager implements SetParam {
             e2.printStackTrace();
         }
     }
-
 
     // 環境の準備に使うメソッド
     private static void initiate(String line) {
