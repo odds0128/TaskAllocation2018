@@ -9,11 +9,12 @@ import java.util.*;
 public class Manager implements SetParam {
 //    private static Strategy strategy = new ProposedMethodForSingapore();
 //    private static Strategy strategy = new PM2();
-    private static Strategy strategy = new PMwithRoleFixed();
+//    private static Strategy strategy = new PMwithRoleFixed();
 //    private static Strategy strategy = new PMwithRationalOnly();
 //    private static Strategy strategy = new PMwithoutRoleRenewal();
 //    private static Strategy strategy = new PMwithReallocation();
 //    private static Strategy strategy   = new Rational();
+    private static Strategy strategy   = new Rational01();
 //    private static Strategy strategy   = new RationalWithRoleRenewal();
 
     static private long _seed;
