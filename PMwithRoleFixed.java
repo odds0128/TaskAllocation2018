@@ -427,7 +427,7 @@ public class PMwithRoleFixed implements Strategy, SetParam {
 
     private void setPrinciple(Agent agent) {
         if (agent.role == MEMBER) {
-            if (agent.relAgents.size() > 0 && agent.e_member > THRESHOLD_FOR_RECIPROCITY) {
+            if (agent.relAgents.size() > 0 && agent.e_member >= THRESHOLD_FOR_RECIPROCITY) {
                 if (agent.principle == RATIONAL) {
                     Agent._recipro_num++;
                     Agent._rational_num--;
@@ -441,7 +441,7 @@ public class PMwithRoleFixed implements Strategy, SetParam {
                 agent.principle = RATIONAL;
             }
         } else if (agent.role == LEADER) {
-            if (agent.relAgents.size() > 0 && agent.e_leader > THRESHOLD_FOR_RECIPROCITY) {
+            if (agent.relAgents.size() > 0 && agent.e_leader >= THRESHOLD_FOR_RECIPROCITY) {
                 if (agent.principle == RATIONAL) {
                     Agent._recipro_num++;
                     Agent._rational_num--;

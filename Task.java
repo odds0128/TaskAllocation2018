@@ -52,10 +52,14 @@ public class Task implements SetParam{
      * コンストラクタ
      * 残りのタスクを生成する.
      */
-    Task( ){
+    Task( String heavy ){
         this.task_id = _task_id;
         _task_id++;
-        this.subTaskNum = _randSeed.nextInt(4) + 3;
+        if( heavy == "HEAVY" ) {
+            this.subTaskNum = _randSeed.nextInt(3) + 8;
+        }else{
+            this.subTaskNum = _randSeed.nextInt(4) + 3;
+        }
         totalSubtaskNum += subTaskNum;
         totalSubTasks++;
         setSubTasks();

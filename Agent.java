@@ -224,6 +224,7 @@ public class Agent implements SetParam , Cloneable{
             preAllocations = new HashMap<>();
             replies = new ArrayList<>();
             results = new ArrayList<>();
+            threshold_for_reciprocity = 1.5;
         } else {
             role = MEMBER;
             e_member = 1;

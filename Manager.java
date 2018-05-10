@@ -9,12 +9,13 @@ import java.util.*;
 public class Manager implements SetParam {
 //    private static Strategy strategy = new ProposedMethodForSingapore();
 //    private static Strategy strategy = new PM2();
+    private static Strategy strategy = new PM2withRoleFixed();
 //    private static Strategy strategy = new PMwithRoleFixed();
 //    private static Strategy strategy = new PMwithRationalOnly();
 //    private static Strategy strategy = new PMwithoutRoleRenewal();
 //    private static Strategy strategy = new PMwithReallocation();
 //    private static Strategy strategy   = new Rational();
-    private static Strategy strategy   = new Rational01();
+//    private static Strategy strategy   = new Rational01();
 //    private static Strategy strategy   = new RationalWithRoleRenewal();
 
     static private long _seed;
@@ -172,7 +173,7 @@ public class Manager implements SetParam {
         // タスクキューの初期化
         taskQueue = new LinkedList<>();
         taskQueue.add(new Task(_seed));
-        for (int i = 1; i < INITIAL_TASK_NUM; i++) taskQueue.add(new Task());
+        for (int i = 1; i < INITIAL_TASK_NUM; i++) taskQueue.add(new Task("NOT HEAVY"));
 
         // エージェントの初期化
         agents = generateAgents(strategy);
@@ -338,16 +339,23 @@ public class Manager implements SetParam {
             int room = TASK_QUEUE_SIZE - taskQueue.size();    // タスクキューの空き
             // タスクキューに空きが十分にあるなら, 普通にぶち込む
             if (ADDITIONAL_TASK_NUM <= room) {
-                for (int i = 0; i < ADDITIONAL_TASK_NUM; i++) taskQueue.add(new Task());
+                if( START_HAPPENS <= turn && turn < START_HAPPENS + BUSY_PERIOD && IS_HEAVY_TASKS_HAPPENS){
+                    for (int i = 0; i < ADDITIONAL_TASK_NUM; i++) taskQueue.add(new Task("HEAVY"));
+                }else{
+                    for (int i = 0; i < ADDITIONAL_TASK_NUM; i++) taskQueue.add(new Task("NOT HEAVY"));
+                }
             }
             // タスクキューからタスクがはみ出そうなら, 入れるだけ入れてはみ出る分はオーバーフローとする
             else {
                 int i;
-                for (i = 0; i < room; i++) taskQueue.add(new Task());
+                    if( START_HAPPENS <= turn && turn < START_HAPPENS + BUSY_PERIOD && IS_HEAVY_TASKS_HAPPENS){
+                        for (i = 0; i < room; i++) taskQueue.add(new Task("HEAVY"));
+                    }else{
+                        for (i = 0; i < room; i++) taskQueue.add(new Task("NOT HEAVY"));
+                }
                 overflowTasks += ADDITIONAL_TASK_NUM - i;
             }
         }
-//        OutPut.checkTask(taskQueue);
     }
 
     static void actFreeLancer() {

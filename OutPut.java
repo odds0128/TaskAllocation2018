@@ -276,14 +276,14 @@ public class OutPut implements SetParam {
 
             pw.println("turn" + ", "
                             + "FinishedTasks" + ", " + "DisposedTasks" + ", " + "OverflownTasks" + ", "
-                            + "Success rate" + ", "
+                            + "Success rate(except overflow)" + ", " + "Success rate" + ", "
                             + "CommunicationTime" + ", " + "Messages" + ", " + "ExecutionTime" + ","
                             + "Leader" + ", " // + "Member"                            + ", "
                             + "NEET Members" + ", "
                             // + "Lonely leaders"                    + ", " + "Lonely members"                    + ", "
                             // + "Accompanied leaders"               + ", " + "Accompanied members"               + ", "
-                            + "Reciprocal"
-//                            + ", " + "Rational"                          + ", " + "ReciprocalMembers" + ","
+                            + "Reciprocal" + ", "
+                            // + "Rational"                          + ", " + "ReciprocalMembers" + ","
                     // + "FinishedTasks in depopulated area" + ", " + "FinishedTasks in populated area"   + ", "
             );
             for (int i = 0; i < WRITING_TIMES; i++) {
@@ -292,6 +292,7 @@ public class OutPut implements SetParam {
                                 + disposedTasksArray[i] / EXECUTION_TIMES + ", "
                                 + overflownTasksArray[i] / EXECUTION_TIMES + ", "
                                 + (double) finishedTasksArray[i] / (finishedTasksArray[i] + disposedTasksArray[i]) + ", "
+                                + (double) finishedTasksArray[i] / (finishedTasksArray[i] + disposedTasksArray[i] + overflownTasksArray[i]) + ", "
                                 + communicationDelayArray[i] / EXECUTION_TIMES + ", "
                                 + messagesArray[i] / EXECUTION_TIMES + ", "
                                 + (double) taskExecutionTimeArray[i] / EXECUTION_TIMES + ", "

@@ -19,11 +19,11 @@ import java.util.Map;
  */
 
 
-public class PM2 implements Strategy, SetParam {
+public class PM2withRoleFixed implements Strategy, SetParam {
     static final double γ = γ_r;
     Map<Agent, AllocatedSubTask>[] teamHistory = new HashMap[AGENT_NUM];
 
-    PM2() {
+    PM2withRoleFixed() {
         for (int i = 0; i < AGENT_NUM; i++) {
             teamHistory[i] = new HashMap<>();
         }
@@ -31,24 +31,24 @@ public class PM2 implements Strategy, SetParam {
 
     public void actAsLeader(Agent agent) {
         setPrinciple(agent);
-        if (agent.phase == PROPOSITION) proposeAsL(agent);
-        else if (agent.phase == REPORT) reportAsL(agent);
-        else if (agent.phase == EXECUTION) execute(agent);
+        if (agent.phase == lPHASE1) proposeAsL(agent);
+        else if (agent.phase == lPHASE2) reportAsL(agent);
+        else if (agent.phase == PHASE3) execute(agent);
         decreaseDEC(agent);
     }
 
     public void actAsMember(Agent agent) {
         setPrinciple(agent);
-        if (agent.phase == REPLY) replyAsM(agent);
-        else if (agent.phase == RECEPTION) receiveAsM(agent);
-        else if (agent.phase == EXECUTION) execute(agent);
+        if (agent.phase == mPHASE1) replyAsM(agent);
+        else if (agent.phase == mPHASE2) receiveAsM(agent);
+        else if (agent.phase == PHASE3) execute(agent);
         decreaseDEC(agent);
     }
 
     private void proposeAsL(Agent leader) {
         leader.ourTask = Manager.getTask();
         if (leader.ourTask == null) {
-            leader.inactivate(0);
+            inactivate(leader, 0);
             return;
         }
         leader.restSubTask = leader.ourTask.subTaskNum;                       // 残りサブタスク数を設定
@@ -56,7 +56,7 @@ public class PM2 implements Strategy, SetParam {
         leader.candidates = selectMembers(leader, leader.ourTask.subTasks);   // メッセージ送信
         if (leader.candidates == null) {
             leader.candidates = new ArrayList<>();
-            leader.inactivate(0);
+            inactivate(leader, 0);
             return;
         } else {
             for (int i = 0; i < leader.candidates.size(); i++) {
@@ -66,7 +66,7 @@ public class PM2 implements Strategy, SetParam {
                 }
             }
         }
-        leader.nextPhase();  // 次のフェイズへ
+        nextPhase(leader);  // 次のフェイズへ
     }
 
     private void replyAsM(Agent member) {
@@ -82,7 +82,7 @@ public class PM2 implements Strategy, SetParam {
         if (member.joined) {
             member.totalOffers++;
             member.start = Manager.getTicks();
-            member.nextPhase();
+            nextPhase(member);
         }
     }
 
@@ -90,11 +90,7 @@ public class PM2 implements Strategy, SetParam {
         if (leader.replies.size() != leader.proposalNum) return;
 
         Agent from;
-/*
-        System.out.println(leader + ", candidates" + leader.candidates);
-        System.out.println("subtasks: " + leader.ourTask.subTasks);
-*/
-        for (Message reply : leader.replies) {
+       for (Message reply : leader.replies) {
             // 拒否ならそのエージェントを候補リストから外し, 信頼度を0で更新する
             if (reply.getReply() != ACCEPT) {
                 from = reply.getFrom();
@@ -104,7 +100,6 @@ public class PM2 implements Strategy, SetParam {
                 leader.relAgents = renewRel(leader, from, 0);
             }
         }
-//        System.out.println("candidates: " + leader.candidates);
 
         Agent A, B;
 
@@ -155,7 +150,7 @@ public class PM2 implements Strategy, SetParam {
                 leader.sendMessage(leader, tm, RESULT, leader.preAllocations.get(tm));
             }
             Manager.finishTask(leader);
-            leader.nextPhase();
+            nextPhase(leader);
             return;
         }
         // 未割り当てのサブタスクが残っていれば失敗
@@ -164,7 +159,7 @@ public class PM2 implements Strategy, SetParam {
                 leader.sendMessage(leader, tm, RESULT, null);
             }
             Manager.disposeTask(leader);
-            leader.inactivate(0);
+            inactivate(leader,0);
             return;
         }
     }
@@ -176,16 +171,16 @@ public class PM2 implements Strategy, SetParam {
         message = member.messages.remove(0);
         member.mySubTask = message.getSubTask();
 
-        // サブタスクがもらえたなら信頼度をプラスに更新し, 実行フェイズへ移る.
+        // サブタスクがもらえたなら実行フェイズへ移る.
         if (member.mySubTask != null) {
             member.allocated[member.leader.id][member.mySubTask.resType]++;
             member.executionTime = member.calcExecutionTime(member, member.mySubTask);
-            member.nextPhase();
+            nextPhase(member);
         }
         // サブタスクが割り当てられなかったら信頼度を0で更新し, inactivate
         else {
             member.relAgents = renewRel(member, member.leader, 0);
-            member.inactivate(0);
+            inactivate(member, 0);
         }
     }
 
@@ -204,7 +199,7 @@ public class PM2 implements Strategy, SetParam {
                     agent.workWithAsM[agent.leader.id]++;
             }
             // 自分のサブタスクが終わったら役割適応度を1で更新して非活性状態へ
-            agent.inactivate(1);
+            inactivate(agent, 1);
         }
     }
 
@@ -535,6 +530,56 @@ public class PM2 implements Strategy, SetParam {
                 } else ag.sendNegative(ag, m.getFrom(), m.getMessageType(), m.getSubTask());
             }
         }
+    }
+
+    void inactivate(Agent ag, int success) {
+        if (ag.role == LEADER) {
+            ag.phase = lPHASE1;
+            ag.teamMembers.clear();        // すでにサブタスクを送っていてメンバの選定から外すエージェントのリスト
+            ag.ourTask = null;
+            ag.candidates.clear();
+            ag.replyNum = 0;
+            ag.replies.clear();
+            ag.results.clear();
+            ag.preAllocations.clear();
+            ag.restSubTask = 0;
+            ag.role = LEADER;
+            ag.proposalNum = 0;
+        } else if (ag.role == MEMBER) {
+            ag.phase = mPHASE1;
+            ag.role = MEMBER;
+        }
+        ag.mySubTask = null;
+        ag.messages.clear();
+        ag.executionTime = 0;
+        ag.leader = null;
+        ag.validatedTicks = Manager.getTicks();
+    }
+
+    protected void nextPhase(Agent ag) {
+        if (ag.role == LEADER) {
+            if (ag.phase == lPHASE1) {
+                ag.phase = lPHASE2;
+            }
+            // チーム編成に成功したが，自分はサブタスクを担当しない場合
+            else if (ag.phase == lPHASE2 && ag.executionTime < 0) {
+                if (Agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
+                    for (Agent mem : ag.teamMembers) ag.workWithAsL[mem.id]++;
+                }
+                inactivate(ag,1);
+            }
+            // サブタスクを持っているなら実行フェイズに写る
+            else {
+                ag.phase = PHASE3;
+            }
+        } else {
+            if (ag.phase == mPHASE1) {
+                ag.phase = mPHASE2;
+            } else if (ag.phase == mPHASE2) {
+                ag.phase = PHASE3;
+            }
+        }
+        ag.validatedTicks = Manager.getTicks();
     }
 
     public void clearStrategy() {
