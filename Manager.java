@@ -10,8 +10,8 @@ import java.util.*;
 public class Manager implements SetParam {
 //    private static Strategy strategy = new ProposedMethodForSingapore();
 //    private static Strategy strategy = new PM2();
-    private static Strategy strategy = new PM2withRoleFixed();      // ICA1028における提案手法
-//    private static Strategy strategy = new PM2withoutReciprocal();  // ICA2018における比較手法1
+//    private static Strategy strategy = new PM2withRoleFixed();      // ICA1028における提案手法
+    private static Strategy strategy = new PM2withoutReciprocity();  // ICA2018における比較手法1
 //    private static Strategy strategy = new PMwithRoleFixed();
 //    private static Strategy strategy = new PMwithRationalOnly();
 //    private static Strategy strategy = new PMwithoutRoleRenewal();
