@@ -8,11 +8,11 @@ interface SetParam {
     int EXECUTION_TIMES = 20;             // 実験の回数
     int MAX_TURN_NUM    = 200000;         // 一回の実験のターン数
     int WRITING_TIMES   = 2000;           // データのファイルへの出力回数
-    boolean CHECK_RELATIONSHIPS   = false;  // エージェント関係の協調関係を録るか
-    boolean CHECK_INITIATION      = false;  // エージェントやタスクの初期設定を確認するか
-    boolean CHECK_RESULTS         = true;  // チーム編成成功数などを確認するか
-    boolean CHECK_AGENTS          = false;   // エージェントの情報を確認するか
-    boolean CHECK_Eleader_Emember = false;
+    boolean CHECK_RELATIONSHIPS    = false;  // エージェント関係の協調関係を録るか
+    boolean CHECK_INITIATION       = false;  // エージェントやタスクの初期設定を確認するか
+    boolean CHECK_RESULTS          = true;  // チーム編成成功数などを確認するか
+    boolean CHECK_AGENTS           = false;   // エージェントの情報を確認するか
+    boolean CHECK_Eleader_Emember  = false;
 
     boolean IS_HEAVY_TASKS_HAPPENS = false;
     int     START_HAPPENS          = 300000;
@@ -35,7 +35,7 @@ interface SetParam {
     int SNAPSHOT_TIME = MAX_TURN_NUM;
 
     int INITIAL_TASK_NUM = 0;       // 最初のタスク数
-    int TASK_QUEUE_SIZE  = 500;     // タスクキューのサイズ
+    int TASK_QUEUE_SIZE  = 100;     // タスクキューのサイズ
     int AGENT_NUM = 500;            // エージェントの数
     int ROW    = 50;                // 行数
     int COLUMN = 50;                // 列数
@@ -50,7 +50,7 @@ interface SetParam {
     int MIN_SUBTASK_RESOURCE_SIZE = 50;
 
     int RESEND_TIMES   = 2;              // あるサブタスクについて要請を出すエージェントの数
-    int MAX_RELIABLE_AGENTS = 1;         // 信頼エージェントの数
+    int MAX_RELIABLE_AGENTS = 1;         // メンバの信頼エージェントの上限
 //    int THRESHOLD_FOR_ROLE_RENEWAL  = 10;
 //    int THRESHOLD_FOR_ROLE_RENEWAL  = 1;
 //int THRESHOLD_FOR_ROLE_RENEWAL  = 100;

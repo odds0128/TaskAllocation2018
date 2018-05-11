@@ -9,13 +9,14 @@ import java.util.*;
 public class Manager implements SetParam {
 //    private static Strategy strategy = new ProposedMethodForSingapore();
 //    private static Strategy strategy = new PM2();
-    private static Strategy strategy = new PM2withRoleFixed();
+    private static Strategy strategy = new PM2withRoleFixed();      // ICA1028における提案手法
+//    private static Strategy strategy = new PM2withoutReciprocal();  // ICA2018における比較手法1
 //    private static Strategy strategy = new PMwithRoleFixed();
 //    private static Strategy strategy = new PMwithRationalOnly();
 //    private static Strategy strategy = new PMwithoutRoleRenewal();
 //    private static Strategy strategy = new PMwithReallocation();
 //    private static Strategy strategy   = new Rational();
-//    private static Strategy strategy   = new Rational01();
+//    private static Strategy strategy   = new Rational01();        // ICA2018における比較手法2
 //    private static Strategy strategy   = new RationalWithRoleRenewal();
 
     static private long _seed;
