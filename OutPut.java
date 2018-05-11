@@ -1033,7 +1033,7 @@ public class OutPut implements SetParam {
             String currentPath = System.getProperty("user.dir");
             Date date = new Date();
             SimpleDateFormat sdf1 = new SimpleDateFormat(",yyyy:MM:dd,HH:mm:ss");
-            fw = new FileWriter(currentPath + "/out/results/rel" + fileName + ", λ=" + String.format("%.2f", (double) ADDITIONAL_TASK_NUM / TASK_ADDITION_SPAN) + sdf1.format(date) + ".csv", false);
+            fw = new FileWriter(currentPath + "/out/results/rel" + fileName + ", λ=" + String.format("%.2f", ADDITIONAL_TASK_NUM ) + sdf1.format(date) + ".csv", false);
             bw = new BufferedWriter(fw);
             pw = new PrintWriter(bw);
             // 列番号入れる部分
@@ -1118,8 +1118,8 @@ public class OutPut implements SetParam {
         String currentPath = System.getProperty("user.dir");
         Date date = new Date();
         SimpleDateFormat sdf1 = new SimpleDateFormat(",yyyy_MM_dd,HH_mm_ss");
-        System.out.println("Writing on " + dir_name + "/" + file_name + ",λ=" + String.format("%.2f", (double) ADDITIONAL_TASK_NUM / TASK_ADDITION_SPAN) + sdf1.format(date) + "." + extension);
-        return currentPath + "/out/" + dir_name + "/" + file_name + ",λ=" + String.format("%.2f", (double) ADDITIONAL_TASK_NUM / TASK_ADDITION_SPAN) + sdf1.format(date) + "." + extension;
+        System.out.println("Writing on " + dir_name + "/" + file_name + ",λ=" + String.format("%.2f", ADDITIONAL_TASK_NUM ) + sdf1.format(date) + "." + extension);
+        return currentPath + "/out/" + dir_name + "/" + file_name + ",λ=" + String.format("%.2f",  ADDITIONAL_TASK_NUM ) + sdf1.format(date) + "." + extension;
     }
 
     private void prepareExcelSheet() {

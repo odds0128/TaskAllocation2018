@@ -3,6 +3,7 @@
  * @version 2.0
  */
 
+import java.awt.geom.RoundRectangle2D;
 import java.io.*;
 import java.util.*;
 
@@ -57,8 +58,7 @@ public class Manager implements SetParam {
             int start, end;
 
             int num = 0;
-            System.out.println(strategy.getClass().getName() + ", λ=" +
-                    (double) ADDITIONAL_TASK_NUM / TASK_ADDITION_SPAN +
+            System.out.println(strategy.getClass().getName() + ", λ=" + ADDITIONAL_TASK_NUM  +
                     ", ε:" + INITIAL_ε + ": " + HOW_EPSILON +
                     ", XF: " + MAX_RELIABLE_AGENTS +
                     ", Role_renewal: " + THRESHOLD_FOR_ROLE_RENEWAL
@@ -336,14 +336,28 @@ public class Manager implements SetParam {
     }
 
     static void addNewTasksToQueue() {
-        if (turn % TASK_ADDITION_SPAN == 0) {
             int room = TASK_QUEUE_SIZE - taskQueue.size();    // タスクキューの空き
-            // タスクキューに空きが十分にあるなら, 普通にぶち込む
-            if (ADDITIONAL_TASK_NUM <= room) {
+            double decimalPart = ADDITIONAL_TASK_NUM%1;
+            int additionalTasksNum = (int)ADDITIONAL_TASK_NUM;
+
+//            System.out.println(additionalTasksNum + ", " + decimalPart);
+
+            if( decimalPart != 0 ){
+                double random = _randSeed.nextDouble();
+                if (random < decimalPart) {
+                    additionalTasksNum++;
+                }
+//                System.out.println(additionalTasksNum + ", " + random);
+            }
+
+
+
+        // タスクキューに空きが十分にあるなら, 普通にぶち込む
+            if (additionalTasksNum <= room) {
                 if( START_HAPPENS <= turn && turn < START_HAPPENS + BUSY_PERIOD && IS_HEAVY_TASKS_HAPPENS){
-                    for (int i = 0; i < ADDITIONAL_TASK_NUM; i++) taskQueue.add(new Task("HEAVY"));
+                    for (int i = 0; i < additionalTasksNum; i++) taskQueue.add(new Task("HEAVY"));
                 }else{
-                    for (int i = 0; i < ADDITIONAL_TASK_NUM; i++) taskQueue.add(new Task("NOT HEAVY"));
+                    for (int i = 0; i < additionalTasksNum; i++) taskQueue.add(new Task("NOT HEAVY"));
                 }
             }
             // タスクキューからタスクがはみ出そうなら, 入れるだけ入れてはみ出る分はオーバーフローとする
@@ -354,9 +368,8 @@ public class Manager implements SetParam {
                     }else{
                         for (i = 0; i < room; i++) taskQueue.add(new Task("NOT HEAVY"));
                 }
-                overflowTasks += ADDITIONAL_TASK_NUM - i;
+                overflowTasks += additionalTasksNum - i;
             }
-        }
     }
 
     static void actFreeLancer() {
