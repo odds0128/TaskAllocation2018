@@ -6,7 +6,6 @@ public class CNP_area_restricted implements SetParam, Strategy {
     static final int reception_span = 3;
 
     int[] reception_time = new int[AGENT_NUM];
-    Agent[] publigationTargets = new Agent[AGENT_NUM];
 
 
     CNP_area_restricted() {
@@ -16,13 +15,16 @@ public class CNP_area_restricted implements SetParam, Strategy {
     }
 
     public void actAsLeader(Agent agent) {
-        int time = 0;
         if (agent.phase == lPHASE1) publicize(agent);
         else if (agent.phase == lPHASE2) organize(agent);
         else if (agent.phase == PHASE3) execute(agent);
     }
 
     public void actAsMember(Agent agent) {
+        if (agent.id == 2 && Manager.getTicks() > 145) {
+            int i = 0;
+        }
+
         if (agent.phase == mPHASE1) bid(agent);
         else if (agent.phase == mPHASE2) waitResult(agent);
         else if (agent.phase == PHASE3) execute(agent);
@@ -33,7 +35,7 @@ public class CNP_area_restricted implements SetParam, Strategy {
         le.ourTask = Manager.getTask();
         if (le.ourTask == null) return;
         le.selectSubTask();
-        for (Agent ag : le.canReach ) {
+        for (Agent ag : le.canReach) {
             TransmissionPath.sendMessage(new Message(le, ag, PUBLICITY, le.ourTask, null));
         }
 //        System.out.println("ID: " + le.id + " published " + le.ourTask);
@@ -52,7 +54,8 @@ public class CNP_area_restricted implements SetParam, Strategy {
                 mem.leader = selectLeader(mem, mem.messages);
 //                System.out.println("ID: " + mem.id + " is bidding to " + mem.leader.id);
                 reception_time[mem.id] = reception_span;
-                this.nextPhase(mem);
+                if (mem.leader.equals(mem)) return;
+                else this.nextPhase(mem);
             }
         }
     }
@@ -60,7 +63,7 @@ public class CNP_area_restricted implements SetParam, Strategy {
     // organizeメソッド ... 入札者の中から落札者を選びチームを編成する
     private void organize(Agent le) {
         // 入札・非入札メッセージが全員から返って来たか確認する
-        if (le.messages.size() < le.canReach.size()) return;
+        if (le.messages.size() != le.canReach.size()) return;
 
         // 全員分のメッセージが確認できたら割り当てを考える
         // 割り当ては，実行時間が短い方を優先する
@@ -76,8 +79,10 @@ public class CNP_area_restricted implements SetParam, Strategy {
         int size = le.messages.size();
         for (int i = 0; i < size; i++) {
             Message m = le.messages.remove(0);
+
             if (m.getBidStIndex() >= 0) {
                 // 暫定の一位よりも早く終わりそうなら
+
                 if (m.getEstimation() < bestEstimations[m.getBidStIndex()]) {
                     // 元一位に未割り当てのメッセージを送って暫定一位を入れ替える
                     TransmissionPath.sendMessage(new Message(le, bestAllocations[m.getBidStIndex()], BID_RESULT, null, null));
@@ -95,7 +100,7 @@ public class CNP_area_restricted implements SetParam, Strategy {
         // 割り当てが全部埋まったか確認する
         for (Agent al : bestAllocations) {
             // 一つでも割当先が見つからなければ失敗と判断し，割り当て候補にも未割り当てを送信するとともに
-            // 　タスクを破棄して次のステップに行く
+            // タスクを破棄して次のステップに行く
             if (al == le) {
                 Manager.disposeTask(le);
                 for (Agent allo : bestAllocations) {
@@ -111,6 +116,7 @@ public class CNP_area_restricted implements SetParam, Strategy {
             le.preAllocations.put(bestAllocations[i], le.ourTask.subTasks.get(i));
             TransmissionPath.sendMessage(new Message(le, bestAllocations[i], BID_RESULT, le.ourTask.subTasks.get(i), null));
         }
+        Manager.finishTask(le);
 //        System.out.println("ID: " + le.id + " with " + le.teamMembers);
         this.nextPhase(le);
     }
@@ -119,6 +125,7 @@ public class CNP_area_restricted implements SetParam, Strategy {
     private void waitResult(Agent mem) {
         // リーダーからの返事が来るまで待つ
         if (mem.messages.size() == 0) return;
+
         Message message;
         message = mem.messages.remove(0);
         mem.mySubTask = message.getSt();
@@ -130,7 +137,7 @@ public class CNP_area_restricted implements SetParam, Strategy {
             //      System.out.println("ID:" + mem.id + "'s subtask will be executed in " + mem.executionTime);
             this.nextPhase(mem);
         }
-        // サブタスクが割り当てられなかったら信頼度を0で更新し, inactivate
+        // サブタスクが割り当てられなかったら, inactivate
         else {
             this.inactivate(mem, 0);
         }
@@ -139,19 +146,14 @@ public class CNP_area_restricted implements SetParam, Strategy {
     // executeメソッド ... 落札者とリーダーは自分の担当するサブタスクを実行する
     private void execute(Agent ag) {
         ag.executionTime--;
+        ag.validatedTicks = Manager.getTicks();
+
         if (ag.executionTime <= 0) {
             if (ag.role == LEADER) {
-                if (ag.messages.size() == ag.teamMembers.size()) {
-                    if (ag._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
-                        for (Agent agent : ag.teamMembers) ag.workWithAsL[agent.id]++;
-                    }
-                    Manager.finishTask(ag);
-                    for (Message m : ag.messages) {
-                        ag.preAllocations.remove(m.getFrom());
-                    }
-                    this.inactivate(ag, 1);
-                    ag.validatedTicks = Manager.getTicks();
+                if (ag._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
+                    for (Agent agent : ag.teamMembers) ag.workWithAsL[agent.id]++;
                 }
+                this.inactivate(ag, 1);
             } else {
                 if (ag._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
                     ag.workWithAsM[ag.leader.id]++;
@@ -160,7 +162,6 @@ public class CNP_area_restricted implements SetParam, Strategy {
                 ag.required[ag.mySubTask.resType]++;
                 // 自分のサブタスクが終わったら非活性状態へ
                 this.inactivate(ag, 1);
-                ag.validatedTicks = Manager.getTicks();
             }
         }
     }
@@ -171,37 +172,39 @@ public class CNP_area_restricted implements SetParam, Strategy {
 
     public Agent selectLeader(Agent mem, List<Message> messages) {
         int size = mem.messages.size();
-        int maxReward = 0;
-        int minRestraint = Integer.MAX_VALUE;
+        double maxMaxReward = 0;
+        double tempMaxReward;
         Agent bidAg = mem; // 暫定の入札対象者　初期値は自分
         int bidStIndex = -1; // 暫定の入札対象サブタスク
-
+        int minRestraint = 0;
 
         for (int i = 0; i < size; i++) {
             Message m = mem.messages.remove(0);
 
             int tempStIndex = selectBestSt(mem, m.getBidTask());
+
             if (tempStIndex < 0) {
                 TransmissionPath.sendMessage(new Message(mem, m.getFrom(), BIDDINGorNOT, -1, 0));
                 continue;
             }
-            SubTask tempSt = m.getBidTask().subTasks.get(tempStIndex);
-            int tempStEt = mem.calcExecutionTime(mem, tempSt);
-            int tempReward = tempSt.reqRes[tempSt.resType];
 
-            // 暫定一位との比較
-            if (tempStEt < minRestraint) {
+            // 今見てるメッセージのサブタスク中で一番やりたいやつと，
+            // 今まで見てきた中で一番やりたいやつの報酬を比較し，
+            // いい方を残す
+            SubTask tempSt = m.getBidTask().subTasks.get(tempStIndex);
+            tempMaxReward = (double) tempSt.reqRes[tempSt.resType] / mem.calcExecutionTime(mem, tempSt);
+
+            if (maxMaxReward < tempMaxReward) {
                 TransmissionPath.sendMessage(new Message(mem, bidAg, BIDDINGorNOT, -1, 0));
-                minRestraint = tempStEt;
-                maxReward = tempReward;
+                maxMaxReward = tempMaxReward;
+                minRestraint = mem.calcExecutionTime(mem, tempSt);
                 bidStIndex = tempStIndex;
                 bidAg = m.getFrom();
-
             } else {
                 TransmissionPath.sendMessage(new Message(mem, m.getFrom(), BIDDINGorNOT, -1, 0));
-
             }
         }
+
 //        System.out.println("ID: " + mem.id + " bid " + bidAg.id);
         TransmissionPath.sendMessage(new Message(mem, bidAg, BIDDINGorNOT, bidStIndex, minRestraint));
         return bidAg;
@@ -212,33 +215,28 @@ public class CNP_area_restricted implements SetParam, Strategy {
         Message m;
         int size = self.messages.size();
         // リーダーは
+
         if (self.role == LEADER) {
-            if (self.phase == lPHASE1) {
-                // 広報時は何も待ってない
+            if (self.phase == lPHASE1 || self.phase == PHASE3) {
+                // 広報時とタスク実行時は何も待ってない
                 for (int i = 0; i < size; i++) {
                     m = self.messages.remove(0);
-                    // mが広報メッセージなら非入札メッセージを送る．それ以外が来ることはありえないはずだが...
-                    assert m.getMessageType() == PUBLICITY : "広報以外はありえないはず";
-                    TransmissionPath.sendMessage(new Message(self, m.getFrom(), BIDDINGorNOT, -1, 0));
+                    // mが広報メッセージなら非入札メッセージを送る．
+                    assert m.getMessageType() == PUBLICITY || m.getMessageType() == DONE : "広報と終了報告以外はありえないはず";
+                    if (m.getMessageType() == PUBLICITY)
+                        TransmissionPath.sendMessage(new Message(self, m.getFrom(), BIDDINGorNOT, -1, 0));
                 }
             } else if (self.phase == lPHASE2) {
                 // 全員からの入札・非入札メッセージを待っている．広報は拒否．それ以外が来ることはないはず．
                 for (int i = 0; i < size; i++) {
                     m = self.messages.remove(0);
                     assert (m.getMessageType() == PUBLICITY || m.getMessageType() == BIDDINGorNOT) : "広報か(非)入札以外はありえない";
-                    if (m.getMessageType() == PUBLICITY)
+                    if (m.getMessageType() == PUBLICITY) {
                         TransmissionPath.sendMessage(new Message(self, m.getFrom(), BIDDINGorNOT, -1, 0));
-                    else self.messages.add(m);
+                    } else if (m.getMessageType() == BIDDINGorNOT) {
+                        self.messages.add(m);
+                    }
 //                    if( m.getBidStIndex() != 0 ) System.out.println("ID: " + self.id + " Bidden by " + m.getFrom());
-                }
-            } else if (self.phase == PHASE3) {
-                // チームメンバからの終了メッセージを待っている．広報は拒否．それ以外が来ることはないはず
-                for (int i = 0; i < size; i++) {
-                    m = self.messages.remove(0);
-                    assert (m.getMessageType() == PUBLICITY || m.getMessageType() == DONE) : "広報か終了連絡以外はありえない";
-                    if (m.getMessageType() == PUBLICITY)
-                        TransmissionPath.sendMessage(new Message(self, m.getFrom(), BIDDINGorNOT, -1, 0));
-                    else self.messages.add(m);
                 }
             }
         }
@@ -255,10 +253,16 @@ public class CNP_area_restricted implements SetParam, Strategy {
                 // 入札に対する結果を待っている
                 for (int i = 0; i < size; i++) {
                     m = self.messages.remove(0);
+//                    if( m.getFrom().id == 379 && m.getTo().id == 2 && Manager.getTicks() > 130 ){
+//                        System.out.println();
+//                    }
+
                     assert (m.getMessageType() == PUBLICITY || m.getMessageType() == BID_RESULT) : "広報か入札に対する結果以外はありえない";
                     if (m.getMessageType() == PUBLICITY)
                         TransmissionPath.sendMessage(new Message(self, m.getFrom(), BIDDINGorNOT, -1, 0));
-                    else self.messages.add(m);
+                    else {
+                        self.messages.add(m);
+                    }
                 }
             } else if (self.phase == PHASE3) {
                 // 実行時は何も待っていない
@@ -273,37 +277,25 @@ public class CNP_area_restricted implements SetParam, Strategy {
     }
 
     private int selectBestSt(Agent ag, Task t) {
-        // 広報されたタスクの中で自分が一番得意でさらに報酬も高いものを優先して入札する
-        // すなわち，拘束時間が短くかつ要求リソース量の多いものを選ぶ
-        // 実行時間が短い → 報酬が高い，の判定順．
-
+        // 今見ているタスクの中で単位時間あたりの報酬が最も大きいものを選ぶ
         int stIndex = -1;
-        int minEt = Integer.MAX_VALUE;
-        int maxRes = 0;
+        double maxValue = 0;
+        double tempValue;
 
         for (int i = 0; i < t.subTaskNum; i++) {
             SubTask st = t.subTasks.get(i);
-            int temp = ag.calcExecutionTime(ag, st);
+            tempValue = (double) st.reqRes[st.resType] / ag.calcExecutionTime(ag, st);
 
-            // サブタスクをこなすことが可能で，その実行時間が暫定の最短より短いならそちらを選ぶ
-            if (temp > 0 && temp < minEt) {
-                minEt = temp;
-                maxRes = st.reqRes[st.resType];
+            if (maxValue < tempValue) {
+                maxValue = tempValue;
                 stIndex = i;
             }
-            // サブタスクが実行可能で，その実行時間が暫定の最短と同じならリソースの大きい方を選ぶ
-            else if (temp == minEt) {
-                if (maxRes < st.reqRes[st.resType]) {
-                    maxRes = st.reqRes[st.resType];
-                    stIndex = i;
-                }
-            }
-            // 実行不可能か，そんなに早くできないなら選ばない
         }
         return stIndex;
     }
 
     protected void nextPhase(Agent ag) {
+        ag.validatedTicks = Manager.getTicks();
         if (ag.role == LEADER) {
             if (ag.phase == lPHASE1) {
                 ag.phase = lPHASE2;
@@ -324,13 +316,15 @@ public class CNP_area_restricted implements SetParam, Strategy {
             ag.phase = lPHASE1;
             ag.teamMembers.clear();        // すでにサブタスクを送っていてメンバの選定から外すエージェントのリスト
             ag.ourTask = null;
+            ag.preAllocations.clear();
         } else if (ag.role == MEMBER) {
             ag.phase = mPHASE1;
-            ag.leader = null;
         }
         ag.mySubTask = null;
         ag.messages.clear();
         ag.executionTime = 0;
+        ag.validatedTicks = Manager.getTicks();
+        ag.leader = null;
     }
 
 

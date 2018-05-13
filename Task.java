@@ -12,7 +12,7 @@ public class Task implements SetParam{
     private static int _task_id = 0;
     private static long _seed;
     private static Random _randSeed ;
-    private int task_id;
+    int task_id;
     static int totalSubTasks = 0;
     static int totalSubtaskNum = 0;
     boolean flag = false;

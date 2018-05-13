@@ -41,7 +41,7 @@ public class OutPut implements SetParam {
     static int[] finishedTasksInDepopulatedAreaArray = new int[WRITING_TIMES];
     static int[] finishedTasksInPopulatedAreaArray = new int[WRITING_TIMES];
     static int[] tempTaskExecutionTimeArray = new int[WRITING_TIMES];
-    static int[] taskExecutionTimeArray = new int[WRITING_TIMES];
+    static double[] taskExecutionTimeArray = new double[WRITING_TIMES];
     static int taskExecutionTimes = 0;
 
     static void aggregateAgentData(List<Agent> agents) {
@@ -145,7 +145,7 @@ public class OutPut implements SetParam {
 
     static void indexIncrement() {
         if (taskExecutionTimes != 0) {
-            taskExecutionTimeArray[index] += tempTaskExecutionTimeArray[index] / taskExecutionTimes;
+            taskExecutionTimeArray[index] += (double) tempTaskExecutionTimeArray[index] / taskExecutionTimes;
 //            System.out.println(taskExecutionTimeArray[index]);
         }
         tempTaskExecutionTimeArray[index] = 0;
@@ -171,7 +171,7 @@ public class OutPut implements SetParam {
     }
 
     /**
-     * checkAgentメソッド
+     * checkGridメソッド
      * 二次元配列の場合
      */
     static void checkGrids(Agent[][] grids) {
@@ -179,7 +179,7 @@ public class OutPut implements SetParam {
         System.out.println("Leaders is " + Agent._leader_num + ", Members is " + Agent._member_num);
         for (int i = 0; i < ROW; i++) {
             for (int j = 0; j < COLUMN; j++) {
-                if (grids[i][j] == null) System.out.print(" 　 ");
+                if (grids[i][j] == null) System.out.print("  ");
                 else System.out.print(String.format("%3d ", grids[i][j].id));
             }
             System.out.println();
@@ -208,6 +208,7 @@ public class OutPut implements SetParam {
 
         for (Agent agent : agents) {
             System.out.print("ID: " + agent.id + " Resources : ");
+            System.out.println("Reachable: " + agent.canReach.size());
             for (int i = 0; i < RESOURCE_TYPES; i++) System.out.print(agent.res[i] + ", ");
             System.out.println(" Reliable Agents: " + agent.relAgents.size());
             System.out.println("Threshold: " + agent.threshold_for_reciprocity);

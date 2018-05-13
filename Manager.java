@@ -8,13 +8,14 @@ import java.io.*;
 import java.util.*;
 
 public class Manager implements SetParam {
-    private static Strategy strategy = new PM2withRoleFixed();      // ICA2018における提案手法    //    private static Strategy strategy = new ProposedMethodForSingapore();
-//    private static Strategy strategy = new PM2withoutReciprocity();  // ICA2018における比較手法1
-//    private static Strategy strategy   = new Rational01();        // ICA2018における比較手法2
+//    private static Strategy strategy = new PM2withRoleFixed();      // ICA2018における提案手法    //    private static Strategy strategy = new ProposedMethodForSingapore();
+//    private static Strategy strategy   = new Rational01();        // ICA2018における比較手法1
+    private static Strategy strategy = new CNP_area_restricted();   // ICA2018における比較手法2
 
 //    private static Strategy strategy = new PM2();
-//private static Strategy strategy = new PM2withoutReciprocalLeaderWithRoleFixed();      // ICA2018における提案手法
-//    private static Strategy strategy = new PM2withoutReciprocalMemberWithRoleFixed();      // ICA2018における提案手法
+//    private static Strategy strategy = new PM2withoutReciprocity();
+//private static Strategy strategy = new PM2withoutReciprocalLeaderWithRoleFixed();
+//    private static Strategy strategy = new PM2withoutReciprocalMemberWithRoleFixed();
 //    private static Strategy strategy = new PMwithRoleFixed();
 //    private static Strategy strategy = new PMwithRationalOnly();
 //    private static Strategy strategy = new PMwithoutRoleRenewal();
@@ -145,6 +146,12 @@ public class Manager implements SetParam {
                     }
                     // ここが1tickの最後の部分．次のtickまでにやることあったらここで．
                 }
+/*
+                for( Agent agent: agents ){
+                    if( agent.role == LEADER ) System.out.print( agent.id + "-l:" + agent.validatedTicks + ", ");
+                    else if( agent.role == MEMBER ) System.out.print( agent.id + "-m:" + agent.validatedTicks + ", ");
+                }
+*/
                 // ↑ 一回の実験のカッコ．以下は実験の合間で作業する部分
                 if (CHECK_AGENTS) OutPut.aggregateDataOnce(agents, num);
                 if (num == EXECUTION_TIMES) break;
@@ -184,6 +191,7 @@ public class Manager implements SetParam {
         if (CHECK_INITIATION) OutPut.checkAgent(agents);
 //        OutPut.countDelays(delays);
 //        OutPut.checkGrids(grids);
+//        OutPut.checkDelay(delays);
 //        OutPut.checkAgent(agents);
     }
 
@@ -276,6 +284,7 @@ public class Manager implements SetParam {
         if (strategy.getClass().getName().endsWith("_area_restricted")) {
             Agent agent;
             System.out.println("area_restricted");
+            // iが起点となるエージェント
             for (int i = 0; i < AGENT_NUM; ) {
                 agent = agents.get(i);
                 dist++;
@@ -287,12 +296,29 @@ public class Manager implements SetParam {
                         tempList.add(agents.get(j));
                     }
                 }
-                // 近い方から100体ほどのエージェントを既知エージェントとする
-                if (tempList.size() >= AREA_LIMIT) {
+                // 近い方から100体のエージェントを既知エージェントとする
+                // 100体に足りてなかったら距離を広げてもう一周
+                if ( tempList.size() + agent.canReach.size() < AREA_LIMIT ) {
                     agent.canReach.addAll(tempList);
+                    tempList.clear();
+                }
+                // ピッタリだったら次のエージェントへ
+                else if( tempList.size() + agent.canReach.size() == AREA_LIMIT ){
+                    agent.canReach.addAll(tempList);
+                    tempList.clear();
                     i++;
                     dist = 0;
+                }
+                // はみ出たらtempListの中からはみ出ない分だけ選んで既知エージェントとする
+                else{
+                    int restSize = AREA_LIMIT - agent.canReach.size();
+                    for( int j = 0; j < restSize; j++ ){
+                        int rand = _randSeed.nextInt(tempList.size());
+                        agent.canReach.add(tempList.remove(rand));
+                    }
                     tempList.clear();
+                    i++;
+                    dist = 0;
                 }
             }
         }

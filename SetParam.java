@@ -5,8 +5,8 @@
 
 interface SetParam {
     // 環境の設定( 変更していく部分 )
-    int EXECUTION_TIMES = 10;             // 実験の回数
-    int MAX_TURN_NUM    = 200000;         // 一回の実験のターン数
+    int EXECUTION_TIMES = 1;             // 実験の回数
+    int MAX_TURN_NUM    = 20000;         // 一回の実験のターン数
     int WRITING_TIMES   = 2000;           // データのファイルへの出力回数
     boolean CHECK_RELATIONSHIPS    = false;  // エージェント関係の協調関係を録るか
     boolean CHECK_INITIATION       = false;  // エージェントやタスクの初期設定を確認するか

@@ -38,16 +38,17 @@ class TransmissionPath implements SetParam {
     static void sendMessage(Message message) {
         if( message.getTo() == message.getFrom() ) return;
         messageQueue.add(message);
+
         int temp = Manager.delays[message.getFrom().id][message.getTo().id];
         delays.add(temp);
         calcCT(temp);
         if (message.getMessageType() == PROPOSAL) proposals++;
-        if (message.getMessageType() == REPLY) {
+        else if (message.getMessageType() == REPLY) {
             replies++;
             if( message.getReply() == ACCEPT ) acceptances++;
             else rejects++;
         }
-        if (message.getMessageType() == RESULT) results++;
+        else if (message.getMessageType() == RESULT) results++;
 //        System.out.println(message);
     }
 

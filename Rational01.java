@@ -291,7 +291,7 @@ public class Rational01 implements Strategy, SetParam {
             from = message.getFrom();
 //            if( member.id == 211  ) System.out.println(message);
 
-            // もし暫定信頼度一位のやつより単位時間あたりの報酬が高いやついたら, 暫定のやつを断って今のやつを暫定(ryに入れる
+            // もし暫定報酬一位のやつより単位時間あたりの報酬が高いやついたら, 暫定のやつを断って今のやつを暫定(ryに入れる
             if (expectedReward < (double)message.getResSize() / member.calcExecutionTime(member, message.getProposedSubtask())) {
                 member.sendMessage(member, tempLeader, REPLY, REJECT);
                 expectedReward = (double)message.getResSize() / member.calcExecutionTime(member, message.getProposedSubtask());
