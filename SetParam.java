@@ -5,7 +5,7 @@
 
 interface SetParam {
     // 環境の設定( 変更していく部分 )
-    int EXECUTION_TIMES = 1;             // 実験の回数
+    int EXECUTION_TIMES = 10;             // 実験の回数
     int MAX_TURN_NUM    = 200000;         // 一回の実験のターン数
     int WRITING_TIMES   = 2000;           // データのファイルへの出力回数
     boolean CHECK_RELATIONSHIPS    = false;  // エージェント関係の協調関係を録るか
@@ -39,14 +39,14 @@ interface SetParam {
     int AGENT_NUM = 500;            // エージェントの数
     int ROW    = 50;                // 行数
     int COLUMN = 50;                // 列数
-    int MAX_DELAY = 10;
+    int MAX_DELAY = 5;
 
-    double ADDITIONAL_TASK_NUM  = 1.5;        // タスクを追加するタイミングで, タスクキューに追加するタスクの個数(=λ)
+    double ADDITIONAL_TASK_NUM  = 15;        // タスクを追加するタイミングで, タスクキューに追加するタスクの個数(=λ)
     int RESOURCE_TYPES = 3;
     int MAX_AGENT_RESOURCE_SIZE   = 5;
     int MIN_AGENT_RESOURCE_SIZE   = 0;
-    int MAX_SUBTASK_RESOURCE_SIZE = 100;
-    int MIN_SUBTASK_RESOURCE_SIZE = 50;
+    int MAX_SUBTASK_RESOURCE_SIZE = 10;
+    int MIN_SUBTASK_RESOURCE_SIZE = 5;
 
     int RESEND_TIMES   = 2;              // あるサブタスクについて要請を出すエージェントの数
     int MAX_RELIABLE_AGENTS = 1;         // メンバの信頼エージェントの上限

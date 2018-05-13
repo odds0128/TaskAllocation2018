@@ -285,16 +285,16 @@ public class Rational01 implements Strategy, SetParam {
         // messageキューに溜まっている参加要請を確認し, 参加するチームを選ぶ
         message = messages.remove(0);
         tempLeader = message.getFrom();
-        expectedReward = message.getResSize() / member.calcExecutionTime(member, message.getProposedSubtask());
+        expectedReward = (double)message.getResSize() / member.calcExecutionTime(member, message.getProposedSubtask());
         for (int i = 0; i < size - 1; i++) {
             message = messages.remove(0);
             from = message.getFrom();
 //            if( member.id == 211  ) System.out.println(message);
 
             // もし暫定信頼度一位のやつより単位時間あたりの報酬が高いやついたら, 暫定のやつを断って今のやつを暫定(ryに入れる
-            if (expectedReward < message.getResSize() / member.calcExecutionTime(member, message.getProposedSubtask())) {
+            if (expectedReward < (double)message.getResSize() / member.calcExecutionTime(member, message.getProposedSubtask())) {
                 member.sendMessage(member, tempLeader, REPLY, REJECT);
-                expectedReward = message.getResSize() / member.calcExecutionTime(member, message.getProposedSubtask());
+                expectedReward = (double)message.getResSize() / member.calcExecutionTime(member, message.getProposedSubtask());
                 tempLeader = from;
             }
             // 暫定一位がその座を守れば挑戦者を断る
