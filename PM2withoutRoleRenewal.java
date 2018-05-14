@@ -236,19 +236,24 @@ public class PM2withoutRoleRenewal implements Strategy, SetParam {
         }
         // この時点でtにはかつての仲間たちが入っている
         // 先に信頼エージェントに対して割り当てを試みる
-        for (Agent relAg : leader.relAgents) {
+        // リーダーにとっての信頼エージェントは閾値を超えたエージェント全てと言える
+        for (Agent relAg : leader.relRanking) {
             SubTask st;
-            // 上位からサブタスクを持って来て
-            // そのサブタスクが上位の信頼エージェントに可能かつまださらに上位の信頼エージェントに割り振られていないなら
-            // そいつに割り当てることにしてそいつをexceptionsに，そのサブタスクをskipsに入れる
-            for (int stIndex = 0; stIndex < subtasks.size(); stIndex++) {
-                st = subtasks.get(stIndex);
-                if (relAg.calcExecutionTime(relAg, st) > 0 && leader.inTheList(st, skips) < 0 && leader.inTheList(relAg, exceptions) < 0) {
-                    memberCandidates.set(stIndex, relAg);
-                    exceptions.add(relAg);
-                    skips.add(st);
-                    break;
+            if( leader.reliabilities[relAg.id] > leader.threshold_for_reciprocity ) {
+                // 上位からサブタスクを持って来て
+                // そのサブタスクが上位の信頼エージェントに可能かつまださらに上位の信頼エージェントに割り振られていないなら
+                // そいつに割り当てることにしてそいつをexceptionsに，そのサブタスクをskipsに入れる
+                for (int stIndex = 0; stIndex < subtasks.size(); stIndex++) {
+                    st = subtasks.get(stIndex);
+                    if (relAg.calcExecutionTime(relAg, st) > 0 && leader.inTheList(st, skips) < 0 && leader.inTheList(relAg, exceptions) < 0) {
+                        memberCandidates.set(stIndex, relAg);
+                        exceptions.add(relAg);
+                        skips.add(st);
+                        break;
+                    }
                 }
+            }else{
+                break;
             }
         }
 
