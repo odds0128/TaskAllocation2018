@@ -59,6 +59,11 @@ public class PM2withRoleFixed implements Strategy, SetParam {
             inactivate(leader, 0);
             return;
         } else {
+            if( Manager.getTicks() > 50000 ) {
+                System.out.println(leader.relRanking.subList(0, 5));
+                System.out.println(leader.candidates);
+                System.out.println();
+            }
             for (int i = 0; i < leader.candidates.size(); i++) {
                 if (leader.candidates.get(i) != null) {
                     leader.proposalNum++;

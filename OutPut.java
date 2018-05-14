@@ -110,7 +110,7 @@ public class OutPut implements SetParam {
                     if( ag.reliabilities[relAg.id] > ag.threshold_for_reciprocity ){
                         mDependableAgentsFromAllLeaders[times]++;
                         mDependableAgentsFromLeadersTrustsSomeone[times] ++;
-                        if( relAg.inTheList(ag, relAg.relAgents) > 0 ){
+                        if( relAg.inTheList(ag, relAg.relAgents) >= 0 ){
                             mMutualDependency[times]++;
                         }
                         temp++;

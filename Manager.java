@@ -444,7 +444,7 @@ public class Manager implements SetParam {
     }
 
     static void finishTask(Agent leader) {
-//      OutPut.checkTeam(leader);
+        if( Manager.getTicks() > 50000 ) OutPut.checkTeam(leader);
         if (CHECK_RESULTS) OutPut.aggregateTaskExecutionTime(leader);
         leader.ourTask = null;
 /*        if( leader.isLonely == 1 )      finishedTasksInDepopulatedArea++;

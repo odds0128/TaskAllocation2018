@@ -41,7 +41,7 @@ interface SetParam {
     int COLUMN = 50;                // 列数
     int MAX_DELAY = 5;
 
-    double ADDITIONAL_TASK_NUM  = 2.5;        // タスクを追加するタイミングで, タスクキューに追加するタスクの個数(=λ)
+    double ADDITIONAL_TASK_NUM  = 7.5;        // タスクを追加するタイミングで, タスクキューに追加するタスクの個数(=λ)
     int RESOURCE_TYPES = 3;
     int MAX_AGENT_RESOURCE_SIZE   = 5;
     int MIN_AGENT_RESOURCE_SIZE   = 0;

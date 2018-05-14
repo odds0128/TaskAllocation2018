@@ -305,7 +305,7 @@ public class PM2 implements Strategy, SetParam {
         }
         return memberCandidates;
     }
-    
+
     /**
      * selectLeaderメソッド
      * メンバがどのリーダーの要請を受けるかを判断する
