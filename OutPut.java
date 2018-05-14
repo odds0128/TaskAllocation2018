@@ -93,21 +93,46 @@ public class OutPut implements SetParam {
     static double[] agentsExcAveArray = new double[EXECUTION_TIMES];
     static double[] leadersExcAveArray = new double[EXECUTION_TIMES];
     static double[] membersExcAveArray = new double[EXECUTION_TIMES];
+    static double[]  mDependableAgentsFromAllLeaders = new double[EXECUTION_TIMES];    // 全リーダーの最終的な信頼エージェント数の平均
+    static double[]  mDependableAgentsFromLeadersTrustsSomeone = new double[EXECUTION_TIMES];    // 全リーダーの最終的な信頼エージェント数の平均
+    static double[]  mMutualDependency   = new double[EXECUTION_TIMES];                  // 相互に協調関係にあるエージェント数
 
     static void aggregateDataOnce(List<Agent> agents, int times) {
         times--;
+        int leadersTrustSomeone = 0;
         for (Agent ag : agents) {
             agentsExcAveArray[times] += ag.excellence;
             if (ag.e_leader > ag.e_member) {
                 leadersArray[times]++;
                 leadersExcAveArray[times] += ag.excellence;
+                int temp = 0;
+                for( Agent relAg:  ag.relRanking ){
+                    if( ag.reliabilities[relAg.id] > ag.threshold_for_reciprocity ){
+                        mDependableAgentsFromAllLeaders[times]++;
+                        mDependableAgentsFromLeadersTrustsSomeone[times] ++;
+                        if( relAg.inTheList(ag, relAg.relAgents) > 0 ){
+                            mMutualDependency[times]++;
+                        }
+                        temp++;
+                    }else{
+                        if( temp > 0 ) leadersTrustSomeone++;
+                        break;
+                    }
+                }
             } else {
                 membersExcAveArray[times] += ag.excellence;
             }
         }
-        agentsExcAveArray[times] /= AGENT_NUM;
-        leadersExcAveArray[times] /= leadersArray[times];
-        membersExcAveArray[times] /= (AGENT_NUM - leadersArray[times]);
+        mDependableAgentsFromAllLeaders[times] /= (double)Agent._leader_num;
+        if( leadersTrustSomeone == 0 ){
+            mDependableAgentsFromLeadersTrustsSomeone[times] = 0;
+        }else {
+            mDependableAgentsFromLeadersTrustsSomeone[times] /= (double) leadersTrustSomeone;
+        }
+        agentsExcAveArray[times] /= (double)AGENT_NUM;
+        leadersExcAveArray[times] /= (double)leadersArray[times];
+        membersExcAveArray[times] /= (double)(AGENT_NUM - leadersArray[times]);
+
 
         // agentをexcellenceごとにソート
         List<Agent> temp = new ArrayList<>();
@@ -555,6 +580,10 @@ public class OutPut implements SetParam {
             _singleton.writeCell(row, colNumber++, style_header, "Agents  excellence ave");
             _singleton.writeCell(row, colNumber++, style_header, "Leaders excellence ave");
             _singleton.writeCell(row, colNumber++, style_header, "Members excellence ave");
+            _singleton.writeCell(row, colNumber++, style_header, "Dependable members(from all leaders)");
+            _singleton.writeCell(row, colNumber++, style_header, "Dependable members(from leaders trust someone)");
+            _singleton.writeCell(row, colNumber++, style_header, "Mutual dependency");
+
 
             //ウィンドウ枠の固定
             sheet.createFreezePane(1, 1);
@@ -582,6 +611,9 @@ public class OutPut implements SetParam {
                 _singleton.writeCell(row, colNumber++, style_double, agentsExcAveArray[wt]);
                 _singleton.writeCell(row, colNumber++, style_double, leadersExcAveArray[wt]);
                 _singleton.writeCell(row, colNumber++, style_double, membersExcAveArray[wt]);
+                _singleton.writeCell(row, colNumber++, style_double, mDependableAgentsFromAllLeaders[wt]);
+                _singleton.writeCell(row, colNumber++, style_double, mDependableAgentsFromLeadersTrustsSomeone[wt]);
+                _singleton.writeCell(row, colNumber++, style_double, mMutualDependency[wt]);
 
                 //列幅の自動調整
                 for (int k = 0; k <= colNumber; k++) {

@@ -227,19 +227,24 @@ public class PM2withRoleFixed implements Strategy, SetParam {
         }
         // この時点でtにはかつての仲間たちが入っている
         // 先に信頼エージェントに対して割り当てを試みる
-        for (Agent relAg : leader.relAgents) {
+        // リーダーにとっての信頼エージェントは閾値を超えたエージェント全てと言える
+        for (Agent relAg : leader.relRanking) {
             SubTask st;
-            // 上位からサブタスクを持って来て
-            // そのサブタスクが上位の信頼エージェントに可能かつまださらに上位の信頼エージェントに割り振られていないなら
-            // そいつに割り当てることにしてそいつをexceptionsに，そのサブタスクをskipsに入れる
-            for (int stIndex = 0; stIndex < subtasks.size(); stIndex++) {
-                st = subtasks.get(stIndex);
-                if (relAg.calcExecutionTime(relAg, st) > 0 && leader.inTheList(st, skips) < 0 && leader.inTheList(relAg, exceptions) < 0) {
-                    memberCandidates.set(stIndex, relAg);
-                    exceptions.add(relAg);
-                    skips.add(st);
-                    break;
+            if( leader.reliabilities[relAg.id] > leader.threshold_for_reciprocity ) {
+                // 上位からサブタスクを持って来て
+                // そのサブタスクが上位の信頼エージェントに可能かつまださらに上位の信頼エージェントに割り振られていないなら
+                // そいつに割り当てることにしてそいつをexceptionsに，そのサブタスクをskipsに入れる
+                for (int stIndex = 0; stIndex < subtasks.size(); stIndex++) {
+                    st = subtasks.get(stIndex);
+                    if (relAg.calcExecutionTime(relAg, st) > 0 && leader.inTheList(st, skips) < 0 && leader.inTheList(relAg, exceptions) < 0) {
+                        memberCandidates.set(stIndex, relAg);
+                        exceptions.add(relAg);
+                        skips.add(st);
+                        break;
+                    }
                 }
+            }else{
+                break;
             }
         }
 
@@ -355,13 +360,11 @@ public class PM2withRoleFixed implements Strategy, SetParam {
      * @param agent
      */
     private List<Agent> renewRel(Agent agent, Agent target, double evaluation) {
-        assert evaluation <= 1 : "evaluation too big";
         assert !agent.equals(target) : "alert4";
         double temp = agent.reliabilities[target.id];
 //        if( Manager.getTicks() % 10000 == 0 ) System.out.println( evaluation );
         // 信頼度の更新式
         agent.reliabilities[target.id] = temp * (1.0 - α) + α * evaluation;
-        assert agent.reliabilities[target.id] <= 1.0 : "Illegal reliability renewal ... Turn: " + Manager.getTicks() + ", ID: " + agent.id + ", target: " + target.id + ", change: " + temp + " → " + agent.reliabilities[target.id];
 
         /*
          信頼エージェントの更新

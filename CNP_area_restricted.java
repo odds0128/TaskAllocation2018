@@ -230,7 +230,7 @@ public class CNP_area_restricted implements SetParam, Strategy {
                 // 全員からの入札・非入札メッセージを待っている．広報は拒否．それ以外が来ることはないはず．
                 for (int i = 0; i < size; i++) {
                     m = self.messages.remove(0);
-                    assert (m.getMessageType() == PUBLICITY || m.getMessageType() == BIDDINGorNOT) : "広報か(非)入札以外はありえない";
+                    assert (m.getMessageType() == PUBLICITY || m.getMessageType() == BIDDINGorNOT || m.getMessageType() == DONE ) : "広報か(非)入札か終了報告以外はありえない";
                     if (m.getMessageType() == PUBLICITY) {
                         TransmissionPath.sendMessage(new Message(self, m.getFrom(), BIDDINGorNOT, -1, 0));
                     } else if (m.getMessageType() == BIDDINGorNOT) {

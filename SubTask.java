@@ -54,7 +54,6 @@ public class SubTask implements SetParam {
         } else {
             resType = _randSeed.nextInt(RESOURCE_TYPES);
             reqRes[resType] = _randSeed.nextInt(MAX_SUBTASK_RESOURCE_SIZE - MIN_SUBTASK_RESOURCE_SIZE + 1) + MIN_SUBTASK_RESOURCE_SIZE;
-            assert resSize > 0 : "SubTask requires no resource.";
         }
     }
 
