@@ -65,6 +65,7 @@ public class OutPut implements SetParam {
         communicationDelayArray[index] += TransmissionPath.getCT();
         disposedTasksArray[index] += dt;
         overflownTasksArray[index] += ot;
+        reciprocalMembersArray[index] += rm;
         reciprocalistsArray[index] += Agent._recipro_num;
 /*        rationalistsArray[index] += Agent._rational_num;
         reciprocalMembersArray[index] += rm;
@@ -96,23 +97,33 @@ public class OutPut implements SetParam {
     static double[]  mDependableAgentsFromAllLeaders = new double[EXECUTION_TIMES];    // 全リーダーの最終的な信頼エージェント数の平均
     static double[]  mDependableAgentsFromLeadersTrustsSomeone = new double[EXECUTION_TIMES];    // 全リーダーの最終的な信頼エージェント数の平均
     static int[]  mMutualDependency   = new int[EXECUTION_TIMES];                  // 相互に協調関係にあるエージェント数
+    static double[] mDependableMembersFromExcellentLeader = new double[EXECUTION_TIMES];
 
     static void aggregateDataOnce(List<Agent> agents, int times) {
         times--;
         int leadersTrustSomeone = 0;
+        int excellentLeaders    = 0;
         for (Agent ag : agents) {
             agentsExcAveArray[times] += ag.excellence;
             if (ag.e_leader > ag.e_member) {
                 leadersArray[times]++;
+                if( ag.didTasksAsLeader > 100 ){
+                    excellentLeaders++;
+                }
+
                 leadersExcAveArray[times] += ag.excellence;
                 int temp = 0;
                 for( Agent relAg:  ag.relRanking ){
                     if( ag.reliabilities[relAg.id] > ag.threshold_for_reciprocity_as_leader ){
                         mDependableAgentsFromAllLeaders[times]++;
                         mDependableAgentsFromLeadersTrustsSomeone[times] ++;
+                        if( ag.didTasksAsLeader > 100 ){
+                            mDependableMembersFromExcellentLeader[times]++;
+                        }
                         if( relAg.inTheList(ag, relAg.relAgents) >= 0 ){
                             mMutualDependency[times]++;
                         }
+
                         temp++;
                     }else{
                         if( temp > 0 ) leadersTrustSomeone++;
@@ -124,10 +135,18 @@ public class OutPut implements SetParam {
             }
         }
         mDependableAgentsFromAllLeaders[times] /= (double)Agent._leader_num;
+
         if( leadersTrustSomeone == 0 ){
             mDependableAgentsFromLeadersTrustsSomeone[times] = 0;
         }else {
             mDependableAgentsFromLeadersTrustsSomeone[times] /= (double) leadersTrustSomeone;
+        }
+
+        if( excellentLeaders == 0 ){
+            mDependableMembersFromExcellentLeader[times] = 0;
+        }else{
+            System.out.println(excellentLeaders);
+            mDependableMembersFromExcellentLeader[times] /= (double) excellentLeaders;
         }
         agentsExcAveArray[times] /= (double)AGENT_NUM;
         leadersExcAveArray[times] /= (double)leadersArray[times];
@@ -319,7 +338,7 @@ public class OutPut implements SetParam {
                             + "NEET Members" + ", "
                             // + "Lonely leaders"                    + ", " + "Lonely members"                    + ", "
                             // + "Accompanied leaders"               + ", " + "Accompanied members"               + ", "
-                            + "Reciprocal" + ", "
+                            + "ReciprocalLeaders" + ", " + "ReciprocalMembers" + ", "
                             // + "Rational"                          + ", " + "ReciprocalMembers" + ","
                     // + "FinishedTasks in depopulated area" + ", " + "FinishedTasks in populated area"   + ", "
             );
@@ -330,12 +349,13 @@ public class OutPut implements SetParam {
                                 + overflownTasksArray[i] / EXECUTION_TIMES + ", "
                                 + (double) finishedTasksArray[i] / (finishedTasksArray[i] + disposedTasksArray[i]) + ", "
                                 + (double) finishedTasksArray[i] / (finishedTasksArray[i] + disposedTasksArray[i] + overflownTasksArray[i]) + ", "
-                                + communicationDelayArray[i] / EXECUTION_TIMES + ", "
-                                + messagesArray[i] / EXECUTION_TIMES + ", "
+                                + (double)communicationDelayArray[i] / EXECUTION_TIMES + ", "
+                                + (double)messagesArray[i] / EXECUTION_TIMES + ", "
                                 + (double) taskExecutionTimeArray[i] / EXECUTION_TIMES + ", "
-                                + leaderNumArray[i] / EXECUTION_TIMES + ", "
-                                + neetMembersArray[i] / EXECUTION_TIMES + ", "
-                                + reciprocalistsArray[i] / EXECUTION_TIMES + ", "
+                                + (double)leaderNumArray[i] / EXECUTION_TIMES + ", "
+                                + (double)neetMembersArray[i] / EXECUTION_TIMES + ", "
+                                + (double)(reciprocalistsArray[i] - reciprocalMembersArray[i]) / EXECUTION_TIMES + ", "
+                                + (double)reciprocalMembersArray[i] / EXECUTION_TIMES + ", "
                         /*                    + memberNumArray[i]                      / EXECUTION_TIMES + ", "
                     + leaderNumInDepopulatedAreaArray[i]     / EXECUTION_TIMES + ", "
                     + memberNumInDepopulatedAreaArray[i]     / EXECUTION_TIMES + ", "
@@ -593,6 +613,7 @@ public class OutPut implements SetParam {
             _singleton.writeCell(row, colNumber++, style_header, "Members excellence ave");
             _singleton.writeCell(row, colNumber++, style_header, "Dependable members(from all leaders)");
             _singleton.writeCell(row, colNumber++, style_header, "Dependable members(from leaders trust someone)");
+            _singleton.writeCell(row, colNumber++, style_header, "Dependable members(from excellent leaders)");
             _singleton.writeCell(row, colNumber++, style_header, "Mutual dependency");
 
 
@@ -624,6 +645,7 @@ public class OutPut implements SetParam {
                 _singleton.writeCell(row, colNumber++, style_double, membersExcAveArray[wt]);
                 _singleton.writeCell(row, colNumber++, style_double, mDependableAgentsFromAllLeaders[wt]);
                 _singleton.writeCell(row, colNumber++, style_double, mDependableAgentsFromLeadersTrustsSomeone[wt]);
+                _singleton.writeCell(row, colNumber++, style_double, mDependableMembersFromExcellentLeader[wt]);
                 _singleton.writeCell(row, colNumber++, style_int, mMutualDependency[wt]);
 
                 //列幅の自動調整
@@ -769,7 +791,8 @@ public class OutPut implements SetParam {
                         _singleton.writeCell(row, colNumber++, style_header, " Allocated " + j);
                     }
                     _singleton.writeCell(row, colNumber++, style_header, " Excellence ");
-                    _singleton.writeCell(row, colNumber++, style_header, " Times ");
+                    _singleton.writeCell(row, colNumber++, style_header, "Did tasks as leader in last period");
+                    _singleton.writeCell(row, colNumber++, style_header, "Did tasks as member in last period");
                     _singleton.writeCell(row, colNumber++, style_header, " e_leader");
                     _singleton.writeCell(row, colNumber++, style_header, " e_member ");
                 } else {
@@ -834,6 +857,7 @@ public class OutPut implements SetParam {
                             else _singleton.writeCell(row, colNumber++, style_int, -1);
                         }
                         _singleton.writeCell(row, colNumber++, style_double, agent.excellence);
+                        _singleton.writeCell(row, colNumber++, style_int, agent.didTasksAsLeader);
                         _singleton.writeCell(row, colNumber++, style_int, agent.didTasksAsMember);
                         _singleton.writeCell(row, colNumber++, style_double, agent.e_leader);
                         _singleton.writeCell(row, colNumber++, style_double, agent.e_member);
