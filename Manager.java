@@ -12,8 +12,8 @@ public class Manager implements SetParam {
 //    private static Strategy strategy   = new Rational01();        // ICA2018における比較手法1
 //    private static Strategy strategy = new CNP_area_restricted();   // ICA2018における比較手法2
 
-//    private static Strategy strategy = new PM2();
-    private static Strategy strategy = new PM2withoutReciprocity();
+    private static Strategy strategy = new PM2();
+//    private static Strategy strategy = new PM2withoutReciprocity();
 //private static Strategy strategy = new PM2withoutReciprocalLeaderWithRoleFixed();
 //    private static Strategy strategy = new PM2withoutReciprocalMemberWithRoleFixed();
 //    private static Strategy strategy = new PMwithRoleFixed();
@@ -109,6 +109,7 @@ public class Manager implements SetParam {
 
                     addNewTasksToQueue();
                     actFreeLancer();
+                    assert Agent._leader_num + Agent._member_num == AGENT_NUM: "Ellegal role numbers, leaders:" + Agent._leader_num + ", members:" + Agent._member_num;
                     if (turn % writeResultsSpan == 0 && CHECK_RESULTS) {
                         OutPut.aggregateAgentData(agents);
                     }
@@ -151,7 +152,10 @@ public class Manager implements SetParam {
                 }
 */
                 // ↑ 一回の実験のカッコ．以下は実験の合間で作業する部分
-                if (CHECK_AGENTS) OutPut.aggregateDataOnce(agents, num);
+                if (CHECK_AGENTS) {
+                    System.out.println("leaders:" + Agent._leader_num + ", members:" + Agent._member_num);
+                    OutPut.aggregateDataOnce(agents, num);
+                }
                 if (num == EXECUTION_TIMES) break;
                 clearAll();
             }
