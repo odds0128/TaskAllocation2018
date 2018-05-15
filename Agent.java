@@ -16,7 +16,7 @@ public class Agent implements SetParam , Cloneable{
     static long _seed;
     static Random _randSeed;
     static int[] resSizeArray = new int[RESOURCE_TYPES + 1];
-    static int _coalition_check_end_time = MAX_TURN_NUM;
+    static int _coalition_check_end_time ;
     static List<Integer> _lonelyAgents = new ArrayList<>();
     static List<Integer> _accompaniedAgents = new ArrayList<>();
     static double ε = INITIAL_ε;
@@ -80,6 +80,11 @@ public class Agent implements SetParam , Cloneable{
         int rand;
         this.id = _id;
         _id++;
+        if (CHECK_INTERIM_RELATIONSHIPS){
+            _coalition_check_end_time = SNAPSHOT_TIME;
+        }else{
+            _coalition_check_end_time = MAX_TURN_NUM;
+        }
         this.x = x;
         this.y = y;
         this.strategy = strategy;
@@ -460,6 +465,7 @@ public class Agent implements SetParam , Cloneable{
         for(Agent ag: agents){
             for( int i= 0; i < AGENT_NUM; i++ ) {
                 ag.workWithAsM[i] = 0;
+                ag.workWithAsL[i] = 0;
             }
         }
         _coalition_check_end_time = MAX_TURN_NUM;

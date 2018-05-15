@@ -5,13 +5,14 @@
 
 interface SetParam {
     // 環境の設定( 変更していく部分 )
-    int EXECUTION_TIMES = 20;             // 実験の回数
+    int EXECUTION_TIMES = 1;             // 実験の回数
     int MAX_TURN_NUM    = 500000;         // 一回の実験のターン数
-    int WRITING_TIMES   = 5000;           // データのファイルへの出力回数
-    boolean CHECK_RELATIONSHIPS    = false;  // エージェント関係の協調関係を録るか
+    int WRITING_TIMES   = 50;           // データのファイルへの出力回数
+    boolean CHECK_RELATIONSHIPS    = true;  // エージェント関係の協調関係を録るか
+    boolean CHECK_INTERIM_RELATIONSHIPS    = true;  // エージェント関係の協調関係のスナップショットを録るか
     boolean CHECK_INITIATION       = false;  // エージェントやタスクの初期設定を確認するか
-    boolean CHECK_RESULTS          = true;  // チーム編成成功数などを確認するか
-    boolean CHECK_AGENTS           = true;   // エージェントの情報を確認するか
+    boolean CHECK_RESULTS          = false;  // チーム編成成功数などを確認するか
+    boolean CHECK_AGENTS           = false;   // エージェントの情報を確認するか
     boolean CHECK_Eleader_Emember  = false;
 
     boolean IS_HEAVY_TASKS_HAPPENS = false;
@@ -29,10 +30,10 @@ interface SetParam {
 
     // 結果表示のためのパラメータ
     int  COALITION_CHECK_SPAN = 5000;          // 協調関係ができているか確認するための最後の方のターム
-    double THRESHOLD_FOR_COALITION = 20;
+    double THRESHOLD_FOR_COALITION = 10;
     int THRESHOLD_FOR_NEET = 5000;
     double THRESHOLD_FOR_RECIPROCITY_RATE = 0.7;
-    int SNAPSHOT_TIME = MAX_TURN_NUM;
+    int SNAPSHOT_TIME = 200000;
 
     int INITIAL_TASK_NUM = 0;       // 最初のタスク数
     int TASK_QUEUE_SIZE  = 100;     // タスクキューのサイズ
@@ -61,7 +62,7 @@ interface SetParam {
     double INITIAL_VALUE_OF_DSM =  0.5;
     double α = 0.01;
     double γ_r = INITIAL_VALUE_OF_DEC/(double)MAX_TURN_NUM;
-    double THRESHOLD_FOR_RECIPROCITY   = 0.5;
+    double THRESHOLD_FOR_ROLE_RECIPROCITY   = 0.5;
     double THRESHOLD_FOR_RECIPROCITY_FROM_LEADER = 1.5;
     int BIAS = 0;
     int UNIFORM = 1;

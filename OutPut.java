@@ -95,7 +95,7 @@ public class OutPut implements SetParam {
     static double[] membersExcAveArray = new double[EXECUTION_TIMES];
     static double[]  mDependableAgentsFromAllLeaders = new double[EXECUTION_TIMES];    // 全リーダーの最終的な信頼エージェント数の平均
     static double[]  mDependableAgentsFromLeadersTrustsSomeone = new double[EXECUTION_TIMES];    // 全リーダーの最終的な信頼エージェント数の平均
-    static double[]  mMutualDependency   = new double[EXECUTION_TIMES];                  // 相互に協調関係にあるエージェント数
+    static int[]  mMutualDependency   = new int[EXECUTION_TIMES];                  // 相互に協調関係にあるエージェント数
 
     static void aggregateDataOnce(List<Agent> agents, int times) {
         times--;
@@ -231,13 +231,22 @@ public class OutPut implements SetParam {
         System.out.println("Total Agents is " + agents.size());
         System.out.println("Leaders is " + Agent._leader_num + ", Members is " + Agent._member_num);
 
+        int recipro = 0;
         for (Agent agent : agents) {
             System.out.print("ID: " + agent.id + " Resources : ");
             System.out.println("Reachable: " + agent.canReach.size());
             for (int i = 0; i < RESOURCE_TYPES; i++) System.out.print(agent.res[i] + ", ");
             System.out.println(" Reliable Agents: " + agent.relAgents.size());
             System.out.println("Threshold: " + agent.threshold_for_reciprocity);
+            System.out.println("Principle: " + agent.principle);
+            if( agent.principle == RECIPROCAL && agent.e_member > agent.e_leader) {
+                for( int wwam: agent.workWithAsM ){
+                    if(wwam != 0) System.out.println("wwam:" + wwam);
+                }
+                recipro++;
+            }
         }
+        System.out.println(recipro);
 // */
 
 /*
@@ -613,7 +622,7 @@ public class OutPut implements SetParam {
                 _singleton.writeCell(row, colNumber++, style_double, membersExcAveArray[wt]);
                 _singleton.writeCell(row, colNumber++, style_double, mDependableAgentsFromAllLeaders[wt]);
                 _singleton.writeCell(row, colNumber++, style_double, mDependableAgentsFromLeadersTrustsSomeone[wt]);
-                _singleton.writeCell(row, colNumber++, style_double, mMutualDependency[wt]);
+                _singleton.writeCell(row, colNumber++, style_int, mMutualDependency[wt]);
 
                 //列幅の自動調整
                 for (int k = 0; k <= colNumber; k++) {
@@ -1107,7 +1116,7 @@ public class OutPut implements SetParam {
         }
 // */
         for (Agent agent : agents) {
-            if (agent.reliabilities[agent.relRanking.get(0).id] > agent.threshold_for_reciprocity && (agent.e_member > THRESHOLD_FOR_RECIPROCITY || agent.e_leader > THRESHOLD_FOR_RECIPROCITY))
+            if (agent.reliabilities[agent.relRanking.get(0).id] > agent.threshold_for_reciprocity && (agent.e_member > THRESHOLD_FOR_ROLE_RECIPROCITY || agent.e_leader > THRESHOLD_FOR_ROLE_RECIPROCITY))
                 temp++;
         }
         return temp;
@@ -1130,7 +1139,7 @@ public class OutPut implements SetParam {
         }
 // */
         for (Agent agent : agents) {
-            if (agent.reliabilities[agent.relRanking.get(0).id] > agent.threshold_for_reciprocity && agent.e_member > THRESHOLD_FOR_RECIPROCITY && agent.e_member > agent.e_leader)
+            if (agent.reliabilities[agent.relRanking.get(0).id] > agent.threshold_for_reciprocity && agent.e_member > THRESHOLD_FOR_ROLE_RECIPROCITY && agent.e_member > agent.e_leader)
                 temp++;
         }
         return temp;

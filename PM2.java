@@ -90,10 +90,6 @@ public class PM2 implements Strategy, SetParam {
         if (leader.replies.size() != leader.proposalNum) return;
 
         Agent from;
-/*
-        System.out.println(leader + ", candidates" + leader.candidates);
-        System.out.println("subtasks: " + leader.ourTask.subTasks);
-*/
         for (Message reply : leader.replies) {
             // 拒否ならそのエージェントを候補リストから外し, 信頼度を0で更新する
             if (reply.getReply() != ACCEPT) {
@@ -104,7 +100,6 @@ public class PM2 implements Strategy, SetParam {
                 leader.relAgents = renewRel(leader, from, 0);
             }
         }
-//        System.out.println("candidates: " + leader.candidates);
 
         Agent A, B;
 
@@ -176,7 +171,7 @@ public class PM2 implements Strategy, SetParam {
         message = member.messages.remove(0);
         member.mySubTask = message.getSubTask();
 
-        // サブタスクがもらえたなら信頼度をプラスに更新し, 実行フェイズへ移る.
+        // サブタスクがもらえたなら実行フェイズへ移る.
         if (member.mySubTask != null) {
             member.allocated[member.leader.id][member.mySubTask.resType]++;
             member.executionTime = member.calcExecutionTime(member, member.mySubTask);
@@ -194,14 +189,19 @@ public class PM2 implements Strategy, SetParam {
         agent.validatedTicks = Manager.getTicks();
         if (agent.executionTime == 0) {
             if (agent.role == LEADER) {
-                if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN)
-                    for (Agent ag : agent.teamMembers) agent.workWithAsL[ag.id]++;
+                if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
+                    for (Agent ag : agent.teamMembers) {
+                        agent.workWithAsL[ag.id]++;
+                    }
+                    agent.didTasksAsLeader++;
+                }
             } else {
                 agent.sendMessage(agent, agent.leader, DONE, 0);
                 agent.required[agent.mySubTask.resType]++;
                 agent.relAgents = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / (double) (Manager.getTicks() - agent.start));
-                if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN)
+                if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
                     agent.workWithAsM[agent.leader.id]++;
+                }
             }
             // 自分のサブタスクが終わったら役割適応度を1で更新して非活性状態へ
             agent.inactivate(1);
@@ -365,13 +365,11 @@ public class PM2 implements Strategy, SetParam {
      * @param agent
      */
     private List<Agent> renewRel(Agent agent, Agent target, double evaluation) {
-        assert evaluation <= 1 : "evaluation too big";
         assert !agent.equals(target) : "alert4";
         double temp = agent.reliabilities[target.id];
 //        if( Manager.getTicks() % 10000 == 0 ) System.out.println( evaluation );
         // 信頼度の更新式
         agent.reliabilities[target.id] = temp * (1.0 - α) + α * evaluation;
-        assert agent.reliabilities[target.id] <= 1.0 : "Illegal reliability renewal ... Turn: " + Manager.getTicks() + ", ID: " + agent.id + ", target: " + target.id + ", change: " + temp + " → " + agent.reliabilities[target.id];
 
         /*
          信頼エージェントの更新
@@ -451,7 +449,7 @@ public class PM2 implements Strategy, SetParam {
 
     private void setPrinciple(Agent agent) {
         if (agent.role == MEMBER) {
-            if (agent.relAgents.size() > 0 && agent.e_member >= THRESHOLD_FOR_RECIPROCITY) {
+            if (agent.relAgents.size() > 0 && agent.e_member >= THRESHOLD_FOR_ROLE_RECIPROCITY) {
                 if (agent.principle == RATIONAL) {
                     Agent._recipro_num++;
                     Agent._rational_num--;
@@ -465,7 +463,7 @@ public class PM2 implements Strategy, SetParam {
                 agent.principle = RATIONAL;
             }
         } else if (agent.role == LEADER) {
-            if (agent.relAgents.size() > 0 && agent.e_leader >= THRESHOLD_FOR_RECIPROCITY) {
+            if (agent.relAgents.size() > 0 && agent.e_leader >= THRESHOLD_FOR_ROLE_RECIPROCITY) {
                 if (agent.principle == RATIONAL) {
                     Agent._recipro_num++;
                     Agent._rational_num--;

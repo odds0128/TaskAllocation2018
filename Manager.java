@@ -113,9 +113,9 @@ public class Manager implements SetParam {
                         OutPut.aggregateAgentData(agents);
                     }
 
-/*                    if( turn == SNAPSHOT_TIME && CHECK_RELATIONSHIPS ){
-                        snapshot = takeAgentsSnapshot(agents);
-                        OutPut.writeGraphInformation(agents, "interim_report");
+                    if( turn == SNAPSHOT_TIME && CHECK_INTERIM_RELATIONSHIPS ){
+                        OutPut.writeGraphInformationX(agents, strategy);
+//                        snapshot = takeAgentsSnapshot(agents);
                         Agent.resetWorkHistory(agents);
                     }
 // */
@@ -444,7 +444,6 @@ public class Manager implements SetParam {
     }
 
     static void finishTask(Agent leader) {
-        if( Manager.getTicks() > 50000 ) OutPut.checkTeam(leader);
         if (CHECK_RESULTS) OutPut.aggregateTaskExecutionTime(leader);
         leader.ourTask = null;
 /*        if( leader.isLonely == 1 )      finishedTasksInDepopulatedArea++;

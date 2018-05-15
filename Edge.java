@@ -23,6 +23,7 @@ public class Edge implements SetParam {
 
     public void makeEdge(List<Agent> agents) {
         int temp;
+        int recipro = 0;
         for (Agent ag : agents) {
             // agがメンバの場合
             if (ag.e_member > ag.e_leader) {
@@ -34,12 +35,16 @@ public class Edge implements SetParam {
                         to_id.add(id);
                         delays.add(Manager.delays[ag.id][id]);
                         times.add(temp);
-                        if (ag.principle == RECIPROCAL) isRecipro.add(true);
+                        if (ag.principle == RECIPROCAL) {
+                            isRecipro.add(true);
+                            recipro++;
+                        }
                         else isRecipro.add(false);
                     }
                 }
             }
         }
+        System.out.println("Edges: " + from_id.size() + ", Reciprocal edges:" + recipro);
     }
 
     public void makeEdgesFromLeader(List<Agent> agents) {

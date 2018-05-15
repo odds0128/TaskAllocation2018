@@ -59,11 +59,6 @@ public class PM2withRoleFixed implements Strategy, SetParam {
             inactivate(leader, 0);
             return;
         } else {
-            if( Manager.getTicks() > 50000 ) {
-                System.out.println(leader.relRanking.subList(0, 5));
-                System.out.println(leader.candidates);
-                System.out.println();
-            }
             for (int i = 0; i < leader.candidates.size(); i++) {
                 if (leader.candidates.get(i) != null) {
                     leader.proposalNum++;
@@ -194,14 +189,20 @@ public class PM2withRoleFixed implements Strategy, SetParam {
         agent.validatedTicks = Manager.getTicks();
         if (agent.executionTime == 0) {
             if (agent.role == LEADER) {
-                if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN)
-                    for (Agent ag : agent.teamMembers) agent.workWithAsL[ag.id]++;
+                if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
+                    for (Agent ag : agent.teamMembers) {
+                        agent.workWithAsL[ag.id]++;
+                    }
+                    agent.didTasksAsLeader++;
+                }
             } else {
                 agent.sendMessage(agent, agent.leader, DONE, 0);
                 agent.required[agent.mySubTask.resType]++;
                 agent.relAgents = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / (double) (Manager.getTicks() - agent.start));
-                if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN)
+                if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
                     agent.workWithAsM[agent.leader.id]++;
+                    agent.didTasksAsMember++;
+                }
             }
             // 自分のサブタスクが終わったら役割適応度を1で更新して非活性状態へ
             inactivate(agent, 1);
@@ -449,7 +450,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
 
     private void setPrinciple(Agent agent) {
         if (agent.role == MEMBER) {
-            if (agent.relAgents.size() > 0 && agent.e_member >= THRESHOLD_FOR_RECIPROCITY) {
+            if (agent.relAgents.size() > 0 && agent.e_member >= THRESHOLD_FOR_ROLE_RECIPROCITY) {
                 if (agent.principle == RATIONAL) {
                     Agent._recipro_num++;
                     Agent._rational_num--;
@@ -463,7 +464,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
                 agent.principle = RATIONAL;
             }
         } else if (agent.role == LEADER) {
-            if (agent.relAgents.size() > 0 && agent.e_leader >= THRESHOLD_FOR_RECIPROCITY) {
+            if (agent.relAgents.size() > 0 && agent.e_leader >= THRESHOLD_FOR_ROLE_RECIPROCITY) {
                 if (agent.principle == RATIONAL) {
                     Agent._recipro_num++;
                     Agent._rational_num--;
@@ -477,7 +478,6 @@ public class PM2withRoleFixed implements Strategy, SetParam {
                 agent.principle = RATIONAL;
             }
         }
-
     }
 
     public void checkMessages(Agent ag) {
