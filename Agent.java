@@ -224,7 +224,7 @@ public class Agent implements SetParam , Cloneable{
         }
     }
     void selectRoleWithoutLearning() {
-        int ran = _randSeed.nextInt(5);
+        int ran = _randSeed.nextInt(10);
         if (ran == 0) {
             role = LEADER;
             _leader_num++;
