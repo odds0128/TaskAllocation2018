@@ -365,17 +365,7 @@ public class RationalWithRoleRenewal implements Strategy, SetParam {
                 }
             }
         }
-        List<Agent> tmp = new ArrayList<>();
-        Agent ag;
-        for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
-            ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > agent.threshold_for_reciprocity) {
-                tmp.add(ag);
-            } else {
-                break;
-            }
-        }
-        return tmp;
+        return null;
     }
 
     /**
@@ -393,17 +383,7 @@ public class RationalWithRoleRenewal implements Strategy, SetParam {
             if (temp < 0) agent.reliabilities[i] = 0;
             else agent.reliabilities[i] = temp;
         }
-        List<Agent> tmp = new ArrayList<>();
-        Agent ag;
-        for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
-            ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > agent.threshold_for_reciprocity) {
-                tmp.add(ag);
-            } else {
-                break;
-            }
-        }
-        return tmp;
+        return null;
     }
 
     public void checkMessages(Agent ag) {

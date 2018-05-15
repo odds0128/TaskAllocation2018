@@ -314,13 +314,11 @@ public class PM2withoutReciprocity implements Strategy, SetParam {
      * @param agent
      */
     private List<Agent> renewRel(Agent agent, Agent target, double evaluation) {
-        assert evaluation <= 1 : "evaluation too big";
         assert !agent.equals(target) : "alert4";
         double temp = agent.reliabilities[target.id];
 //        if( Manager.getTicks() % 10000 == 0 ) System.out.println( evaluation );
         // 信頼度の更新式
         agent.reliabilities[target.id] = temp * (1.0 - α) + α * evaluation;
-        assert agent.reliabilities[target.id] <= 1.0 : "Illegal reliability renewal ... Turn: " + Manager.getTicks() + ", ID: " + agent.id + ", target: " + target.id + ", change: " + temp + " → " + agent.reliabilities[target.id];
 
         /*
          信頼エージェントの更新
@@ -357,17 +355,7 @@ public class PM2withoutReciprocity implements Strategy, SetParam {
                 }
             }
         }
-        List<Agent> tmp = new ArrayList<>();
-        Agent ag;
-        for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
-            ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > agent.threshold_for_reciprocity) {
-                tmp.add(ag);
-            } else {
-                break;
-            }
-        }
-        return tmp;
+        return null;
     }
 
     /**
@@ -385,17 +373,7 @@ public class PM2withoutReciprocity implements Strategy, SetParam {
             if (temp < 0) agent.reliabilities[i] = 0;
             else agent.reliabilities[i] = temp;
         }
-        List<Agent> tmp = new ArrayList<>();
-        Agent ag;
-        for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
-            ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > agent.threshold_for_reciprocity) {
-                tmp.add(ag);
-            } else {
-                break;
-            }
-        }
-        return tmp;
+        return null;
     }
 
     public void checkMessages(Agent ag) {

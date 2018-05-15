@@ -423,7 +423,7 @@ public class PMwithoutRoleRenewal implements Strategy, SetParam {
         Agent ag;
         for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
             ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > agent.threshold_for_reciprocity) {
+            if (agent.reliabilities[ag.id] > agent.threshold_for_reciprocity_as_member) {
                 tmp.add(ag);
             } else {
                 break;
@@ -451,7 +451,7 @@ public class PMwithoutRoleRenewal implements Strategy, SetParam {
         Agent ag;
         for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
             ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > agent.threshold_for_reciprocity) {
+            if (agent.reliabilities[ag.id] > agent.threshold_for_reciprocity_as_member) {
                 tmp.add(ag);
             } else {
                 break;

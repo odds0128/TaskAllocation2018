@@ -50,7 +50,6 @@ public class Agent implements SetParam , Cloneable{
     int[]   required  = new int[RESOURCE_TYPES];            // そのリソースを要求するサブタスクが割り当てられた回数
     int[][] allocated = new int[AGENT_NUM][RESOURCE_TYPES]; // そのエージェントからそのリソースを要求するサブタスクが割り当てられた回数
     List<Agent> canReach = new ArrayList<>();
-    double threshold_for_reciprocity;
     int role_renewal_counter = 0;
 
     // リーダーエージェントが持つパラメータ
@@ -68,11 +67,14 @@ public class Agent implements SetParam , Cloneable{
     int acceptances = 0;           // 今まで自分の元に帰って来た受理応答
     int untilAcceptances = 0;      // 今まで自分の元に返って来た受理応答の合計応答時間(= 往復の通信時間 + メンバの処理時間)
     double meanUA = 0;             // 今まで自分の元に返って来た受理応答の平均応答時間(=  untilAcceptances/acceptances)
+    double threshold_for_reciprocity_as_leader;
+
     // メンバエージェントのみが持つパラメータ
     Agent leader;
     int totalOffers = 0;            // 今まで自分が受理して来たオファー数
     int totalResponseTicks = 0;     // 受理応答からの待ち時間の合計
     double meanRT = 0;     // 受理応答からの待ち時間の平均
+    double threshold_for_reciprocity_as_member;
 
     // seedが変わった(各タームの最初の)エージェントの生成
     Agent(long seed, int x, int y, Strategy strategy) {
@@ -90,7 +92,8 @@ public class Agent implements SetParam , Cloneable{
         this.strategy = strategy;
         setResource(UNIFORM);
         Arrays.fill(reliabilities, INITIAL_VALUE_OF_DEC);
-        threshold_for_reciprocity = (double)resSum/resCount * THRESHOLD_FOR_RECIPROCITY_RATE;
+        threshold_for_reciprocity_as_leader = THRESHOLD_FOR_RECIPROCITY_FROM_LEADER;
+                threshold_for_reciprocity_as_member = (double)resSum/resCount * THRESHOLD_FOR_RECIPROCITY_RATE;
         if (strategy.getClass().getName().startsWith("CNP")
                 || strategy.getClass().getName().startsWith("Rational")
                 || strategy.getClass().getName().endsWith("RoleFixed")) {
@@ -111,7 +114,8 @@ public class Agent implements SetParam , Cloneable{
         this.strategy = strategy;
         setResource(UNIFORM);
         Arrays.fill(reliabilities, INITIAL_VALUE_OF_DEC);
-        threshold_for_reciprocity = (double)resSum/resCount * THRESHOLD_FOR_RECIPROCITY_RATE;
+        threshold_for_reciprocity_as_leader = THRESHOLD_FOR_RECIPROCITY_FROM_LEADER;
+        threshold_for_reciprocity_as_member = (double)resSum/resCount * THRESHOLD_FOR_RECIPROCITY_RATE;
         if (strategy.getClass().getName().startsWith("CNP")
                 || strategy.getClass().getName().startsWith("Rational")
                 || strategy.getClass().getName().endsWith("RoleFixed")
@@ -231,7 +235,6 @@ public class Agent implements SetParam , Cloneable{
             preAllocations = new HashMap<>();
             replies = new ArrayList<>();
             results = new ArrayList<>();
-            threshold_for_reciprocity = THRESHOLD_FOR_RECIPROCITY_FROM_LEADER;
         } else {
             role = MEMBER;
             e_member = 1;

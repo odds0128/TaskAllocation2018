@@ -235,7 +235,7 @@ public class PM2 implements Strategy, SetParam {
         // リーダーにとっての信頼エージェントは閾値を超えたエージェント全てと言える
         for (Agent relAg : leader.relRanking) {
             SubTask st;
-            if( leader.reliabilities[relAg.id] > leader.threshold_for_reciprocity ) {
+            if( leader.reliabilities[relAg.id] > leader.threshold_for_reciprocity_as_leader ) {
                 // 上位からサブタスクを持って来て
                 // そのサブタスクが上位の信頼エージェントに可能かつまださらに上位の信頼エージェントに割り振られていないなら
                 // そいつに割り当てることにしてそいつをexceptionsに，そのサブタスクをskipsに入れる
@@ -410,7 +410,7 @@ public class PM2 implements Strategy, SetParam {
         Agent ag;
         for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
             ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > agent.threshold_for_reciprocity) {
+            if (agent.reliabilities[ag.id] > agent.threshold_for_reciprocity_as_member) {
                 tmp.add(ag);
             } else {
                 break;
@@ -438,7 +438,7 @@ public class PM2 implements Strategy, SetParam {
         Agent ag;
         for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
             ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > agent.threshold_for_reciprocity) {
+            if (agent.reliabilities[ag.id] > agent.threshold_for_reciprocity_as_member) {
                 tmp.add(ag);
             } else {
                 break;

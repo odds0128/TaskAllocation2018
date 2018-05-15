@@ -107,7 +107,7 @@ public class OutPut implements SetParam {
                 leadersExcAveArray[times] += ag.excellence;
                 int temp = 0;
                 for( Agent relAg:  ag.relRanking ){
-                    if( ag.reliabilities[relAg.id] > ag.threshold_for_reciprocity ){
+                    if( ag.reliabilities[relAg.id] > ag.threshold_for_reciprocity_as_leader ){
                         mDependableAgentsFromAllLeaders[times]++;
                         mDependableAgentsFromLeadersTrustsSomeone[times] ++;
                         if( relAg.inTheList(ag, relAg.relAgents) >= 0 ){
@@ -237,7 +237,7 @@ public class OutPut implements SetParam {
             System.out.println("Reachable: " + agent.canReach.size());
             for (int i = 0; i < RESOURCE_TYPES; i++) System.out.print(agent.res[i] + ", ");
             System.out.println(" Reliable Agents: " + agent.relAgents.size());
-            System.out.println("Threshold: " + agent.threshold_for_reciprocity);
+            System.out.println("Threshold: " + agent.threshold_for_reciprocity_as_member);
             System.out.println("Principle: " + agent.principle);
             if( agent.principle == RECIPROCAL && agent.e_member > agent.e_leader) {
                 for( int wwam: agent.workWithAsM ){
@@ -1116,7 +1116,9 @@ public class OutPut implements SetParam {
         }
 // */
         for (Agent agent : agents) {
-            if (agent.reliabilities[agent.relRanking.get(0).id] > agent.threshold_for_reciprocity && (agent.e_member > THRESHOLD_FOR_ROLE_RECIPROCITY || agent.e_leader > THRESHOLD_FOR_ROLE_RECIPROCITY))
+            if (agent.reliabilities[agent.relRanking.get(0).id] > agent.threshold_for_reciprocity_as_member
+                    && (agent.e_member > THRESHOLD_FOR_ROLE_RECIPROCITY
+                    || agent.e_leader > THRESHOLD_FOR_ROLE_RECIPROCITY))
                 temp++;
         }
         return temp;
@@ -1139,7 +1141,9 @@ public class OutPut implements SetParam {
         }
 // */
         for (Agent agent : agents) {
-            if (agent.reliabilities[agent.relRanking.get(0).id] > agent.threshold_for_reciprocity && agent.e_member > THRESHOLD_FOR_ROLE_RECIPROCITY && agent.e_member > agent.e_leader)
+            if (agent.reliabilities[agent.relRanking.get(0).id] > agent.threshold_for_reciprocity_as_member
+                    && agent.e_member > THRESHOLD_FOR_ROLE_RECIPROCITY
+                    && agent.e_member > agent.e_leader)
                 temp++;
         }
         return temp;
