@@ -8,8 +8,8 @@ import java.io.*;
 import java.util.*;
 
 public class Manager implements SetParam {
-//    private static Strategy strategy = new PM2withRoleFixed();      // ICA2018における提案手法    //    private static Strategy strategy = new ProposedMethodForSingapore();
-    private static Strategy strategy   = new Rational01();        // ICA2018における比較手法1
+    private static Strategy strategy = new PM2withRoleFixed();      // ICA2018における提案手法    //    private static Strategy strategy = new ProposedMethodForSingapore();
+//    private static Strategy strategy   = new Rational01();        // ICA2018における比較手法1
 //    private static Strategy strategy = new CNP_area_restricted();   // ICA2018における比較手法2
 
 //    private static Strategy strategy = new PM2();
@@ -109,10 +109,11 @@ public class Manager implements SetParam {
 
                     addNewTasksToQueue();
                     actFreeLancer();
-                    assert Agent._leader_num + Agent._member_num == AGENT_NUM: "Ellegal role numbers, leaders:" + Agent._leader_num + ", members:" + Agent._member_num;
+                    assert Agent._leader_num + Agent._member_num == AGENT_NUM: "Illegal role numbers, leaders:" + Agent._leader_num + ", members:" + Agent._member_num;
                     if (turn % writeResultsSpan == 0 && CHECK_RESULTS) {
                         OutPut.aggregateAgentData(agents);
-                    }
+                        assert Agent._recipro_num + Agent._rational_num == AGENT_NUM: "Illegal principle numbers, reciprocal:" + Agent._recipro_num + ", rational:" + Agent._rational_num;
+                     }
 
                     if( turn == SNAPSHOT_TIME && CHECK_INTERIM_RELATIONSHIPS ){
                         OutPut.writeGraphInformationX(agents, strategy);

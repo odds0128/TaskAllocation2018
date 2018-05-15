@@ -22,7 +22,7 @@ public class PMwithRoleFixed implements Strategy, SetParam {
         if (agent.phase == lPHASE1) proposeAsL(agent);
         else if (agent.phase == lPHASE2) reportAsL(agent);
         else if (agent.phase == PHASE3) execute(agent);
-        decreaseDEC(agent);
+        agent.relAgents = decreaseDEC(agent);
     }
 
     public void actAsMember(Agent agent) {
@@ -30,7 +30,7 @@ public class PMwithRoleFixed implements Strategy, SetParam {
         if (agent.phase == mPHASE1) replyAsM(agent);
         else if (agent.phase == mPHASE2) receiveAsM(agent);
         else if (agent.phase == PHASE3) execute(agent);
-        decreaseDEC(agent);
+        agent.relAgents = decreaseDEC(agent);
     }
 
     private void proposeAsL(Agent leader) {
@@ -405,7 +405,7 @@ public class PMwithRoleFixed implements Strategy, SetParam {
      *
      * @param agent
      */
-    private List<Agent> decreaseDEC(Agent agent) {
+    private List<Agent>  decreaseDEC(Agent agent) {
         double temp;
         for (int i = 0; i < AGENT_NUM; i++) {
             temp = agent.reliabilities[i] - γ;

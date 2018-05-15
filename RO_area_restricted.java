@@ -32,7 +32,7 @@ public class RO_area_restricted implements Strategy, SetParam {
         if (agent.phase == PROPOSITION) proposeAsL(agent);
         else if (agent.phase == REPORT) reportAsL(agent);
         else if (agent.phase == EXECUTION) execute(agent);
-        decreaseDEC(agent);
+        agent.relAgents = decreaseDEC(agent);
     }
 
     public void actAsMember(Agent agent) {
@@ -40,7 +40,7 @@ public class RO_area_restricted implements Strategy, SetParam {
         if (agent.phase == REPLY) replyAsM(agent);
         else if (agent.phase == RECEPTION) receiveAsM(agent);
         else if (agent.phase == EXECUTION) execute(agent);
-        decreaseDEC(agent);
+        agent.relAgents = decreaseDEC(agent);
     }
 
     private void proposeAsL(Agent leader) {

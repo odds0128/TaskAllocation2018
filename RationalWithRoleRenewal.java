@@ -25,7 +25,7 @@ public class RationalWithRoleRenewal implements Strategy, SetParam {
         if (agent.phase == lPHASE1) proposeAsL(agent);
         else if (agent.phase == lPHASE2) reportAsL(agent);
         else if (agent.phase == PHASE3) execute(agent);
-        decreaseDEC(agent);
+        agent.relAgents = decreaseDEC(agent);
     }
 
     public void actAsMember(Agent agent) {
