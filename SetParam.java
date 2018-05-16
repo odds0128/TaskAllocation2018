@@ -57,10 +57,10 @@ interface SetParam {
     int THRESHOLD_FOR_ROLE_RENEWAL  = 50;
 
     // パラメータ
-    double INITIAL_VALUE_OF_DEC =  0.1;
+    double INITIAL_VALUE_OF_DEC =  0;
     double INITIAL_VALUE_OF_DSL =  0.5;
     double INITIAL_VALUE_OF_DSM =  0.5;
-    double α = 0.01;
+    double α = 0.05;
     double γ_r = 0.000002;
     double THRESHOLD_FOR_ROLE_RECIPROCITY   = 0;
     double THRESHOLD_FOR_RECIPROCITY_FROM_LEADER = 1.5;
