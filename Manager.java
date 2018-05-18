@@ -3,26 +3,11 @@
  * @version 2.0
  */
 
-import escape.ProposedMethodForSingapore;
-
 import java.io.*;
 import java.util.*;
 
 public class Manager implements SetParam {
     private static Strategy strategy = new PM2withRoleFixed();      // ICA2018における提案手法    //    private static Strategy strategy = new escape.ProposedMethodForSingapore();
-//    private static Strategy strategy   = new escape.Rational01();        // ICA2018における比較手法1
-//    private static Strategy strategy = new escape.CNP_area_restricted();   // ICA2018における比較手法2
-
-//    private static Strategy strategy = new escape.PM2();
-//    private static Strategy strategy = new escape.PM2withoutReciprocity();
-//private static Strategy strategy = new escape.PM2withoutReciprocalLeaderWithRoleFixed();
-//    private static Strategy strategy = new escape.PM2withoutReciprocalMemberWithRoleFixed();
-//    private static Strategy strategy = new escape.PMwithRoleFixed();
-//    private static Strategy strategy = new escape.PMwithRationalOnly();
-//    private static Strategy strategy = new escape.PMwithoutRoleRenewal();
-//    private static Strategy strategy = new escape.PMwithReallocation();
-//    private static Strategy strategy   = new escape.Rational();
-//    private static Strategy strategy   = new escape.RationalWithRoleRenewal();
 
     static private long _seed;
     private static Random _randSeed;
@@ -34,8 +19,6 @@ public class Manager implements SetParam {
     static int disposedTasks = 0;
     static int overflowTasks = 0;
     static int finishedTasks = 0;
-    static int finishedTasksInDepopulatedArea = 0;
-    static int finishedTasksInPopulatedArea = 0;
     static int turn;
     static List<Agent> snapshot = new ArrayList<>();
 
@@ -85,8 +68,8 @@ public class Manager implements SetParam {
 
             // num回実験
             while ((line = br.readLine()) != null) {
-                initiate(line);                         // シード，タスク，エージェントの初期化処理
                 System.out.println(++num + "回目");
+                initiate(line);                         // シード，タスク，エージェントの初期化処理
                 if (CHECK_INITIATION) {
                     if (num == EXECUTION_TIMES) break;
                     clearAll();
@@ -129,13 +112,11 @@ public class Manager implements SetParam {
 
                     if (turn % writeResultsSpan == 0 && CHECK_RESULTS) {
                         int rmNum = Agent.countReciprocalMember(agents);
-                        OutPut.aggregateData(finishedTasks, disposedTasks, overflowTasks, rmNum, finishedTasksInDepopulatedArea, finishedTasksInPopulatedArea);
+                        OutPut.aggregateData(finishedTasks, disposedTasks, overflowTasks, rmNum, 0, 0);
                         OutPut.indexIncrement();
                         finishedTasks = 0;
                         disposedTasks = 0;
                         overflowTasks = 0;
-                        finishedTasksInDepopulatedArea = 0;
-                        finishedTasksInPopulatedArea = 0;
 
                         if (CHECK_Eleader_Emember && turn % writeResultsSpan == 0) {
                             pw.print(turn + ", ");
@@ -190,7 +171,11 @@ public class Manager implements SetParam {
         // エージェントの初期化
         agents = generateAgents(strategy);
 //
-        if (CHECK_INITIATION) OutPut.checkAgent(agents);
+        if (CHECK_INITIATION){
+//            OutPut.checkAgent(agents);
+//            OutPut.checkGrids(grids);
+            OutPut.checkDelay(delays);
+        }
 //        OutPut.countDelays(delays);
 //        OutPut.checkGrids(grids);
 //        OutPut.checkDelay(delays);
@@ -246,7 +231,6 @@ public class Manager implements SetParam {
     static void setRelAg(List<Agent> agents) {
         int dist = 0;
         List<Agent> tempList = new ArrayList();
-        int agents_in_depopulated_area = 0, agents_in_populated_area = 0;
 
         // 距離の計算 & iから距離1にいるエージェントのカウント
         int min = Integer.MAX_VALUE;
@@ -256,30 +240,10 @@ public class Manager implements SetParam {
         for (int i = 0; i < AGENT_NUM; i++) {
             int temp;
             for (int j = 0; j < AGENT_NUM; j++) {
-                temp = calcManhattan(agents.get(i), agents.get(j));
-                delays[i][j] = temp;
-                if (temp <= 2) density[i]++;
+                delays[i][j] =  calcurateDelay(agents.get(i), agents.get(j));
             }
             if (density[i] < min) min = density[i];
             if (density[i] > max) max = density[i];
-        }
-        // 過疎エージェントの探索
-        for (int neighborhoods_i = min; agents_in_depopulated_area < quartile; neighborhoods_i++) {
-            for (int density_i = 0; density_i < AGENT_NUM; density_i++) {
-                if (density[density_i] == neighborhoods_i) {
-                    agents_in_depopulated_area++;
-                    agents.get(density_i).isLonely = 1;
-                }
-            }
-        }
-        // 過密エージェントの探索
-        for (int neighborhoods_i = max; agents_in_populated_area < quartile; neighborhoods_i--) {
-            for (int density_i = 0; density_i < AGENT_NUM; density_i++) {
-                if (density[density_i] == neighborhoods_i) {
-                    agents_in_populated_area++;
-                    agents.get(density_i).isAccompanied = 1;
-                }
-            }
         }
 
         // エリア制限手法において，知っているエージェントを定義する
@@ -340,16 +304,20 @@ public class Manager implements SetParam {
         }
     }
 
-    static int inTheList(Agent a, List<Agent> agents) {
-        for (int i = 0; i < agents.size(); i++) {
-            if (a == agents.get(i)) return i;
-        }
-        return -1;
-    }
 
-    static int calcManhattan(Agent from, Agent to) {
-        int distance = Math.abs(from.x - to.x) + Math.abs(from.y - to.y);
-        return (int) Math.ceil((double) (distance * MAX_DELAY) / (double) (ROW + COLUMN - 2));
+    // これではいけない
+    static int calcurateDelay(Agent from, Agent to) {
+        double distance = Math.abs(from.x - to.x) + Math.abs(from.y - to.y);
+        double tillEnd  = ROW/2  + COLUMN/2 ;
+        if( from.id == 345 && to.id == 2466 ){
+            System.out.print(" ");
+        }
+        if( distance <= tillEnd ) {
+            return (int)Math.ceil( distance / tillEnd * MAX_DELAY );
+        }
+        else {
+            return (int)Math.ceil( ( (2*tillEnd-distance) / tillEnd * MAX_DELAY));
+        }
     }
 
     // taskQueueにあるタスクをリーダーに渡すメソッド
@@ -379,8 +347,6 @@ public class Manager implements SetParam {
                 }
 //                System.out.println(additionalTasksNum + ", " + random);
             }
-
-
 
         // タスクキューに空きが十分にあるなら, 普通にぶち込む
             if (additionalTasksNum <= room) {
@@ -466,34 +432,6 @@ public class Manager implements SetParam {
 
     private static void checkMessage(List<Agent> agents) {
         for (Agent ag : agents) ag.checkMessages(ag);
-    }
-
-    private static List<Agent> takeAgentsSnapshot(List<Agent> agents) {
-        List<Agent> temp = new ArrayList<>();
-        // この時点でのリーダーエージェントをsnapshotとして残しておく
-        int size = agents.size();
-        Agent ag;
-        int positiveAgents = 0, mPositiveAgents = 0;
-
-        for (Agent a : agents) {
-            temp.add(a.clone());
-        }
-
-        for (int i = 0; i < size; i++) {
-            ag = temp.remove(0);
-            if (ag.e_leader > ag.e_member) {
-                temp.add(ag);
-                for (double rel : ag.reliabilities) {
-                    if (rel > 0) positiveAgents++;
-                }
-/*                System.out.println("positiveAgents: " + positiveAgents);
-                mPositiveAgents += positiveAgents;
-// */
-            }
-        }
-//        System.out.println("turn :" + SNAPSHOT_TIME + ", Leaders: " + temp.size() + ", Positive Agents: " + mPositiveAgents);
-        assert size == agents.size() : "Deep copy failed";
-        return temp;
     }
 
     private static void clearAll() {

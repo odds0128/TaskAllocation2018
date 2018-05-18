@@ -5,14 +5,14 @@
 
 interface SetParam {
     // 環境の設定( 変更していく部分 )
-    int EXECUTION_TIMES = 2;             // 実験の回数
+    int EXECUTION_TIMES = 1;             // 実験の回数
     int MAX_TURN_NUM    = 50000;         // 一回の実験のターン数
     int WRITING_TIMES   = 5000;           // データのファイルへの出力回数
     boolean CHECK_RELATIONSHIPS    = false;  // エージェント関係の協調関係を録るか
     boolean CHECK_INTERIM_RELATIONSHIPS    = false;  // エージェント関係の協調関係のスナップショットを録るか
-    boolean CHECK_INITIATION       = false;  // エージェントやタスクの初期設定を確認するか
-    boolean CHECK_RESULTS          = true;  // チーム編成成功数などを確認するか
-    boolean CHECK_AGENTS           = true;   // エージェントの情報を確認するか
+    boolean CHECK_INITIATION       = true;  // エージェントやタスクの初期設定を確認するか
+    boolean CHECK_RESULTS          = false;  // チーム編成成功数などを確認するか
+    boolean CHECK_AGENTS           = false;   // エージェントの情報を確認するか
     boolean CHECK_Eleader_Emember  = false;
 
     boolean IS_HEAVY_TASKS_HAPPENS = false;
@@ -37,9 +37,10 @@ interface SetParam {
 
     int INITIAL_TASK_NUM = 0;       // 最初のタスク数
     int TASK_QUEUE_SIZE  = 100;     // タスクキューのサイズ
-    int AGENT_NUM = 500;            // エージェントの数
-    int ROW    = 50;                // 行数
-    int COLUMN = 50;                // 列数
+    int AGENT_NUM = 2500;            // エージェントの数
+
+    // トーラスを考えた時に，中心が自分であるほうが考えやすいので，一片の長さは奇数にする
+    int ROW    = 51, COLUMN = 51;
     int MAX_DELAY = 5;
 
     double ADDITIONAL_TASK_NUM  = 2.5;        // タスクを追加するタイミングで, タスクキューに追加するタスクの個数(=λ)

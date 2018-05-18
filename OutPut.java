@@ -225,20 +225,27 @@ public class OutPut implements SetParam {
         System.out.println("Leaders is " + Agent._leader_num + ", Members is " + Agent._member_num);
         for (int i = 0; i < ROW; i++) {
             for (int j = 0; j < COLUMN; j++) {
-                if (grids[i][j] == null) System.out.print("  ");
-                else System.out.print(String.format("%3d ", grids[i][j].id));
+                if (grids[i][j] == null) System.out.print("　");
+                else System.out.print(String.format("%2d", grids[i][j].id));
             }
             System.out.println();
         }
     }
-
     static void checkDelay(int[][] delays) {
+        int[] countDelay = new int[MAX_DELAY];
         for (int i = 0; i < AGENT_NUM; i++) {
-            System.out.print("ID: " + i + "...");
+//            System.out.print("ID: " + i + "...");
             for (int j = 0; j < AGENT_NUM; j++) {
-                System.out.print(delays[i][j] + ", ");
+//                System.out.print(delays[i][j] + ", ");
+                if( i != j ) {
+                    System.out.println(i + ", " + j + ", " + delays[i][j]);
+                    countDelay[delays[i][j] - 1]++;
+                }
             }
-            System.out.println();
+//            System.out.println();
+        }
+        for(int i = 0; i < MAX_DELAY ;i++){
+            System.out.println( (i+1) + ", " + countDelay[i]/AGENT_NUM);
         }
     }
 
