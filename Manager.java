@@ -3,25 +3,26 @@
  * @version 2.0
  */
 
-import java.awt.geom.RoundRectangle2D;
+import escape.ProposedMethodForSingapore;
+
 import java.io.*;
 import java.util.*;
 
 public class Manager implements SetParam {
-    private static Strategy strategy = new PM2withRoleFixed();      // ICA2018における提案手法    //    private static Strategy strategy = new ProposedMethodForSingapore();
-//    private static Strategy strategy   = new Rational01();        // ICA2018における比較手法1
-//    private static Strategy strategy = new CNP_area_restricted();   // ICA2018における比較手法2
+    private static Strategy strategy = new PM2withRoleFixed();      // ICA2018における提案手法    //    private static Strategy strategy = new escape.ProposedMethodForSingapore();
+//    private static Strategy strategy   = new escape.Rational01();        // ICA2018における比較手法1
+//    private static Strategy strategy = new escape.CNP_area_restricted();   // ICA2018における比較手法2
 
-//    private static Strategy strategy = new PM2();
-//    private static Strategy strategy = new PM2withoutReciprocity();
-//private static Strategy strategy = new PM2withoutReciprocalLeaderWithRoleFixed();
-//    private static Strategy strategy = new PM2withoutReciprocalMemberWithRoleFixed();
-//    private static Strategy strategy = new PMwithRoleFixed();
-//    private static Strategy strategy = new PMwithRationalOnly();
-//    private static Strategy strategy = new PMwithoutRoleRenewal();
-//    private static Strategy strategy = new PMwithReallocation();
-//    private static Strategy strategy   = new Rational();
-//    private static Strategy strategy   = new RationalWithRoleRenewal();
+//    private static Strategy strategy = new escape.PM2();
+//    private static Strategy strategy = new escape.PM2withoutReciprocity();
+//private static Strategy strategy = new escape.PM2withoutReciprocalLeaderWithRoleFixed();
+//    private static Strategy strategy = new escape.PM2withoutReciprocalMemberWithRoleFixed();
+//    private static Strategy strategy = new escape.PMwithRoleFixed();
+//    private static Strategy strategy = new escape.PMwithRationalOnly();
+//    private static Strategy strategy = new escape.PMwithoutRoleRenewal();
+//    private static Strategy strategy = new escape.PMwithReallocation();
+//    private static Strategy strategy   = new escape.Rational();
+//    private static Strategy strategy   = new escape.RationalWithRoleRenewal();
 
     static private long _seed;
     private static Random _randSeed;
@@ -161,8 +162,6 @@ public class Manager implements SetParam {
                 clearAll();
             }
             // ↑ 全実験の終了のカッコ．以下は後処理
-            System.out.println("leader role renewal: " + ProposedMethodForSingapore.leader_role_renewal / EXECUTION_TIMES);
-            System.out.println("member role renewal: " + ProposedMethodForSingapore.member_role_renewal / EXECUTION_TIMES);
             if (CHECK_RESULTS) OutPut.writeResults(strategy);
             if (CHECK_AGENTS) OutPut.writeAgentsInformationX(strategy);
 //            OutPut.writeDelays(delays);

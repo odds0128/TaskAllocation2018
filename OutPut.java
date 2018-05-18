@@ -339,7 +339,7 @@ public class OutPut implements SetParam {
                             // + "Lonely leaders"                    + ", " + "Lonely members"                    + ", "
                             // + "Accompanied leaders"               + ", " + "Accompanied members"               + ", "
                             + "ReciprocalLeaders" + ", " + "ReciprocalMembers" + ", "
-                            // + "Rational"                          + ", " + "ReciprocalMembers" + ","
+                            // + "escape.Rational"                          + ", " + "ReciprocalMembers" + ","
                     // + "FinishedTasks in depopulated area" + ", " + "FinishedTasks in populated area"   + ", "
             );
             for (int i = 0; i < WRITING_TIMES; i++) {
