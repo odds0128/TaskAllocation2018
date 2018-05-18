@@ -66,7 +66,8 @@ public class PM2withRoleFixed implements Strategy, SetParam {
                 }
             }
         }
-        nextPhase(leader);  // 次のフェイズへ
+        leader.phase = lPHASE2;
+        leader.validatedTicks = Manager.getTicks();
     }
 
     private void replyAsM(Agent member) {
@@ -82,7 +83,8 @@ public class PM2withRoleFixed implements Strategy, SetParam {
         if (member.joined) {
             member.totalOffers++;
             member.start = Manager.getTicks();
-            nextPhase(member);
+            member.phase = lPHASE2;
+            member.validatedTicks = Manager.getTicks();
         }
     }
 
@@ -150,7 +152,8 @@ public class PM2withRoleFixed implements Strategy, SetParam {
                 leader.sendMessage(leader, tm, RESULT, leader.preAllocations.get(tm));
             }
             Manager.finishTask(leader);
-            nextPhase(leader);
+            leader.phase = PHASE3;
+            leader.validatedTicks = Manager.getTicks();
             return;
         }
         // 未割り当てのサブタスクが残っていれば失敗
@@ -175,7 +178,9 @@ public class PM2withRoleFixed implements Strategy, SetParam {
         if (member.mySubTask != null) {
             member.allocated[member.leader.id][member.mySubTask.resType]++;
             member.executionTime = member.calcExecutionTime(member, member.mySubTask);
-            nextPhase(member);
+            member.phase = PHASE3;
+            member.validatedTicks = Manager.getTicks();
+
         }
         // サブタスクが割り当てられなかったら信頼度を0で更新し, inactivate
         else {
@@ -553,9 +558,11 @@ public class PM2withRoleFixed implements Strategy, SetParam {
             ag.restSubTask = 0;
             ag.role = LEADER;
             ag.proposalNum = 0;
+            ag.didTasksAsLeader += success;
         } else if (ag.role == MEMBER) {
             ag.phase = mPHASE1;
             ag.role = MEMBER;
+            ag.didTasksAsMember += success;
         }
         ag.mySubTask = null;
         ag.messages.clear();
@@ -564,31 +571,6 @@ public class PM2withRoleFixed implements Strategy, SetParam {
         ag.validatedTicks = Manager.getTicks();
     }
 
-    protected void nextPhase(Agent ag) {
-        if (ag.role == LEADER) {
-            if (ag.phase == lPHASE1) {
-                ag.phase = lPHASE2;
-            }
-            // チーム編成に成功したが，自分はサブタスクを担当しない場合
-            else if (ag.phase == lPHASE2 && ag.executionTime < 0) {
-                if (Agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
-                    for (Agent mem : ag.teamMembers) ag.workWithAsL[mem.id]++;
-                }
-                inactivate(ag,1);
-            }
-            // サブタスクを持っているなら実行フェイズに写る
-            else {
-                ag.phase = PHASE3;
-            }
-        } else {
-            if (ag.phase == mPHASE1) {
-                ag.phase = mPHASE2;
-            } else if (ag.phase == mPHASE2) {
-                ag.phase = PHASE3;
-            }
-        }
-        ag.validatedTicks = Manager.getTicks();
-    }
 
     public void clearStrategy() {
         for (int i = 0; i < AGENT_NUM; i++) {
