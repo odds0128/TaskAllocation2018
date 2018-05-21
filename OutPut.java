@@ -223,10 +223,10 @@ public class OutPut implements SetParam {
     static void checkGrids(Agent[][] grids) {
         System.out.println("Total Agents is " + Agent._id);
         System.out.println("Leaders is " + Agent._leader_num + ", Members is " + Agent._member_num);
-        for (int i = 0; i < ROW; i++) {
-            for (int j = 0; j < COLUMN; j++) {
-                if (grids[i][j] == null) System.out.print("　");
-                else System.out.print(String.format("%2d", grids[i][j].id));
+        for (int i = 0; i < MAX_X; i++) {
+            for (int j = 0; j < MAX_Y; j++) {
+                if (grids[i][j] == null) System.out.print("　　");
+                else System.out.print(String.format("%3d ", grids[i][j].id));
             }
             System.out.println();
         }
@@ -238,7 +238,7 @@ public class OutPut implements SetParam {
             for (int j = 0; j < AGENT_NUM; j++) {
 //                System.out.print(delays[i][j] + ", ");
                 if( i != j ) {
-                    System.out.println(i + ", " + j + ", " + delays[i][j]);
+//                    System.out.println(i + ", " + j + ", " + delays[i][j]);
                     countDelay[delays[i][j] - 1]++;
                 }
             }

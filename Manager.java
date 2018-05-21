@@ -14,7 +14,7 @@ public class Manager implements SetParam {
 
     static Queue<Task> taskQueue;
     static int[][] delays = new int[AGENT_NUM][AGENT_NUM];
-    private static Agent[][] grids = new Agent[ROW][COLUMN];
+    private static Agent[][] grids = new Agent[MAX_X][MAX_Y];
     private static List<Agent> agents;
     static int disposedTasks = 0;
     static int overflowTasks = 0;
@@ -25,7 +25,7 @@ public class Manager implements SetParam {
     public static void main(String[] args) {
         assert MAX_RELIABLE_AGENTS < AGENT_NUM : "alert0";
         assert INITIAL_TASK_NUM <= TASK_QUEUE_SIZE : "alert1";
-        assert AGENT_NUM <= ROW * COLUMN : "alert2";
+        assert AGENT_NUM <= MAX_X * MAX_Y : "alert2";
         assert COALITION_CHECK_SPAN < MAX_TURN_NUM : "a";
 
         try {
@@ -190,19 +190,19 @@ public class Manager implements SetParam {
     private static List<Agent> generateAgents(Strategy strategy) {
         Agent temp;
         List tempList = new ArrayList();
-        int randX = _randSeed.nextInt(COLUMN);
-        int randY = _randSeed.nextInt(ROW);
+        int randX = _randSeed.nextInt(MAX_Y);
+        int randY = _randSeed.nextInt(MAX_X);
         while (checkDuplication(randX, randY) == false) {
-            randX = _randSeed.nextInt(COLUMN);
-            randY = _randSeed.nextInt(ROW);
+            randX = _randSeed.nextInt(MAX_Y);
+            randY = _randSeed.nextInt(MAX_X);
         }
         temp = new Agent(_seed, randX, randY, strategy);
         grids[temp.y][temp.x] = temp;
         tempList.add(temp);
         for (int i = 1; i < AGENT_NUM; i++) {
             while (checkDuplication(randX, randY) == false) {
-                randX = _randSeed.nextInt(COLUMN);
-                randY = _randSeed.nextInt(ROW);
+                randX = _randSeed.nextInt(MAX_Y);
+                randY = _randSeed.nextInt(MAX_X);
             }
             temp = new Agent(randX, randY, strategy);
             grids[temp.y][temp.x] = temp;
@@ -305,19 +305,39 @@ public class Manager implements SetParam {
     }
 
 
-    // これではいけない
+    //TODO: トーラス構造の導入
+    /**
+     * calcurateDelayメソッド
+     * エージェント間のマンハッタン距離を計算し，returnするメソッド
+     * □□□
+     * □■□
+     * □□□
+     * このように座標を拡張し，真ん中からの距離を計算，その最短距離をとることで
+     * トーラス構造の距離関係を割り出す
+     */
     static int calcurateDelay(Agent from, Agent to) {
-        double distance = Math.abs(from.x - to.x) + Math.abs(from.y - to.y);
-        double tillEnd  = ROW/2  + COLUMN/2 ;
-        if( from.id == 345 && to.id == 2466 ){
-            System.out.print(" ");
+        int tillEnd      = MAX_X/2 + MAX_Y/2;
+        int minDistance  = Integer.MAX_VALUE;
+        int tilesX       = 3;
+        int tilesY       = 3;
+
+        int fromX = from.x;
+        int fromY = from.y;
+
+        for( int i = 0; i < tilesX; i++ ){
+            int toX   = to.x + ( i - 1 ) * MAX_X;
+
+            for( int j = 0; j < tilesY; j++ ){
+                int toY   = to.y + ( j - 1 ) * MAX_Y;
+                int tempDistance = Math.abs(fromX - toX) + Math.abs(fromY - toY);
+
+                if( tempDistance < minDistance ){
+                    minDistance = tempDistance;
+                }
+            }
         }
-        if( distance <= tillEnd ) {
-            return (int)Math.ceil( distance / tillEnd * MAX_DELAY );
-        }
-        else {
-            return (int)Math.ceil( ( (2*tillEnd-distance) / tillEnd * MAX_DELAY));
-        }
+
+        return (int)Math.ceil( (double)minDistance / tillEnd * MAX_DELAY );
     }
 
     // taskQueueにあるタスクをリーダーに渡すメソッド
@@ -446,8 +466,8 @@ public class Manager implements SetParam {
                 delays[i][j] = 0;
             }
         }
-        for (int i = 0; i < ROW; i++) {
-            for (int j = 0; j < COLUMN; j++) {
+        for (int i = 0; i < MAX_X; i++) {
+            for (int j = 0; j < MAX_Y; j++) {
                 grids[i][j] = null;
             }
         }

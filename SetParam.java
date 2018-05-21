@@ -40,7 +40,7 @@ interface SetParam {
     int AGENT_NUM = 2500;            // エージェントの数
 
     // トーラスを考えた時に，中心が自分であるほうが考えやすいので，一片の長さは奇数にする
-    int ROW    = 51, COLUMN = 51;
+    int MAX_X    = 101, MAX_Y = 101;
     int MAX_DELAY = 5;
 
     double ADDITIONAL_TASK_NUM  = 2.5;        // タスクを追加するタイミングで, タスクキューに追加するタスクの個数(=λ)
