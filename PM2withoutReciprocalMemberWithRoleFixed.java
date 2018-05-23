@@ -18,7 +18,6 @@ import java.util.Map;
  * メンバが互恵かどうかを気にするバージョン
  */
 
-
 public class PM2withoutReciprocalMemberWithRoleFixed implements Strategy, SetParam {
     static final double γ = γ_r;
     Map<Agent, AllocatedSubTask>[] teamHistory = new HashMap[AGENT_NUM];

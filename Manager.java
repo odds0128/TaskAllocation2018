@@ -7,7 +7,7 @@ import java.io.*;
 import java.util.*;
 
 public class Manager implements SetParam {
-    private static Strategy strategy = new PM2withRoleFixed();      // ICA2018における提案手法    //    private static Strategy strategy = new escape.ProposedMethodForSingapore();
+    private static Strategy strategy = new PM2withRoleFixed();      // ICA2018における提案手法    //    private static Strategy strategy = new ProposedMethodForSingapore();
 
     static private long _seed;
     private static Random _randSeed;
@@ -304,8 +304,6 @@ public class Manager implements SetParam {
         }
     }
 
-
-    //TODO: トーラス構造の導入
     /**
      * calcurateDelayメソッド
      * エージェント間のマンハッタン距離を計算し，returnするメソッド

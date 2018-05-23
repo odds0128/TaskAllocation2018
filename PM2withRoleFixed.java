@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * escape.ProposedMethodForSingapore クラス
+ * ProposedMethodForSingapore クラス
  * サブタスクの要求リソースに量を設けたことにより，"報酬"を適切に考える必要が生じた
  * そこで報酬はサブタスクの要求リソースに依存するものとし，信頼度更新式 e^i_j = (1-α)e^i_j + δ * α を
  * 1. j(自分)がメンバでi(相手)がリーダーの場合，
