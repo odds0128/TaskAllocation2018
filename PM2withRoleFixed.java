@@ -83,7 +83,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
         if (member.joined) {
             member.totalOffers++;
             member.start = Manager.getTicks();
-            member.phase = lPHASE2;
+            member.phase = mPHASE2;
             member.validatedTicks = Manager.getTicks();
         }
     }
