@@ -104,7 +104,6 @@ public class PM2 implements Strategy, SetParam {
         Agent A, B;
 
         // if 全candidatesから返信が返ってきてタスクが実行可能なら割り当てを考えていく
-
         for (int indexA = 0, indexB = leader.restSubTask; indexA < leader.restSubTask; indexA++, indexB++) {
             A = leader.candidates.get(indexA);
             B = leader.candidates.get(indexB);
@@ -159,7 +158,7 @@ public class PM2 implements Strategy, SetParam {
                 leader.sendMessage(leader, tm, RESULT, null);
             }
             Manager.disposeTask(leader);
-            leader.inactivate(0);
+            leader.inactivate(-1);
             return;
         }
     }
