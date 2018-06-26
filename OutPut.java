@@ -47,9 +47,9 @@ public class OutPut implements SetParam {
     static void aggregateAgentData(List<Agent> agents) {
         leaderNumArray[index] += Agent._leader_num;
         neetMembersArray[index] += Agent.countNEETmembers(agents, MAX_TURN_NUM / WRITING_TIMES);
-/*        memberNumArray[index] += Agent._member_num;
+        memberNumArray[index] += Agent._member_num;
 
-        int a = Agent.countLeadersInDepopulatedArea(agents);
+/*        int a = Agent.countLeadersInDepopulatedArea(agents);
         int b = Agent.countLeadersInPopulatedArea(agents);
 
         leaderNumInDepopulatedAreaArray[index] += a;
@@ -341,7 +341,7 @@ public class OutPut implements SetParam {
                             + "FinishedTasks" + ", " + "DisposedTasks" + ", " + "OverflownTasks" + ", "
                             + "Success rate(except overflow)" + ", " + "Success rate" + ", "
                             + "CommunicationTime" + ", " + "Messages" + ", " + "ExecutionTime" + ","
-                            + "Leader" + ", " // + "Member"                            + ", "
+                            + "Leader" + ", " + "Member"                            + ", "
                             + "NEET Members" + ", "
                             // + "Lonely leaders"                    + ", " + "Lonely members"                    + ", "
                             // + "Accompanied leaders"               + ", " + "Accompanied members"               + ", "
@@ -359,7 +359,8 @@ public class OutPut implements SetParam {
                                 + (double)communicationDelayArray[i] / EXECUTION_TIMES + ", "
                                 + (double)messagesArray[i] / EXECUTION_TIMES + ", "
                                 + (double) taskExecutionTimeArray[i] / EXECUTION_TIMES + ", "
-                                + (double)leaderNumArray[i] / EXECUTION_TIMES + ", "
+                                + (double)leaderNumArray[i]   / EXECUTION_TIMES + ", "
+                                + (double) memberNumArray[i]  / EXECUTION_TIMES + ", "
                                 + (double)neetMembersArray[i] / EXECUTION_TIMES + ", "
                                 + (double)(reciprocalistsArray[i] - reciprocalMembersArray[i]) / EXECUTION_TIMES + ", "
                                 + (double)reciprocalMembersArray[i] / EXECUTION_TIMES + ", "
@@ -1043,6 +1044,35 @@ public class OutPut implements SetParam {
                     pw.print(delays[i][j] + ", ");
                 }
                 pw.println();
+            }
+            pw.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e2) {
+            e2.printStackTrace();
+        }
+    }
+    static void writeLastRoleDegree(List<Agent> agents) {
+        FileWriter fw;
+        BufferedWriter bw;
+        PrintWriter pw;
+        try {
+            String currentPath = System.getProperty("user.dir");
+            Date date = new Date();
+            SimpleDateFormat sdf1 = new SimpleDateFormat(",yyyy:MM:dd,HH:mm:ss");
+            fw = new FileWriter(currentPath + "/out/results/roleFitness" + sdf1.format(date) + ".csv", false);
+            bw = new BufferedWriter(fw);
+            pw = new PrintWriter(bw);
+
+/*            pw.println("delay" + ", " + " count ");
+            for (int i = 1; i < MAX_DELAY + 1; i++) {
+                pw.println(i + ", " + dCounts[i] / 2);
+            }
+            pw.println();
+// */
+            pw.println("id, e_leader, e_member");
+            for(Agent agent: agents){
+                pw.println(agent.id + ", " + agent.e_leader + ", " + agent.e_member);
             }
             pw.close();
         } catch (FileNotFoundException e) {

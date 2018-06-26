@@ -7,7 +7,8 @@ import java.io.*;
 import java.util.*;
 
 public class Manager implements SetParam {
-    private static Strategy strategy = new PM2withRoleFixed();      // ICA2018における提案手法    //    private static Strategy strategy = new ProposedMethodForSingapore();
+//    private static Strategy strategy = new PM2withRoleFixed();      // ICA2018における提案手法    //    private static Strategy strategy = new ProposedMethodForSingapore();
+    private static Strategy strategy = new PM2();      // ICA2018における提案手法    //    private static Strategy strategy = new ProposedMethodForSingapore();
 
     static private long _seed;
     private static Random _randSeed;
@@ -150,6 +151,7 @@ public class Manager implements SetParam {
 //            OutPut.writeDelaysAndRels(delays, agents, strategy);
             if (CHECK_RELATIONSHIPS) OutPut.writeGraphInformationX(agents, strategy);
 // */
+            if(CHECK_LAST_ROLE_DEGREE) OutPut.writeLastRoleDegree(agents);
             if (CHECK_Eleader_Emember) pw.close();
             br.close();
         } catch (FileNotFoundException e) {
