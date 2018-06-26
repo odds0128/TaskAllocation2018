@@ -405,11 +405,18 @@ public class PM2 implements Strategy, SetParam {
                 }
             }
         }
+        // 信頼度を更新したら改めて信頼エージェントを設定する
         List<Agent> tmp = new ArrayList<>();
         Agent ag;
+        double threshold;
+        if( agent.role == LEADER ){
+            threshold = agent.threshold_for_reciprocity_as_leader;
+        }else{
+            threshold = agent.threshold_for_reciprocity_as_member;
+        }
         for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
             ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > agent.threshold_for_reciprocity_as_member) {
+            if (agent.reliabilities[ag.id] > threshold) {
                 tmp.add(ag);
             } else {
                 break;
@@ -433,11 +440,18 @@ public class PM2 implements Strategy, SetParam {
             if (temp < 0) agent.reliabilities[i] = 0;
             else agent.reliabilities[i] = temp;
         }
+        // 信頼度を更新したら改めて信頼エージェントを設定する
         List<Agent> tmp = new ArrayList<>();
         Agent ag;
+        double threshold;
+        if( agent.role == LEADER ){
+            threshold = agent.threshold_for_reciprocity_as_leader;
+        }else{
+            threshold = agent.threshold_for_reciprocity_as_member;
+        }
         for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
             ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > agent.threshold_for_reciprocity_as_member) {
+            if (agent.reliabilities[ag.id] > threshold) {
                 tmp.add(ag);
             } else {
                 break;

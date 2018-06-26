@@ -156,6 +156,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
             for (Agent tm : leader.teamMembers) {
                 teamHistory[leader.id].put(tm, new AllocatedSubTask(leader.preAllocations.get(tm), Manager.getTicks()));
                 leader.sendMessage(leader, tm, RESULT, leader.preAllocations.get(tm));
+
                 leader.agentsCommunicatingWith.add(tm);
             }
             Manager.finishTask(leader);
@@ -388,7 +389,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
          信頼エージェントの更新
          信頼度rankingを更新し, 上からMAX_REL_AGENTS分をrelAgentに放り込む
      //   */
-        // 信頼度が下がった場合と上がった場合で比較の対象を変える
+        // 信頼度が下がった場合と上がった場合で比較gtの対象を変える
         // 上がった場合は順位が上のやつと比較して
         if (evaluation > 0) {
             int index = agent.inTheList(target, agent.relRanking) - 1;    // targetの現在順位の上を持ってくる
@@ -422,9 +423,15 @@ public class PM2withRoleFixed implements Strategy, SetParam {
         // 信頼度を更新したら改めて信頼エージェントを設定する
         List<Agent> tmp = new ArrayList<>();
         Agent ag;
+        double threshold;
+        if( agent.role == LEADER ){
+            threshold = agent.threshold_for_reciprocity_as_leader;
+        }else{
+            threshold = agent.threshold_for_reciprocity_as_member;
+        }
         for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
             ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > agent.threshold_for_reciprocity_as_member) {
+            if (agent.reliabilities[ag.id] > threshold) {
                 tmp.add(ag);
             } else {
                 break;
@@ -448,11 +455,19 @@ public class PM2withRoleFixed implements Strategy, SetParam {
             if (temp < 0) agent.reliabilities[i] = 0;
             else agent.reliabilities[i] = temp;
         }
+
+        // 信頼度を更新したら改めて信頼エージェントを設定する
         List<Agent> tmp = new ArrayList<>();
         Agent ag;
+        double threshold;
+        if( agent.role == LEADER ){
+            threshold = agent.threshold_for_reciprocity_as_leader;
+        }else{
+            threshold = agent.threshold_for_reciprocity_as_member;
+        }
         for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
             ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > agent.threshold_for_reciprocity_as_member) {
+            if (agent.reliabilities[ag.id] > threshold) {
                 tmp.add(ag);
             } else {
                 break;
@@ -486,15 +501,22 @@ public class PM2withRoleFixed implements Strategy, SetParam {
                 }
             }
         }
+//        if( agent.id == 211 && Manager.getTicks() > 5000 ){
+//            System.out.print("");
+//        }
 
-        System.out.println(agent.relRanking);
-
-        // 信頼エージェントの更新
+        // 信頼度を更新したら改めて信頼エージェントを設定する
         List<Agent> tmp = new ArrayList<>();
         Agent ag;
+        double threshold;
+        if( agent.role == LEADER ){
+            threshold = agent.threshold_for_reciprocity_as_leader;
+        }else{
+            threshold = agent.threshold_for_reciprocity_as_member;
+        }
         for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
             ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > agent.threshold_for_reciprocity_as_member) {
+            if (agent.reliabilities[ag.id] > threshold) {
                 tmp.add(ag);
             } else {
                 break;
@@ -564,14 +586,12 @@ public class PM2withRoleFixed implements Strategy, SetParam {
         if (ag.phase == PROPOSITION || ag.phase == EXECUTION) {
             for (int i = 0; i < size; i++) {
                 m = ag.messages.remove(0);
-                ag.agentsCommunicatingWith.remove(m.getFrom());
                 ag.sendNegative(ag, m.getFrom(), m.getMessageType(), m.getSubTask());
             }
             // メンバでWAITING → PROPOSALを期待している
         } else if (ag.phase == WAITING) {
             for (int i = 0; i < size; i++) {
                 m = ag.messages.remove(0);
-                ag.agentsCommunicatingWith.remove(m.getFrom());
                 // PROPOSALで, 要求されているリソースを自分が持つならmessagesに追加
                 if (m.getMessageType() == PROPOSAL && ag.res[m.getResType()] != 0) {
                     ag.messages.add(m);
@@ -583,7 +603,6 @@ public class PM2withRoleFixed implements Strategy, SetParam {
         else if (ag.phase == REPORT) {
             for (int i = 0; i < size; i++) {
                 m = ag.messages.remove(0);
-                ag.agentsCommunicatingWith.remove(m.getFrom());
                 Agent from = m.getFrom();
                 if (m.getMessageType() == REPLY && ag.inTheList(from, ag.candidates) > -1) ag.replies.add(m);
                 else ag.sendNegative(ag, m.getFrom(), m.getMessageType(), m.getSubTask());
@@ -592,7 +611,6 @@ public class PM2withRoleFixed implements Strategy, SetParam {
         } else if (ag.phase == RECEPTION) {
             for (int i = 0; i < size; i++) {
                 m = ag.messages.remove(0);
-                ag.agentsCommunicatingWith.remove(m.getFrom());
                 if (m.getMessageType() == RESULT && m.getFrom() == ag.leader) {
                     ag.messages.add(m);
                     // 違かったらsendNegative
