@@ -63,8 +63,8 @@ public class PM2withRoleFixed implements Strategy, SetParam {
         } else {
             Agent candidate;
             for (int i = 0; i < leader.candidates.size(); i++) {
-                if (leader.candidates.get(i) != null) {
-                    candidate = leader.candidates.get(i);
+                candidate = leader.candidates.get(i);
+                if (candidate != null) {
                     leader.proposalNum++;
                     leader.agentsCommunicatingWith.add(candidate);
                     leader.sendMessage(leader, candidate, PROPOSAL, leader.ourTask.subTasks.get(i % leader.restSubTask));
@@ -389,7 +389,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
          信頼エージェントの更新
          信頼度rankingを更新し, 上からMAX_REL_AGENTS分をrelAgentに放り込む
      //   */
-        // 信頼度が下がった場合と上がった場合で比較gtの対象を変える
+        // 信頼度が下がった場合と上がった場合で比較の対象を変える
         // 上がった場合は順位が上のやつと比較して
         if (evaluation > 0) {
             int index = agent.inTheList(target, agent.relRanking) - 1;    // targetの現在順位の上を持ってくる
