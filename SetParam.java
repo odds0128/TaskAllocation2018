@@ -5,7 +5,7 @@
 
 interface SetParam {
     // 環境の設定( 変更していく部分 )
-    int EXECUTION_TIMES = 20;             // 実験の回数
+    int EXECUTION_TIMES = 10;             // 実験の回数
     int MAX_TURN_NUM    = 500000;         // 一回の実験のターン数
     int WRITING_TIMES   = 5000;           // データのファイルへの出力回数
     boolean CHECK_RELATIONSHIPS    = false;  // エージェント関係の協調関係を録るか
@@ -36,14 +36,14 @@ interface SetParam {
     int SNAPSHOT_TIME = 200000;
 
     int INITIAL_TASK_NUM = 0;       // 最初のタスク数
-    int TASK_QUEUE_SIZE  = 100;     // タスクキューのサイズ
-    int AGENT_NUM = 500;            // エージェントの数
+    int TASK_QUEUE_SIZE  = 500;     // タスクキューのサイズ
+    int AGENT_NUM = 2000;            // エージェントの数
 
     // トーラスを考えた時に，中心が自分であるほうが考えやすいので，一片の長さは奇数にする
-    int MAX_X    = 51, MAX_Y = 51;
+    int MAX_X    = 101, MAX_Y = 101;
     int MAX_DELAY = 5;
 
-    double ADDITIONAL_TASK_NUM  = 7.5;        // タスクを追加するタイミングで, タスクキューに追加するタスクの個数(=λ)
+    double ADDITIONAL_TASK_NUM  = 30;        // タスクを追加するタイミングで, タスクキューに追加するタスクの個数(=λ)
     int RESOURCE_TYPES = 3;
     int MAX_AGENT_RESOURCE_SIZE   = 5;
     int MIN_AGENT_RESOURCE_SIZE   = 0;
@@ -61,8 +61,8 @@ interface SetParam {
     double INITIAL_VALUE_OF_DEC =  0;
     double INITIAL_VALUE_OF_DSL =  0.5;
     double INITIAL_VALUE_OF_DSM =  0.5;
-    double α = 0.01;
-    double γ_r = 0.000002;
+    double α = 0.05;
+    double γ_r = 0.00005;
     double THRESHOLD_FOR_ROLE_RECIPROCITY   = 0;
     double THRESHOLD_FOR_RECIPROCITY_FROM_LEADER = 1.5;
     int BIAS = 0;
