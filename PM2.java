@@ -30,6 +30,7 @@ public class PM2 implements Strategy, SetParam {
     }
 
     public void actAsLeader(Agent agent) {
+        agent.relAgents = decreaseDECduringCommunication(agent, agent.agentsCommunicatingWith);
         setPrinciple(agent);
         if (agent.phase == PROPOSITION) proposeAsL(agent);
         else if (agent.phase == REPORT) reportAsL(agent);
@@ -38,6 +39,7 @@ public class PM2 implements Strategy, SetParam {
     }
 
     public void actAsMember(Agent agent) {
+        agent.relAgents = decreaseDECduringCommunication(agent, agent.agentsCommunicatingWith);
         setPrinciple(agent);
         if (agent.phase == REPLY) replyAsM(agent);
         else if (agent.phase == RECEPTION) receiveAsM(agent);
@@ -202,7 +204,7 @@ public class PM2 implements Strategy, SetParam {
             } else {
                 agent.sendMessage(agent, agent.leader, DONE, 0);
                 agent.required[agent.mySubTask.resType]++;
-                agent.relAgents = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / (double) (Manager.getTicks() - agent.start));
+                agent.relAgents = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / (double) agent.calcExecutionTime(agent, agent.mySubTask));
                 if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
                     agent.workWithAsM[agent.leader.id]++;
                     agent.didTasksAsMember++;
@@ -467,6 +469,56 @@ public class PM2 implements Strategy, SetParam {
         return tmp;
     }
 
+    private List<Agent> decreaseDECduringCommunication(Agent agent, List<Agent> targets){
+        double temp;
+        int target_id = 0;
+
+        // 通信対象の信頼度の更新
+        for (Agent target: targets) {
+            target_id = target.id;
+            temp = agent.reliabilities[target_id] - γ;
+            if (temp < 0) agent.reliabilities[target_id] = 0;
+            else agent.reliabilities[target_id] = temp;
+
+            // 信頼ランキングの更新
+            int index = agent.inTheList(target, agent.relRanking) + 1;    // targetの現在順位の下を持ってくる
+            while (index < AGENT_NUM - 1) {
+                // 順位が下のやつよりも信頼度が低くなったなら
+                if (agent.reliabilities[agent.relRanking.get(index).id] > agent.reliabilities[target.id]) {
+                    Agent tmp = agent.relRanking.get(index);
+                    agent.relRanking.set(index, target);
+                    agent.relRanking.set(index - 1, tmp);
+                    index++;
+                } else {
+                    break;
+                }
+            }
+        }
+//        if( agent.id == 211 && Manager.getTicks() > 5000 ){
+//            System.out.print("");
+//        }
+
+        // 信頼度を更新したら改めて信頼エージェントを設定する
+        List<Agent> tmp = new ArrayList<>();
+        Agent ag;
+        double threshold;
+        if( agent.role == LEADER ){
+            threshold = agent.threshold_for_reciprocity_as_leader;
+        }else{
+            threshold = agent.threshold_for_reciprocity_as_member;
+        }
+        for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
+            ag = agent.relRanking.get(j);
+            if (agent.reliabilities[ag.id] > threshold) {
+                tmp.add(ag);
+            } else {
+                break;
+            }
+        }
+        return tmp;
+
+    }
+
     private void setPrinciple(Agent agent) {
         if (agent.role == MEMBER) {
             if (agent.relAgents.size() > 0 && agent.e_member >= THRESHOLD_FOR_ROLE_RECIPROCITY) {
@@ -511,7 +563,7 @@ public class PM2 implements Strategy, SetParam {
                 // そのメンバにサブタスクを送ってからリーダーがその完了報告を受けるまでの時間
                 // すなわちrt = "メンバのサブタスク実行時間 + メッセージ往復時間"
                 AllocatedSubTask as = teamHistory[ag.id].remove(m.getFrom());
-                int rt = Manager.getTicks() - as.getAllocatedTime();
+                int rt = ag.calcExecutionTime(m.getFrom(), as.getSt());
                 int reward = as.getRequiredResources();
                 //                System.out.println(rt);
                 ag.relAgents = renewRel(ag, m.getFrom(), (double) reward / rt);

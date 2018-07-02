@@ -5,7 +5,7 @@
 
 interface SetParam {
     // 環境の設定( 変更していく部分 )
-    int EXECUTION_TIMES = 10;             // 実験の回数
+    int EXECUTION_TIMES = 1;             // 実験の回数
     int MAX_TURN_NUM    = 500000;         // 一回の実験のターン数
     int WRITING_TIMES   = 5000;           // データのファイルへの出力回数
     boolean CHECK_RELATIONSHIPS    = true;  // エージェント関係の協調関係を録るか
@@ -13,9 +13,9 @@ interface SetParam {
     boolean CHECK_INTERIM_RELATIONSHIPS    = false;  // エージェント関係の協調関係のスナップショットを録るか
     boolean CHECK_INITIATION       = false;  // エージェントやタスクの初期設定を確認するか
     boolean CHECK_RESULTS          = true;  // チーム編成成功数などを確認するか
-    boolean CHECK_AGENTS           = false;   // エージェントの情報を確認するか
+    boolean CHECK_AGENTS           = true;   // エージェントの情報を確認するか
     boolean CHECK_Eleader_Emember  = false;
-    boolean CHECK_LAST_ROLE_DEGREE = true;
+    boolean CHECK_LAST_ROLE_DEGREE = false;
 
     boolean IS_HEAVY_TASKS_HAPPENS = false;
     int     START_HAPPENS          = 300000;
@@ -34,7 +34,7 @@ interface SetParam {
     int  COALITION_CHECK_SPAN = 5000;          // 協調関係ができているか確認するための最後の方のターム
     double THRESHOLD_FOR_COALITION = 10;
     int THRESHOLD_FOR_NEET = 5000;
-    double THRESHOLD_FOR_RECIPROCITY_RATE = 0.7;
+    double THRESHOLD_FOR_RECIPROCITY_RATE = 0.5;
     int SNAPSHOT_TIME = 200000;
 
     int INITIAL_TASK_NUM = 0;       // 最初のタスク数
