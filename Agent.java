@@ -259,9 +259,9 @@ public class Agent implements SetParam , Cloneable{
         }
 
         if (role == LEADER) {
-            if (success == 1) {
-                didTasksAsLeader++;
-            }
+//            if (success == 1) {
+//                didTasksAsLeader++;
+//            }
             _leader_num--;
             if (ourTask != null) Manager.disposeTask(this);
             candidates.clear();
@@ -273,7 +273,7 @@ public class Agent implements SetParam , Cloneable{
             proposalNum = 0;
             replyNum = 0;
         } else {
-            if (success == 1) didTasksAsMember++;
+//            if (success == 1) didTasksAsMember++;
             _member_num--;
         }
         role_renewal_counter=0;
@@ -316,7 +316,7 @@ public class Agent implements SetParam , Cloneable{
         // もし一つもなかったら仕方ないからなしでreturn
         if (tempIndex == -1) {
             restSubTask = ourTask.subTaskNum;
-            executionTime = 0;
+            executionTime = -1;
             return;
         }
         // 一個でもあったらどれかを選んで自分のサブタスクとする

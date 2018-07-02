@@ -787,25 +787,28 @@ public class OutPut implements SetParam {
                 else _singleton.writeCell(row, colNumber++, style_header, "Target Node id");
 
                 if (i == 0) {
-                    _singleton.writeCell(row, colNumber++, style_header, " x-coordinate ");
-                    _singleton.writeCell(row, colNumber++, style_header, " y-coordinate ");
-                    _singleton.writeCell(row, colNumber++, style_header, " leader id");
-                    _singleton.writeCell(row, colNumber++, style_header, " delay to leader ");
+                    _singleton.writeCell(row, colNumber++, style_header, "x-coordinate ");
+                    _singleton.writeCell(row, colNumber++, style_header, "y-coordinate ");
+                    _singleton.writeCell(row, colNumber++, style_header, "leader id");
+                    _singleton.writeCell(row, colNumber++, style_header, "delay to leader ");
 //                    _singleton.writeCell(row, colNumber++, style_header, " is lonely or not");
 //                    _singleton.writeCell(row, colNumber++, style_header, " is accompanied or not");
-                    for (int j = 0; j < RESOURCE_TYPES; j++) {
-                        _singleton.writeCell(row, colNumber++, style_header, " Resources " + j);
-                        _singleton.writeCell(row, colNumber++, style_header, " Required " + j);
-                        _singleton.writeCell(row, colNumber++, style_header, " Allocated " + j);
-                    }
-                    _singleton.writeCell(row, colNumber++, style_header, " Excellence ");
+//                    for (int j = 0; j < RESOURCE_TYPES; j++) {
+//                        _singleton.writeCell(row, colNumber++, style_header, " Resources " + j);
+//                        _singleton.writeCell(row, colNumber++, style_header, " Required " + j);
+//                        _singleton.writeCell(row, colNumber++, style_header, " Allocated " + j);
+//                    }
+//                    _singleton.writeCell(row, colNumber++, style_header, " Excellence ");
+                    _singleton.writeCell(row, colNumber++, style_header, "Validated ticks");
+                    _singleton.writeCell(row, colNumber++, style_header, "Phase");
                     _singleton.writeCell(row, colNumber++, style_header, "Did tasks as leader in last period");
                     _singleton.writeCell(row, colNumber++, style_header, "Did tasks as member in last period");
-                    _singleton.writeCell(row, colNumber++, style_header, " e_leader");
-                    _singleton.writeCell(row, colNumber++, style_header, " e_member ");
+                    _singleton.writeCell(row, colNumber++, style_header, "Role");
+                    _singleton.writeCell(row, colNumber++, style_header, "e_leader");
+                    _singleton.writeCell(row, colNumber++, style_header, "e_member ");
                 } else {
-                    _singleton.writeCell(row, colNumber++, style_header, " length ");
-                    _singleton.writeCell(row, colNumber++, style_header, " times ");
+                    _singleton.writeCell(row, colNumber++, style_header, "length ");
+                    _singleton.writeCell(row, colNumber++, style_header, "times ");
                     _singleton.writeCell(row, colNumber++, style_header, "Target Node id again");
                 }
 
@@ -857,16 +860,43 @@ public class OutPut implements SetParam {
                         _singleton.writeCell(row, colNumber++, style_int,agent.isLonely);
                         _singleton.writeCell(row, colNumber++, style_int,agent.isAccompanied);
 // */
-                        for (int j = 0; j < RESOURCE_TYPES; j++) {
-                            _singleton.writeCell(row, colNumber++, style_int, agent.res[j]);
-                            _singleton.writeCell(row, colNumber++, style_int, agent.required[j]);
-                            if (agent.relRanking.size() > 0)
-                                _singleton.writeCell(row, colNumber++, style_int, agent.allocated[agent.relRanking.get(0).id][j]);
-                            else _singleton.writeCell(row, colNumber++, style_int, -1);
+//                        for (int j = 0; j < RESOURCE_TYPES; j++) {
+//                            _singleton.writeCell(row, colNumber++, style_int, agent.res[j]);
+//                            _singleton.writeCell(row, colNumber++, style_int, agent.required[j]);
+//                            if (agent.relRanking.size() > 0)
+//                                _singleton.writeCell(row, colNumber++, style_int, agent.allocated[agent.relRanking.get(0).id][j]);
+//                            else _singleton.writeCell(row, colNumber++, style_int, -1);
+//                        }
+//                        _singleton.writeCell(row, colNumber++, style_double, agent.excellence);
+                        _singleton.writeCell(row, colNumber++, style_int, agent.validatedTicks);
+                        String phase;
+                        if( agent.phase == SELECT_ROLE ){
+                            phase = "select role";
+                        }else if( agent.phase == PROPOSITION ){
+                            phase = "proposition";
+                        }else if( agent.phase == WAITING ){
+                            phase = "waiting";
+                        }else if( agent.phase == REPORT ){
+                            phase = "report";
+                        }else if( agent.phase == RECEPTION ){
+                            phase = "reception";
+                        }else if( agent.phase == EXECUTION ){
+                            phase = "execution";
+                        }else{
+                            phase = "none";
                         }
-                        _singleton.writeCell(row, colNumber++, style_double, agent.excellence);
+                        _singleton.writeCell(row, colNumber++, style_string, phase);
                         _singleton.writeCell(row, colNumber++, style_int, agent.didTasksAsLeader);
                         _singleton.writeCell(row, colNumber++, style_int, agent.didTasksAsMember);
+                        String role;
+                        if( agent.role == LEADER ){
+                            role = "leader";
+                        }else if( agent.role == MEMBER ){
+                            role = "member";
+                        }else{
+                            role = "JOHN DOE";
+                        }
+                        _singleton.writeCell(row, colNumber++, style_string, role);
                         _singleton.writeCell(row, colNumber++, style_double, agent.e_leader);
                         _singleton.writeCell(row, colNumber++, style_double, agent.e_member);
 

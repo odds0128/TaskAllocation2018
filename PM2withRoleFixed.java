@@ -207,7 +207,9 @@ public class PM2withRoleFixed implements Strategy, SetParam {
                 if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
                     agent.workWithAsM[agent.leader.id]++;
                     agent.didTasksAsMember++;
+                    System.out.println("passed");
                 }
+                System.out.println("member: " + agent._coalition_check_end_time);
             }
             // 自分のサブタスクが終わったら役割適応度を1で更新して非活性状態へ
             inactivate(agent, 1);
@@ -562,7 +564,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
         } else if (ag.role == MEMBER) {
             ag.phase = mPHASE1;
             ag.role = MEMBER;
-            ag.didTasksAsMember += success;
+//            ag.didTasksAsMember += success;
         }
         ag.mySubTask = null;
         ag.messages.clear();

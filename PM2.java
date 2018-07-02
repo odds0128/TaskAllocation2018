@@ -159,7 +159,7 @@ public class PM2 implements Strategy, SetParam {
                 leader.sendMessage(leader, tm, RESULT, null);
             }
             Manager.disposeTask(leader);
-            leader.inactivate(-1);
+            leader.inactivate(0);
             return;
         }
     }
@@ -186,7 +186,11 @@ public class PM2 implements Strategy, SetParam {
 
     private void execute(Agent agent) {
         agent.executionTime--;
+        assert agent.executionTime >= 0 : "Illegal execution time";
         agent.validatedTicks = Manager.getTicks();
+//        if (agent.id == 2 && Manager.getTicks() > 490000) {
+//            System.out.print(" ");
+//        }
         if (agent.executionTime == 0) {
             if (agent.role == LEADER) {
                 if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
@@ -195,13 +199,16 @@ public class PM2 implements Strategy, SetParam {
                     }
                     agent.didTasksAsLeader++;
                 }
+//                System.out.println("leader: " + agent._coalition_check_end_time);
             } else {
                 agent.sendMessage(agent, agent.leader, DONE, 0);
                 agent.required[agent.mySubTask.resType]++;
                 agent.relAgents = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / (double) (Manager.getTicks() - agent.start));
                 if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
                     agent.workWithAsM[agent.leader.id]++;
+                    agent.didTasksAsMember++;
                 }
+//                System.out.println("member: " + agent._coalition_check_end_time);
             }
             // 自分のサブタスクが終わったら役割適応度を1で更新して非活性状態へ
             agent.inactivate(1);
@@ -235,7 +242,7 @@ public class PM2 implements Strategy, SetParam {
         // リーダーにとっての信頼エージェントは閾値を超えたエージェント全てと言える
         for (Agent relAg : leader.relRanking) {
             SubTask st;
-            if( leader.reliabilities[relAg.id] > leader.threshold_for_reciprocity_as_leader ) {
+            if (leader.reliabilities[relAg.id] > leader.threshold_for_reciprocity_as_leader) {
                 // 上位からサブタスクを持って来て
                 // そのサブタスクが上位の信頼エージェントに可能かつまださらに上位の信頼エージェントに割り振られていないなら
                 // そいつに割り当てることにしてそいつをexceptionsに，そのサブタスクをskipsに入れる
@@ -248,7 +255,7 @@ public class PM2 implements Strategy, SetParam {
                         break;
                     }
                 }
-            }else{
+            } else {
                 break;
             }
         }
