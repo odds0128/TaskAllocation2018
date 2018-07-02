@@ -375,7 +375,9 @@ public class PM2withoutRoleRenewal implements Strategy, SetParam {
 //        if( Manager.getTicks() % 10000 == 0 ) System.out.println( evaluation );
         // 信頼度の更新式
         agent.reliabilities[target.id] = temp * (1.0 - α) + α * evaluation;
-        assert agent.reliabilities[target.id] <= 1.0 : "Illegal reliability renewal ... Turn: " + Manager.getTicks() + ", ID: " + agent.id + ", target: " + target.id + ", change: " + temp + " → " + agent.reliabilities[target.id];
+        assert agent.reliabilities[target.id] <= 1.0 : "Illegal reliability renewal ... Turn: "
+                + Manager.getTicks() + ", ID: " + agent.id + ", target: " + target.id
+                + ", change: " + temp + " → " + agent.reliabilities[target.id];
 
         /*
          信頼エージェントの更新
@@ -497,7 +499,7 @@ public class PM2withoutRoleRenewal implements Strategy, SetParam {
                 // そのメンバにサブタスクを送ってからリーダーがその完了報告を受けるまでの時間
                 // すなわちrt = "メンバのサブタスク実行時間 + メッセージ往復時間"
                 AllocatedSubTask as = teamHistory[ag.id].remove(m.getFrom());
-                int rt = Manager.getTicks() - as.getAllocatedTime();
+                int rt = ag.calcExecutionTime(m.getFrom(), as.getSt());
                 int reward = as.getRequiredResources();
                 //                System.out.println(rt);
                 ag.relAgents = renewRel(ag, m.getFrom(), (double) reward / rt);

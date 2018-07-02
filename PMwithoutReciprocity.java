@@ -4,59 +4,33 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * ProposedMethodForSingapore クラス
- * サブタスクの要求リソースに量を設けたことにより，"報酬"を適切に考える必要が生じた
- * そこで報酬はサブタスクの要求リソースに依存するものとし，信頼度更新式 e^i_j = (1-α)e^i_j + δ * α を
- * 1. j(自分)がメンバでi(相手)がリーダーの場合，
- * 　a. 成功(サブタスク割り当て)時　　　　　　　　δ = そのサブタスクの要求リソース / 実行時間
- * 　b. 失敗(サブタスクみ割り当て)時　　　　　　　δ = 0
- * 2. j(自分)がリーダーでi(相手)がメンバの場合，
- * 　a. 成功(チーム編成成功)後，終了連絡受理時　　δ = そのサブタスクの要求リソース / 応答時間(= メッセージ往復時間 + サブタスク実行時間)
- * 　b. 失敗(チーム参加要請拒否受理)時，　　　　　δ = 0
- * によって更新する．
- * 役割更新機構あり
- * メンバが互恵かどうかを気にするバージョン
+ * PM2withoutReciprocity クラス
+ * PM2withRoleFixedからメンバリーダー共に互恵的行動を無くした手法
  */
 
 
-public class PM2withRoleFixed implements Strategy, SetParam {
+public class PMwithoutReciprocity implements Strategy, SetParam {
     static final double γ = γ_r;
     Map<Agent, AllocatedSubTask>[] teamHistory = new HashMap[AGENT_NUM];
 
-    PM2withRoleFixed() {
+    PMwithoutReciprocity() {
         for (int i = 0; i < AGENT_NUM; i++) {
             teamHistory[i] = new HashMap<>();
         }
     }
 
     public void actAsLeader(Agent agent) {
-        agent.relAgents = decreaseDECduringCommunication(agent, agent.agentsCommunicatingWith);
-        setPrinciple(agent);
         if (agent.phase == lPHASE1) proposeAsL(agent);
         else if (agent.phase == lPHASE2) reportAsL(agent);
         else if (agent.phase == PHASE3) execute(agent);
-        agent.relAgents = decreaseDEC(agent);
+        decreaseDEC(agent);
     }
 
     public void actAsMember(Agent agent) {
-//        if( Manager.getTicks() > 5000 ){
-//            for( int i = 0; i < AGENT_NUM; i++ ){
-//                if( agent.reliabilities[i] != 0 ){
-//                    System.out.println("id: " + i + ", rel: " + agent.reliabilities[i]);
-//                }
-//            }
-//            System.out.println(agent.relRanking.subList(0,5));
-//            System.out.println();
-//
-//        }
-
-
-        agent.relAgents = decreaseDECduringCommunication(agent, agent.agentsCommunicatingWith);
-        setPrinciple(agent);
         if (agent.phase == mPHASE1) replyAsM(agent);
         else if (agent.phase == mPHASE2) receiveAsM(agent);
         else if (agent.phase == PHASE3) execute(agent);
-        agent.relAgents = decreaseDEC(agent);
+        decreaseDEC(agent);
     }
 
     private void proposeAsL(Agent leader) {
@@ -73,18 +47,14 @@ public class PM2withRoleFixed implements Strategy, SetParam {
             inactivate(leader, 0);
             return;
         } else {
-            Agent candidate;
             for (int i = 0; i < leader.candidates.size(); i++) {
-                candidate = leader.candidates.get(i);
-                if (candidate != null) {
+                if (leader.candidates.get(i) != null) {
                     leader.proposalNum++;
-                    leader.agentsCommunicatingWith.add(candidate);
-                    leader.sendMessage(leader, candidate, PROPOSAL, leader.ourTask.subTasks.get(i % leader.restSubTask));
+                    leader.sendMessage(leader, leader.candidates.get(i), PROPOSAL, leader.ourTask.subTasks.get(i % leader.restSubTask));
                 }
             }
         }
-        leader.phase = lPHASE2;
-        leader.validatedTicks = Manager.getTicks();
+        nextPhase(leader);  // 次のフェイズへ
     }
 
     private void replyAsM(Agent member) {
@@ -94,15 +64,13 @@ public class PM2withRoleFixed implements Strategy, SetParam {
             member.joined = true;
 //            System.out.println("ID: "+ member.id + ", my leader is " + member.leader.id );
             member.sendMessage(member, member.leader, REPLY, ACCEPT);
-            member.agentsCommunicatingWith.add(member.leader);
         }
         // どのリーダーからの要請も受けないのならinactivate
         // どっかには参加するのなら交渉2フェイズへ
         if (member.joined) {
             member.totalOffers++;
             member.start = Manager.getTicks();
-            member.phase = mPHASE2;
-            member.validatedTicks = Manager.getTicks();
+            nextPhase(member);
         }
     }
 
@@ -110,7 +78,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
         if (leader.replies.size() != leader.proposalNum) return;
 
         Agent from;
-       for (Message reply : leader.replies) {
+        for (Message reply : leader.replies) {
             // 拒否ならそのエージェントを候補リストから外し, 信頼度を0で更新する
             if (reply.getReply() != ACCEPT) {
                 from = reply.getFrom();
@@ -168,12 +136,9 @@ public class PM2withRoleFixed implements Strategy, SetParam {
             for (Agent tm : leader.teamMembers) {
                 teamHistory[leader.id].put(tm, new AllocatedSubTask(leader.preAllocations.get(tm), Manager.getTicks()));
                 leader.sendMessage(leader, tm, RESULT, leader.preAllocations.get(tm));
-
-                leader.agentsCommunicatingWith.add(tm);
             }
             Manager.finishTask(leader);
-            leader.phase = PHASE3;
-            leader.validatedTicks = Manager.getTicks();
+            nextPhase(leader);
             return;
         }
         // 未割り当てのサブタスクが残っていれば失敗
@@ -182,7 +147,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
                 leader.sendMessage(leader, tm, RESULT, null);
             }
             Manager.disposeTask(leader);
-            inactivate(leader,0);
+            inactivate(leader, 0);
             return;
         }
     }
@@ -198,9 +163,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
         if (member.mySubTask != null) {
             member.allocated[member.leader.id][member.mySubTask.resType]++;
             member.executionTime = member.calcExecutionTime(member, member.mySubTask);
-            member.phase = PHASE3;
-            member.validatedTicks = Manager.getTicks();
-
+            nextPhase(member);
         }
         // サブタスクが割り当てられなかったら信頼度を0で更新し, inactivate
         else {
@@ -214,20 +177,14 @@ public class PM2withRoleFixed implements Strategy, SetParam {
         agent.validatedTicks = Manager.getTicks();
         if (agent.executionTime == 0) {
             if (agent.role == LEADER) {
-                if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
-                    for (Agent ag : agent.teamMembers) {
-                        agent.workWithAsL[ag.id]++;
-                    }
-                    agent.didTasksAsLeader++;
-                }
+                if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN)
+                    for (Agent ag : agent.teamMembers) agent.workWithAsL[ag.id]++;
             } else {
                 agent.sendMessage(agent, agent.leader, DONE, 0);
                 agent.required[agent.mySubTask.resType]++;
-                agent.relAgents = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / (double) agent.calcExecutionTime(agent, agent.mySubTask));
-                if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
+                agent.relAgents = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / (double) (Manager.getTicks() - agent.start));
+                if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN)
                     agent.workWithAsM[agent.leader.id]++;
-                    agent.didTasksAsMember++;
-                }
             }
             // 自分のサブタスクが終わったら役割適応度を1で更新して非活性状態へ
             inactivate(agent, 1);
@@ -244,51 +201,14 @@ public class PM2withRoleFixed implements Strategy, SetParam {
     public List<Agent> selectMembers(Agent leader, List<SubTask> subtasks) {
         List<Agent> memberCandidates = new ArrayList<>();
         Agent candidate = null;
-        List<SubTask> skips = new ArrayList<>();  // 互恵エージェントがいるために他のエージェントに要請を送らないサブタスクを格納
-
-        for (SubTask st : subtasks) {
-            for (int i = 0; i < RESEND_TIMES; i++) {
-                memberCandidates.add(null);
-            }
-        }
-
         List<Agent> exceptions = new ArrayList<>();
         for (Map.Entry<Agent, AllocatedSubTask> ex : teamHistory[leader.id].entrySet()) {
             exceptions.add(ex.getKey());
         }
         // この時点でtにはかつての仲間たちが入っている
-        // 先に信頼エージェントに対して割り当てを試みる
-        // リーダーにとっての信頼エージェントは閾値を超えたエージェント全てと言える
-        for (Agent relAg : leader.relRanking) {
-            SubTask st;
-            if( leader.reliabilities[relAg.id] > leader.threshold_for_reciprocity_as_leader ) {
-                // 上位からサブタスクを持って来て
-                // そのサブタスクが上位の信頼エージェントに可能かつまださらに上位の信頼エージェントに割り振られていないなら
-                // そいつに割り当てることにしてそいつをexceptionsに，そのサブタスクをskipsに入れる
-                for (int stIndex = 0; stIndex < subtasks.size(); stIndex++) {
-                    st = subtasks.get(stIndex);
-                    if (relAg.calcExecutionTime(relAg, st) > 0 && leader.inTheList(st, skips) < 0 && leader.inTheList(relAg, exceptions) < 0) {
-                        memberCandidates.set(stIndex, relAg);
-                        exceptions.add(relAg);
-                        skips.add(st);
-                        break;
-                    }
-                }
-            }else{
-                break;
-            }
-        }
-
         // 一つのタスクについてRESEND_TIMES周する
         for (int i = 0; i < RESEND_TIMES; i++) {
-            SubTask st;
-            for (int stIndex = 0; stIndex < subtasks.size(); stIndex++) {
-                st = subtasks.get(stIndex);
-                // すでにそのサブタスクを互恵エージェントに割り当てる予定ならやめて次のサブタスクへ
-                if (leader.inTheList(st, skips) >= 0) {
-                    continue;
-                }
-//                System.out.print(st);
+            for (SubTask st : subtasks) {
                 // 一つ目のサブタスク(報酬が最も高い)から割り当てていく
                 // 信頼度の一番高いやつから割り当てる
                 // εの確率でランダムに割り振る
@@ -320,7 +240,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
                 // 候補が見つかれば，チーム参加要請対象者リストに入れ，参加要請を送る
                 if (!candidate.equals(null)) {
                     exceptions.add(candidate);
-                    memberCandidates.set(stIndex + i * subtasks.size(), candidate);
+                    memberCandidates.add(candidate);
                 }
                 // 候補が見つからないサブタスクがあったら直ちにチーム編成を失敗とする
                 else {
@@ -337,7 +257,6 @@ public class PM2withRoleFixed implements Strategy, SetParam {
      * メンバがどのリーダーの要請を受けるかを判断する
      * 信頼エージェントのリストにあるリーダーエージェントからの要請を受ける
      */
-    // 互恵主義と合理主義のどちらかによって行動を変える
     public Agent selectLeader(Agent member, List<Message> messages) {
         int size = messages.size();
         Message message;
@@ -372,13 +291,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
                     member.sendMessage(member, from, REPLY, REJECT);
                 }
             }
-            if (member.principle == RATIONAL) {
-                myLeader = temp;
-            } else {
-                if (member.inTheList(temp, member.relAgents) > -1) {
-                    myLeader = temp;
-                } else member.sendMessage(member, temp, REPLY, REJECT);
-            }
+            myLeader = temp;
         }
         return myLeader;
     }
@@ -391,11 +304,13 @@ public class PM2withRoleFixed implements Strategy, SetParam {
      * @param agent
      */
     private List<Agent> renewRel(Agent agent, Agent target, double evaluation) {
+        assert evaluation <= 1 : "evaluation too big";
         assert !agent.equals(target) : "alert4";
         double temp = agent.reliabilities[target.id];
 //        if( Manager.getTicks() % 10000 == 0 ) System.out.println( evaluation );
         // 信頼度の更新式
         agent.reliabilities[target.id] = temp * (1.0 - α) + α * evaluation;
+        assert agent.reliabilities[target.id] <= 1.0 : "Illegal reliability renewal ... Turn: " + Manager.getTicks() + ", ID: " + agent.id + ", target: " + target.id + ", change: " + temp + " → " + agent.reliabilities[target.id];
 
         /*
          信頼エージェントの更新
@@ -432,24 +347,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
                 }
             }
         }
-        // 信頼度を更新したら改めて信頼エージェントを設定する
-        List<Agent> tmp = new ArrayList<>();
-        Agent ag;
-        double threshold;
-        if( agent.role == LEADER ){
-            threshold = agent.threshold_for_reciprocity_as_leader;
-        }else{
-            threshold = agent.threshold_for_reciprocity_as_member;
-        }
-        for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
-            ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > threshold) {
-                tmp.add(ag);
-            } else {
-                break;
-            }
-        }
-        return tmp;
+        return null;
     }
 
     /**
@@ -467,107 +365,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
             if (temp < 0) agent.reliabilities[i] = 0;
             else agent.reliabilities[i] = temp;
         }
-
-        // 信頼度を更新したら改めて信頼エージェントを設定する
-        List<Agent> tmp = new ArrayList<>();
-        Agent ag;
-        double threshold;
-        if( agent.role == LEADER ){
-            threshold = agent.threshold_for_reciprocity_as_leader;
-        }else{
-            threshold = agent.threshold_for_reciprocity_as_member;
-        }
-        for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
-            ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > threshold) {
-                tmp.add(ag);
-            } else {
-                break;
-            }
-        }
-        return tmp;
-    }
-
-    private List<Agent> decreaseDECduringCommunication(Agent agent, List<Agent> targets){
-        double temp;
-        int target_id = 0;
-
-        // 通信対象の信頼度の更新
-        for (Agent target: targets) {
-            target_id = target.id;
-            temp = agent.reliabilities[target_id] - γ;
-            if (temp < 0) agent.reliabilities[target_id] = 0;
-            else agent.reliabilities[target_id] = temp;
-
-            // 信頼ランキングの更新
-            int index = agent.inTheList(target, agent.relRanking) + 1;    // targetの現在順位の下を持ってくる
-            while (index < AGENT_NUM - 1) {
-                // 順位が下のやつよりも信頼度が低くなったなら
-                if (agent.reliabilities[agent.relRanking.get(index).id] > agent.reliabilities[target.id]) {
-                    Agent tmp = agent.relRanking.get(index);
-                    agent.relRanking.set(index, target);
-                    agent.relRanking.set(index - 1, tmp);
-                    index++;
-                } else {
-                    break;
-                }
-            }
-        }
-//        if( agent.id == 211 && Manager.getTicks() > 5000 ){
-//            System.out.print("");
-//        }
-
-        // 信頼度を更新したら改めて信頼エージェントを設定する
-        List<Agent> tmp = new ArrayList<>();
-        Agent ag;
-        double threshold;
-        if( agent.role == LEADER ){
-            threshold = agent.threshold_for_reciprocity_as_leader;
-        }else{
-            threshold = agent.threshold_for_reciprocity_as_member;
-        }
-        for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
-            ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > threshold) {
-                tmp.add(ag);
-            } else {
-                break;
-            }
-        }
-        return tmp;
-
-    }
-
-    private void setPrinciple(Agent agent) {
-        if (agent.role == MEMBER) {
-            if (agent.relAgents.size() > 0 && agent.e_member >= THRESHOLD_FOR_ROLE_RECIPROCITY) {
-                if (agent.principle == RATIONAL) {
-                    Agent._recipro_num++;
-                    Agent._rational_num--;
-                }
-                agent.principle = RECIPROCAL;
-            } else {
-                if (agent.principle == RECIPROCAL) {
-                    Agent._recipro_num--;
-                    Agent._rational_num++;
-                }
-                agent.principle = RATIONAL;
-            }
-        } else if (agent.role == LEADER) {
-            if (agent.relAgents.size() > 0 && agent.e_leader >= THRESHOLD_FOR_ROLE_RECIPROCITY) {
-                if (agent.principle == RATIONAL) {
-                    Agent._recipro_num++;
-                    Agent._rational_num--;
-                }
-                agent.principle = RECIPROCAL;
-            } else {
-                if (agent.principle == RECIPROCAL) {
-                    Agent._recipro_num--;
-                    Agent._rational_num++;
-                }
-                agent.principle = RATIONAL;
-            }
-        }
+        return null;
     }
 
     public void checkMessages(Agent ag) {
@@ -576,13 +374,12 @@ public class PM2withRoleFixed implements Strategy, SetParam {
         // メンバからの作業完了報告をチェックする
         for (int i = 0; i < size; i++) {
             m = ag.messages.remove(0);
-            ag.agentsCommunicatingWith.remove(m.getFrom());
             if (m.getMessageType() == DONE) {
                 // 「リーダーとしての更新式で」信頼度を更新する
                 // そのメンバにサブタスクを送ってからリーダーがその完了報告を受けるまでの時間
                 // すなわちrt = "メンバのサブタスク実行時間 + メッセージ往復時間"
                 AllocatedSubTask as = teamHistory[ag.id].remove(m.getFrom());
-                int rt = ag.calcExecutionTime(m.getFrom(), as.getSt());
+                int rt = Manager.getTicks() - as.getAllocatedTime();
                 int reward = as.getRequiredResources();
                 //                System.out.println(rt);
                 ag.relAgents = renewRel(ag, m.getFrom(), (double) reward / rt);
@@ -644,11 +441,9 @@ public class PM2withRoleFixed implements Strategy, SetParam {
             ag.restSubTask = 0;
             ag.role = LEADER;
             ag.proposalNum = 0;
-            ag.didTasksAsLeader += success;
         } else if (ag.role == MEMBER) {
             ag.phase = mPHASE1;
             ag.role = MEMBER;
-//            ag.didTasksAsMember += success;
         }
         ag.mySubTask = null;
         ag.messages.clear();
@@ -657,6 +452,31 @@ public class PM2withRoleFixed implements Strategy, SetParam {
         ag.validatedTicks = Manager.getTicks();
     }
 
+    protected void nextPhase(Agent ag) {
+        if (ag.role == LEADER) {
+            if (ag.phase == lPHASE1) {
+                ag.phase = lPHASE2;
+            }
+            // チーム編成に成功したが，自分はサブタスクを担当しない場合
+            else if (ag.phase == lPHASE2 && ag.executionTime < 0) {
+                if (Agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
+                    for (Agent mem : ag.teamMembers) ag.workWithAsL[mem.id]++;
+                }
+                inactivate(ag, 1);
+            }
+            // サブタスクを持っているなら実行フェイズに写る
+            else {
+                ag.phase = PHASE3;
+            }
+        } else {
+            if (ag.phase == mPHASE1) {
+                ag.phase = mPHASE2;
+            } else if (ag.phase == mPHASE2) {
+                ag.phase = PHASE3;
+            }
+        }
+        ag.validatedTicks = Manager.getTicks();
+    }
 
     public void clearStrategy() {
         for (int i = 0; i < AGENT_NUM; i++) {
