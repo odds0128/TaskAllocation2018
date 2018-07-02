@@ -323,7 +323,7 @@ public class Agent implements SetParam , Cloneable{
         // もし一つもなかったら仕方ないからなしでreturn
         if (tempIndex == -1) {
             restSubTask = ourTask.subTaskNum;
-            executionTime = 0;
+            executionTime = -1;
             return;
         }
         // 一個でもあったらどれかを選んで自分のサブタスクとする

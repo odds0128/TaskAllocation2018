@@ -39,6 +39,18 @@ public class PM2withRoleFixed implements Strategy, SetParam {
     }
 
     public void actAsMember(Agent agent) {
+//        if( Manager.getTicks() > 5000 ){
+//            for( int i = 0; i < AGENT_NUM; i++ ){
+//                if( agent.reliabilities[i] != 0 ){
+//                    System.out.println("id: " + i + ", rel: " + agent.reliabilities[i]);
+//                }
+//            }
+//            System.out.println(agent.relRanking.subList(0,5));
+//            System.out.println();
+//
+//        }
+
+
         agent.relAgents = decreaseDECduringCommunication(agent, agent.agentsCommunicatingWith);
         setPrinciple(agent);
         if (agent.phase == mPHASE1) replyAsM(agent);

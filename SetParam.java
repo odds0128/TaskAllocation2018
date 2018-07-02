@@ -32,7 +32,7 @@ interface SetParam {
     int  COALITION_CHECK_SPAN = 5000;          // 協調関係ができているか確認するための最後の方のターム
     double THRESHOLD_FOR_COALITION = 10;
     int THRESHOLD_FOR_NEET = 5000;
-    double THRESHOLD_FOR_RECIPROCITY_RATE = 0.5;
+    double THRESHOLD_FOR_RECIPROCITY_RATE = 0.7;
     int SNAPSHOT_TIME = 200000;
 
     int INITIAL_TASK_NUM = 0;       // 最初のタスク数
