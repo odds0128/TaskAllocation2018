@@ -30,7 +30,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
     }
 
     public void actAsLeader(Agent agent) {
-        agent.relAgents = decreaseDECduringCommunication(agent, agent.agentsCommunicatingWith);
+//        agent.relAgents = decreaseDECduringCommunication(agent, agent.agentsCommunicatingWith);
         setPrinciple(agent);
         if (agent.phase == lPHASE1) proposeAsL(agent);
         else if (agent.phase == lPHASE2) reportAsL(agent);
@@ -39,7 +39,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
     }
 
     public void actAsMember(Agent agent) {
-        agent.relAgents = decreaseDECduringCommunication(agent, agent.agentsCommunicatingWith);
+//        agent.relAgents = decreaseDECduringCommunication(agent, agent.agentsCommunicatingWith);
         setPrinciple(agent);
         if (agent.phase == mPHASE1) replyAsM(agent);
         else if (agent.phase == mPHASE2) receiveAsM(agent);
@@ -98,7 +98,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
         if (leader.replies.size() != leader.proposalNum) return;
 
         Agent from;
-       for (Message reply : leader.replies) {
+        for (Message reply : leader.replies) {
             // 拒否ならそのエージェントを候補リストから外し, 信頼度を0で更新する
             if (reply.getReply() != ACCEPT) {
                 from = reply.getFrom();
@@ -422,9 +422,16 @@ public class PM2withRoleFixed implements Strategy, SetParam {
         // 信頼度を更新したら改めて信頼エージェントを設定する
         List<Agent> tmp = new ArrayList<>();
         Agent ag;
+        double threshold;
+        if( agent.role == LEADER ){
+            threshold = agent.threshold_for_reciprocity_as_leader;
+        }else{
+            threshold = agent.threshold_for_reciprocity_as_member;
+        }
+
         for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
             ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > agent.threshold_for_reciprocity_as_member) {
+            if (agent.reliabilities[ag.id] > threshold) {
                 tmp.add(ag);
             } else {
                 break;
@@ -450,9 +457,15 @@ public class PM2withRoleFixed implements Strategy, SetParam {
         }
         List<Agent> tmp = new ArrayList<>();
         Agent ag;
+        double threshold;
+        if( agent.role == LEADER ){
+            threshold = agent.threshold_for_reciprocity_as_leader;
+        }else{
+            threshold = agent.threshold_for_reciprocity_as_member;
+        }
         for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
             ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > agent.threshold_for_reciprocity_as_member) {
+            if (agent.reliabilities[ag.id] > threshold) {
                 tmp.add(ag);
             } else {
                 break;
@@ -487,21 +500,26 @@ public class PM2withRoleFixed implements Strategy, SetParam {
             }
         }
 
-        System.out.println(agent.relRanking);
+//        System.out.println(agent.relRanking);
 
         // 信頼エージェントの更新
         List<Agent> tmp = new ArrayList<>();
         Agent ag;
+        double threshold;
+        if( agent.role == LEADER ){
+            threshold = agent.threshold_for_reciprocity_as_leader;
+        }else{
+            threshold = agent.threshold_for_reciprocity_as_member;
+        }
         for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
             ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > agent.threshold_for_reciprocity_as_member) {
+            if (agent.reliabilities[ag.id] > threshold) {
                 tmp.add(ag);
             } else {
                 break;
             }
         }
         return tmp;
-
     }
 
     private void setPrinciple(Agent agent) {
@@ -564,14 +582,12 @@ public class PM2withRoleFixed implements Strategy, SetParam {
         if (ag.phase == PROPOSITION || ag.phase == EXECUTION) {
             for (int i = 0; i < size; i++) {
                 m = ag.messages.remove(0);
-                ag.agentsCommunicatingWith.remove(m.getFrom());
                 ag.sendNegative(ag, m.getFrom(), m.getMessageType(), m.getSubTask());
             }
             // メンバでWAITING → PROPOSALを期待している
         } else if (ag.phase == WAITING) {
             for (int i = 0; i < size; i++) {
                 m = ag.messages.remove(0);
-                ag.agentsCommunicatingWith.remove(m.getFrom());
                 // PROPOSALで, 要求されているリソースを自分が持つならmessagesに追加
                 if (m.getMessageType() == PROPOSAL && ag.res[m.getResType()] != 0) {
                     ag.messages.add(m);
@@ -583,7 +599,6 @@ public class PM2withRoleFixed implements Strategy, SetParam {
         else if (ag.phase == REPORT) {
             for (int i = 0; i < size; i++) {
                 m = ag.messages.remove(0);
-                ag.agentsCommunicatingWith.remove(m.getFrom());
                 Agent from = m.getFrom();
                 if (m.getMessageType() == REPLY && ag.inTheList(from, ag.candidates) > -1) ag.replies.add(m);
                 else ag.sendNegative(ag, m.getFrom(), m.getMessageType(), m.getSubTask());
@@ -592,7 +607,6 @@ public class PM2withRoleFixed implements Strategy, SetParam {
         } else if (ag.phase == RECEPTION) {
             for (int i = 0; i < size; i++) {
                 m = ag.messages.remove(0);
-                ag.agentsCommunicatingWith.remove(m.getFrom());
                 if (m.getMessageType() == RESULT && m.getFrom() == ag.leader) {
                     ag.messages.add(m);
                     // 違かったらsendNegative
