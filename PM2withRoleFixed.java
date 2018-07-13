@@ -30,6 +30,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
     }
 
     public void actAsLeader(Agent agent) {
+        setPrinciple(agent);
         if (agent.phase == lPHASE1) proposeAsL(agent);
         else if (agent.phase == lPHASE2) reportAsL(agent);
         else if (agent.phase == PHASE3) execute(agent);
@@ -37,6 +38,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
     }
 
     public void actAsMember(Agent agent) {
+        setPrinciple(agent);
         if (agent.phase == mPHASE1) replyAsM(agent);
         else if (agent.phase == mPHASE2) receiveAsM(agent);
         else if (agent.phase == PHASE3) execute(agent);
@@ -150,9 +152,20 @@ public class PM2withRoleFixed implements Strategy, SetParam {
                 leader.sendMessage(leader, tm, RESULT, leader.preAllocations.get(tm));
             }
             Manager.finishTask(leader);
-            leader.phase = PHASE3;
-            leader.validatedTicks = Manager.getTicks();
-            return;
+            if( leader.executionTime < 0 ){
+                if (leader._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
+                    for (Agent ag : leader.teamMembers) {
+                        leader.workWithAsL[ag.id]++;
+                    }
+                    leader.didTasksAsLeader++;
+                }
+                inactivate(leader, 1);
+                return;
+            }else {
+                leader.phase = PHASE3;
+                leader.validatedTicks = Manager.getTicks();
+                return;
+            }
         }
         // 未割り当てのサブタスクが残っていれば失敗
         else {
@@ -619,11 +632,9 @@ public class PM2withRoleFixed implements Strategy, SetParam {
             ag.restSubTask = 0;
             ag.role = LEADER;
             ag.proposalNum = 0;
-            ag.didTasksAsLeader += success;
         } else if (ag.role == MEMBER) {
             ag.phase = mPHASE1;
             ag.role = MEMBER;
-//            ag.didTasksAsMember += success;
         }
         ag.mySubTask = null;
         ag.messages.clear();

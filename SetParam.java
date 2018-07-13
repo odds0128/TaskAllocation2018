@@ -45,7 +45,7 @@ interface SetParam {
     int MAX_X    = 51, MAX_Y = 51;
     int MAX_DELAY = 5;
 
-    double ADDITIONAL_TASK_NUM  = 10.0;        // タスクを追加するタイミングで, タスクキューに追加するタスクの個数(=λ)
+    double ADDITIONAL_TASK_NUM  = 7.5;        // タスクを追加するタイミングで, タスクキューに追加するタスクの個数(=λ)
     int RESOURCE_TYPES = 3;
     int MAX_AGENT_RESOURCE_SIZE   = 5;
     int MIN_AGENT_RESOURCE_SIZE   = 0;
@@ -65,9 +65,9 @@ interface SetParam {
     double INITIAL_VALUE_OF_DSM =  0.5;
     double α = 0.05;
     double γ_r = 0.00005;
-    double THRESHOLD_FOR_ROLE_RECIPROCITY   = 15.0;
+    double THRESHOLD_FOR_ROLE_RECIPROCITY   = 0.5;
 
-    double THRESHOLD_FOR_RECIPROCITY_FROM_LEADER = 15.0;
+    double THRESHOLD_FOR_RECIPROCITY_FROM_LEADER = 1.5;
     int BIAS = 0;
     int UNIFORM = 1;
     int AREA_LIMIT = 100; // 近い方からn体のエージェントを知っている
