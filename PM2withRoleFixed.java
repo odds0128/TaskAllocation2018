@@ -30,7 +30,6 @@ public class PM2withRoleFixed implements Strategy, SetParam {
     }
 
     public void actAsLeader(Agent agent) {
-        setPrinciple(agent);
         if (agent.phase == lPHASE1) proposeAsL(agent);
         else if (agent.phase == lPHASE2) reportAsL(agent);
         else if (agent.phase == PHASE3) execute(agent);
@@ -38,7 +37,6 @@ public class PM2withRoleFixed implements Strategy, SetParam {
     }
 
     public void actAsMember(Agent agent) {
-        setPrinciple(agent);
         if (agent.phase == mPHASE1) replyAsM(agent);
         else if (agent.phase == mPHASE2) receiveAsM(agent);
         else if (agent.phase == PHASE3) execute(agent);
@@ -92,7 +90,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
         if (leader.replies.size() != leader.proposalNum) return;
 
         Agent from;
-       for (Message reply : leader.replies) {
+        for (Message reply : leader.replies) {
             // 拒否ならそのエージェントを候補リストから外し, 信頼度を0で更新する
             if (reply.getReply() != ACCEPT) {
                 from = reply.getFrom();
@@ -416,9 +414,16 @@ public class PM2withRoleFixed implements Strategy, SetParam {
         }
         List<Agent> tmp = new ArrayList<>();
         Agent ag;
+        double threshold;
+        if( agent.role == LEADER ){
+            threshold = agent.threshold_for_reciprocity_as_leader;
+        }else{
+            threshold = agent.threshold_for_reciprocity_as_member;
+        }
+
         for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
             ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > agent.threshold_for_reciprocity_as_member) {
+            if (agent.reliabilities[ag.id] > threshold) {
                 tmp.add(ag);
             } else {
                 break;
@@ -444,9 +449,63 @@ public class PM2withRoleFixed implements Strategy, SetParam {
         }
         List<Agent> tmp = new ArrayList<>();
         Agent ag;
+        double threshold;
+        if( agent.role == LEADER ){
+            threshold = agent.threshold_for_reciprocity_as_leader;
+        }else{
+            threshold = agent.threshold_for_reciprocity_as_member;
+        }
         for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
             ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > agent.threshold_for_reciprocity_as_member) {
+            if (agent.reliabilities[ag.id] > threshold) {
+                tmp.add(ag);
+            } else {
+                break;
+            }
+        }
+        return tmp;
+    }
+
+    private List<Agent> decreaseDECduringCommunication(Agent agent, List<Agent> targets){
+        double temp;
+        int target_id = 0;
+
+        // 通信対象の信頼度の更新
+        for (Agent target: targets) {
+            target_id = target.id;
+            temp = agent.reliabilities[target_id] - γ;
+            if (temp < 0) agent.reliabilities[target_id] = 0;
+            else agent.reliabilities[target_id] = temp;
+
+            // 信頼ランキングの更新
+            int index = agent.inTheList(target, agent.relRanking) + 1;    // targetの現在順位の下を持ってくる
+            while (index < AGENT_NUM - 1) {
+                // 順位が下のやつよりも信頼度が低くなったなら
+                if (agent.reliabilities[agent.relRanking.get(index).id] > agent.reliabilities[target.id]) {
+                    Agent tmp = agent.relRanking.get(index);
+                    agent.relRanking.set(index, target);
+                    agent.relRanking.set(index - 1, tmp);
+                    index++;
+                } else {
+                    break;
+                }
+            }
+        }
+
+//        System.out.println(agent.relRanking);
+
+        // 信頼エージェントの更新
+        List<Agent> tmp = new ArrayList<>();
+        Agent ag;
+        double threshold;
+        if( agent.role == LEADER ){
+            threshold = agent.threshold_for_reciprocity_as_leader;
+        }else{
+            threshold = agent.threshold_for_reciprocity_as_member;
+        }
+        for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
+            ag = agent.relRanking.get(j);
+            if (agent.reliabilities[ag.id] > threshold) {
                 tmp.add(ag);
             } else {
                 break;
