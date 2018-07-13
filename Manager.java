@@ -7,7 +7,8 @@ import java.io.*;
 import java.util.*;
 
 public class Manager implements SetParam {
-    private static Strategy strategy = new PM2withRoleFixed();      // ICA2018における提案手法    //    private static Strategy strategy = new ProposedMethodForSingapore();
+//    private static Strategy strategy = new PM2withRoleFixed();      // ICA2018における提案手法    //    private static Strategy strategy = new ProposedMethodForSingapore();
+    private static Strategy strategy = new PM2();      // ICA2018における提案手法役割更新あり    //    private static Strategy strategy = new ProposedMethodForSingapore();
 
     static private long _seed;
     private static Random _randSeed;

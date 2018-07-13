@@ -172,11 +172,22 @@ public class PM2withRoleFixed implements Strategy, SetParam {
                 leader.agentsCommunicatingWith.add(tm);
             }
             Manager.finishTask(leader);
-            leader.phase = PHASE3;
-            leader.validatedTicks = Manager.getTicks();
-            return;
+            if (leader.executionTime < 0) {
+                if (leader._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
+                    for (Agent ag : leader.teamMembers) {
+                        leader.workWithAsL[ag.id]++;
+                    }
+                    leader.didTasksAsLeader++;
+                }
+                inactivate(leader, 1);
+                return;
+            } else {
+                leader.phase = PHASE3;
+                leader.validatedTicks = Manager.getTicks();
+                return;
+            }
+            // 未割り当てのサブタスクが残っていれば失敗
         }
-        // 未割り当てのサブタスクが残っていれば失敗
         else {
             for (Agent tm : leader.teamMembers) {
                 leader.sendMessage(leader, tm, RESULT, null);

@@ -149,8 +149,19 @@ public class PM2 implements Strategy, SetParam {
                 leader.sendMessage(leader, tm, RESULT, leader.preAllocations.get(tm));
             }
             Manager.finishTask(leader);
-            leader.nextPhase();
-            return;
+            if( leader.executionTime < 0 ){
+                if (leader._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
+                    for (Agent ag : leader.teamMembers) {
+                        leader.workWithAsL[ag.id]++;
+                    }
+                    leader.didTasksAsLeader++;
+                }
+                leader.inactivate(1);
+                return;
+            }else {
+                leader.nextPhase();
+                return;
+            }
         }
         // 未割り当てのサブタスクが残っていれば失敗
         else {
