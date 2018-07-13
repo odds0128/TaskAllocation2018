@@ -61,10 +61,13 @@ public class PM2 implements Strategy, SetParam {
             leader.inactivate(0);
             return;
         } else {
+            Agent candidate;
             for (int i = 0; i < leader.candidates.size(); i++) {
-                if (leader.candidates.get(i) != null) {
+                candidate = leader.candidates.get(i);
+                if (candidate != null) {
                     leader.proposalNum++;
-                    leader.sendMessage(leader, leader.candidates.get(i), PROPOSAL, leader.ourTask.subTasks.get(i % leader.restSubTask));
+                    leader.agentsCommunicatingWith.add(candidate);
+                    leader.sendMessage(leader, candidate, PROPOSAL, leader.ourTask.subTasks.get(i % leader.restSubTask));
                 }
             }
         }
@@ -77,6 +80,7 @@ public class PM2 implements Strategy, SetParam {
         if (member.leader != null) {
             member.joined = true;
 //            System.out.println("ID: "+ member.id + ", my leader is " + member.leader.id );
+            member.agentsCommunicatingWith.add(member.leader);
             member.sendMessage(member, member.leader, REPLY, ACCEPT);
         }
         // どのリーダーからの要請も受けないのならinactivate
@@ -558,6 +562,8 @@ public class PM2 implements Strategy, SetParam {
         // メンバからの作業完了報告をチェックする
         for (int i = 0; i < size; i++) {
             m = ag.messages.remove(0);
+            ag.agentsCommunicatingWith.remove(m.getFrom());
+
             if (m.getMessageType() == DONE) {
                 // 「リーダーとしての更新式で」信頼度を更新する
                 // そのメンバにサブタスクを送ってからリーダーがその完了報告を受けるまでの時間

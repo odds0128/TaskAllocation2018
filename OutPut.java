@@ -1172,11 +1172,11 @@ public class OutPut implements SetParam {
             bw = new BufferedWriter(fw);
             pw = new PrintWriter(bw);
             // 列番号入れる部分
-            pw.print("id");
+            pw.print("to, excellence \\ from ");
             for (int i = 0; i < AGENT_NUM; i++) pw.print(", " + i);
             pw.println();
             for (Agent ag : agents) {
-                pw.print(ag.id + ", ");
+                pw.print(ag.id + ", " + ag.excellence + ", ");
                 if (ag.e_member > ag.e_leader) {
                     for (int i = 0; i < AGENT_NUM; i++) {
                         pw.print("-" + ag.reliabilities[i] + ", ");
