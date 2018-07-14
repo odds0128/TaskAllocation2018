@@ -34,7 +34,7 @@ interface SetParam {
     int  COALITION_CHECK_SPAN = 5000;          // 協調関係ができているか確認するための最後の方のターム
     double THRESHOLD_FOR_COALITION = 10;
     int THRESHOLD_FOR_NEET = 5000;
-    double THRESHOLD_FOR_RECIPROCITY_RATE = 11;
+    double THRESHOLD_FOR_RECIPROCITY_RATE = 1;
     int SNAPSHOT_TIME = 200000;
 
     int INITIAL_TASK_NUM = 0;       // 最初のタスク数
@@ -45,7 +45,7 @@ interface SetParam {
     int MAX_X    = 51, MAX_Y = 51;
     int MAX_DELAY = 5;
 
-    double ADDITIONAL_TASK_NUM  = 7.5;        // タスクを追加するタイミングで, タスクキューに追加するタスクの個数(=λ)
+    double ADDITIONAL_TASK_NUM  = 10.0;        // タスクを追加するタイミングで, タスクキューに追加するタスクの個数(=λ)
     int RESOURCE_TYPES = 3;
     int MAX_AGENT_RESOURCE_SIZE   = 5;
     int MIN_AGENT_RESOURCE_SIZE   = 0;
