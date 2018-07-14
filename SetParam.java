@@ -8,7 +8,7 @@ interface SetParam {
     int EXECUTION_TIMES = 10;             // 実験の回数
     int MAX_TURN_NUM    = 500000;         // 一回の実験のターン数
     int WRITING_TIMES   = 5000;           // データのファイルへの出力回数
-    boolean CHECK_RELATIONSHIPS    = false;  // エージェント関係の協調関係を録るか
+    boolean CHECK_RELATIONSHIPS    = true;  // エージェント関係の協調関係を録るか
     boolean CHECK_INTERIM_RELATIONSHIPS    = false;  // エージェント関係の協調関係のスナップショットを録るか
     boolean CHECK_INITIATION       = false;  // エージェントやタスクの初期設定を確認するか
     boolean CHECK_RESULTS          = true;  // チーム編成成功数などを確認するか
@@ -43,7 +43,7 @@ interface SetParam {
     int MAX_X    = 51, MAX_Y = 51;
     int MAX_DELAY = 5;
 
-    double ADDITIONAL_TASK_NUM  = 2.5;        // タスクを追加するタイミングで, タスクキューに追加するタスクの個数(=λ)
+    double ADDITIONAL_TASK_NUM  = 10.0;        // タスクを追加するタイミングで, タスクキューに追加するタスクの個数(=λ)
     int RESOURCE_TYPES = 3;
     int MAX_AGENT_RESOURCE_SIZE   = 5;
     int MIN_AGENT_RESOURCE_SIZE   = 0;

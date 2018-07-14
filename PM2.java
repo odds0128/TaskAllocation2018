@@ -169,7 +169,7 @@ public class PM2 implements Strategy, SetParam {
                 leader.sendMessage(leader, tm, RESULT, null);
             }
             Manager.disposeTask(leader);
-            leader.inactivate(-1);
+            leader.inactivate(0);
             return;
         }
     }
