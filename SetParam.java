@@ -63,7 +63,7 @@ interface SetParam {
     double INITIAL_VALUE_OF_DSM =  0.5;
     double α = 0.05;
     double γ_r = 0.00005;
-    double THRESHOLD_FOR_ROLE_RECIPROCITY   = 0;
+    double THRESHOLD_FOR_ROLE_RECIPROCITY   = 0.5;
     double THRESHOLD_FOR_RECIPROCITY_FROM_LEADER = 1.5;
     int BIAS = 0;
     int UNIFORM = 1;
