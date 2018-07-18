@@ -30,7 +30,7 @@ public class PM2 implements Strategy, SetParam {
     }
 
     public void actAsLeader(Agent agent) {
-//        setPrinciple(agent);
+        setPrinciple(agent);
         if (agent.phase == PROPOSITION) proposeAsL(agent);
         else if (agent.phase == REPORT) reportAsL(agent);
         else if (agent.phase == EXECUTION) execute(agent);
@@ -38,7 +38,7 @@ public class PM2 implements Strategy, SetParam {
     }
 
     public void actAsMember(Agent agent) {
-//        setPrinciple(agent);
+        setPrinciple(agent);
         if (agent.phase == REPLY) replyAsM(agent);
         else if (agent.phase == RECEPTION) receiveAsM(agent);
         else if (agent.phase == EXECUTION) execute(agent);

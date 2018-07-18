@@ -30,7 +30,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
     }
 
     public void actAsLeader(Agent agent) {
-        agent.relAgents = decreaseDECduringCommunication(agent, agent.agentsCommunicatingWith);
+//        agent.relAgents = decreaseDECduringCommunication(agent, agent.agentsCommunicatingWith);
         setPrinciple(agent);
         if (agent.phase == lPHASE1) proposeAsL(agent);
         else if (agent.phase == lPHASE2) reportAsL(agent);
@@ -51,7 +51,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
 //        }
 
 
-        agent.relAgents = decreaseDECduringCommunication(agent, agent.agentsCommunicatingWith);
+//        agent.relAgents = decreaseDECduringCommunication(agent, agent.agentsCommunicatingWith);
         setPrinciple(agent);
         if (agent.phase == mPHASE1) replyAsM(agent);
         else if (agent.phase == mPHASE2) receiveAsM(agent);
