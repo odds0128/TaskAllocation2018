@@ -208,7 +208,7 @@ public class PM2 implements Strategy, SetParam {
             } else {
                 agent.sendMessage(agent, agent.leader, DONE, 0);
                 agent.required[agent.mySubTask.resType]++;
-                agent.relAgents = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / (double) (Manager.getTicks() - agent.start));
+                agent.relAgents = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / (double) agent.calcExecutionTime(agent, agent.mySubTask));
                 if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
                     agent.workWithAsM[agent.leader.id]++;
                 }
@@ -515,7 +515,7 @@ public class PM2 implements Strategy, SetParam {
                 // そのメンバにサブタスクを送ってからリーダーがその完了報告を受けるまでの時間
                 // すなわちrt = "メンバのサブタスク実行時間 + メッセージ往復時間"
                 AllocatedSubTask as = teamHistory[ag.id].remove(m.getFrom());
-                int rt = Manager.getTicks() - as.getAllocatedTime();
+                int rt = ag.calcExecutionTime(m.getFrom(), as.getSt());
                 int reward = as.getRequiredResources();
                 //                System.out.println(rt);
                 ag.relAgents = renewRel(ag, m.getFrom(), (double) reward / rt);
