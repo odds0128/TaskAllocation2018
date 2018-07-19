@@ -661,6 +661,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
             ag.role = MEMBER;
             ag.didTasksAsMember += success;
         }
+        ag.joined = false;
         ag.mySubTask = null;
         ag.messages.clear();
         ag.executionTime = 0;
