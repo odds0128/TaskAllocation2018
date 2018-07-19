@@ -636,6 +636,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
             ag.phase = mPHASE1;
             ag.role = MEMBER;
         }
+        ag.joined = false;
         ag.mySubTask = null;
         ag.messages.clear();
         ag.executionTime = 0;
