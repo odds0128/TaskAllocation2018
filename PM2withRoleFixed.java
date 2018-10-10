@@ -186,8 +186,8 @@ public class PM2withRoleFixed implements Strategy, SetParam {
                 leader.validatedTicks = Manager.getTicks();
                 return;
             }
-            // 未割り当てのサブタスクが残っていれば失敗
         }
+        // 未割り当てのサブタスクが残っていれば失敗
         else {
             for (Agent tm : leader.teamMembers) {
                 leader.sendMessage(leader, tm, RESULT, null);
@@ -655,12 +655,11 @@ public class PM2withRoleFixed implements Strategy, SetParam {
             ag.restSubTask = 0;
             ag.role = LEADER;
             ag.proposalNum = 0;
-            ag.didTasksAsLeader += success;
         } else if (ag.role == MEMBER) {
             ag.phase = mPHASE1;
             ag.role = MEMBER;
-            ag.didTasksAsMember += success;
         }
+        ag.joined = false;
         ag.mySubTask = null;
         ag.messages.clear();
         ag.executionTime = 0;

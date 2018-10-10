@@ -266,9 +266,6 @@ public class Agent implements SetParam , Cloneable{
 //        if( (e_member + e_leader) != 1.0  ) System.out.println("Illegal renewal ");
 
         if (role == LEADER) {
-            if (success == 1) {
-                didTasksAsLeader++;
-            }
             _leader_num--;
             if (ourTask != null) Manager.disposeTask(this);
             candidates.clear();
@@ -280,7 +277,6 @@ public class Agent implements SetParam , Cloneable{
             proposalNum = 0;
             replyNum = 0;
         } else {
-            if (success == 1) didTasksAsMember++;
             _member_num--;
         }
         role_renewal_counter=0;
