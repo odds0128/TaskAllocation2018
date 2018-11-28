@@ -292,7 +292,7 @@ public class Agent implements SetParam , Cloneable{
         if (strategy.getClass().getName() != "RoundRobin") {
             index = 0;
         } else {
-            prevIndex = index % relAgents.size();
+            prevIndex = index % relAgents_l.size();
             index = prevIndex;
         }
         this.validatedTicks = Manager.getTicks();

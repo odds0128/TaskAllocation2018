@@ -34,7 +34,7 @@ public class PM2 implements Strategy, SetParam {
         if (agent.phase == PROPOSITION) proposeAsL(agent);
         else if (agent.phase == REPORT) reportAsL(agent);
         else if (agent.phase == EXECUTION) execute(agent);
-        agent.relAgents = decreaseDEC(agent);
+        agent.relAgents_l = decreaseDEC(agent);
     }
 
     public void actAsMember(Agent agent) {
@@ -42,7 +42,7 @@ public class PM2 implements Strategy, SetParam {
         if (agent.phase == REPLY) replyAsM(agent);
         else if (agent.phase == RECEPTION) receiveAsM(agent);
         else if (agent.phase == EXECUTION) execute(agent);
-        agent.relAgents = decreaseDEC(agent);
+        agent.relAgents_m = decreaseDEC(agent);
     }
 
     private void proposeAsL(Agent leader) {
@@ -97,7 +97,7 @@ public class PM2 implements Strategy, SetParam {
                 int i = leader.inTheList(from, leader.candidates);
                 assert i >= 0 : "alert: Leader got reply from a ghost.";
                 leader.candidates.set(i, null);
-                leader.relAgents = renewRel(leader, from, 0);
+                leader.relAgents_l = renewRel(leader, from, 0);
             }
         }
 
@@ -115,7 +115,7 @@ public class PM2 implements Strategy, SetParam {
             // もし両方から受理が返ってきたら, 信頼度の高い方に割り当てる
             else if (A != null && B != null) {
                 // Bの方がAより信頼度が高い場合
-                if (leader.reliabilities[A.id] < leader.reliabilities[B.id]) {
+                if (leader.reliabilities_l[A.id] < leader.reliabilities_l[B.id]) {
                     leader.preAllocations.put(B, leader.ourTask.subTasks.get(indexA));
                     leader.sendMessage(leader, A, RESULT, null);
                     leader.teamMembers.add(B);
@@ -149,7 +149,7 @@ public class PM2 implements Strategy, SetParam {
                 leader.sendMessage(leader, tm, RESULT, leader.preAllocations.get(tm));
             }
             Manager.finishTask(leader);
-            if( leader.executionTime < 0 ){
+            if (leader.executionTime < 0) {
                 if (leader._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
                     for (Agent ag : leader.teamMembers) {
                         leader.workWithAsL[ag.id]++;
@@ -158,7 +158,7 @@ public class PM2 implements Strategy, SetParam {
                 }
                 leader.inactivate(1);
                 return;
-            }else {
+            } else {
                 leader.nextPhase();
                 return;
             }
@@ -189,7 +189,7 @@ public class PM2 implements Strategy, SetParam {
         }
         // サブタスクが割り当てられなかったら信頼度を0で更新し, inactivate
         else {
-            member.relAgents = renewRel(member, member.leader, 0);
+            member.relAgents_m = renewRel(member, member.leader, 0);
             member.inactivate(0);
         }
     }
@@ -208,7 +208,7 @@ public class PM2 implements Strategy, SetParam {
             } else {
                 agent.sendMessage(agent, agent.leader, DONE, 0);
                 agent.required[agent.mySubTask.resType]++;
-                agent.relAgents = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / (double) (Manager.getTicks() - agent.start));
+                agent.relAgents_m = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / (double) (Manager.getTicks() - agent.start));
                 if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
                     agent.workWithAsM[agent.leader.id]++;
                 }
@@ -243,9 +243,9 @@ public class PM2 implements Strategy, SetParam {
         // この時点でtにはかつての仲間たちが入っている
         // 先に信頼エージェントに対して割り当てを試みる
         // リーダーにとっての信頼エージェントは閾値を超えたエージェント全てと言える
-        for (Agent relAg : leader.relRanking) {
+        for (Agent relAg : leader.relRanking_l) {
             SubTask st;
-            if( leader.reliabilities[relAg.id] > leader.threshold_for_reciprocity_as_leader ) {
+            if (leader.reliabilities_l[relAg.id] > leader.threshold_for_reciprocity_as_leader) {
                 // 上位からサブタスクを持って来て
                 // そのサブタスクが上位の信頼エージェントに可能かつまださらに上位の信頼エージェントに割り振られていないなら
                 // そいつに割り当てることにしてそいつをexceptionsに，そのサブタスクをskipsに入れる
@@ -258,7 +258,7 @@ public class PM2 implements Strategy, SetParam {
                         break;
                     }
                 }
-            }else{
+            } else {
                 break;
             }
         }
@@ -286,9 +286,9 @@ public class PM2 implements Strategy, SetParam {
                     // 2. すでにチームに参加してもらっていて，まだ終了連絡がこない
                     // 3. すでに別のサブタスクを割り当てる予定がある
                     // に当てはまらなければ割り当て候補とする．
-                    int rankingSize = leader.relRanking.size();
+                    int rankingSize = leader.relRanking_l.size();
                     for (int relRank = 0; relRank < rankingSize; relRank++) {
-                        candidate = leader.relRanking.get(relRank);
+                        candidate = leader.relRanking_l.get(relRank);
                         // 上記1~3の項目を満たさないか確認する
                         // 満たしていなければ要請を送る確定の候補とし，ループから抜ける
                         if (leader.inTheList(candidate, exceptions) < 0 &&
@@ -347,7 +347,7 @@ public class PM2 implements Strategy, SetParam {
                 message = messages.remove(0);
                 from = message.getFrom();
                 // もし暫定信頼度一位のやつより信頼度高いやついたら, 暫定のやつを断って今のやつを暫定(ryに入れる
-                if (member.reliabilities[temp.id] < member.reliabilities[from.id]) {
+                if (member.reliabilities_m[temp.id] < member.reliabilities_m[from.id]) {
                     member.sendMessage(member, temp, REPLY, REJECT);
                     temp = from;
                 }
@@ -359,7 +359,7 @@ public class PM2 implements Strategy, SetParam {
             if (member.principle == RATIONAL) {
                 myLeader = temp;
             } else {
-                if (member.inTheList(temp, member.relAgents) > -1) {
+                if (member.inTheList(temp, member.relAgents_m) > -1) {
                     myLeader = temp;
                 } else member.sendMessage(member, temp, REPLY, REJECT);
             }
@@ -374,67 +374,129 @@ public class PM2 implements Strategy, SetParam {
      *
      * @param agent
      */
+    // DEを2種類にしたことでエージェントの役割によって挙動を変えなくてはならない
     private List<Agent> renewRel(Agent agent, Agent target, double evaluation) {
         assert !agent.equals(target) : "alert4";
-        double temp = agent.reliabilities[target.id];
-//        if( Manager.getTicks() % 10000 == 0 ) System.out.println( evaluation );
-        // 信頼度の更新式
-        agent.reliabilities[target.id] = temp * (1.0 - α) + α * evaluation;
+
+        if (agent.role == LEADER) {
+            double temp = agent.reliabilities_l[target.id];
+            // 信頼度の更新式
+            agent.reliabilities_l[target.id] = temp * (1.0 - α) + α * evaluation;
 
         /*
          信頼エージェントの更新
          信頼度rankingを更新し, 上からMAX_REL_AGENTS分をrelAgentに放り込む
-     //   */
-        // 信頼度が下がった場合と上がった場合で比較の対象を変える
-        // 上がった場合は順位が上のやつと比較して
-        if (evaluation > 0) {
-            int index = agent.inTheList(target, agent.relRanking) - 1;    // targetの現在順位の上を持ってくる
-            while (index > -1) {
-                // 順位が上のやつよりも信頼度が高くなったなら
-                if (agent.reliabilities[agent.relRanking.get(index).id] < agent.reliabilities[target.id]) {
-                    Agent tmp = agent.relRanking.get(index);
-                    agent.relRanking.set(index, target);
-                    agent.relRanking.set(index + 1, tmp);
-                    index--;
-                } else {
-                    break;
+        //   */
+            // 信頼度が下がった場合と上がった場合で比較の対象を変える
+            // 上がった場合は順位が上のやつと比較して
+            if (evaluation > 0) {
+                int index = agent.inTheList(target, agent.relRanking_l) - 1;    // targetの現在順位の上を持ってくる
+                while (index > -1) {
+                    // 順位が上のやつよりも信頼度が高くなったなら
+                    if (agent.reliabilities_l[agent.relRanking_l.get(index).id] < agent.reliabilities_l[target.id]) {
+                        Agent tmp = agent.relRanking_l.get(index);
+                        agent.relRanking_l.set(index, target);
+                        agent.relRanking_l.set(index + 1, tmp);
+                        index--;
+                    } else {
+                        break;
+                    }
                 }
             }
-        }
-        // 下がった場合は下のやつと比較して入れ替えていく
-        else {
-            int index = agent.inTheList(target, agent.relRanking) + 1;    // targetの現在順位の下を持ってくる
-            while (index < AGENT_NUM - 1) {
-                // 順位が下のやつよりも信頼度が低くなったなら
-                if (agent.reliabilities[agent.relRanking.get(index).id] > agent.reliabilities[target.id]) {
-                    Agent tmp = agent.relRanking.get(index);
-                    agent.relRanking.set(index, target);
-                    agent.relRanking.set(index - 1, tmp);
-                    index++;
-                } else {
-                    break;
+            // 下がった場合は下のやつと比較して入れ替えていく
+            else {
+                int index = agent.inTheList(target, agent.relRanking_l) + 1;    // targetの現在順位の下を持ってくる
+                while (index < AGENT_NUM - 1) {
+                    // 順位が下のやつよりも信頼度が低くなったなら
+                    if (agent.reliabilities_l[agent.relRanking_l.get(index).id] > agent.reliabilities_l[target.id]) {
+                        Agent tmp = agent.relRanking_l.get(index);
+                        agent.relRanking_l.set(index, target);
+                        agent.relRanking_l.set(index - 1, tmp);
+                        index++;
+                    } else {
+                        break;
+                    }
                 }
             }
-        }
-        // 信頼度を更新したら改めて信頼エージェントを設定する
-        List<Agent> tmp = new ArrayList<>();
-        Agent ag;
-        double threshold;
-        if( agent.role == LEADER ){
-            threshold = agent.threshold_for_reciprocity_as_leader;
-        }else{
-            threshold = agent.threshold_for_reciprocity_as_member;
-        }
-        for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
-            ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > threshold) {
-                tmp.add(ag);
+            // 信頼度を更新したら改めて信頼エージェントを設定する
+            List<Agent> tmp = new ArrayList<>();
+            Agent ag;
+            double threshold;
+            if (agent.role == LEADER) {
+                threshold = agent.threshold_for_reciprocity_as_leader;
             } else {
-                break;
+                threshold = agent.threshold_for_reciprocity_as_member;
             }
+            for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
+                ag = agent.relRanking_l.get(j);
+                if (agent.reliabilities_l[ag.id] > threshold) {
+                    tmp.add(ag);
+                } else {
+                    break;
+                }
+            }
+            return tmp;
+        } else {
+            double temp = agent.reliabilities_m[target.id];
+            // 信頼度の更新式
+            agent.reliabilities_m[target.id] = temp * (1.0 - α) + α * evaluation;
+
+        /*
+         信頼エージェントの更新
+         信頼度rankingを更新し, 上からMAX_REL_AGENTS分をrelAgentに放り込む
+        //   */
+            // 信頼度が下がった場合と上がった場合で比較の対象を変える
+            // 上がった場合は順位が上のやつと比較して
+            if (evaluation > 0) {
+                int index = agent.inTheList(target, agent.relRanking_m) - 1;    // targetの現在順位の上を持ってくる
+                while (index > -1) {
+                    // 順位が上のやつよりも信頼度が高くなったなら
+                    if (agent.reliabilities_m[agent.relRanking_m.get(index).id] < agent.reliabilities_m[target.id]) {
+                        Agent tmp = agent.relRanking_m.get(index);
+                        agent.relRanking_m.set(index, target);
+                        agent.relRanking_m.set(index + 1, tmp);
+                        index--;
+                    } else {
+                        break;
+                    }
+                }
+            }
+            // 下がった場合は下のやつと比較して入れ替えていく
+            else {
+                int index = agent.inTheList(target, agent.relRanking_m) + 1;    // targetの現在順位の下を持ってくる
+                while (index < AGENT_NUM - 1) {
+                    // 順位が下のやつよりも信頼度が低くなったなら
+                    if (agent.reliabilities_m[agent.relRanking_m.get(index).id] > agent.reliabilities_m[target.id]) {
+                        Agent tmp = agent.relRanking_m.get(index);
+                        agent.relRanking_m.set(index, target);
+                        agent.relRanking_m.set(index - 1, tmp);
+                        index++;
+                    } else {
+                        break;
+                    }
+                }
+            }
+            // 信頼度を更新したら改めて信頼エージェントを設定する
+            List<Agent> tmp = new ArrayList<>();
+            Agent ag;
+            double threshold;
+            if (agent.role == LEADER) {
+                threshold = agent.threshold_for_reciprocity_as_leader;
+            } else {
+                threshold = agent.threshold_for_reciprocity_as_member;
+            }
+            for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
+                ag = agent.relRanking_m.get(j);
+                if (agent.reliabilities_m[ag.id] > threshold) {
+                    tmp.add(ag);
+                } else {
+                    break;
+                }
+            }
+            return tmp;
         }
-        return tmp;
     }
+
 
     /**
      * decreaseDECメソッド
@@ -446,34 +508,62 @@ public class PM2 implements Strategy, SetParam {
      */
     private List<Agent> decreaseDEC(Agent agent) {
         double temp;
-        for (int i = 0; i < AGENT_NUM; i++) {
-            temp = agent.reliabilities[i] - γ;
-            if (temp < 0) agent.reliabilities[i] = 0;
-            else agent.reliabilities[i] = temp;
-        }
-        // 信頼度を更新したら改めて信頼エージェントを設定する
-        List<Agent> tmp = new ArrayList<>();
-        Agent ag;
-        double threshold;
-        if( agent.role == LEADER ){
-            threshold = agent.threshold_for_reciprocity_as_leader;
-        }else{
-            threshold = agent.threshold_for_reciprocity_as_member;
-        }
-        for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
-            ag = agent.relRanking.get(j);
-            if (agent.reliabilities[ag.id] > threshold) {
-                tmp.add(ag);
-            } else {
-                break;
+
+        if(agent.role == LEADER){
+            for (int i = 0; i < AGENT_NUM; i++) {
+                temp = agent.reliabilities_l[i] - γ;
+                if (temp < 0) agent.reliabilities_l[i] = 0;
+                else agent.reliabilities_l[i] = temp;
             }
+            // 信頼度を更新したら改めて信頼エージェントを設定する
+            List<Agent> tmp = new ArrayList<>();
+            Agent ag;
+            double threshold;
+            if (agent.role == LEADER) {
+                threshold = agent.threshold_for_reciprocity_as_leader;
+            } else {
+                threshold = agent.threshold_for_reciprocity_as_member;
+            }
+            for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
+                ag = agent.relRanking_l.get(j);
+                if (agent.reliabilities_l[ag.id] > threshold) {
+                    tmp.add(ag);
+                } else {
+                    break;
+                }
+            }
+            return tmp;
+        }else{
+            for (int i = 0; i < AGENT_NUM; i++) {
+                temp = agent.reliabilities_m[i] - γ;
+                if (temp < 0) agent.reliabilities_m[i] = 0;
+                else agent.reliabilities_m[i] = temp;
+            }
+            // 信頼度を更新したら改めて信頼エージェントを設定する
+            List<Agent> tmp = new ArrayList<>();
+            Agent ag;
+            double threshold;
+            if (agent.role == LEADER) {
+                threshold = agent.threshold_for_reciprocity_as_leader;
+            } else {
+                threshold = agent.threshold_for_reciprocity_as_member;
+            }
+            for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
+                ag = agent.relRanking_m.get(j);
+                if (agent.reliabilities_m[ag.id] > threshold) {
+                    tmp.add(ag);
+                } else {
+                    break;
+                }
+            }
+            return tmp;
         }
-        return tmp;
     }
+
 
     private void setPrinciple(Agent agent) {
         if (agent.role == MEMBER) {
-            if (agent.relAgents.size() > 0 && agent.e_member >= THRESHOLD_FOR_ROLE_RECIPROCITY) {
+            if (agent.relAgents_m.size() > 0 && agent.e_member >= THRESHOLD_FOR_ROLE_RECIPROCITY) {
                 if (agent.principle == RATIONAL) {
                     Agent._recipro_num++;
                     Agent._rational_num--;
@@ -487,7 +577,7 @@ public class PM2 implements Strategy, SetParam {
                 agent.principle = RATIONAL;
             }
         } else if (agent.role == LEADER) {
-            if (agent.relAgents.size() > 0 && agent.e_leader >= THRESHOLD_FOR_ROLE_RECIPROCITY) {
+            if (agent.relAgents_l.size() > 0 && agent.e_leader >= THRESHOLD_FOR_ROLE_RECIPROCITY) {
                 if (agent.principle == RATIONAL) {
                     Agent._recipro_num++;
                     Agent._rational_num--;
@@ -518,7 +608,7 @@ public class PM2 implements Strategy, SetParam {
                 int rt = Manager.getTicks() - as.getAllocatedTime();
                 int reward = as.getRequiredResources();
                 //                System.out.println(rt);
-                ag.relAgents = renewRel(ag, m.getFrom(), (double) reward / rt);
+                ag.relAgents_l = renewRel(ag, m.getFrom(), (double) reward / rt);
             } else {
                 ag.messages.add(m); // 違うメッセージだったら戻す
             }
