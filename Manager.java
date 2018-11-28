@@ -292,6 +292,7 @@ public class Manager implements SetParam {
 
         // 信頼度ランキングをランダムに初期化
         Agent agent;
+        // リーダー側
         for (int i = 0; i < AGENT_NUM; i++) {
             List<Agent> temp = new ArrayList<>(agents);
             int rand;
@@ -300,9 +301,22 @@ public class Manager implements SetParam {
             while (temp.size() != 0) {
                 rand = _randSeed.nextInt(temp.size());
                 ag = temp.remove(rand);
-                if (!ag.equals(agent)) agent.relRanking.add(ag);
+                if (!ag.equals(agent)) agent.relRanking_l.add(ag);
             }
         }
+        // メンバ側
+        for (int i = 0; i < AGENT_NUM; i++) {
+            List<Agent> temp = new ArrayList<>(agents);
+            int rand;
+            Agent ag;
+            agent = agents.get(i);
+            while (temp.size() != 0) {
+                rand = _randSeed.nextInt(temp.size());
+                ag = temp.remove(rand);
+                if (!ag.equals(agent)) agent.relRanking_m.add(ag);
+            }
+        }
+
     }
 
     /**
