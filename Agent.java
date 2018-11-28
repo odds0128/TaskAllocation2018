@@ -36,7 +36,6 @@ public class Agent implements SetParam , Cloneable{
     boolean joined = false;
     double e_leader = INITIAL_VALUE_OF_DSL, e_member = INITIAL_VALUE_OF_DSM;
     SubTask mySubTask;
-    double[] reliabilities = new double[AGENT_NUM];
     List<Message> messages;
     List<Agent> relAgents = new ArrayList<>();
     List<Agent> relRanking = new ArrayList<>();
@@ -65,8 +64,9 @@ public class Agent implements SetParam , Cloneable{
     int prevIndex = 0;
     int acceptances = 0;           // 今まで自分の元に帰って来た受理応答
     int untilAcceptances = 0;      // 今まで自分の元に返って来た受理応答の合計応答時間(= 往復の通信時間 + メンバの処理時間)
-    double meanUA = 0;             // 今まで自分の元に返って来た受理応答の平均応答時間(=  untilAcceptances/acceptances)
+    double meanUA = 0;             // 今まで自分の元に返って来た受理応答の平均応答時間(= untilAcceptances/acceptances)
     double threshold_for_reciprocity_as_leader;
+    double[] reliabilities_l = new double[AGENT_NUM];
 
     // メンバエージェントのみが持つパラメータ
     Agent leader;
@@ -74,6 +74,7 @@ public class Agent implements SetParam , Cloneable{
     int totalResponseTicks = 0;     // 受理応答からの待ち時間の合計
     double meanRT = 0;     // 受理応答からの待ち時間の平均
     double threshold_for_reciprocity_as_member;
+    double[] reliabilities_m = new double[AGENT_NUM];
 
     // seedが変わった(各タームの最初の)エージェントの生成
     Agent(long seed, int x, int y, Strategy strategy) {
