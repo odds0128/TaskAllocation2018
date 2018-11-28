@@ -37,8 +37,6 @@ public class Agent implements SetParam , Cloneable{
     double e_leader = INITIAL_VALUE_OF_DSL, e_member = INITIAL_VALUE_OF_DSM;
     SubTask mySubTask;
     List<Message> messages;
-    List<Agent> relAgents = new ArrayList<>();
-    List<Agent> relRanking = new ArrayList<>();
     int principle = RATIONAL;
     int executionTime = 0;
     int start = 0;                                          // その時のチーム参加要請を送った時刻
@@ -67,6 +65,8 @@ public class Agent implements SetParam , Cloneable{
     double meanUA = 0;             // 今まで自分の元に返って来た受理応答の平均応答時間(= untilAcceptances/acceptances)
     double threshold_for_reciprocity_as_leader;
     double[] reliabilities_l = new double[AGENT_NUM];
+    List<Agent> relAgents_l = new ArrayList<>();
+    List<Agent> relRanking_l = new ArrayList<>();
 
     // メンバエージェントのみが持つパラメータ
     Agent leader;
@@ -75,11 +75,12 @@ public class Agent implements SetParam , Cloneable{
     double meanRT = 0;     // 受理応答からの待ち時間の平均
     double threshold_for_reciprocity_as_member;
     double[] reliabilities_m = new double[AGENT_NUM];
+    List<Agent> relAgents_m = new ArrayList<>();
+    List<Agent> relRanking_m = new ArrayList<>();
 
     // seedが変わった(各タームの最初の)エージェントの生成
     Agent(long seed, int x, int y, Strategy strategy) {
         setSeed(seed);
-        int rand;
         this.id = _id;
         _id++;
         if (CHECK_INTERIM_RELATIONSHIPS){
@@ -91,7 +92,8 @@ public class Agent implements SetParam , Cloneable{
         this.y = y;
         this.strategy = strategy;
         setResource(UNIFORM);
-        Arrays.fill(reliabilities, INITIAL_VALUE_OF_DEC);
+        Arrays.fill(reliabilities_l, INITIAL_VALUE_OF_DEC);
+        Arrays.fill(reliabilities_m, INITIAL_VALUE_OF_DEC);
         threshold_for_reciprocity_as_leader = THRESHOLD_FOR_RECIPROCITY_FROM_LEADER;
         threshold_for_reciprocity_as_member = (double)resSum/resCount * THRESHOLD_FOR_RECIPROCITY_RATE;
         if (strategy.getClass().getName().startsWith("CNP")
@@ -106,14 +108,14 @@ public class Agent implements SetParam , Cloneable{
 
     // 残りのエージェントの生成
     Agent(int x, int y, Strategy strategy) {
-        int rand;
         this.id = _id;
         _id++;
         this.x = x;
         this.y = y;
         this.strategy = strategy;
         setResource(UNIFORM);
-        Arrays.fill(reliabilities, INITIAL_VALUE_OF_DEC);
+        Arrays.fill(reliabilities_l, INITIAL_VALUE_OF_DEC);
+        Arrays.fill(reliabilities_m, INITIAL_VALUE_OF_DEC);
         threshold_for_reciprocity_as_leader = THRESHOLD_FOR_RECIPROCITY_FROM_LEADER;
         threshold_for_reciprocity_as_member = (double)resSum/resCount * THRESHOLD_FOR_RECIPROCITY_RATE;
         if (strategy.getClass().getName().startsWith("CNP")
@@ -422,14 +424,6 @@ public class Agent implements SetParam , Cloneable{
     protected boolean canDo(Agent agent, SubTask st) {
         if (agent.res[st.resType] == st.reqRes[st.resType]) return true;
         else return false;
-    }
-
-    int countZeroReliability(List<Agent> agents){
-        int countZero = 0;
-        for( double rel: this.reliabilities ){
-            if( rel == 0 ) countZero++;
-        }
-        return countZero;
     }
 
     private static void setSeed(long seed) {
