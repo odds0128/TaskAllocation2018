@@ -35,7 +35,6 @@ public class Agent implements SetParam , Cloneable{
     int validatedTicks = 0;
     boolean joined = false;
     double e_leader = INITIAL_VALUE_OF_DSL, e_member = INITIAL_VALUE_OF_DSM;
-    SubTask mySubTask;
     double[] reliabilities = new double[AGENT_NUM];
     List<Message> messages;
     List<Agent> relAgents = new ArrayList<>();
@@ -74,6 +73,7 @@ public class Agent implements SetParam , Cloneable{
     int totalResponseTicks = 0;     // 受理応答からの待ち時間の合計
     double meanRT = 0;     // 受理応答からの待ち時間の平均
     double threshold_for_reciprocity_as_member;
+    List<SubTask> mySubTaskQueue;       // メンバはサブタスクを溜め込むことができる(実質的に，同時に複数のチームに参加することができるようになる)
 
     // seedが変わった(各タームの最初の)エージェントの生成
     Agent(long seed, int x, int y, Strategy strategy) {
