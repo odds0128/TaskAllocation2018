@@ -1,0 +1,31 @@
+@startuml
+title メンバがサブタスクをキューに入れていく様子
+hide footbox
+
+participant Member  as A
+participant Leader1 as X
+participant Leader2 as Y
+'participant Leader3 as Z
+
+activate A
+A -> X: Join
+A -> A: ExecuteTask
+Y -> A: Solicit
+
+alt タスクキューに空きがある and Yが信用できる
+    A -> Y: Join
+    A -> A: Store Subtask
+else other
+    A -> Y: Decline
+end
+
+deactivate A
+
+alt タスクキューにサブタスクがある
+    activate A
+    A -> A: ExecuteTask
+else other
+    A -> A: Wait solicitation
+end
+
+@enduml
