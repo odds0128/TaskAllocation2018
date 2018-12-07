@@ -52,7 +52,6 @@ public class PM2 implements Strategy, SetParam {
             return;
         }
         leader.restSubTask = leader.ourTask.subTaskNum;                       // 残りサブタスク数を設定
-        leader.selectSubTask();
         leader.candidates = selectMembers(leader, leader.ourTask.subTasks);   // メッセージ送信
         if (leader.candidates == null) {
             leader.candidates = new ArrayList<>();
