@@ -58,12 +58,12 @@ public class PM2withRoleFixed implements Strategy, SetParam {
     }
 
     private void proposeAsL(Agent leader) {
-        leader.ourTask = Manager.getTask();
-        leader.ourTask.setFrom(leader);
+        leader.ourTask = Manager.getTask(leader);
         if (leader.ourTask == null) {
             inactivate(leader, 0);
             return;
         }
+        leader.ourTask.setFrom(leader);
         leader.restSubTask = leader.ourTask.subTaskNum;                       // 残りサブタスク数を設定
         leader.executionTime = -1;
         leader.candidates = selectMembers(leader, leader.ourTask.subTasks);   // メッセージ送信
@@ -187,12 +187,11 @@ public class PM2withRoleFixed implements Strategy, SetParam {
     }
 
     private void receiveAsM(Agent member) {
-        if (member.messages.size() == 0) return;
-
         member.mySubTask = receiveSubtasks(member, member.messages);
 
         // サブタスクがもらえたなら実行フェイズへ移る.
         if (member.mySubTask != null) {
+            member.leader = member.mySubTask.from;
             member.allocated[member.leader.id][member.mySubTask.resType]++;
             member.executionTime = member.calcExecutionTime(member, member.mySubTask);
             member.phase = PHASE3;
@@ -200,7 +199,6 @@ public class PM2withRoleFixed implements Strategy, SetParam {
         }
         // サブタスクが割り当てられなかったら信頼度を0で更新し, inactivate
         else {
-            member.relAgents = renewRel(member, member.leader, 0);
             inactivate(member, 0);
         }
 
@@ -338,7 +336,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
      */
     // 互恵主義と合理主義のどちらかによって行動を変える
     // TODO: 複数のサブタスクを許容するように変更する
-    public Agent selectSolicitations(Agent member, List<Message> messages) {
+    public void selectSolicitations(Agent member, List<Message> messages) {
         int size = messages.size();
         List<Message> others = new ArrayList<>();
         List<Message> solicitations = new ArrayList<>();
@@ -348,7 +346,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
         Agent tempLeader;
 
         // 有効なメッセージがなければリターンする
-        if (size == 0) return null;
+        if (size == 0) return;
 
         // TODO: メッセージの分類
         for (int i = 0; i < size; i++) {
@@ -362,8 +360,12 @@ public class PM2withRoleFixed implements Strategy, SetParam {
         assert member.messages.size() == 0 : "Odd message(s) exists";
         member.messages = others;
 
+        size = solicitations.size();
+
+        if (size == 0) return;
+
         // TODO: サブタスクキューの空きがある限りsolicitationを選定する
-        while (member.mySubTaskQueue.size() < SUBTASK_QUEUE_SIZE) {
+        while (member.mySubTaskQueue.size() < SUBTASK_QUEUE_SIZE && solicitations.size() > 0) {
             // εグリーディーで選択する
             if (member.epsilonGreedy()) {
                 member.sendMessage(member, solicitations.remove(member._randSeed.nextInt(solicitations.size())).getFrom(), REPLY, ACCEPT);
@@ -373,13 +375,13 @@ public class PM2withRoleFixed implements Strategy, SetParam {
                 int index = 0;
                 message = solicitations.get(0);
                 tempLeader = message.getFrom();
-                for (int i = 1; i < size; i++) {
-                    message = solicitations.get(i);
+                for (int i = 0; i < size - 1; i++) {
+                    message = solicitations.get(i + 1);
                     from = message.getFrom();
                     // もし暫定信頼度一位のやつより信頼度高いやついたら, 暫定のやつを断って今のやつを暫定(ryに入れる
                     if (member.reliabilities[tempLeader.id] < member.reliabilities[from.id]) {
                         tempLeader = from;
-                        index = i;
+                        index = i + 1;
                     }
                 }
                 if (member.principle == RATIONAL) {
@@ -392,6 +394,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
                     } else member.sendMessage(member, tempLeader, REPLY, REJECT);
                 }
             }
+            size--;
         }
 
         size = solicitations.size();
@@ -401,7 +404,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
         }
         assert solicitations.size() == 0 : "Miss solicitation!";
 
-        return member.mySubTaskQueue.get(0).from;
+        return;
     }
 
     SubTask receiveSubtasks(Agent m, List<Message> ms) {
@@ -411,8 +414,13 @@ public class PM2withRoleFixed implements Strategy, SetParam {
 
         for (int i = 0; i < size; i++) {
             message = m.messages.remove(0);
-            m.mySubTaskQueue.add(message.getSubTask());
+            if (message.getSubTask() != null) {
+                m.mySubTaskQueue.add(message.getSubTask());
+            } else {
+                m.relAgents = renewRel(m, message.getFrom(), 0);
+            }
         }
+        if( m.mySubTaskQueue.size() == 0 ) return null;
         return m.mySubTaskQueue.remove(0);
     }
 
@@ -626,8 +634,16 @@ public class PM2withRoleFixed implements Strategy, SetParam {
 
         // TODO: solicitを受けるか判断する
         if (ag.role == MEMBER) {
-            ag.leader = selectSolicitations(ag, ag.messages);
-            receiveSubtasks(ag, ag.messages);
+            selectSolicitations(ag, ag.messages);
+            SubTask temp;
+            temp = receiveSubtasks(ag, ag.messages);
+            if(temp != null) {
+                if (ag.mySubTask == null) {
+                    ag.mySubTask = temp;
+                } else{
+                    ag.mySubTaskQueue.add(0, temp );
+                }
+            }
         } else {
             size = ag.messages.size();
             if (size == 0) return;
@@ -652,6 +668,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
     }
 
     void inactivate(Agent ag, int success) {
+
         if (ag.role == LEADER) {
             ag.phase = lPHASE1;
             ag.teamMembers.clear();        // すでにサブタスクを送っていてメンバの選定から外すエージェントのリスト
@@ -668,7 +685,13 @@ public class PM2withRoleFixed implements Strategy, SetParam {
             ag.phase = mPHASE1;
             ag.role = MEMBER;
         }
-        ag.mySubTask = null;
+        if (ag.mySubTaskQueue.size() > 0) {
+            ag.mySubTask = ag.mySubTaskQueue.remove(0);
+            ag.leader = ag.mySubTask.from;
+            ag.phase = EXECUTION;
+        } else {
+            ag.mySubTask = null;
+        }
         ag.joined = false;
         ag.messages.clear();
         ag.executionTime = 0;

@@ -159,6 +159,7 @@ public class Agent implements SetParam , Cloneable{
         validatedTicks = Manager.getTicks();
         if( mySubTaskQueue.size() > 0 ){
             mySubTask = mySubTaskQueue.remove(0);
+            leader = mySubTask.from;
             role = MEMBER;
             _member_num++;
             this.phase = EXECUTION;
@@ -230,7 +231,14 @@ public class Agent implements SetParam , Cloneable{
         }
     }
     void selectRoleWithoutLearning() {
-        int ran = _randSeed.nextInt(5);
+        int ran = _randSeed.nextInt(7);
+        if( mySubTaskQueue.size() > 0 ){
+            mySubTask = mySubTaskQueue.remove(0);
+            leader = mySubTask.from;
+            role = MEMBER;
+            _member_num++;
+            this.phase = EXECUTION;
+        }
         if (ran == 0) {
             role = LEADER;
             _leader_num++;
