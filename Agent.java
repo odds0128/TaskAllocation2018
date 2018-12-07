@@ -73,7 +73,8 @@ public class Agent implements SetParam , Cloneable{
     int totalResponseTicks = 0;     // 受理応答からの待ち時間の合計
     double meanRT = 0;     // 受理応答からの待ち時間の平均
     double threshold_for_reciprocity_as_member;
-    List<SubTask> mySubTaskQueue;       // メンバはサブタスクを溜め込むことができる(実質的に，同時に複数のチームに参加することができるようになる)
+    SubTask mySubTask;
+    List<SubTask> mySubTaskQueue = new ArrayList<>();       // メンバはサブタスクを溜め込むことができる(実質的に，同時に複数のチームに参加することができるようになる)
 
     // seedが変わった(各タームの最初の)エージェントの生成
     Agent(long seed, int x, int y, Strategy strategy) {
@@ -156,6 +157,12 @@ public class Agent implements SetParam , Cloneable{
 
     void selectRole() {
         validatedTicks = Manager.getTicks();
+        if( mySubTaskQueue.size() > 0 ){
+            mySubTask = mySubTaskQueue.remove(0);
+            role = MEMBER;
+            _member_num++;
+            this.phase = EXECUTION;
+        }
         if (epsilonGreedy()) {
             if (e_leader < e_member) {
                 role = LEADER;
@@ -279,12 +286,12 @@ public class Agent implements SetParam , Cloneable{
         } else {
             _member_num--;
         }
+        mySubTask = null;
         role_renewal_counter=0;
         joined = false;
         role = JONE_DOE;
         phase = SELECT_ROLE;
         leader = null;
-        mySubTask = null;
         executionTime = 0;
         if (strategy.getClass().getName() != "RoundRobin") {
             index = 0;
@@ -388,6 +395,14 @@ public class Agent implements SetParam , Cloneable{
         else return false;
     }
 
+    boolean isOccupied(){
+        assert this.mySubTaskQueue.size() > SUBTASK_QUEUE_SIZE : "YesMan";
+        if( this.mySubTaskQueue.size() == SUBTASK_QUEUE_SIZE ){
+            return true;
+        }
+        return false;
+    }
+
     int countZeroReliability(List<Agent> agents){
         int countZero = 0;
         for( double rel: this.reliabilities ){
@@ -473,6 +488,8 @@ public class Agent implements SetParam , Cloneable{
         }
         return temp;
     }
+
+
 
     /**
      * agentsの中でspan以上の時間誰からの依頼も受けずチームに参加していないメンバ数を返す．

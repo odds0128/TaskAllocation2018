@@ -80,6 +80,7 @@ interface SetParam {
     int MEMBER     = -1   ;
     int RATIONAL   = 0    ;
     int RECIPROCAL = 1    ;
+    int SUBTASK_QUEUE_SIZE = 5;
 
     // メッセージの種類
     int PROPOSAL   = 1;
