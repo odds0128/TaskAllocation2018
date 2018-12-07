@@ -33,8 +33,8 @@ public class CNP_area_restricted implements SetParam, Strategy {
     // publicizeメソッド ... 近い方から約100体のエージェントに広報する
     private void publicize(Agent le) {
         le.ourTask = Manager.getTask();
+        le.executionTime = -1;
         if (le.ourTask == null) return;
-        le.selectSubTask();
         for (Agent ag : le.canReach) {
             TransmissionPath.sendMessage(new Message(le, ag, PUBLICITY, le.ourTask, null));
         }

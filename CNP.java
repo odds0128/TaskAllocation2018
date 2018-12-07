@@ -27,8 +27,8 @@ public class CNP implements Strategy, SetParam {
     // publicizeメソッド ... 全エージェントに広報する
     private void publicize(Agent le) {
         le.ourTask = Manager.getTask();
+        le.executionTime = -1;
         if (le.ourTask == null) return;
-        le.selectSubTask();
         for (Agent ag : Manager.getAgents()) {
             TransmissionPath.sendMessage(new Message(le, ag, PUBLICITY, le.ourTask, null));
         }

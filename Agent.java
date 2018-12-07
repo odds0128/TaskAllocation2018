@@ -295,41 +295,6 @@ public class Agent implements SetParam , Cloneable{
         this.validatedTicks = Manager.getTicks();
     }
 
-    /**
-     * selectSubtaskメソッド
-     * リーダーが自分のやるサブタスクを選択するメソッド
-     * まず自分に能力的に可能なサブタスクを探し, その中からランダムで選ぶ
-     * なければ何もしない
-     */
-    void selectSubTask() {
-        int calc = 0;
-        int temp = Integer.MAX_VALUE;
-        int tempIndex = -1;
-        int i = 0;
-
-        // 自分に可能なサブタスクを抽出する
-        for (SubTask st : ourTask.subTasks) {
-            calc = calcExecutionTime(this, st);
-            if( calc > 0 && calc < temp ){
-                temp = calc ;
-                tempIndex = i;
-            }
-            i++;
-        }
-        // もし一つもなかったら仕方ないからなしでreturn
-        if (tempIndex == -1) {
-            restSubTask = ourTask.subTaskNum;
-            executionTime = -1;
-            return;
-        }
-        // 一個でもあったらどれかを選んで自分のサブタスクとする
-        else {
-            executionTime = temp;
-            mySubTask = ourTask.subTasks.remove(tempIndex);
-            ourTask.subTaskNum--;
-            restSubTask = ourTask.subTaskNum;
-        }
-    }
     void sendMessage(Agent from, Agent to, int type, Object o) {
         TransmissionPath.sendMessage(new Message(from, to, type, o));
     }
