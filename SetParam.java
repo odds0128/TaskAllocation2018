@@ -5,9 +5,9 @@
 
 interface SetParam {
     // 環境の設定( 変更していく部分 )
-    int EXECUTION_TIMES = 10;             // 実験の回数
+    int EXECUTION_TIMES = 1;             // 実験の回数
     int MAX_TURN_NUM    = 500000;         // 一回の実験のターン数
-    int WRITING_TIMES   = 5000;           // データのファイルへの出力回数
+    int WRITING_TIMES   = 50;           // データのファイルへの出力回数
     boolean CHECK_RELATIONSHIPS    = false;  // エージェント関係の協調関係を録るか
     boolean CHECK_INTERIM_RELATIONSHIPS    = false;  // エージェント関係の協調関係のスナップショットを録るか
     boolean CHECK_INITIATION       = false;  // エージェントやタスクの初期設定を確認するか
@@ -29,7 +29,7 @@ interface SetParam {
     double RATE        = 0.99996;   // rateはマジでちゃんと計算して気をつけて思ったより早く収束するから
 
     // 結果表示のためのパラメータ
-    int  COALITION_CHECK_SPAN = 5000;          // 協調関係ができているか確認するための最後の方のターム
+    int  COALITION_CHECK_SPAN = 50;          // 協調関係ができているか確認するための最後の方のターム
     double THRESHOLD_FOR_COALITION = 10;
     int THRESHOLD_FOR_NEET = 5000;
     double THRESHOLD_FOR_RECIPROCITY_RATE = 0.7;

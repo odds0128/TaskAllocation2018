@@ -30,7 +30,6 @@ public class PM2 implements Strategy, SetParam {
     }
 
     public void actAsLeader(Agent agent) {
-        setPrinciple(agent);
         if (agent.phase == PROPOSITION) proposeAsL(agent);
         else if (agent.phase == REPORT) reportAsL(agent);
         else if (agent.phase == EXECUTION) execute(agent);
@@ -38,7 +37,6 @@ public class PM2 implements Strategy, SetParam {
     }
 
     public void actAsMember(Agent agent) {
-        setPrinciple(agent);
         if (agent.phase == REPLY) replyAsM(agent);
         else if (agent.phase == RECEPTION) receiveAsM(agent);
         else if (agent.phase == EXECUTION) execute(agent);
@@ -70,16 +68,13 @@ public class PM2 implements Strategy, SetParam {
     }
 
     private void replyAsM(Agent member) {
+        Agent.phase1++;
         if (member.messages.size() == 0) return;     // メッセージをチェック
         member.leader = selectLeader(member, member.messages);
         if (member.leader != null) {
             member.joined = true;
 //            System.out.println("ID: "+ member.id + ", my leader is " + member.leader.id );
             member.sendMessage(member, member.leader, REPLY, ACCEPT);
-        }
-        // どのリーダーからの要請も受けないのならinactivate
-        // どっかには参加するのなら交渉2フェイズへ
-        if (member.joined) {
             member.totalOffers++;
             member.start = Manager.getTicks();
             member.nextPhase();
@@ -175,6 +170,7 @@ public class PM2 implements Strategy, SetParam {
     }
 
     private void receiveAsM(Agent member) {
+        Agent.phase2++;
         // リーダーからの返事が来るまで待つ
         if (member.messages.size() == 0) return;
         Message message;
@@ -208,7 +204,8 @@ public class PM2 implements Strategy, SetParam {
             } else {
                 agent.sendMessage(agent, agent.leader, DONE, 0);
                 agent.required[agent.mySubTask.resType]++;
-                agent.relAgents = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / (double) (Manager.getTicks() - agent.start));
+                int et = agent.calcExecutionTime(agent, agent.mySubTask);
+                agent.relAgents = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / (double) et);
                 if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
                     agent.workWithAsM[agent.leader.id]++;
                 }
@@ -377,7 +374,6 @@ public class PM2 implements Strategy, SetParam {
     private List<Agent> renewRel(Agent agent, Agent target, double evaluation) {
         assert !agent.equals(target) : "alert4";
         double temp = agent.reliabilities[target.id];
-//        if( Manager.getTicks() % 10000 == 0 ) System.out.println( evaluation );
         // 信頼度の更新式
         agent.reliabilities[target.id] = temp * (1.0 - α) + α * evaluation;
 
@@ -433,6 +429,7 @@ public class PM2 implements Strategy, SetParam {
                 break;
             }
         }
+
         return tmp;
     }
 
@@ -515,7 +512,7 @@ public class PM2 implements Strategy, SetParam {
                 // そのメンバにサブタスクを送ってからリーダーがその完了報告を受けるまでの時間
                 // すなわちrt = "メンバのサブタスク実行時間 + メッセージ往復時間"
                 AllocatedSubTask as = teamHistory[ag.id].remove(m.getFrom());
-                int rt = Manager.getTicks() - as.getAllocatedTime();
+                int rt = ag.calcExecutionTime(m.getFrom(), as.getSt());
                 int reward = as.getRequiredResources();
                 //                System.out.println(rt);
                 ag.relAgents = renewRel(ag, m.getFrom(), (double) reward / rt);
