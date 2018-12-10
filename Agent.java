@@ -292,7 +292,6 @@ public class Agent implements SetParam , Cloneable{
             prevIndex = index % relAgents.size();
             index = prevIndex;
         }
-        this.validatedTicks = Manager.getTicks();
     }
 
     void sendMessage(Agent from, Agent to, int type, Object o) {
@@ -489,6 +488,19 @@ public class Agent implements SetParam , Cloneable{
                 }
         }
         return neetM;
+    }
+
+    static int phase1 = 0;
+    static int phase2 = 0;
+    static public void resetCount(){
+        System.out.println("Turn: " + Manager.getTicks());
+        System.out.println(" Member: " + _member_num);
+        System.out.println(" Leader: " + _leader_num);
+        System.out.println("  Phase1: " + phase1);
+        System.out.println("  Phase2: " + phase2);
+        System.out.println();
+        phase1 = 0;
+        phase2 = 0;
     }
 
     @Override

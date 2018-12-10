@@ -128,14 +128,12 @@ public class Manager implements SetParam {
                         }
                     }
                     // ここが1tickの最後の部分．次のtickまでにやることあったらここで．
+//                    if( turn%10 == 0  && turn > 400000) {
+//                        Agent.resetCount();
+//                    }
                 }
-/*
-                for( Agent agent: agents ){
-                    if( agent.role == LEADER ) System.out.print( agent.id + "-l:" + agent.validatedTicks + ", ");
-                    else if( agent.role == MEMBER ) System.out.print( agent.id + "-m:" + agent.validatedTicks + ", ");
-                }
-*/
                 // ↑ 一回の実験のカッコ．以下は実験の合間で作業する部分
+
                 if (CHECK_AGENTS) {
                     System.out.println("leaders:" + Agent._leader_num + ", members:" + Agent._member_num);
                     OutPut.aggregateDataOnce(agents, num);

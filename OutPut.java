@@ -687,6 +687,7 @@ public class OutPut implements SetParam {
         String outputFilePath = _singleton.setPath("relationships", st.getClass().getName(), "xlsx");
         Edge edge = new Edge();
         edge.makeEdge(agents);
+
         try {
             book = new SXSSFWorkbook();
             Font font = book.createFont();

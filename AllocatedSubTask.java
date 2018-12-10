@@ -20,4 +20,16 @@ public class AllocatedSubTask {
         return requiredResources;
     }
 
+
+    @Override
+    public String toString(){
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("AllocatedSubtask: \n");
+        sb.append(" Subtask: " + st + "\n");
+        sb.append(" AllocateTime: " + allocatedTime + "\n");
+        sb.append(" RequiredResource: " + requiredResources + "\n");
+
+        return sb.toString();
+    }
 }
