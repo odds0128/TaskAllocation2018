@@ -69,7 +69,12 @@ public class PM2 implements Strategy, SetParam {
 
     private void replyAsM(Agent member) {
         Agent.phase1++;
-        if (member.messages.size() == 0) return;     // メッセージをチェック
+        if (member.messages.size() == 0) {
+            if (Manager.getTicks() - member.validatedTicks > THRESHOLD_FOR_ROLE_RENEWAL) {
+                member.inactivate(0);
+            }
+            return;     // メッセージをチェック
+        }
         member.leader = selectLeader(member, member.messages);
         if (member.leader != null) {
             member.joined = true;
@@ -78,6 +83,8 @@ public class PM2 implements Strategy, SetParam {
             member.totalOffers++;
             member.start = Manager.getTicks();
             member.nextPhase();
+        } else if (Manager.getTicks() - member.validatedTicks > THRESHOLD_FOR_ROLE_RENEWAL) {
+            member.inactivate(0);
         }
     }
 
@@ -144,7 +151,7 @@ public class PM2 implements Strategy, SetParam {
                 leader.sendMessage(leader, tm, RESULT, leader.preAllocations.get(tm));
             }
             Manager.finishTask(leader);
-            if( leader.executionTime < 0 ){
+            if (leader.executionTime < 0) {
                 if (leader._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
                     for (Agent ag : leader.teamMembers) {
                         leader.workWithAsL[ag.id]++;
@@ -153,7 +160,7 @@ public class PM2 implements Strategy, SetParam {
                 }
                 leader.inactivate(1);
                 return;
-            }else {
+            } else {
                 leader.nextPhase();
                 return;
             }
@@ -242,7 +249,7 @@ public class PM2 implements Strategy, SetParam {
         // リーダーにとっての信頼エージェントは閾値を超えたエージェント全てと言える
         for (Agent relAg : leader.relRanking) {
             SubTask st;
-            if( leader.reliabilities[relAg.id] > leader.threshold_for_reciprocity_as_leader ) {
+            if (leader.reliabilities[relAg.id] > leader.threshold_for_reciprocity_as_leader) {
                 // 上位からサブタスクを持って来て
                 // そのサブタスクが上位の信頼エージェントに可能かつまださらに上位の信頼エージェントに割り振られていないなら
                 // そいつに割り当てることにしてそいつをexceptionsに，そのサブタスクをskipsに入れる
@@ -255,7 +262,7 @@ public class PM2 implements Strategy, SetParam {
                         break;
                     }
                 }
-            }else{
+            } else {
                 break;
             }
         }
@@ -416,9 +423,9 @@ public class PM2 implements Strategy, SetParam {
         List<Agent> tmp = new ArrayList<>();
         Agent ag;
         double threshold;
-        if( agent.role == LEADER ){
+        if (agent.role == LEADER) {
             threshold = agent.threshold_for_reciprocity_as_leader;
-        }else{
+        } else {
             threshold = agent.threshold_for_reciprocity_as_member;
         }
         for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
@@ -452,9 +459,9 @@ public class PM2 implements Strategy, SetParam {
         List<Agent> tmp = new ArrayList<>();
         Agent ag;
         double threshold;
-        if( agent.role == LEADER ){
+        if (agent.role == LEADER) {
             threshold = agent.threshold_for_reciprocity_as_leader;
-        }else{
+        } else {
             threshold = agent.threshold_for_reciprocity_as_member;
         }
         for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {

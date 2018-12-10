@@ -128,9 +128,9 @@ public class Manager implements SetParam {
                         }
                     }
                     // ここが1tickの最後の部分．次のtickまでにやることあったらここで．
-                    if( turn%10 == 0  && turn > 400000) {
-                        Agent.resetCount();
-                    }
+//                    if( turn%10 == 0  && turn > 400000) {
+//                        Agent.resetCount();
+//                    }
                 }
                 // ↑ 一回の実験のカッコ．以下は実験の合間で作業する部分
 
