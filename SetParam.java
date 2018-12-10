@@ -43,7 +43,7 @@ interface SetParam {
     int MAX_X    = 51, MAX_Y = 51;
     int MAX_DELAY = 5;
 
-    double ADDITIONAL_TASK_NUM  = 5.0;        // タスクを追加するタイミングで, タスクキューに追加するタスクの個数(=λ)
+    double ADDITIONAL_TASK_NUM  = 7.0;        // タスクを追加するタイミングで, タスクキューに追加するタスクの個数(=λ)
     int RESOURCE_TYPES = 3;
     int MAX_AGENT_RESOURCE_SIZE   = 5;
     int MIN_AGENT_RESOURCE_SIZE   = 0;

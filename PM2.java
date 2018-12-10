@@ -30,7 +30,6 @@ public class PM2 implements Strategy, SetParam {
     }
 
     public void actAsLeader(Agent agent) {
-        setPrinciple(agent);
         if (agent.phase == PROPOSITION) proposeAsL(agent);
         else if (agent.phase == REPORT) reportAsL(agent);
         else if (agent.phase == EXECUTION) execute(agent);
@@ -38,7 +37,6 @@ public class PM2 implements Strategy, SetParam {
     }
 
     public void actAsMember(Agent agent) {
-        setPrinciple(agent);
         if (agent.phase == REPLY) replyAsM(agent);
         else if (agent.phase == RECEPTION) receiveAsM(agent);
         else if (agent.phase == EXECUTION) execute(agent);
@@ -70,19 +68,21 @@ public class PM2 implements Strategy, SetParam {
     }
 
     private void replyAsM(Agent member) {
-        if (member.messages.size() == 0) return;     // メッセージをチェック
+        if (member.messages.size() == 0) {
+            if (Manager.getTicks() - member.validatedTicks > THRESHOLD_FOR_ROLE_RENEWAL) {
+                member.inactivate(0);
+            }
+            return;     // メッセージをチェック
+        }
         member.leader = selectLeader(member, member.messages);
         if (member.leader != null) {
             member.joined = true;
-//            System.out.println("ID: "+ member.id + ", my leader is " + member.leader.id );
             member.sendMessage(member, member.leader, REPLY, ACCEPT);
-        }
-        // どのリーダーからの要請も受けないのならinactivate
-        // どっかには参加するのなら交渉2フェイズへ
-        if (member.joined) {
             member.totalOffers++;
             member.start = Manager.getTicks();
             member.nextPhase();
+        } else if (Manager.getTicks() - member.validatedTicks > THRESHOLD_FOR_ROLE_RENEWAL) {
+            member.inactivate(0);
         }
     }
 
@@ -423,11 +423,9 @@ public class PM2 implements Strategy, SetParam {
             List<Agent> tmp = new ArrayList<>();
             Agent ag;
             double threshold;
-            if (agent.role == LEADER) {
-                threshold = agent.threshold_for_reciprocity_as_leader;
-            } else {
-                threshold = agent.threshold_for_reciprocity_as_member;
-            }
+
+            threshold = agent.threshold_for_reciprocity_as_leader;
+
             for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
                 ag = agent.relRanking_l.get(j);
                 if (agent.reliabilities_l[ag.id] > threshold) {
@@ -481,11 +479,9 @@ public class PM2 implements Strategy, SetParam {
             List<Agent> tmp = new ArrayList<>();
             Agent ag;
             double threshold;
-            if (agent.role == LEADER) {
-                threshold = agent.threshold_for_reciprocity_as_leader;
-            } else {
-                threshold = agent.threshold_for_reciprocity_as_member;
-            }
+           
+            threshold = agent.threshold_for_reciprocity_as_member;
+
             for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
                 ag = agent.relRanking_m.get(j);
                 if (agent.reliabilities_m[ag.id] > threshold) {
@@ -510,7 +506,7 @@ public class PM2 implements Strategy, SetParam {
     private List<Agent> decreaseDEC(Agent agent) {
         double temp;
 
-        if(agent.role == LEADER){
+        if (agent.role == LEADER) {
             for (int i = 0; i < AGENT_NUM; i++) {
                 temp = agent.reliabilities_l[i] - γ;
                 if (temp < 0) agent.reliabilities_l[i] = 0;
@@ -520,11 +516,8 @@ public class PM2 implements Strategy, SetParam {
             List<Agent> tmp = new ArrayList<>();
             Agent ag;
             double threshold;
-            if (agent.role == LEADER) {
-                threshold = agent.threshold_for_reciprocity_as_leader;
-            } else {
-                threshold = agent.threshold_for_reciprocity_as_member;
-            }
+            threshold = agent.threshold_for_reciprocity_as_leader;
+
             for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
                 ag = agent.relRanking_l.get(j);
                 if (agent.reliabilities_l[ag.id] > threshold) {
@@ -534,7 +527,7 @@ public class PM2 implements Strategy, SetParam {
                 }
             }
             return tmp;
-        }else{
+        } else {
             for (int i = 0; i < AGENT_NUM; i++) {
                 temp = agent.reliabilities_m[i] - γ;
                 if (temp < 0) agent.reliabilities_m[i] = 0;
@@ -544,11 +537,8 @@ public class PM2 implements Strategy, SetParam {
             List<Agent> tmp = new ArrayList<>();
             Agent ag;
             double threshold;
-            if (agent.role == LEADER) {
-                threshold = agent.threshold_for_reciprocity_as_leader;
-            } else {
-                threshold = agent.threshold_for_reciprocity_as_member;
-            }
+            threshold = agent.threshold_for_reciprocity_as_member;
+
             for (int j = 0; j < MAX_RELIABLE_AGENTS; j++) {
                 ag = agent.relRanking_m.get(j);
                 if (agent.reliabilities_m[ag.id] > threshold) {
