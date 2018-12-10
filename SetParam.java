@@ -55,7 +55,7 @@ interface SetParam {
 //    int THRESHOLD_FOR_ROLE_RENEWAL  = 10;
 //    int THRESHOLD_FOR_ROLE_RENEWAL  = 1;
 //int THRESHOLD_FOR_ROLE_RENEWAL  = 100;
-    int THRESHOLD_FOR_ROLE_RENEWAL  = 50;
+    int THRESHOLD_FOR_ROLE_RENEWAL  = 5;
 
     // パラメータ
     double INITIAL_VALUE_OF_DEC =  0;
