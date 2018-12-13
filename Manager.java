@@ -7,7 +7,7 @@ import java.io.*;
 import java.util.*;
 
 public class Manager implements SetParam {
-//    private static Strategy strategy = new PM2withRoleFixed();      // ICA2018における提案手法    //    private static Strategy strategy = new ProposedMethodForSingapore();
+// // // //   private static Strategy strategy = new PM2withRoleFixed();      // ICA2018における提案手法    //    private static Strategy strategy = new ProposedMethodForSingapore();
     private static Strategy strategy = new PM2();      // ICA2018における提案手法役割更新あり    //    private static Strategy strategy = new ProposedMethodForSingapore();
 
     static private long _seed;
@@ -279,7 +279,10 @@ public class Manager implements SetParam {
         }
 
         // 信頼度ランキングをランダムに初期化
+
+        // 信頼度ランキングをランダムに初期化
         Agent agent;
+        // リーダー側
         for (int i = 0; i < AGENT_NUM; i++) {
             List<Agent> temp = new ArrayList<>(agents);
             int rand;
@@ -288,9 +291,22 @@ public class Manager implements SetParam {
             while (temp.size() != 0) {
                 rand = _randSeed.nextInt(temp.size());
                 ag = temp.remove(rand);
-                if (!ag.equals(agent)) agent.relRanking.add(ag);
+                if (!ag.equals(agent)) agent.relRanking_l.add(ag);
             }
         }
+        // メンバ側
+        for (int i = 0; i < AGENT_NUM; i++) {
+            List<Agent> temp = new ArrayList<>(agents);
+            int rand;
+            Agent ag;
+            agent = agents.get(i);
+            while (temp.size() != 0) {
+                rand = _randSeed.nextInt(temp.size());
+                ag = temp.remove(rand);
+                if (!ag.equals(agent)) agent.relRanking_m.add(ag);
+            }
+        }
+
     }
 
     /**

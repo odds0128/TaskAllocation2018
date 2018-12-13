@@ -114,14 +114,14 @@ public class OutPut implements SetParam {
 
                 leadersExcAveArray[times] += ag.excellence;
                 int temp = 0;
-                for( Agent relAg:  ag.relRanking ){
-                    if( ag.reliabilities[relAg.id] > ag.threshold_for_reciprocity_as_leader ){
+                for( Agent relAg:  ag.relRanking_l ){
+                    if( ag.reliabilities_l[relAg.id] > ag.threshold_for_reciprocity_as_leader ){
                         mDependableAgentsFromAllLeaders[times]++;
                         mDependableAgentsFromLeadersTrustsSomeone[times] ++;
                         if( ag.didTasksAsLeader > 100 ){
                             mDependableMembersFromExcellentLeader[times]++;
                         }
-                        if( relAg.inTheList(ag, relAg.relAgents) >= 0 ){
+                        if( relAg.inTheList(ag, relAg.relAgents_l) >= 0 ){
                             mMutualDependency[times]++;
                         }
 
@@ -265,7 +265,7 @@ public class OutPut implements SetParam {
             System.out.print("ID: " + agent.id + " Resources : ");
             System.out.println("Reachable: " + agent.canReach.size());
             for (int i = 0; i < RESOURCE_TYPES; i++) System.out.print(agent.res[i] + ", ");
-            System.out.println(" Reliable Agents: " + agent.relAgents.size());
+//            System.out.println(" Reliable Agents: " + agent.relAgents.size());
             System.out.println("Threshold: " + agent.threshold_for_reciprocity_as_member);
             System.out.println("Principle: " + agent.principle);
             if( agent.principle == RECIPROCAL && agent.e_member > agent.e_leader) {
@@ -887,13 +887,13 @@ public class OutPut implements SetParam {
                         _singleton.writeCell(row, colNumber++, style_int, agent.y * 10);
 
                         if (agent.e_leader > agent.e_member) _singleton.writeCell(row, colNumber++, style_int, -1);
-                        else if (agent.relRanking.size() > 0)
-                            _singleton.writeCell(row, colNumber++, style_int, agent.relRanking.get(0).id);
+                        else if (agent.relRanking_m.size() > 0)
+                            _singleton.writeCell(row, colNumber++, style_int, agent.relRanking_m.get(0).id);
                         else _singleton.writeCell(row, colNumber++, style_int, -1);
 
                         if (agent.e_leader > agent.e_member) _singleton.writeCell(row, colNumber++, style_int, 0);
-                        else if (agent.relRanking.size() > 0)
-                            _singleton.writeCell(row, colNumber++, style_int, Manager.delays[agent.id][agent.relRanking.get(0).id]);
+                        else if (agent.relRanking_m.size() > 0)
+                            _singleton.writeCell(row, colNumber++, style_int, Manager.delays[agent.id][agent.relRanking_m.get(0).id]);
                         else _singleton.writeCell(row, colNumber++, style_int, -1);
 
                         /*
@@ -903,8 +903,8 @@ public class OutPut implements SetParam {
                         for (int j = 0; j < RESOURCE_TYPES; j++) {
                             _singleton.writeCell(row, colNumber++, style_int, agent.res[j]);
                             _singleton.writeCell(row, colNumber++, style_int, agent.required[j]);
-                            if (agent.relRanking.size() > 0)
-                                _singleton.writeCell(row, colNumber++, style_int, agent.allocated[agent.relRanking.get(0).id][j]);
+                            if (agent.relRanking_m.size() > 0)
+                                _singleton.writeCell(row, colNumber++, style_int, agent.allocated[agent.relRanking_m.get(0).id][j]);
                             else _singleton.writeCell(row, colNumber++, style_int, -1);
                         }
                         _singleton.writeCell(row, colNumber++, style_double, agent.excellence);
@@ -1112,7 +1112,7 @@ public class OutPut implements SetParam {
 
             for (int from = 0; from < AGENT_NUM; from++) {
                 for (int to = 0; to < AGENT_NUM; to++) {
-                    pw.println(delays[from][to] + ", " + agents.get(from).reliabilities[to]);
+//                    pw.println(delays[from][to] + ", " + agents.get(from).reliabilities[to]);
                 }
             }
 
@@ -1163,11 +1163,11 @@ public class OutPut implements SetParam {
                 pw.print(ag.id + ", ");
                 if (ag.e_member > ag.e_leader) {
                     for (int i = 0; i < AGENT_NUM; i++) {
-                        pw.print("-" + ag.reliabilities[i] + ", ");
+//                        pw.print("-" + ag.reliabilities[i] + ", ");
                     }
                 } else {
                     for (int i = 0; i < AGENT_NUM; i++) {
-                        pw.print(ag.reliabilities[i] + ", ");
+//                        pw.print(ag.reliabilities[i] + ", ");
                     }
                 }
                 pw.println();
@@ -1193,10 +1193,10 @@ public class OutPut implements SetParam {
         }
 // */
         for (Agent agent : agents) {
-            if (agent.reliabilities[agent.relRanking.get(0).id] > agent.threshold_for_reciprocity_as_member
-                    && (agent.e_member > THRESHOLD_FOR_ROLE_RECIPROCITY
-                    || agent.e_leader > THRESHOLD_FOR_ROLE_RECIPROCITY))
-                temp++;
+//            if (agent.reliabilities[agent.relRanking.get(0).id] > agent.threshold_for_reciprocity_as_member
+//                    && (agent.e_member > THRESHOLD_FOR_ROLE_RECIPROCITY
+//                    || agent.e_leader > THRESHOLD_FOR_ROLE_RECIPROCITY))
+//                temp++;
         }
         return temp;
     }
@@ -1218,10 +1218,10 @@ public class OutPut implements SetParam {
         }
 // */
         for (Agent agent : agents) {
-            if (agent.reliabilities[agent.relRanking.get(0).id] > agent.threshold_for_reciprocity_as_member
-                    && agent.e_member > THRESHOLD_FOR_ROLE_RECIPROCITY
-                    && agent.e_member > agent.e_leader)
-                temp++;
+//            if (agent.reliabilities[agent.relRanking.get(0).id] > agent.threshold_for_reciprocity_as_member
+//                    && agent.e_member > THRESHOLD_FOR_ROLE_RECIPROCITY
+//                    && agent.e_member > agent.e_leader)
+//                temp++;
         }
         return temp;
     }
