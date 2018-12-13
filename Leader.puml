@@ -1,0 +1,11 @@
+@startuml
+
+participant A as "Leader"
+participant B as "Member1"
+participant C as "Member2"
+participant D as "Member3"
+
+
+A -> B
+
+@enduml

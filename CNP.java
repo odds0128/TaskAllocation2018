@@ -12,7 +12,6 @@ public class CNP implements Strategy, SetParam {
         }
     }
 
-    @Override
     public void selectSolicitations(Agent agent, List<Message> messages) {
         return ;
     }

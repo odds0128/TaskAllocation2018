@@ -95,15 +95,15 @@ class Message implements SetParam{
         StringBuilder str = new StringBuilder();
         str.append(" from: " + from.id );
         str.append(", to: " + to.id);
-        str.append(", type: " + messageType );
+        str.append(", type: ");
         if( messageType == PROPOSAL ){
-            str.append(", " + proposedSubtask.resType);
+            str.append("proposal__ " + proposedSubtask.resType);
         }else if( messageType == REPLY ){
-            str.append(", " + reply);
+            str.append("reply__ " + reply);
         }else if( messageType == RESULT ){
-            str.append(", " + subtask);
+            str.append("result__ " + subtask);
         }else if( messageType == DONE ){
-            str.append(", " + timeSTarrived);
+            str.append("done__ " + timeSTarrived);
         }
         return str.toString();
     }

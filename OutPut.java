@@ -47,7 +47,8 @@ public class OutPut implements SetParam {
     static void aggregateAgentData(List<Agent> agents) {
         leaderNumArray[index] += Agent._leader_num;
         neetMembersArray[index] += Agent.countNEETmembers(agents, MAX_TURN_NUM / WRITING_TIMES);
-/*        memberNumArray[index] += Agent._member_num;
+/*
+        memberNumArray[index] += Agent._member_num;
 
         int a = Agent.countLeadersInDepopulatedArea(agents);
         int b = Agent.countLeadersInPopulatedArea(agents);
@@ -56,7 +57,7 @@ public class OutPut implements SetParam {
         memberNumInDepopulatedAreaArray[index] += (Agent._lonelyAgents.size() - a);
         leaderNumInPopulatedAreaArray[index]   += b;
         memberNumInPopulatedAreaArray[index]   += (Agent._lonelyAgents.size() - b);
-        // */
+// */
     }
 
     static void aggregateData(int ft, int dt, int ot, int rm, int ftida, int ftipa) {
@@ -528,7 +529,7 @@ public class OutPut implements SetParam {
         }
     }
 
-    static void writeAgentsInformationX(Strategy st) throws FileNotFoundException, IOException {
+    static void writeAgentsInformationX(Strategy st, List<Agent> agents) throws FileNotFoundException, IOException {
         String outputFilePath = _singleton.setPath("agentInfo", st.getClass().getName(), "xlsx");
         try {
             book = new SXSSFWorkbook();
@@ -660,6 +661,49 @@ public class OutPut implements SetParam {
                     sheet.autoSizeColumn(k, true);
                 }
             }
+
+            // 2ページ目
+            rowNumber = 0;
+            colNumber = 0;
+
+            sheet = book.createSheet();
+            if (sheet instanceof SXSSFSheet) {
+                ((SXSSFSheet) sheet).trackAllColumnsForAutoSizing();
+            }
+            //シート名称の設定
+            book.setSheetName(0, st.getClass().getName());
+
+            row = sheet.createRow(rowNumber);
+            _singleton.writeCell(row, colNumber++, style_header, "ID");
+            _singleton.writeCell(row, colNumber++, style_header, "Tasks leaders still have");
+            _singleton.writeCell(row, colNumber++, style_header, "Subtasks to be done");
+
+            //ウィンドウ枠の固定
+            sheet.createFreezePane(1, 1);
+
+            //ヘッダ行にオートフィルタの設定
+            sheet.setAutoFilter(new CellRangeAddress(0, 0, 0, colNumber));
+
+            //列幅の自動調整
+            for (int j = 0; j <= colNumber; j++) {
+                sheet.autoSizeColumn(j, true);
+            }
+            Agent agent;
+            // 結果を書き込んでいく
+            for (int wt = 0; wt < AGENT_NUM; wt++) {
+                rowNumber++;
+                colNumber = 0;
+                row = sheet.createRow(rowNumber);
+                agent = agents.get(wt);
+                _singleton.writeCell(row, colNumber++, style_int, wt);
+                if( agent.ourTask == null ) {
+                    _singleton.writeCell(row, colNumber++, style_int, 0);
+                }else{
+                    _singleton.writeCell(row, colNumber++, style_int, 1);
+                }
+                _singleton.writeCell(row, colNumber++, style_int, agent.mySubTaskQueue.size());
+            }
+
             //ファイル出力
             fout = new FileOutputStream(outputFilePath);
             book.write(fout);

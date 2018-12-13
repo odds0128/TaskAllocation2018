@@ -5,7 +5,6 @@ hide footbox
 participant Member  as A
 participant Leader1 as X
 participant Leader2 as Y
-'participant Leader3 as Z
 
 activate A
 A -> X: Join
@@ -23,9 +22,10 @@ deactivate A
 
 alt タスクキューにサブタスクがある
     activate A
-    A -> A: ExecuteTask
+    A -> A: Pop subtask
+    A -> A: to Execution
 else other
-    A -> A: Wait solicitation
+    A -> A: to Waiting
 end
 
 @enduml

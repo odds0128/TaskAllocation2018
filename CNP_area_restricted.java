@@ -14,7 +14,6 @@ public class CNP_area_restricted implements SetParam, Strategy {
         }
     }
 
-    @Override
     public void selectSolicitations(Agent agent, List<Message> messages) {
         return ;
     }
