@@ -125,7 +125,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
             // もし片っぽしか受理しなければそいつがチームメンバーとなる
             else {
                 // Bだけ受理してくれた
-                if (A == null) {
+                if (A == null){
                     leader.preAllocations.put(B, leader.ourTask.subTasks.get(indexA));
                     leader.teamMembers.add(B);
                 }
@@ -139,6 +139,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
         // 未割り当てが残っていないのなら実行へ
         if (leader.teamMembers.size() == leader.ourTask.subTaskNum) {
             leader.pastTasks.add(leader.ourTask);
+
             for (Agent tm : leader.teamMembers) {
                 teamHistory[leader.id].put(tm, new AllocatedSubTask(leader.preAllocations.get(tm), Manager.getTicks(), leader.ourTask.task_id));
                 leader.sendMessage(leader, tm, RESULT, leader.preAllocations.get(tm));
@@ -313,7 +314,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
      *
      */
     // 互恵主義と合理主義のどちらかによって行動を変える
-    // TODO: 複数のサブタスクを許容するように変更する
+    // 複数のサブタスクを許容するように変更する
     public void checkSolicitationsANDAllocations(Agent member) {
         List<Message> others = new ArrayList<>();
         List<Message> solicitations = new ArrayList<>();
@@ -322,7 +323,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
         // 有効なメッセージがなければリターンする
         if (member.messages.size() == 0) return;
 
-        // TODO: メッセージの分類
+        // メッセージの分類
         while (member.messages.size() > 0) {
             message = member.messages.remove(0);
             if (message.getMessageType() == PROPOSAL) {
@@ -336,7 +337,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
         member.messages = others;
         int room = SUBTASK_QUEUE_SIZE - member.mySubTaskQueue.size(); // サブタスクキューの空き
 
-        // TODO: サブタスクキューの空きがある限りsolicitationを選定する．
+        // サブタスクキューの空きがある限りsolicitationを選定する．
         while ( member.tbd < room && solicitations.size() > 0) {
             // εグリーディーで選択する
             if (member.epsilonGreedy()) {
@@ -346,7 +347,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
                 assert to.role == LEADER: "おーい";
                 member.sendMessage(member, to, REPLY, ACCEPT);
             }
-            // TODO: solicitationsの中から最も信頼するリーダーのsolicitを受ける
+            // solicitationsの中から最も信頼するリーダーのsolicitを受ける
             else {
                 int index = 0;
                 int solicitationNum = solicitations.size();
@@ -378,7 +379,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
             message = solicitations.remove(0);
             member.sendMessage(member, message.getFrom(), REPLY, REJECT);
         }
-        // TODO: othersへの対処．(othersとしては，RESULTが考えられる)
+        // othersへの対処．(othersとしては，RESULTが考えられる)
         Message result ;
         SubTask allocatedSubtask;
         while( others.size() > 0 ){
@@ -389,8 +390,8 @@ public class PM2withRoleFixed implements Strategy, SetParam {
             if( allocatedSubtask == null ){   // 割り当てがなかった場合
                 renewRel(member, result.getFrom(), 0);
             }else{    // 割り当てられた場合
-                // TODO: すでにサブタスクを持っているならそれを優先して今もらったやつはキューに入れておく
-                // TODO: さもなければキューに"入れずに"自分の担当サブタスクとする
+                // すでにサブタスクを持っているならそれを優先して今もらったやつはキューに入れておく
+                // さもなければキューに"入れずに"自分の担当サブタスクとする
                 if( member.mySubTask == null ){
                     member.mySubTask = allocatedSubtask;
                 }else{
@@ -613,7 +614,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
                 task.subTasks.remove(as.getSt());
                 if( task.subTasks.size() == 0 ) {
                     ag.pastTasks.remove(task);
-                    Manager.finishTask(ag);
+                    Manager.finishTask(ag, task);
                     ag.didTasksAsLeader++;
                 }
 

@@ -145,7 +145,6 @@ public class CNP implements Strategy, SetParam {
                     if (ag._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
                         for (Agent agent : ag.teamMembers) ag.workWithAsL[agent.id]++;
                     }
-                    Manager.finishTask(ag);
                     for (Message m : ag.messages) {
                         ag.preAllocations.remove(m.getFrom());
                     }

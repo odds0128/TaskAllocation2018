@@ -162,7 +162,6 @@ public class Agent implements SetParam , Cloneable{
             mySubTask = mySubTaskQueue.remove(0);
             leader = mySubTask.from;
             role = MEMBER;
-            _member_num++;
             this.phase = EXECUTION;
         }
 //        if (epsilonGreedy()) {

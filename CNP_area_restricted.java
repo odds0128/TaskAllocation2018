@@ -120,7 +120,6 @@ public class CNP_area_restricted implements SetParam, Strategy {
             le.preAllocations.put(bestAllocations[i], le.ourTask.subTasks.get(i));
             TransmissionPath.sendMessage(new Message(le, bestAllocations[i], BID_RESULT, le.ourTask.subTasks.get(i), null));
         }
-        Manager.finishTask(le);
 //        System.out.println("ID: " + le.id + " with " + le.teamMembers);
         this.nextPhase(le);
     }

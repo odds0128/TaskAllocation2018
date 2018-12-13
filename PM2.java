@@ -192,7 +192,7 @@ public class PM2 implements Strategy, SetParam {
             } else {
                 agent.sendMessage(agent, agent.leader, DONE, 0);
                 agent.required[agent.mySubTask.resType]++;
-                agent.relAgents = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / (double) agent.calcExecutionTime(agent, agent.mySubTask));
+                agent.relAgents = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / (double) Manager.getTicks()-agent.start);
                 if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
                     agent.workWithAsM[agent.leader.id]++;
                     agent.didTasksAsMember++;
@@ -548,7 +548,7 @@ public class PM2 implements Strategy, SetParam {
                     System.out.println(Manager.getTicks() + ": " + m.getFrom() + " asserts he did " + ag.id + "'s subtask ");
                 }
 
-                int rt = ag.calcExecutionTime(m.getFrom(), as.getSt());
+                int rt = Manager.getTicks() - as.getAllocatedTime();
                 int reward = as.getRequiredResources();
                 //                System.out.println(rt);
                 ag.relAgents = renewRel(ag, m.getFrom(), (double) reward / rt);
@@ -563,7 +563,7 @@ public class PM2 implements Strategy, SetParam {
                 task.subTasks.remove(as.getSt());
                 if( task.subTasks.size() == 0 ) {
                     ag.pastTasks.remove(task);
-                    Manager.finishTask(ag);
+                    Manager.finishTask(ag, task);
                     ag.didTasksAsLeader++;
                 }
             } else {
