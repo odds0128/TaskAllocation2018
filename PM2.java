@@ -54,6 +54,7 @@ public class PM2 implements Strategy, SetParam {
         leader.executionTime = -1;
         leader.candidates = selectMembers(leader, leader.ourTask.subTasks);   // メッセージ送信
         if (leader.candidates == null) {
+            Manager.disposeTask(leader);
             leader.candidates = new ArrayList<>();
             leader.inactivate(0);
             return;
@@ -134,7 +135,6 @@ public class PM2 implements Strategy, SetParam {
         }
         // 未割り当てが残っていないのなら実行へ
         if (leader.teamMembers.size() == leader.ourTask.subTaskNum) {
-            leader.pastTasks.add(leader.ourTask);
             for (Agent tm : leader.teamMembers) {
                 teamHistory[leader.id].put(tm, new AllocatedSubTask(leader.preAllocations.get(tm), Manager.getTicks(), leader.ourTask.task_id));
                 leader.sendMessage(leader, tm, RESULT, leader.preAllocations.get(tm));
@@ -145,6 +145,8 @@ public class PM2 implements Strategy, SetParam {
                         leader.workWithAsL[ag.id]++;
                     }
                 }
+                leader.pastTasks.add(leader.ourTask);
+                leader.ourTask = null;
                 leader.inactivate(1);
                 return;
             }else {

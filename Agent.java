@@ -282,7 +282,6 @@ public class Agent implements SetParam , Cloneable{
 
         if (role == LEADER) {
             _leader_num--;
-            if (ourTask != null) Manager.disposeTask(this);
             candidates.clear();
             teamMembers.clear();
             preAllocations.clear();
