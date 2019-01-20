@@ -35,11 +35,7 @@ public class Agent implements SetParam , Cloneable{
     int validatedTicks = 0;
     boolean joined = false;
     double e_leader = INITIAL_VALUE_OF_DSL, e_member = INITIAL_VALUE_OF_DSM;
-    SubTask mySubTask;
-    double[] reliabilities = new double[AGENT_NUM];
     List<Message> messages;
-    List<Agent> relAgents = new ArrayList<>();
-    List<Agent> relRanking = new ArrayList<>();
     int principle = RATIONAL;
     int executionTime = 0;
     int start = 0;                                          // その時のチーム参加要請を送った時刻
@@ -67,6 +63,10 @@ public class Agent implements SetParam , Cloneable{
     int untilAcceptances = 0;      // 今まで自分の元に返って来た受理応答の合計応答時間(= 往復の通信時間 + メンバの処理時間)
     double meanUA = 0;             // 今まで自分の元に返って来た受理応答の平均応答時間(=  untilAcceptances/acceptances)
     double threshold_for_reciprocity_as_leader;
+    List<Task> pastTasks = new ArrayList<>();
+    double[] reliabilities_l = new double[AGENT_NUM];
+    List<Agent> relAgents_l = new ArrayList<>();
+    List<Agent> relRanking_l = new ArrayList<>();
 
     // メンバエージェントのみが持つパラメータ
     Agent leader;
@@ -74,6 +74,12 @@ public class Agent implements SetParam , Cloneable{
     int totalResponseTicks = 0;     // 受理応答からの待ち時間の合計
     double meanRT = 0;     // 受理応答からの待ち時間の平均
     double threshold_for_reciprocity_as_member;
+    SubTask mySubTask;
+    List<SubTask> mySubTaskQueue = new ArrayList<>();       // メンバはサブタスクを溜め込むことができる(実質的に，同時に複数のチームに参加することができるようになる)
+    int tbd = 0;                                            // 返事待ちの数
+    double[] reliabilities_m = new double[AGENT_NUM];
+    List<Agent> relAgents_m = new ArrayList<>();
+    List<Agent> relRanking_m = new ArrayList<>();
 
     // seedが変わった(各タームの最初の)エージェントの生成
     Agent(long seed, int x, int y, Strategy strategy) {
@@ -90,7 +96,8 @@ public class Agent implements SetParam , Cloneable{
         this.y = y;
         this.strategy = strategy;
         setResource(UNIFORM);
-        Arrays.fill(reliabilities, INITIAL_VALUE_OF_DEC);
+        Arrays.fill(reliabilities_l, INITIAL_VALUE_OF_DEC);
+        Arrays.fill(reliabilities_m, INITIAL_VALUE_OF_DEC);
         threshold_for_reciprocity_as_leader = THRESHOLD_FOR_RECIPROCITY_FROM_LEADER;
         threshold_for_reciprocity_as_member = (double)resSum/resCount * THRESHOLD_FOR_RECIPROCITY_RATE;
         if (strategy.getClass().getName().startsWith("CNP")
@@ -112,7 +119,8 @@ public class Agent implements SetParam , Cloneable{
         this.y = y;
         this.strategy = strategy;
         setResource(UNIFORM);
-        Arrays.fill(reliabilities, INITIAL_VALUE_OF_DEC);
+        Arrays.fill(reliabilities_l, INITIAL_VALUE_OF_DEC);
+        Arrays.fill(reliabilities_m, INITIAL_VALUE_OF_DEC);
         threshold_for_reciprocity_as_leader = THRESHOLD_FOR_RECIPROCITY_FROM_LEADER;
         threshold_for_reciprocity_as_member = (double)resSum/resCount * THRESHOLD_FOR_RECIPROCITY_RATE;
         if (strategy.getClass().getName().startsWith("CNP")
@@ -132,8 +140,7 @@ public class Agent implements SetParam , Cloneable{
 /*            for (int i = 0; i < RESOURCE_NUM; i++) {
                 int rand = random.nextInt(3) + 6;
                 res[i] = rand;
-            }
-*/
+            } */
         } else {
             while (resSum == 0) {
                 for (int i = 0; i < RESOURCE_TYPES; i++) {
@@ -156,40 +163,46 @@ public class Agent implements SetParam , Cloneable{
 
     void selectRole() {
         validatedTicks = Manager.getTicks();
-        if (epsilonGreedy()) {
-            if (e_leader < e_member) {
-                role = LEADER;
-                _leader_num++;
-                this.phase = PROPOSITION;
-                candidates = new ArrayList<>();
-                teamMembers = new ArrayList<>();
-                preAllocations = new HashMap<>();
-                replies = new ArrayList<>();
-                results = new ArrayList<>();
-            } else if (e_member < e_leader) {
-                role = MEMBER;
-                _member_num++;
-                this.phase = WAITING;
-            } else {
-// */
-                int ran = _randSeed.nextInt(2);
-                if (ran == 0) {
-                    role = LEADER;
-                    _leader_num++;
-                    this.phase = PROPOSITION;
-                    candidates = new ArrayList<>();
-                    teamMembers = new ArrayList<>();
-                    preAllocations = new HashMap<>();
-                    replies = new ArrayList<>();
-                    results = new ArrayList<>();
-                } else {
-                    role = MEMBER;
-                    _member_num++;
-                    this.phase = WAITING;
-                }
-            }
-        // εじゃない時
-        } else {
+        if( mySubTaskQueue.size() > 0 ){
+            mySubTask = mySubTaskQueue.remove(0);
+            leader = mySubTask.from;
+            role = MEMBER;
+            this.phase = EXECUTION;
+        }
+//        if (epsilonGreedy()) {
+//            if (e_leader < e_member) {
+//                role = LEADER;
+//                _leader_num++;
+//                this.phase = PROPOSITION;
+//                candidates = new ArrayList<>();
+//                teamMembers = new ArrayList<>();
+//                preAllocations = new HashMap<>();
+//                replies = new ArrayList<>();
+//                results = new ArrayList<>();
+//            } else if (e_member < e_leader) {
+//                role = MEMBER;
+//                _member_num++;
+//                this.phase = WAITING;
+//            } else {
+//// */
+//                int ran = _randSeed.nextInt(2);
+//                if (ran == 0) {
+//                    role = LEADER;
+//                    _leader_num++;
+//                    this.phase = PROPOSITION;
+//                    candidates = new ArrayList<>();
+//                    teamMembers = new ArrayList<>();
+//                    preAllocations = new HashMap<>();
+//                    replies = new ArrayList<>();
+//                    results = new ArrayList<>();
+//                } else {
+//                    role = MEMBER;
+//                    _member_num++;
+//                    this.phase = WAITING;
+//                }
+//            }
+//        // εじゃない時
+//        } else {
             if (e_leader > e_member) {
                 role = LEADER;
                 _leader_num++;
@@ -219,11 +232,18 @@ public class Agent implements SetParam , Cloneable{
                     _member_num++;
                     this.phase = WAITING;
                 }
-            }
+//            }
         }
     }
     void selectRoleWithoutLearning() {
-        int ran = _randSeed.nextInt(5);
+        int ran = _randSeed.nextInt(7);
+        if( mySubTaskQueue.size() > 0 ){
+            mySubTask = mySubTaskQueue.remove(0);
+            leader = mySubTask.from;
+            role = MEMBER;
+            _member_num++;
+            this.phase = EXECUTION;
+        }
         if (ran == 0) {
             role = LEADER;
             _leader_num++;
@@ -267,7 +287,10 @@ public class Agent implements SetParam , Cloneable{
 
         if (role == LEADER) {
             _leader_num--;
-            if (ourTask != null) Manager.disposeTask(this);
+            if (ourTask != null) {
+                System.out.println("バカな");
+                ourTask = null;
+            }
             candidates.clear();
             teamMembers.clear();
             preAllocations.clear();
@@ -279,17 +302,17 @@ public class Agent implements SetParam , Cloneable{
         } else {
             _member_num--;
         }
+        mySubTask = null;
         role_renewal_counter=0;
         joined = false;
         role = JONE_DOE;
         phase = SELECT_ROLE;
         leader = null;
-        mySubTask = null;
         executionTime = 0;
         if (strategy.getClass().getName() != "RoundRobin") {
             index = 0;
         } else {
-            prevIndex = index % relAgents.size();
+            prevIndex = index % relAgents_l.size();
             index = prevIndex;
         }
         this.validatedTicks = Manager.getTicks();
@@ -349,6 +372,22 @@ public class Agent implements SetParam , Cloneable{
         return -1;
     }
 
+    /**
+     * taskIDを元にpastTaskからTaskを同定しそれを返す
+     * @param taskID ... taskのID
+     */
+    protected Task identifyTask (int taskID){
+        Task temp = null;
+        for( Task t: pastTasks ){
+            if( t.task_id == taskID ){
+                temp = t;
+                break;
+            }
+        }
+        assert temp != null : "Did phantom task!";
+        return temp;
+    }
+
     protected boolean epsilonGreedy() {
         double random = _randSeed.nextDouble();
         if (random < ε) {
@@ -356,6 +395,7 @@ public class Agent implements SetParam , Cloneable{
         }
         return false;
     }
+
     /**
      * nextPhaseメソッド
      * phaseの変更をする
@@ -383,17 +423,18 @@ public class Agent implements SetParam , Cloneable{
         this.validatedTicks = Manager.getTicks();
         this.role_renewal_counter=0;
     }
+
     protected boolean canDo(Agent agent, SubTask st) {
         if (agent.res[st.resType] == st.reqRes[st.resType]) return true;
         else return false;
     }
 
-    int countZeroReliability(List<Agent> agents){
-        int countZero = 0;
-        for( double rel: this.reliabilities ){
-            if( rel == 0 ) countZero++;
+    boolean isOccupied(){
+        assert this.mySubTaskQueue.size() > SUBTASK_QUEUE_SIZE : "YesMan";
+        if( this.mySubTaskQueue.size() == SUBTASK_QUEUE_SIZE ){
+            return true;
         }
-        return countZero;
+        return false;
     }
 
     private static void setSeed(long seed) {
@@ -424,7 +465,6 @@ public class Agent implements SetParam , Cloneable{
         for (int i = 0; i < RESOURCE_TYPES; i++) resSizeArray[i] = 0;
     }
 
-
     // 結果集計用のstaticメソッド
     public static void resetWorkHistory(List<Agent> agents){
         for(Agent ag: agents){
@@ -435,6 +475,7 @@ public class Agent implements SetParam , Cloneable{
         }
         _coalition_check_end_time = MAX_TURN_NUM;
     }
+
     public static int countReciprocalMember(List<Agent> agents){
         int temp = 0;
         for( Agent ag: agents ){
@@ -444,6 +485,7 @@ public class Agent implements SetParam , Cloneable{
         }
         return temp;
     }
+
     static void makeLonelyORAccompaniedAgentList(List<Agent> agents){
         for( Agent ag: agents ){
             if( ag.isLonely == 1 ){
@@ -473,6 +515,8 @@ public class Agent implements SetParam , Cloneable{
         }
         return temp;
     }
+
+
 
     /**
      * agentsの中でspan以上の時間誰からの依頼も受けずチームに参加していないメンバ数を返す．

@@ -14,6 +14,10 @@ public class CNP_area_restricted implements SetParam, Strategy {
         }
     }
 
+    public void selectSolicitations(Agent agent, List<Message> messages) {
+        return ;
+    }
+
     public void actAsLeader(Agent agent) {
         if (agent.phase == lPHASE1) publicize(agent);
         else if (agent.phase == lPHASE2) organize(agent);
@@ -32,7 +36,7 @@ public class CNP_area_restricted implements SetParam, Strategy {
 
     // publicizeメソッド ... 近い方から約100体のエージェントに広報する
     private void publicize(Agent le) {
-        le.ourTask = Manager.getTask();
+        le.ourTask = Manager.getTask(le);
         le.executionTime = -1;
         if (le.ourTask == null) return;
         for (Agent ag : le.canReach) {
@@ -116,7 +120,6 @@ public class CNP_area_restricted implements SetParam, Strategy {
             le.preAllocations.put(bestAllocations[i], le.ourTask.subTasks.get(i));
             TransmissionPath.sendMessage(new Message(le, bestAllocations[i], BID_RESULT, le.ourTask.subTasks.get(i), null));
         }
-        Manager.finishTask(le);
 //        System.out.println("ID: " + le.id + " with " + le.teamMembers);
         this.nextPhase(le);
     }

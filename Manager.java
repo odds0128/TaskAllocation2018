@@ -7,7 +7,7 @@ import java.io.*;
 import java.util.*;
 
 public class Manager implements SetParam {
-//    private static Strategy strategy = new PM2withRoleFixed();      // ICA2018における提案手法    //    private static Strategy strategy = new ProposedMethodForSingapore();
+// // // //   private static Strategy strategy = new PM2withRoleFixed();      // ICA2018における提案手法    //    private static Strategy strategy = new ProposedMethodForSingapore();
     private static Strategy strategy = new PM2();      // ICA2018における提案手法役割更新あり    //    private static Strategy strategy = new ProposedMethodForSingapore();
 
     static private long _seed;
@@ -56,13 +56,13 @@ public class Manager implements SetParam {
                 bw = new BufferedWriter(fw);
                 pw = new PrintWriter(bw);
                 start = 0;
-                end = 20;
+                end = AGENT_NUM;
                 for (int i = start; i < end; i++) {
-                    pw.print(i + ", " + " " + ", ");
+                    pw.print(", " + i + ", " + " " + ", ");
                 }
                 pw.println();
                 for (int i = start; i < end; i++) {
-                    pw.print("e_leader, e_member, ");
+                    pw.print(" , e_leader, e_member, ");
                 }
                 pw.println();
             }
@@ -79,11 +79,6 @@ public class Manager implements SetParam {
 
                 // ターンの進行
                 for (turn = 1; turn <= MAX_TURN_NUM; turn++) {
-/*                    if( turn > 1000 ) {
-                        System.out.println("===========================================================");
-                        System.out.println("Turn: " + turn);
-                    }
-// */
                     // ターンの最初にεを調整する
                     // 最初は大きくしてトライアルを多くするともに，
                     // 徐々に小さくして安定させる
@@ -94,7 +89,6 @@ public class Manager implements SetParam {
 
                     addNewTasksToQueue();
                     actFreeLancer();
-                    assert Agent._leader_num + Agent._member_num == AGENT_NUM: "Illegal role numbers, leaders:" + Agent._leader_num + ", members:" + Agent._member_num;
                     if (turn % writeResultsSpan == 0 && CHECK_RESULTS) {
                         OutPut.aggregateAgentData(agents);
                         assert Agent._recipro_num + Agent._rational_num == AGENT_NUM: "Illegal principle numbers, reciprocal:" + Agent._recipro_num + ", rational:" + Agent._rational_num;
@@ -129,12 +123,6 @@ public class Manager implements SetParam {
                     }
                     // ここが1tickの最後の部分．次のtickまでにやることあったらここで．
                 }
-/*
-                for( Agent agent: agents ){
-                    if( agent.role == LEADER ) System.out.print( agent.id + "-l:" + agent.validatedTicks + ", ");
-                    else if( agent.role == MEMBER ) System.out.print( agent.id + "-m:" + agent.validatedTicks + ", ");
-                }
-*/
                 // ↑ 一回の実験のカッコ．以下は実験の合間で作業する部分
                 if (CHECK_AGENTS) {
                     System.out.println("leaders:" + Agent._leader_num + ", members:" + Agent._member_num);
@@ -145,7 +133,7 @@ public class Manager implements SetParam {
             }
             // ↑ 全実験の終了のカッコ．以下は後処理
             if (CHECK_RESULTS) OutPut.writeResults(strategy);
-            if (CHECK_AGENTS) OutPut.writeAgentsInformationX(strategy);
+            if (CHECK_AGENTS) OutPut.writeAgentsInformationX(strategy, agents);
 //            OutPut.writeDelays(delays);
 //            OutPut.writeReliabilities(agents, strategy);
 //            OutPut.writeDelaysAndRels(delays, agents, strategy);
@@ -215,11 +203,11 @@ public class Manager implements SetParam {
     }
 
     static Agent getAgentRandomly(Agent self, List<Agent> exceptions, List<Agent> targets) {
-        int random = _randSeed.nextInt(targets.size());
+        int random      = _randSeed.nextInt(targets.size());
         Agent candidate = targets.get(random);
-        while (candidate.equals(self) || self.inTheList(candidate, exceptions) > 0) {
-            random = _randSeed.nextInt(targets.size());
-            candidate = targets.get(random);
+        while (candidate.equals(self) || self.inTheList(candidate, exceptions) >= 0) {
+            random      = _randSeed.nextInt(targets.size());
+            candidate   = targets.get(random);
         }
         return candidate;
     }
@@ -291,7 +279,10 @@ public class Manager implements SetParam {
         }
 
         // 信頼度ランキングをランダムに初期化
+
+        // 信頼度ランキングをランダムに初期化
         Agent agent;
+        // リーダー側
         for (int i = 0; i < AGENT_NUM; i++) {
             List<Agent> temp = new ArrayList<>(agents);
             int rand;
@@ -300,9 +291,22 @@ public class Manager implements SetParam {
             while (temp.size() != 0) {
                 rand = _randSeed.nextInt(temp.size());
                 ag = temp.remove(rand);
-                if (!ag.equals(agent)) agent.relRanking.add(ag);
+                if (!ag.equals(agent)) agent.relRanking_l.add(ag);
             }
         }
+        // メンバ側
+        for (int i = 0; i < AGENT_NUM; i++) {
+            List<Agent> temp = new ArrayList<>(agents);
+            int rand;
+            Agent ag;
+            agent = agents.get(i);
+            while (temp.size() != 0) {
+                rand = _randSeed.nextInt(temp.size());
+                ag = temp.remove(rand);
+                if (!ag.equals(agent)) agent.relRanking_m.add(ag);
+            }
+        }
+
     }
 
     /**
@@ -340,10 +344,13 @@ public class Manager implements SetParam {
     }
 
     // taskQueueにあるタスクをリーダーに渡すメソッド
-    static Task getTask() {
+    static Task getTask(Agent agent) {
         Task temp;
         temp = taskQueue.poll();
-        if (temp != null) temp.flag = PROCESSING;
+        if (temp != null){
+            temp.flag = PROCESSING;
+            temp.setFrom(agent);
+        }
         return temp;
     }
 
@@ -400,7 +407,7 @@ public class Manager implements SetParam {
             if (ag.role == MEMBER) members.add(ag);
             else if (ag.role == LEADER) leaders.add(ag);
         }
-        actRandom(leaders, "act as leader");            // メンバの選定,　要請の送信
+        actRandom(leaders, "act as leader");            // メンバの選定,要請の送信
         actRandom(members, "act as member");            // 要請があるメンバ達はそれに返事をする
     }
 
@@ -432,9 +439,8 @@ public class Manager implements SetParam {
         leader.ourTask = null;
     }
 
-    static void finishTask(Agent leader) {
+    static void finishTask(Agent leader, Task task) {
         if (CHECK_RESULTS) OutPut.aggregateTaskExecutionTime(leader);
-        leader.ourTask = null;
 /*        if( leader.isLonely == 1 )      finishedTasksInDepopulatedArea++;
         if( leader.isAccompanied == 1 ) finishedTasksInPopulatedArea++;
 // */

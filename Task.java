@@ -76,6 +76,12 @@ public class Task implements SetParam{
 //        System.out.println(subTasks);
     }
 
+    void setFrom(Agent agent){
+        for(SubTask st: subTasks){
+            st.setFrom(agent);
+        }
+    }
+
     static void setSeed(long seed){
         _seed = seed;
         _randSeed = new Random(_seed);

@@ -14,6 +14,7 @@ public class SubTask implements SetParam {
     int resSize = 0;
     int resType;
     int resentTimes = 0;
+    Agent from;
 
     /**
      * コンストラクタ
@@ -55,6 +56,10 @@ public class SubTask implements SetParam {
             resType = _randSeed.nextInt(RESOURCE_TYPES);
             reqRes[resType] = _randSeed.nextInt(MAX_SUBTASK_RESOURCE_SIZE - MIN_SUBTASK_RESOURCE_SIZE + 1) + MIN_SUBTASK_RESOURCE_SIZE;
         }
+    }
+
+    void setFrom(Agent agent){
+        this.from = agent;
     }
 
     /**

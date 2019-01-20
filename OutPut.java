@@ -47,7 +47,8 @@ public class OutPut implements SetParam {
     static void aggregateAgentData(List<Agent> agents) {
         leaderNumArray[index] += Agent._leader_num;
         neetMembersArray[index] += Agent.countNEETmembers(agents, MAX_TURN_NUM / WRITING_TIMES);
-/*        memberNumArray[index] += Agent._member_num;
+/*
+        memberNumArray[index] += Agent._member_num;
 
         int a = Agent.countLeadersInDepopulatedArea(agents);
         int b = Agent.countLeadersInPopulatedArea(agents);
@@ -56,7 +57,7 @@ public class OutPut implements SetParam {
         memberNumInDepopulatedAreaArray[index] += (Agent._lonelyAgents.size() - a);
         leaderNumInPopulatedAreaArray[index]   += b;
         memberNumInPopulatedAreaArray[index]   += (Agent._lonelyAgents.size() - b);
-        // */
+// */
     }
 
     static void aggregateData(int ft, int dt, int ot, int rm, int ftida, int ftipa) {
@@ -113,14 +114,14 @@ public class OutPut implements SetParam {
 
                 leadersExcAveArray[times] += ag.excellence;
                 int temp = 0;
-                for( Agent relAg:  ag.relRanking ){
-                    if( ag.reliabilities[relAg.id] > ag.threshold_for_reciprocity_as_leader ){
+                for( Agent relAg:  ag.relRanking_l ){
+                    if( ag.reliabilities_l[relAg.id] > ag.threshold_for_reciprocity_as_leader ){
                         mDependableAgentsFromAllLeaders[times]++;
                         mDependableAgentsFromLeadersTrustsSomeone[times] ++;
                         if( ag.didTasksAsLeader > 100 ){
                             mDependableMembersFromExcellentLeader[times]++;
                         }
-                        if( relAg.inTheList(ag, relAg.relAgents) >= 0 ){
+                        if( relAg.inTheList(ag, relAg.relAgents_l) >= 0 ){
                             mMutualDependency[times]++;
                         }
 
@@ -264,7 +265,7 @@ public class OutPut implements SetParam {
             System.out.print("ID: " + agent.id + " Resources : ");
             System.out.println("Reachable: " + agent.canReach.size());
             for (int i = 0; i < RESOURCE_TYPES; i++) System.out.print(agent.res[i] + ", ");
-            System.out.println(" Reliable Agents: " + agent.relAgents.size());
+//            System.out.println(" Reliable Agents: " + agent.relAgents.size());
             System.out.println("Threshold: " + agent.threshold_for_reciprocity_as_member);
             System.out.println("Principle: " + agent.principle);
             if( agent.principle == RECIPROCAL && agent.e_member > agent.e_leader) {
@@ -528,7 +529,7 @@ public class OutPut implements SetParam {
         }
     }
 
-    static void writeAgentsInformationX(Strategy st) throws FileNotFoundException, IOException {
+    static void writeAgentsInformationX(Strategy st, List<Agent> agents) throws FileNotFoundException, IOException {
         String outputFilePath = _singleton.setPath("agentInfo", st.getClass().getName(), "xlsx");
         try {
             book = new SXSSFWorkbook();
@@ -660,6 +661,49 @@ public class OutPut implements SetParam {
                     sheet.autoSizeColumn(k, true);
                 }
             }
+
+            // 2ページ目
+            rowNumber = 0;
+            colNumber = 0;
+
+            sheet = book.createSheet();
+            if (sheet instanceof SXSSFSheet) {
+                ((SXSSFSheet) sheet).trackAllColumnsForAutoSizing();
+            }
+            //シート名称の設定
+            book.setSheetName(0, st.getClass().getName());
+
+            row = sheet.createRow(rowNumber);
+            _singleton.writeCell(row, colNumber++, style_header, "ID");
+            _singleton.writeCell(row, colNumber++, style_header, "Tasks leaders still have");
+            _singleton.writeCell(row, colNumber++, style_header, "Subtasks to be done");
+
+            //ウィンドウ枠の固定
+            sheet.createFreezePane(1, 1);
+
+            //ヘッダ行にオートフィルタの設定
+            sheet.setAutoFilter(new CellRangeAddress(0, 0, 0, colNumber));
+
+            //列幅の自動調整
+            for (int j = 0; j <= colNumber; j++) {
+                sheet.autoSizeColumn(j, true);
+            }
+            Agent agent;
+            // 結果を書き込んでいく
+            for (int wt = 0; wt < AGENT_NUM; wt++) {
+                rowNumber++;
+                colNumber = 0;
+                row = sheet.createRow(rowNumber);
+                agent = agents.get(wt);
+                _singleton.writeCell(row, colNumber++, style_int, wt);
+                if( agent.ourTask == null ) {
+                    _singleton.writeCell(row, colNumber++, style_int, 0);
+                }else{
+                    _singleton.writeCell(row, colNumber++, style_int, 1);
+                }
+                _singleton.writeCell(row, colNumber++, style_int, agent.mySubTaskQueue.size());
+            }
+
             //ファイル出力
             fout = new FileOutputStream(outputFilePath);
             book.write(fout);
@@ -843,13 +887,13 @@ public class OutPut implements SetParam {
                         _singleton.writeCell(row, colNumber++, style_int, agent.y * 10);
 
                         if (agent.e_leader > agent.e_member) _singleton.writeCell(row, colNumber++, style_int, -1);
-                        else if (agent.relRanking.size() > 0)
-                            _singleton.writeCell(row, colNumber++, style_int, agent.relRanking.get(0).id);
+                        else if (agent.relRanking_m.size() > 0)
+                            _singleton.writeCell(row, colNumber++, style_int, agent.relRanking_m.get(0).id);
                         else _singleton.writeCell(row, colNumber++, style_int, -1);
 
                         if (agent.e_leader > agent.e_member) _singleton.writeCell(row, colNumber++, style_int, 0);
-                        else if (agent.relRanking.size() > 0)
-                            _singleton.writeCell(row, colNumber++, style_int, Manager.delays[agent.id][agent.relRanking.get(0).id]);
+                        else if (agent.relRanking_m.size() > 0)
+                            _singleton.writeCell(row, colNumber++, style_int, Manager.delays[agent.id][agent.relRanking_m.get(0).id]);
                         else _singleton.writeCell(row, colNumber++, style_int, -1);
 
                         /*
@@ -859,8 +903,8 @@ public class OutPut implements SetParam {
                         for (int j = 0; j < RESOURCE_TYPES; j++) {
                             _singleton.writeCell(row, colNumber++, style_int, agent.res[j]);
                             _singleton.writeCell(row, colNumber++, style_int, agent.required[j]);
-                            if (agent.relRanking.size() > 0)
-                                _singleton.writeCell(row, colNumber++, style_int, agent.allocated[agent.relRanking.get(0).id][j]);
+                            if (agent.relRanking_m.size() > 0)
+                                _singleton.writeCell(row, colNumber++, style_int, agent.allocated[agent.relRanking_m.get(0).id][j]);
                             else _singleton.writeCell(row, colNumber++, style_int, -1);
                         }
                         _singleton.writeCell(row, colNumber++, style_double, agent.excellence);
@@ -1068,7 +1112,7 @@ public class OutPut implements SetParam {
 
             for (int from = 0; from < AGENT_NUM; from++) {
                 for (int to = 0; to < AGENT_NUM; to++) {
-                    pw.println(delays[from][to] + ", " + agents.get(from).reliabilities[to]);
+//                    pw.println(delays[from][to] + ", " + agents.get(from).reliabilities[to]);
                 }
             }
 
@@ -1111,19 +1155,33 @@ public class OutPut implements SetParam {
             fw = new FileWriter(currentPath + "/out/results/rel" + fileName + ", λ=" + String.format("%.2f", ADDITIONAL_TASK_NUM ) + sdf1.format(date) + ".csv", false);
             bw = new BufferedWriter(fw);
             pw = new PrintWriter(bw);
+
             // 列番号入れる部分
-            pw.print("id");
-            for (int i = 0; i < AGENT_NUM; i++) pw.print(", " + i);
+            pw.print(" , targets");
+            for (int i = 0; i < AGENT_NUM; i++) pw.print(", " + i + ", ");
             pw.println();
-            for (Agent ag : agents) {
-                pw.print(ag.id + ", ");
-                if (ag.e_member > ag.e_leader) {
-                    for (int i = 0; i < AGENT_NUM; i++) {
-                        pw.print("-" + ag.reliabilities[i] + ", ");
-                    }
+
+            pw.print(", Role, ");
+            for (int i = 0; i < AGENT_NUM; i++) pw.print("             DE_l ,             DE_m, " );
+            pw.println();
+
+            for (Agent from : agents) {
+                // column 1 : Role
+                pw.print(from.id + ", ");
+                if (from.e_member > from.e_leader) {
+                    pw.print("Member, ");
                 } else {
-                    for (int i = 0; i < AGENT_NUM; i++) {
-                        pw.print(ag.reliabilities[i] + ", ");
+                    pw.print("Leader, ");
+                }
+
+                // column 2~3 :  DE_l(from→target), DE_m(from→target),
+                for ( Agent target: agents) {
+                    // 自分は飛ばす
+                    if( target.equals(from) ){
+                        pw.print(" , ,");
+                    }else{
+                        pw.print(from.reliabilities_l[target.id] + ", ");
+                        pw.print(from.reliabilities_m[target.id] + ", ");
                     }
                 }
                 pw.println();
@@ -1149,10 +1207,10 @@ public class OutPut implements SetParam {
         }
 // */
         for (Agent agent : agents) {
-            if (agent.reliabilities[agent.relRanking.get(0).id] > agent.threshold_for_reciprocity_as_member
-                    && (agent.e_member > THRESHOLD_FOR_ROLE_RECIPROCITY
-                    || agent.e_leader > THRESHOLD_FOR_ROLE_RECIPROCITY))
-                temp++;
+//            if (agent.reliabilities[agent.relRanking.get(0).id] > agent.threshold_for_reciprocity_as_member
+//                    && (agent.e_member > THRESHOLD_FOR_ROLE_RECIPROCITY
+//                    || agent.e_leader > THRESHOLD_FOR_ROLE_RECIPROCITY))
+//                temp++;
         }
         return temp;
     }
@@ -1174,10 +1232,10 @@ public class OutPut implements SetParam {
         }
 // */
         for (Agent agent : agents) {
-            if (agent.reliabilities[agent.relRanking.get(0).id] > agent.threshold_for_reciprocity_as_member
-                    && agent.e_member > THRESHOLD_FOR_ROLE_RECIPROCITY
-                    && agent.e_member > agent.e_leader)
-                temp++;
+//            if (agent.reliabilities[agent.relRanking.get(0).id] > agent.threshold_for_reciprocity_as_member
+//                    && agent.e_member > THRESHOLD_FOR_ROLE_RECIPROCITY
+//                    && agent.e_member > agent.e_leader)
+//                temp++;
         }
         return temp;
     }

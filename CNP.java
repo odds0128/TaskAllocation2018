@@ -12,6 +12,10 @@ public class CNP implements Strategy, SetParam {
         }
     }
 
+    public void selectSolicitations(Agent agent, List<Message> messages) {
+        return ;
+    }
+
     public void actAsLeader(Agent agent) {
         if (agent.phase == lPHASE1) publicize(agent);
         else if (agent.phase == lPHASE2) organize(agent);
@@ -26,7 +30,7 @@ public class CNP implements Strategy, SetParam {
 
     // publicizeメソッド ... 全エージェントに広報する
     private void publicize(Agent le) {
-        le.ourTask = Manager.getTask();
+        le.ourTask = Manager.getTask(le);
         le.executionTime = -1;
         if (le.ourTask == null) return;
         for (Agent ag : Manager.getAgents()) {
@@ -141,7 +145,6 @@ public class CNP implements Strategy, SetParam {
                     if (ag._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
                         for (Agent agent : ag.teamMembers) ag.workWithAsL[agent.id]++;
                     }
-                    Manager.finishTask(ag);
                     for (Message m : ag.messages) {
                         ag.preAllocations.remove(m.getFrom());
                     }
