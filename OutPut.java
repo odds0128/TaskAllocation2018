@@ -1155,19 +1155,33 @@ public class OutPut implements SetParam {
             fw = new FileWriter(currentPath + "/out/results/rel" + fileName + ", λ=" + String.format("%.2f", ADDITIONAL_TASK_NUM ) + sdf1.format(date) + ".csv", false);
             bw = new BufferedWriter(fw);
             pw = new PrintWriter(bw);
+
             // 列番号入れる部分
-            pw.print("id");
-            for (int i = 0; i < AGENT_NUM; i++) pw.print(", " + i);
+            pw.print(" , targets");
+            for (int i = 0; i < AGENT_NUM; i++) pw.print(", " + i + ", ");
             pw.println();
-            for (Agent ag : agents) {
-                pw.print(ag.id + ", ");
-                if (ag.e_member > ag.e_leader) {
-                    for (int i = 0; i < AGENT_NUM; i++) {
-//                        pw.print("-" + ag.reliabilities[i] + ", ");
-                    }
+
+            pw.print(", Role, ");
+            for (int i = 0; i < AGENT_NUM; i++) pw.print("             DE_l ,             DE_m, " );
+            pw.println();
+
+            for (Agent from : agents) {
+                // column 1 : Role
+                pw.print(from.id + ", ");
+                if (from.e_member > from.e_leader) {
+                    pw.print("Member, ");
                 } else {
-                    for (int i = 0; i < AGENT_NUM; i++) {
-//                        pw.print(ag.reliabilities[i] + ", ");
+                    pw.print("Leader, ");
+                }
+
+                // column 2~3 :  DE_l(from→target), DE_m(from→target),
+                for ( Agent target: agents) {
+                    // 自分は飛ばす
+                    if( target.equals(from) ){
+                        pw.print(" , ,");
+                    }else{
+                        pw.print(from.reliabilities_l[target.id] + ", ");
+                        pw.print(from.reliabilities_m[target.id] + ", ");
                     }
                 }
                 pw.println();

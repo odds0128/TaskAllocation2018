@@ -194,7 +194,7 @@ public class PM2 implements Strategy, SetParam {
             } else {
                 agent.sendMessage(agent, agent.leader, DONE, 0);
                 agent.required[agent.mySubTask.resType]++;
-                agent.relAgents_m = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / (double) Manager.getTicks()-agent.start);
+                agent.relAgents_m = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / (double) agent.calcExecutionTime(agent, agent.mySubTask));
                 if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
                     agent.workWithAsM[agent.leader.id]++;
                     agent.didTasksAsMember++;
@@ -444,6 +444,8 @@ public class PM2 implements Strategy, SetParam {
             return tmp;
         } else {
             double temp = agent.reliabilities_m[target.id];
+
+
             // 信頼度の更新式
             agent.reliabilities_m[target.id] = temp * (1.0 - α) + α * evaluation;
 
