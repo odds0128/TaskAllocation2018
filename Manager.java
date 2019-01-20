@@ -56,13 +56,13 @@ public class Manager implements SetParam {
                 bw = new BufferedWriter(fw);
                 pw = new PrintWriter(bw);
                 start = 0;
-                end = 20;
+                end = AGENT_NUM;
                 for (int i = start; i < end; i++) {
-                    pw.print(i + ", " + " " + ", ");
+                    pw.print(", " + i + ", " + " " + ", ");
                 }
                 pw.println();
                 for (int i = start; i < end; i++) {
-                    pw.print("e_leader, e_member, ");
+                    pw.print(" , e_leader, e_member, ");
                 }
                 pw.println();
             }
