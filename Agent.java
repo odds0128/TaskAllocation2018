@@ -80,6 +80,7 @@ public class Agent implements SetParam , Cloneable{
     double[] reliabilities_m = new double[AGENT_NUM];
     List<Agent> relAgents_m = new ArrayList<>();
     List<Agent> relRanking_m = new ArrayList<>();
+    List<Agent> myLeaders = new ArrayList<>();
 
     // seedが変わった(各タームの最初の)エージェントの生成
     Agent(long seed, int x, int y, Strategy strategy) {
@@ -370,6 +371,13 @@ public class Agent implements SetParam , Cloneable{
             if( a.equals(List.get(i)) ) return i;
         }
         return -1;
+    }
+
+    protected boolean haveAlreadyJoined( Agent member, Agent target ){
+        if( member.leader == target ){
+            return true;
+        }
+        return inTheList(target, myLeaders) >= 0 ? true : false;
     }
 
     /**

@@ -193,6 +193,7 @@ public class PM2 implements Strategy, SetParam {
                 }
             } else {
                 agent.sendMessage(agent, agent.leader, DONE, 0);
+                agent.myLeaders.remove(agent.leader);
                 agent.required[agent.mySubTask.resType]++;
                 agent.relAgents_m = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / (double) agent.calcExecutionTime(agent, agent.mySubTask));
                 if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
@@ -224,10 +225,6 @@ public class PM2 implements Strategy, SetParam {
         }
 
         List<Agent> exceptions = new ArrayList<>();
-        for (Map.Entry<Agent, AllocatedSubTask> ex : teamHistory[leader.id].entrySet()) {
-            exceptions.add(ex.getKey());
-        }
-        // この時点でexceptionsにはかつての仲間たちが入っている
         // 一つのタスクについてRESEND_TIMES周する
         for (int i = 0; i < RESEND_TIMES; i++) {
             SubTask st;
@@ -267,7 +264,7 @@ public class PM2 implements Strategy, SetParam {
                     }
                 }
                 // 候補が見つかれば，チーム参加要請対象者リストに入れ，参加要請を送る
-                if (!candidate.equals(null)) {
+                if (!(candidate == null)) {
                     exceptions.add(candidate);
                     memberCandidates.set(stIndex + i * subtasks.size(), candidate);
                 }
@@ -296,12 +293,17 @@ public class PM2 implements Strategy, SetParam {
         // 有効なメッセージがなければリターンする
         if (member.messages.size() == 0) return;
 
-        // TODO: メッセージの分類
+        // メッセージの分類
         while (member.messages.size() > 0) {
             message = member.messages.remove(0);
             if (message.getMessageType() == PROPOSAL) {
-//                assert message.getFrom() != member.leader : message.getFrom().id + " to " + member.id +  "Duplicated";
-                solicitations.add(message);
+                // assert message.getFrom() != member.leader : message.getFrom().id + " to " + member.id +  "Duplicated";
+                // すでにそのリーダーのチームに参加している場合は落とす
+                if( member.haveAlreadyJoined(member, message.getFrom()) ){
+                    member.sendMessage(member, message.getFrom(), REPLY, REJECT);
+                }else {
+                    solicitations.add(message);
+                }
             } else {
                 others.add(message);
             }
@@ -309,19 +311,21 @@ public class PM2 implements Strategy, SetParam {
         member.messages = others;
         int room = SUBTASK_QUEUE_SIZE - member.mySubTaskQueue.size(); // サブタスクキューの空き
 
-
-
-        // TODO: サブタスクキューの空きがある限りsolicitationを選定する
+        // サブタスクキューの空きがある限りsolicitationを選定する
         while ( member.tbd < room && solicitations.size() > 0) {
             // εグリーディーで選択する
             if (member.epsilonGreedy()) {
-                int index      = Agent._randSeed.nextInt(solicitations.size());
-                Message target = solicitations.remove(index);
-                Agent   to     = target.getFrom();
-                assert to.role == LEADER: "おーい";
+                Message target;
+                Agent to;
+                do {
+                    int index = Agent._randSeed.nextInt(solicitations.size());
+                    target = solicitations.remove(index);
+                    to = target.getFrom();
+                }while( member.haveAlreadyJoined(member, to) );
                 member.sendMessage(member, to, REPLY, ACCEPT);
+                member.myLeaders.add(to);
             }
-            // TODO: solicitationsの中から最も信頼するリーダーのsolicitを受ける
+            // solicitationsの中から最も信頼するリーダーのsolicitを受ける
             else {
                 int index = 0;
                 int solicitationNum = solicitations.size();
@@ -340,10 +344,14 @@ public class PM2 implements Strategy, SetParam {
                     }
                 }
                 if (member.principle == RATIONAL) {
-                    member.sendMessage(member, solicitations.remove(index).getFrom(), REPLY, ACCEPT);
+                    Agent l = solicitations.remove(index).getFrom();
+                    member.sendMessage(member, l, REPLY, ACCEPT);
+                    member.myLeaders.add(l);
                 } else {
                     if (member.inTheList(tempLeader, member.relAgents_m) > -1) {
-                        member.sendMessage(member, solicitations.remove(index).getFrom(), REPLY, ACCEPT);
+                        Agent l = solicitations.remove(index).getFrom();
+                        member.sendMessage(member, l, REPLY, ACCEPT);
+                        member.myLeaders.add(l);
                     } else member.sendMessage(member, tempLeader, REPLY, REJECT);
                 }
             }
@@ -353,7 +361,7 @@ public class PM2 implements Strategy, SetParam {
             message = solicitations.remove(0);
             member.sendMessage(member, message.getFrom(), REPLY, REJECT);
         }
-        // TODO: othersへの対処．(othersとしては，RESULTが考えられる)
+        // othersへの対処．(othersとしては，RESULTが考えられる)
         Message result ;
         SubTask allocatedSubtask;
         while( others.size() > 0 ){
@@ -363,9 +371,10 @@ public class PM2 implements Strategy, SetParam {
             assert result.getMessageType() == RESULT: "Leader Must Confuse Someone";
             if( allocatedSubtask == null ){   // 割り当てがなかった場合
                 renewRel(member, result.getFrom(), 0);
+                member.myLeaders.remove(result.getFrom());
             }else{    // 割り当てられた場合
-                // TODO: すでにサブタスクを持っているならそれを優先して今もらったやつはキューに入れておく
-                // TODO: さもなければキューに"入れずに"自分の担当サブタスクとする
+                // すでにサブタスクを持っているならそれを優先して今もらったやつはキューに入れておく
+                // さもなければキューに"入れずに"自分の担当サブタスクとする
                 if( member.mySubTask == null ){
                     member.mySubTask = allocatedSubtask;
                 }else{
@@ -608,10 +617,9 @@ public class PM2 implements Strategy, SetParam {
 
                 int rt = Manager.getTicks() - as.getAllocatedTime();
                 int reward = as.getRequiredResources();
-                //                System.out.println(rt);
                 ag.relAgents_l = renewRel(ag, m.getFrom(), (double) reward / rt);
 
-                // TODO: タスク全体が終わったかどうかの判定と，それによる処理
+                // タスク全体が終わったかどうかの判定と，それによる処理
                 /*
                 1. 終わったサブタスクがどのタスクのものだったか確認する
                 2. そのサブタスクを履歴から除く
@@ -629,7 +637,7 @@ public class PM2 implements Strategy, SetParam {
             }
         }
 
-        // TODO: solicitを受けるか判断する
+        // solicitを受けるか判断する
         if (ag.role == MEMBER) {
             checkSolicitationsANDAllocations(ag);
         } else {

@@ -62,6 +62,10 @@ public class SubTask implements SetParam {
         this.from = agent;
     }
 
+    Agent getFrom(){
+        return from;
+    }
+
     /**
      * canResendメソッド
      * このサブタスクが再送可能回数を超えていないか判断する
