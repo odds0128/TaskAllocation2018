@@ -195,7 +195,7 @@ public class PM2 implements Strategy, SetParam {
                 agent.sendMessage(agent, agent.leader, DONE, 0);
                 agent.myLeaders.remove(agent.leader);
                 agent.required[agent.mySubTask.resType]++;
-                agent.relAgents_m = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / (double) agent.calcExecutionTime(agent, agent.mySubTask));
+                agent.relAgents_m = renewRel(agent, agent.leader, 1.0);
                 if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
                     agent.workWithAsM[agent.leader.id]++;
                     agent.didTasksAsMember++;
@@ -615,9 +615,7 @@ public class PM2 implements Strategy, SetParam {
                     System.out.println(Manager.getTicks() + ": " + m.getFrom() + " asserts he did " + ag.id + "'s subtask ");
                 }
 
-                int rt = Manager.getTicks() - as.getAllocatedTime();
-                int reward = as.getRequiredResources() * 5;
-                ag.relAgents_l = renewRel(ag, m.getFrom(), (double) reward / rt);
+                ag.relAgents_l = renewRel(ag, m.getFrom(), 1.0);
 
                 // タスク全体が終わったかどうかの判定と，それによる処理
                 /*
