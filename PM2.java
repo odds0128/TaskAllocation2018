@@ -616,7 +616,7 @@ public class PM2 implements Strategy, SetParam {
                 }
 
                 int rt = Manager.getTicks() - as.getAllocatedTime();
-                int reward = as.getRequiredResources();
+                int reward = as.getRequiredResources() * 5;
                 ag.relAgents_l = renewRel(ag, m.getFrom(), (double) reward / rt);
 
                 // タスク全体が終わったかどうかの判定と，それによる処理
