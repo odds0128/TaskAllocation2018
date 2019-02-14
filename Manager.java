@@ -7,7 +7,7 @@ import java.io.*;
 import java.util.*;
 
 public class Manager implements SetParam {
-// // // //   private static Strategy strategy = new PM2withRoleFixed();      // ICA2018における提案手法    //    private static Strategy strategy = new ProposedMethodForSingapore();
+    //    private static Strategy strategy = new PM2withRoleFixed();      // ICA2018における提案手法    //    private static Strategy strategy = new ProposedMethodForSingapore();
     private static Strategy strategy = new PM2();      // ICA2018における提案手法役割更新あり    //    private static Strategy strategy = new ProposedMethodForSingapore();
 
     static private long _seed;
@@ -27,7 +27,8 @@ public class Manager implements SetParam {
         assert MAX_RELIABLE_AGENTS < AGENT_NUM : "alert0";
         assert INITIAL_TASK_NUM <= TASK_QUEUE_SIZE : "alert1";
         assert AGENT_NUM <= MAX_X * MAX_Y : "alert2";
-        assert COALITION_CHECK_SPAN < MAX_TURN_NUM : "a";
+        assert COALITION_CHECK_SPAN < MAX_TURN_NUM : "alert3";
+        assert !(IS_MORE_TASKS_HAPPENS && IS_HEAVY_TASKS_HAPPENS) : "alert4";
 
         try {
             int writeResultsSpan = MAX_TURN_NUM / WRITING_TIMES;
@@ -44,7 +45,7 @@ public class Manager implements SetParam {
             int start, end;
 
             int num = 0;
-            System.out.println(strategy.getClass().getName() + ", λ=" + ADDITIONAL_TASK_NUM  +
+            System.out.println(strategy.getClass().getName() + ", λ=" + ADDITIONAL_TASK_NUM +
                     ", ε:" + INITIAL_ε + ": " + HOW_EPSILON +
                     ", XF: " + MAX_RELIABLE_AGENTS +
                     ", Role_renewal: " + THRESHOLD_FOR_ROLE_RENEWAL
@@ -91,10 +92,10 @@ public class Manager implements SetParam {
                     actFreeLancer();
                     if (turn % writeResultsSpan == 0 && CHECK_RESULTS) {
                         OutPut.aggregateAgentData(agents);
-                        assert Agent._recipro_num + Agent._rational_num == AGENT_NUM: "Illegal principle numbers, reciprocal:" + Agent._recipro_num + ", rational:" + Agent._rational_num;
-                     }
+                        assert Agent._recipro_num + Agent._rational_num == AGENT_NUM : "Illegal principle numbers, reciprocal:" + Agent._recipro_num + ", rational:" + Agent._rational_num;
+                    }
 
-                    if( turn == SNAPSHOT_TIME && CHECK_INTERIM_RELATIONSHIPS ){
+                    if (turn == SNAPSHOT_TIME && CHECK_INTERIM_RELATIONSHIPS) {
                         OutPut.writeGraphInformationX(agents, strategy);
 //                        snapshot = takeAgentsSnapshot(agents);
                         Agent.resetWorkHistory(agents);
@@ -160,7 +161,7 @@ public class Manager implements SetParam {
         // エージェントの初期化
         agents = generateAgents(strategy);
 //
-        if (CHECK_INITIATION){
+        if (CHECK_INITIATION) {
 //            OutPut.checkAgent(agents);
 //            OutPut.checkGrids(grids);
             OutPut.checkDelay(delays);
@@ -203,11 +204,11 @@ public class Manager implements SetParam {
     }
 
     static Agent getAgentRandomly(Agent self, List<Agent> exceptions, List<Agent> targets) {
-        int random      = _randSeed.nextInt(targets.size());
+        int random = _randSeed.nextInt(targets.size());
         Agent candidate = targets.get(random);
         while (candidate.equals(self) || self.inTheList(candidate, exceptions) >= 0) {
-            random      = _randSeed.nextInt(targets.size());
-            candidate   = targets.get(random);
+            random = _randSeed.nextInt(targets.size());
+            candidate = targets.get(random);
         }
         return candidate;
     }
@@ -229,7 +230,7 @@ public class Manager implements SetParam {
         for (int i = 0; i < AGENT_NUM; i++) {
             int temp;
             for (int j = 0; j < AGENT_NUM; j++) {
-                delays[i][j] =  calcurateDelay(agents.get(i), agents.get(j));
+                delays[i][j] = calcurateDelay(agents.get(i), agents.get(j));
             }
             if (density[i] < min) min = density[i];
             if (density[i] > max) max = density[i];
@@ -253,21 +254,21 @@ public class Manager implements SetParam {
                 }
                 // 近い方から100体のエージェントを既知エージェントとする
                 // 100体に足りてなかったら距離を広げてもう一周
-                if ( tempList.size() + agent.canReach.size() < AREA_LIMIT ) {
+                if (tempList.size() + agent.canReach.size() < AREA_LIMIT) {
                     agent.canReach.addAll(tempList);
                     tempList.clear();
                 }
                 // ピッタリだったら次のエージェントへ
-                else if( tempList.size() + agent.canReach.size() == AREA_LIMIT ){
+                else if (tempList.size() + agent.canReach.size() == AREA_LIMIT) {
                     agent.canReach.addAll(tempList);
                     tempList.clear();
                     i++;
                     dist = 0;
                 }
                 // はみ出たらtempListの中からはみ出ない分だけ選んで既知エージェントとする
-                else{
+                else {
                     int restSize = AREA_LIMIT - agent.canReach.size();
-                    for( int j = 0; j < restSize; j++ ){
+                    for (int j = 0; j < restSize; j++) {
                         int rand = _randSeed.nextInt(tempList.size());
                         agent.canReach.add(tempList.remove(rand));
                     }
@@ -319,35 +320,35 @@ public class Manager implements SetParam {
      * トーラス構造の距離関係を割り出す
      */
     static int calcurateDelay(Agent from, Agent to) {
-        int tillEnd      = MAX_X/2 + MAX_Y/2;
-        int minDistance  = Integer.MAX_VALUE;
-        int tilesX       = 3;
-        int tilesY       = 3;
+        int tillEnd = MAX_X / 2 + MAX_Y / 2;
+        int minDistance = Integer.MAX_VALUE;
+        int tilesX = 3;
+        int tilesY = 3;
 
         int fromX = from.x;
         int fromY = from.y;
 
-        for( int i = 0; i < tilesX; i++ ){
-            int toX   = to.x + ( i - 1 ) * MAX_X;
+        for (int i = 0; i < tilesX; i++) {
+            int toX = to.x + (i - 1) * MAX_X;
 
-            for( int j = 0; j < tilesY; j++ ){
-                int toY   = to.y + ( j - 1 ) * MAX_Y;
+            for (int j = 0; j < tilesY; j++) {
+                int toY = to.y + (j - 1) * MAX_Y;
                 int tempDistance = Math.abs(fromX - toX) + Math.abs(fromY - toY);
 
-                if( tempDistance < minDistance ){
+                if (tempDistance < minDistance) {
                     minDistance = tempDistance;
                 }
             }
         }
 
-        return (int)Math.ceil( (double)minDistance / tillEnd * MAX_DELAY );
+        return (int) Math.ceil((double) minDistance / tillEnd * MAX_DELAY);
     }
 
     // taskQueueにあるタスクをリーダーに渡すメソッド
     static Task getTask(Agent agent) {
         Task temp;
         temp = taskQueue.poll();
-        if (temp != null){
+        if (temp != null) {
             temp.flag = PROCESSING;
             temp.setFrom(agent);
         }
@@ -360,38 +361,42 @@ public class Manager implements SetParam {
     }
 
     static void addNewTasksToQueue() {
-            int room = TASK_QUEUE_SIZE - taskQueue.size();    // タスクキューの空き
-            double decimalPart = ADDITIONAL_TASK_NUM%1;
-            int additionalTasksNum = (int)ADDITIONAL_TASK_NUM;
+        int room = TASK_QUEUE_SIZE - taskQueue.size();    // タスクキューの空き
+        double decimalPart = ADDITIONAL_TASK_NUM % 1;
+        int additionalTasksNum = (int) ADDITIONAL_TASK_NUM;
 
 //            System.out.println(additionalTasksNum + ", " + decimalPart);
 
-            if( decimalPart != 0 ){
-                double random = _randSeed.nextDouble();
-                if (random < decimalPart) {
-                    additionalTasksNum++;
-                }
-//                System.out.println(additionalTasksNum + ", " + random);
+        if (decimalPart != 0) {
+            double random = _randSeed.nextDouble();
+            if (random < decimalPart) {
+                additionalTasksNum++;
             }
+//                System.out.println(additionalTasksNum + ", " + random);
+        }
 
         // タスクキューに空きが十分にあるなら, 普通にぶち込む
-            if (additionalTasksNum <= room) {
-                if( START_HAPPENS <= turn && turn < START_HAPPENS + BUSY_PERIOD && IS_HEAVY_TASKS_HAPPENS){
-                    for (int i = 0; i < additionalTasksNum; i++) taskQueue.add(new Task("HEAVY"));
-                }else{
-                    for (int i = 0; i < additionalTasksNum; i++) taskQueue.add(new Task("NOT HEAVY"));
-                }
+        if (START_HAPPENS <= turn && turn < START_HAPPENS + BUSY_PERIOD && IS_MORE_TASKS_HAPPENS) {
+            additionalTasksNum += HOW_MANY;
+        }
+
+        if (additionalTasksNum <= room) {
+            if (START_HAPPENS <= turn && turn < START_HAPPENS + BUSY_PERIOD && IS_HEAVY_TASKS_HAPPENS) {
+                for (int i = 0; i < additionalTasksNum; i++) taskQueue.add(new Task("HEAVY"));
+            }else{
+                for (int i = 0; i < additionalTasksNum; i++) taskQueue.add(new Task("NOT HEAVY"));
             }
-            // タスクキューからタスクがはみ出そうなら, 入れるだけ入れてはみ出る分はオーバーフローとする
-            else {
-                int i;
-                    if( START_HAPPENS <= turn && turn < START_HAPPENS + BUSY_PERIOD && IS_HEAVY_TASKS_HAPPENS){
-                        for (i = 0; i < room; i++) taskQueue.add(new Task("HEAVY"));
-                    }else{
-                        for (i = 0; i < room; i++) taskQueue.add(new Task("NOT HEAVY"));
-                }
-                overflowTasks += additionalTasksNum - i;
+        }
+        // タスクキューからタスクがはみ出そうなら, 入れるだけ入れてはみ出る分はオーバーフローとする
+        else {
+            int i;
+            if (START_HAPPENS <= turn && turn < START_HAPPENS + BUSY_PERIOD && IS_HEAVY_TASKS_HAPPENS) {
+                for (i = 0; i < room; i++) taskQueue.add(new Task("HEAVY"));
+            } else {
+                for (i = 0; i < room; i++) taskQueue.add(new Task("NOT HEAVY"));
             }
+            overflowTasks += additionalTasksNum - i;
+        }
     }
 
     static void actFreeLancer() {
