@@ -1,0 +1,123 @@
+@startuml
+
+package agent {
+    class AgentManager
+    class AgentFactory
+    class Agent
+
+    AgentManager -> AgentFactory
+    AgentManager "1"-->"1..*" Agent
+    AgentFactory "1"-->"1..*" Agent :create
+
+}
+
+package task {
+    class TaskFactory
+    class Task
+    class Subtask
+
+    TaskFactory --> Task :create
+    Task "1" *-- "1.." Subtask
+}
+
+package team {
+    interface Team
+    class PreTeam
+    class ActualTeam
+
+    Team *---> Agent
+    Team --- Task
+
+    Team <|.. PreTeam
+    Team <|.. ActualTeam
+}
+
+package communication {
+    class MessageManager
+    interface Message
+    abstract AbstractMessage
+
+    Message <|.. AbstractMessage
+
+    AbstractMessage <|-down- Proposal
+    AbstractMessage <|-down- Reply
+    AbstractMessage <|-down- Allocation
+    AbstractMessage <|-down- Finished
+
+    MessageManager"1"*--"1" Message
+    Team --> MessageManager :use
+    MessageManager --> Agent :use
+    Message -- Subtask
+
+
+}
+
+package strategy {
+
+    interface MemberStrategy
+    interface LeaderStrategy
+    abstract class AbstractLeaderStrategy
+    abstract class AbstractMemberStrategy
+    class ConcreteLeaderStrategy1
+    class ConcreteMemberStrategy1
+    class ConcreteLeaderStrategy2
+    class ConcreteMemberStrategy2
+
+    Agent -- LeaderStrategy
+    Agent -- MemberStrategy
+
+    LeaderStrategy --> Team
+    MemberStrategy -- Subtask
+
+    LeaderStrategy <|.. AbstractLeaderStrategy
+    AbstractLeaderStrategy <|-- ConcreteLeaderStrategy1
+    AbstractLeaderStrategy <|-- ConcreteLeaderStrategy2
+    MemberStrategy <|.. AbstractMemberStrategy
+    AbstractMemberStrategy <|-- ConcreteMemberStrategy1
+    AbstractMemberStrategy <|-- ConcreteMemberStrategy2
+}
+
+package operation {
+    class OperationManager
+    class Aggregate
+    
+    OperationManager --> AgentManager
+    OperationManager --> TaskFactory
+    OperationManager --> MessageManager
+    OperationManager --> Aggregate
+    Aggregate --> AgentManager
+    Aggregate --> TaskFactory
+    Aggregate --> MessageManager
+
+}
+
+
+    
+package output {
+    class Output
+    interface Builder
+    class CsvBuilder
+    class XlsxBuilder
+
+    Output o-> Builder
+    Builder <|.. CsvBuilder
+    Builder <|.. XlsxBuilder
+    
+}
+
+package graph {
+    class Node
+    class Edge
+
+    CsvBuilder  "1"--"0..*" Edge
+    XlsxBuilder "1"--"0..*" Edge
+    Edge "1" *-- "2" Node
+}
+
+class Main
+class Random
+
+Main --> Output
+Main --> OperationManager
+
+@enduml
