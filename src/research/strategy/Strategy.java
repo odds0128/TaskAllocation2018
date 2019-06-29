@@ -1,3 +1,8 @@
+package research.strategy;
+
+import research.task.SubTask;
+import research.agent.Agent;
+
 import java.util.List;
 
 public interface Strategy {

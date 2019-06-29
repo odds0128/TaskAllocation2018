@@ -1,11 +1,16 @@
-import java.io.DataOutput;
+package research.communication;
+
+import research.SetParam;
+import research.agent.Agent;
+import research.task.SubTask;
+import research.task.Task;
 
 /**
  * @author Funato
  * @version 2.0
  */
 
-class Message implements SetParam{
+public class Message implements SetParam {
 
     private Agent from;
     private Agent to;
@@ -18,7 +23,7 @@ class Message implements SetParam{
     private SubTask subtask;  // チーム編成が成功したら, 割り当てるサブタスクが入る. 失敗したらnull
     private int timeSTarrived;
 
-    Message(Agent from, Agent to, int type, Object o) {
+    public Message(Agent from, Agent to, int type, Object o) {
         this.from = from;
         this.to   = to;
         this.messageType = type;
@@ -58,19 +63,19 @@ class Message implements SetParam{
         }
     }
 
-    Agent getFrom() {
+    public Agent getFrom() {
         return from;
     }
     Agent getTo()   {
         return to;
     }
-    int getMessageType(){
+    public int getMessageType(){
         return messageType;
     }
-    SubTask getSubTask() {
+    public SubTask getSubTask() {
         return subtask;
     }
-    int getReply( ) {
+    public int getReply() {
         return reply;
     }
     int getResType(){ return proposedSubtask.resType; }

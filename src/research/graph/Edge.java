@@ -1,3 +1,9 @@
+package research.graph;
+
+import research.Main;
+import research.SetParam;
+import research.agent.Agent;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,13 +13,13 @@ import java.util.List;
  * 辺の情報を格納するクラス
  */
 public class Edge implements SetParam {
-    List<Integer> from_id;      // エッジの根元
-    List<Integer> to_id;        // エッジの先端
-    List<Integer> delays;
-    List<Boolean> isRecipro;    // 互恵主義かどうか
-    List<Integer> times;        // そのリーダーと何度仕事をしたか
+    public List<Integer> from_id;      // エッジの根元
+    public List<Integer> to_id;        // エッジの先端
+    public List<Integer> delays;
+    public List<Boolean> isRecipro;    // 互恵主義かどうか
+    public List<Integer> times;        // そのリーダーと何度仕事をしたか
 
-    Edge() {
+    public Edge() {
         from_id = new ArrayList<>();
         to_id = new ArrayList<>();
         delays = new ArrayList<>();
@@ -36,7 +42,7 @@ public class Edge implements SetParam {
                     if ( temp >= THRESHOLD_FOR_COALITION) {
                         from_id.add(ag.id);
                         to_id.add(id);
-                        delays.add(Manager.delays[ag.id][id]);
+                        delays.add(Main.delays[ag.id][id]);
                         times.add(temp);
                         hard_worker_flag = true;
                         edges_per_hard_worker++;
@@ -67,7 +73,7 @@ public class Edge implements SetParam {
                     if ( temp >= THRESHOLD_FOR_COALITION) {
                         from_id.add(ag.id);
                         to_id.add(id);
-                        delays.add(Manager.delays[ag.id][id]);
+                        delays.add(Main.delays[ag.id][id]);
                         times.add(temp);
                         if (agents.get(id).principle == RECIPROCAL) isRecipro.add(true);
                         else isRecipro.add(false);

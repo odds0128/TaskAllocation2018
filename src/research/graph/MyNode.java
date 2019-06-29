@@ -1,3 +1,7 @@
+package research.graph;
+
+import research.agent.Agent;
+
 public class MyNode {
     Agent agent;
 

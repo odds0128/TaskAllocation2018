@@ -1,3 +1,5 @@
+package research.task;
+
 import java.util.Comparator;
 
 public class SubtaskRewardComparator implements Comparator<SubTask> {

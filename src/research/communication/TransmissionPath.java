@@ -1,11 +1,14 @@
-/**
+package research.communication; /**
  *
  */
+
+import research.Main;
+import research.SetParam;
 
 import java.util.ArrayList;
 import java.util.List;
 
-class TransmissionPath implements SetParam {
+public class TransmissionPath implements SetParam {
     static double[] meanCT = new double[WRITING_TIMES + 1];
 
     static int messageNum = 0;
@@ -35,11 +38,11 @@ class TransmissionPath implements SetParam {
      *
      * @param message
      */
-    static void sendMessage(Message message) {
+    public static void sendMessage(Message message) {
         if( message.getTo() == message.getFrom() ) return;
         messageQueue.add(message);
 
-        int temp = Manager.delays[message.getFrom().id][message.getTo().id];
+        int temp = Main.delays[message.getFrom().id][message.getTo().id];
         delays.add(temp);
         calcCT(temp);
         if (message.getMessageType() == PROPOSAL) proposals++;
@@ -56,7 +59,7 @@ class TransmissionPath implements SetParam {
      * transmissionメソッド
      * 通信時間を管理し, それが0になったメッセージを宛先のmessageリストに追加する
      */
-    static void transmit() {
+    public static void transmit() {
         int tempI;
         Message tempM;
         int size = messageQueue.size();
@@ -114,7 +117,7 @@ class TransmissionPath implements SetParam {
         assert delays.size() == 0 && messageQueue.size() == 0 : "transmitAlert";
     }
 
-    static void clearTP() {
+    public static void clearTP() {
         messageQueue.clear();
         delays.clear();
         messageNum = 0;

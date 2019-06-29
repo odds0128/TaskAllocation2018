@@ -1,7 +1,10 @@
-/**
+package research.task; /**
  * @author Funato
  * @version 2.0
  */
+
+import research.SetParam;
+import research.agent.Agent;
 
 import java.util.Random;
 
@@ -10,11 +13,11 @@ public class SubTask implements SetParam {
     static long _seed;
     static Random _randSeed;
     int subtask_id;
-    int reqRes[] = new int[RESOURCE_TYPES];
+    public int[] reqRes = new int[RESOURCE_TYPES];
     int resSize = 0;
-    int resType;
+    public int resType;
     int resentTimes = 0;
-    Agent from;
+    public Agent from;
 
     /**
      * コンストラクタ
@@ -87,7 +90,7 @@ public class SubTask implements SetParam {
         _randSeed = new Random(_seed);
     }
 
-    static void clearST() {
+    public static void clearST() {
         _subtask_id = 0;
     }
 

@@ -1,20 +1,27 @@
-/**
+package research; /**
  * @author Funato
  * @version 2.0
  */
 
+import research.agent.Agent;
+import research.communication.TransmissionPath;
+import research.strategy.PM2withRoleFixed;
+import research.strategy.Strategy;
+import research.task.SubTask;
+import research.task.Task;
+
 import java.io.*;
 import java.util.*;
 
-public class Manager implements SetParam {
-        private static Strategy strategy = new PM2withRoleFixed();      // ICA2018における提案手法    //    private static Strategy strategy = new ProposedMethodForSingapore();
-//    private static Strategy strategy = new PM2();      // ICA2018における提案手法役割更新あり    //    private static Strategy strategy = new ProposedMethodForSingapore();
+public class Main implements SetParam {
+        private static Strategy strategy = new PM2withRoleFixed();      // ICA2018における提案手法    //    private static research.strategy.Strategy strategy = new ProposedMethodForSingapore();
+//    private static research.strategy.Strategy strategy = new research.strategy.PM2();      // ICA2018における提案手法役割更新あり    //    private static research.strategy.Strategy strategy = new ProposedMethodForSingapore();
 
     static private long _seed;
     private static Random _randSeed;
 
     static Queue<Task> taskQueue;
-    static int[][] delays = new int[AGENT_NUM][AGENT_NUM];
+    public static int[][] delays = new int[AGENT_NUM][AGENT_NUM];
     private static Agent[][] grids = new Agent[MAX_X][MAX_Y];
     private static List<Agent> agents;
     static int disposedTasks = 0;
@@ -35,7 +42,7 @@ public class Manager implements SetParam {
 
             // seedの読み込み
             String currentPath = System.getProperty("user.dir");
-            FileReader fr = new FileReader(currentPath + "/src/RandomSeed.txt");
+            FileReader fr = new FileReader(currentPath + "/RandomSeed.txt");
             BufferedReader br = new BufferedReader(fr);
             String line;
 
@@ -135,9 +142,9 @@ public class Manager implements SetParam {
             // ↑ 全実験の終了のカッコ．以下は後処理
             if (CHECK_RESULTS) OutPut.writeResults(strategy);
             if (CHECK_AGENTS) OutPut.writeAgentsInformationX(strategy, agents);
-//            OutPut.writeDelays(delays);
-//            OutPut.writeReliabilities(agents, strategy);
-//            OutPut.writeDelaysAndRels(delays, agents, strategy);
+//            research.OutPut.writeDelays(delays);
+//            research.OutPut.writeReliabilities(agents, strategy);
+//            research.OutPut.writeDelaysAndRels(delays, agents, strategy);
             if (CHECK_RELATIONSHIPS) OutPut.writeGraphInformationX(agents, strategy);
 // */
             if (CHECK_Eleader_Emember) pw.close();
@@ -162,14 +169,14 @@ public class Manager implements SetParam {
         agents = generateAgents(strategy);
 
         if (CHECK_INITIATION) {
-//            OutPut.checkAgent(agents);
-//            OutPut.checkGrids(grids);
+//            research.OutPut.checkAgent(agents);
+//            research.OutPut.checkGrids(grids);
             OutPut.checkDelay(delays);
         }
-//        OutPut.countDelays(delays);
-//        OutPut.checkGrids(grids);
-//        OutPut.checkDelay(delays);
-//        OutPut.checkAgent(agents);
+//        research.OutPut.countDelays(delays);
+//        research.OutPut.checkGrids(grids);
+//        research.OutPut.checkDelay(delays);
+//        research.OutPut.checkAgent(agents);
     }
 
     private static void setSeed(String line) {
@@ -203,7 +210,7 @@ public class Manager implements SetParam {
         return tempList;
     }
 
-    static Agent getAgentRandomly(Agent self, List<Agent> exceptions, List<Agent> targets) {
+    public static Agent getAgentRandomly(Agent self, List<Agent> exceptions, List<Agent> targets) {
         int random = _randSeed.nextInt(targets.size());
         Agent candidate = targets.get(random);
         while (candidate.equals(self) || self.inTheList(candidate, exceptions) >= 0) {
@@ -345,7 +352,7 @@ public class Manager implements SetParam {
     }
 
     // taskQueueにあるタスクをリーダーに渡すメソッド
-    static Task getTask(Agent agent) {
+    public static Task getTask(Agent agent) {
         Task temp;
         temp = taskQueue.poll();
         if (temp != null) {
@@ -356,7 +363,7 @@ public class Manager implements SetParam {
     }
 
     // 現在のターン数を返すメソッド
-    static int getTicks() {
+    public static int getTicks() {
         return turn;
     }
 
@@ -439,12 +446,12 @@ public class Manager implements SetParam {
 
     }
 
-    static void disposeTask(Agent leader) {
+    static public void disposeTask(Agent leader) {
         disposedTasks++;
         leader.ourTask = null;
     }
 
-    static void finishTask(Agent leader, Task task) {
+    public static void finishTask(Agent leader, Task task) {
         if (CHECK_RESULTS) OutPut.aggregateTaskExecutionTime(leader);
 /*        if( leader.isLonely == 1 )      finishedTasksInDepopulatedArea++;
         if( leader.isAccompanied == 1 ) finishedTasksInPopulatedArea++;

@@ -1,10 +1,12 @@
+package research.task;
+
 public class AllocatedSubTask {
     private SubTask st;
     private int     allocatedTime;
     private int     requiredResources;
     private int     taskId;
 
-    AllocatedSubTask(SubTask st, int allocatedTime, int taskId){
+    public AllocatedSubTask(SubTask st, int allocatedTime, int taskId){
         this.st = st;
         this.allocatedTime = allocatedTime;
         this.taskId = taskId;
@@ -12,13 +14,13 @@ public class AllocatedSubTask {
         this.requiredResources = st.reqRes[st.resType];
     }
 
-    SubTask getSt(){
+    public SubTask getSt(){
         return st;
     }
-    int getAllocatedTime(){
+    public int getAllocatedTime(){
         return allocatedTime;
     }
-    int getRequiredResources(){
+    public int getRequiredResources(){
         return requiredResources;
     }
     public int getTaskId() {

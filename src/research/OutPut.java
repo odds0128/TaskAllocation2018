@@ -1,10 +1,17 @@
+package research;
+
 import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
-import org.apache.xmlbeans.impl.xb.xsdschema.All;
-import org.omg.CORBA.SystemException;
+import research.agent.Agent;
+import research.agent.AgentExceComparator;
+import research.communication.TransmissionPath;
+import research.graph.Edge;
+import research.strategy.Strategy;
+import research.task.SubTask;
+import research.task.Task;
 
 import java.text.SimpleDateFormat;
 
@@ -282,13 +289,13 @@ public class OutPut implements SetParam {
         for (int i = 0; i < AGENT_NUM; i++) {
             System.out.print("ID : " + i + ", ");
             for( int j = 0; j < AGENT_NUM; j++ ){
-                System.out.print(String.format("%3d", Manager.delays[i][j]));
+                System.out.print(String.format("%3d", research.Main.delays[i][j]));
             }
             System.out.println();
         }
 // */
 
-//        Collections.sort(temp, new AgentIDcomparator());
+//        Collections.sort(temp, new research.agent.AgentIDcomparator());
 
 /*
         for (int i = 0; i < AGENT_NUM; i++) {
@@ -309,7 +316,7 @@ public class OutPut implements SetParam {
     }
 
     static void checkTeam(Agent leader) {
-        System.out.print("Time: " + Manager.getTicks() + ", " + leader.id + " and ");
+        System.out.print("Time: " + Main.getTicks() + ", " + leader.id + " and ");
         for (Agent mem : leader.teamMembers) {
             System.out.print(mem.id + ", ");
         }
@@ -820,7 +827,7 @@ public class OutPut implements SetParam {
                 row = sheet.createRow(rowNumber);
 
                 if (i == 0) _singleton.writeCell(row, colNumber++, style_header, "Node id");
-                else _singleton.writeCell(row, colNumber++, style_header, "Edge id");
+                else _singleton.writeCell(row, colNumber++, style_header, "research.graph.Edge id");
 
                 if (i == 0) _singleton.writeCell(row, colNumber++, style_header, "Node color");
                 else _singleton.writeCell(row, colNumber++, style_header, "Source Node id");
@@ -893,7 +900,7 @@ public class OutPut implements SetParam {
 
                         if (agent.e_leader > agent.e_member) _singleton.writeCell(row, colNumber++, style_int, 0);
                         else if (agent.relRanking_m.size() > 0)
-                            _singleton.writeCell(row, colNumber++, style_int, Manager.delays[agent.id][agent.relRanking_m.get(0).id]);
+                            _singleton.writeCell(row, colNumber++, style_int, Main.delays[agent.id][agent.relRanking_m.get(0).id]);
                         else _singleton.writeCell(row, colNumber++, style_int, -1);
 
                         /*
@@ -978,7 +985,7 @@ public class OutPut implements SetParam {
 
                 row = sheet.createRow(rowNumber);
 
-                _singleton.writeCell(row, colNumber++, style_header, "Edge id");
+                _singleton.writeCell(row, colNumber++, style_header, "research.graph.Edge id");
                 _singleton.writeCell(row, colNumber++, style_header, "Source Node id");
                 _singleton.writeCell(row, colNumber++, style_header, "Target Node id");
                 _singleton.writeCell(row, colNumber++, style_header, " length ");

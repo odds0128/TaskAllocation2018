@@ -1,9 +1,11 @@
+package research;
+
 /**
  * @author Funato
  * @version 2.0
  */
 
-interface SetParam {
+public interface SetParam {
     // 環境の設定( 変更していく部分 )
     int EXECUTION_TIMES = 2;             // 実験の回数
     int MAX_TURN_NUM    = 500;         // 一回の実験のターン数

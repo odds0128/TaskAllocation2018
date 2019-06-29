@@ -1,22 +1,25 @@
-/**
+package research.task; /**
  * @author Funato
  * @version 2.0
  */
+
+import research.SetParam;
+import research.agent.Agent;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-public class Task implements SetParam{
+public class Task implements SetParam {
     private static int _task_id = 0;
     private static long _seed;
     private static Random _randSeed ;
-    int task_id;
+    public int task_id;
     static int totalSubTasks = 0;
     static int totalSubtaskNum = 0;
-    boolean flag = false;
-    List<SubTask> subTasks = new ArrayList<>();
+    public boolean flag = false;
+    public List<SubTask> subTasks = new ArrayList<>();
     public int subTaskNum ;
     int fromBirth = 0;
     int fromPicked = 0;
@@ -26,7 +29,7 @@ public class Task implements SetParam{
      * タームの最初のタスク生成時に呼び出される
      * パラメータで指定されたseedのサブタスクをランダムに生成する.
      */
-    Task( long seed ){
+    public Task(long seed){
         this.task_id = _task_id;
         _task_id++;
         setSeed(seed);
@@ -52,7 +55,7 @@ public class Task implements SetParam{
      * コンストラクタ
      * 残りのタスクを生成する.
      */
-    Task( String heavy ){
+    public Task( String heavy ){
         this.task_id = _task_id;
         _task_id++;
         if( heavy == "HEAVY" ) {
@@ -76,7 +79,7 @@ public class Task implements SetParam{
 //        System.out.println(subTasks);
     }
 
-    void setFrom(Agent agent){
+    public void setFrom(Agent agent){
         for(SubTask st: subTasks){
             st.setFrom(agent);
         }
@@ -86,7 +89,7 @@ public class Task implements SetParam{
         _seed = seed;
         _randSeed = new Random(_seed);
     }
-    static void clearT(){
+    public static void clearT(){
         _task_id = 0;
     }
 
@@ -95,7 +98,7 @@ public class Task implements SetParam{
         String sep = System.getProperty("line.separator");
 
         StringBuilder str = new StringBuilder();
-        str.append("Task " + task_id + "(Subtasks :" + subTaskNum +" [");
+        str.append("research.task.Task " + task_id + "(Subtasks :" + subTaskNum +" [");
         for( int i = 0 ; i < subTasks.size() ; i++ ) str.append(subTasks.get(i));
         str.append("] ) ");
         return str.toString();

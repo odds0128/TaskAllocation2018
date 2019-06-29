@@ -1,3 +1,12 @@
+package research.strategy;
+
+import research.*;
+import research.agent.Agent;
+import research.communication.Message;
+import research.task.AllocatedSubTask;
+import research.task.SubTask;
+import research.task.Task;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -44,7 +53,7 @@ public class PM2 implements Strategy, SetParam {
     }
 
     private void proposeAsL(Agent leader) {
-        leader.ourTask = Manager.getTask(leader);
+        leader.ourTask = Main.getTask(leader);
         if (leader.ourTask == null) {
             leader.inactivate(0);
             return;
@@ -55,7 +64,7 @@ public class PM2 implements Strategy, SetParam {
         leader.candidates = selectMembers(leader, leader.ourTask.subTasks);   // メッセージ送信
         if (leader.candidates == null) {
             leader.candidates = new ArrayList<>();
-            Manager.disposeTask(leader);
+            Main.disposeTask(leader);
             leader.inactivate(0);
             return;
         } else {
@@ -71,14 +80,14 @@ public class PM2 implements Strategy, SetParam {
 
     private void replyAsM(Agent member) {
         if (member.mySubTask == null) {
-            if (Manager.getTicks() - member.validatedTicks > THRESHOLD_FOR_ROLE_RENEWAL) {
+            if (Main.getTicks() - member.validatedTicks > THRESHOLD_FOR_ROLE_RENEWAL) {
                 member.inactivate(0);
             }
             return;     // メッセージをチェック
         }
         // どのリーダーからの要請も受けないのならinactivate
         member.phase = mPHASE2;
-        member.validatedTicks = Manager.getTicks();
+        member.validatedTicks = Main.getTicks();
     }
 
     private void reportAsL(Agent leader) {
@@ -136,11 +145,11 @@ public class PM2 implements Strategy, SetParam {
         // 未割り当てが残っていないのなら実行へ
         if (leader.teamMembers.size() == leader.ourTask.subTaskNum) {
             for (Agent tm : leader.teamMembers) {
-                teamHistory[leader.id].put(tm, new AllocatedSubTask(leader.preAllocations.get(tm), Manager.getTicks(), leader.ourTask.task_id));
+                teamHistory[leader.id].put(tm, new AllocatedSubTask(leader.preAllocations.get(tm), Main.getTicks(), leader.ourTask.task_id));
                 leader.sendMessage(leader, tm, RESULT, leader.preAllocations.get(tm));
             }
             if( leader.executionTime < 0 ){
-                if (leader._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
+                if (leader._coalition_check_end_time - Main.getTicks() < COALITION_CHECK_SPAN) {
                     for (Agent ag : leader.teamMembers) {
                         leader.workWithAsL[ag.id]++;
                     }
@@ -159,7 +168,7 @@ public class PM2 implements Strategy, SetParam {
             for (Agent tm : leader.teamMembers) {
                 leader.sendMessage(leader, tm, RESULT, null);
             }
-            Manager.disposeTask(leader);
+            Main.disposeTask(leader);
             leader.inactivate(-1);
             return;
         }
@@ -172,7 +181,7 @@ public class PM2 implements Strategy, SetParam {
             member.allocated[member.leader.id][member.mySubTask.resType]++;
             member.executionTime = member.calcExecutionTime(member, member.mySubTask);
             member.phase = PHASE3;
-            member.validatedTicks = Manager.getTicks();
+            member.validatedTicks = Main.getTicks();
         }
         // サブタスクが割り当てられなかったら信頼度を0で更新し, inactivate
         else {
@@ -182,10 +191,10 @@ public class PM2 implements Strategy, SetParam {
 
     private void execute(Agent agent) {
         agent.executionTime--;
-        agent.validatedTicks = Manager.getTicks();
+        agent.validatedTicks = Main.getTicks();
         if (agent.executionTime == 0) {
             if (agent.role == LEADER) {
-                if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
+                if (agent._coalition_check_end_time - Main.getTicks() < COALITION_CHECK_SPAN) {
                     for (Agent ag : agent.teamMembers) {
                         agent.workWithAsL[ag.id]++;
                     }
@@ -196,7 +205,7 @@ public class PM2 implements Strategy, SetParam {
                 agent.myLeaders.remove(agent.leader);
                 agent.required[agent.mySubTask.resType]++;
                 agent.relAgents_m = renewRel(agent, agent.leader, (double) agent.mySubTask.reqRes[agent.mySubTask.resType] / (double) agent.calcExecutionTime(agent, agent.mySubTask));
-                if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
+                if (agent._coalition_check_end_time - Main.getTicks() < COALITION_CHECK_SPAN) {
                     agent.workWithAsM[agent.leader.id]++;
                     agent.didTasksAsMember++;
                 }
@@ -240,7 +249,7 @@ public class PM2 implements Strategy, SetParam {
                 // εの確率でランダムに割り振る
                 if (leader.epsilonGreedy()) {
                     do {
-                        candidate = Manager.getAgentRandomly(leader, exceptions, Manager.getAgents());
+                        candidate = Main.getAgentRandomly(leader, exceptions, Main.getAgents());
                     } while (leader.calcExecutionTime(candidate, st) < 0);
                 } else {
                     // 信頼度ランキングの上から割り当てを試みる．
@@ -612,10 +621,10 @@ public class PM2 implements Strategy, SetParam {
                 // すなわちrt = "メンバのサブタスク実行時間 + メッセージ往復時間"
                 AllocatedSubTask as = teamHistory[ag.id].remove(m.getFrom());
                 if (as == null) {
-                    System.out.println(Manager.getTicks() + ": " + m.getFrom() + " asserts he did " + ag.id + "'s subtask ");
+                    System.out.println(Main.getTicks() + ": " + m.getFrom() + " asserts he did " + ag.id + "'s subtask ");
                 }
 
-                int rt = Manager.getTicks() - as.getAllocatedTime();
+                int rt = Main.getTicks() - as.getAllocatedTime();
                 int reward = as.getRequiredResources() * 5;
                 ag.relAgents_l = renewRel(ag, m.getFrom(), (double) reward / rt);
 
@@ -629,7 +638,7 @@ public class PM2 implements Strategy, SetParam {
                 task.subTasks.remove(as.getSt());
                 if( task.subTasks.size() == 0 ) {
                     ag.pastTasks.remove(task);
-                    Manager.finishTask(ag, task);
+                    Main.finishTask(ag, task);
                     ag.didTasksAsLeader++;
                 }
             } else {

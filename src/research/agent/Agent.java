@@ -3,87 +3,98 @@
  * @version 2.0
  */
 
+package research.agent;
+
+
+import research.*;
+import research.communication.Message;
+import research.communication.TransmissionPath;
+import research.strategy.Strategy;
+import research.task.SubTask;
+import research.task.Task;
 import java.util.*;
 
 public class Agent implements SetParam , Cloneable{
-    static int _id = 0;
-    static int _leader_num = 0;
-    static int _member_num = 0;
-    static int _recipro_num = 0;
-    static int _rational_num = AGENT_NUM;
+    public static int _id = 0;
+    public static int _leader_num = 0;
+    public static int _member_num = 0;
+    public static int _recipro_num = 0;
+    public static int _rational_num = AGENT_NUM;
     static long _seed;
-    static Random _randSeed;
+    public static Random _randSeed;
     static int[] resSizeArray = new int[RESOURCE_TYPES + 1];
-    static int _coalition_check_end_time ;
+    public static int _coalition_check_end_time ;
     static List<Integer> _lonelyAgents = new ArrayList<>();
     static List<Integer> _accompaniedAgents = new ArrayList<>();
     static double ε = INITIAL_ε;
 
     // リーダーもメンバも持つパラメータ
-    int id;
-    int x, y;
-    int role = JONE_DOE;
-    int phase = SELECT_ROLE;
+    public int id;
+    public int x;
+    public int y;
+    public int role = JONE_DOE;
+    public int phase = SELECT_ROLE;
     Strategy strategy;
     int resSum = 0, resCount = 0;
-    int res[] = new int[RESOURCE_TYPES];
-    double excellence;
-    int didTasksAsLeader = 0;
-    int didTasksAsMember = 0;
-    int[] workWithAsL = new int[AGENT_NUM];
-    int[] workWithAsM = new int[AGENT_NUM];
-    int validatedTicks = 0;
-    boolean joined = false;
-    double e_leader = INITIAL_VALUE_OF_DSL, e_member = INITIAL_VALUE_OF_DSM;
-    List<Message> messages;
-    int principle = RATIONAL;
-    int executionTime = 0;
-    int start = 0;                                          // その時のチーム参加要請を送った時刻
+    public int[] res = new int[RESOURCE_TYPES];
+    public double excellence;
+    public int didTasksAsLeader = 0;
+    public int didTasksAsMember = 0;
+    public int[] workWithAsL = new int[AGENT_NUM];
+    public int[] workWithAsM = new int[AGENT_NUM];
+    public int validatedTicks = 0;
+    public boolean joined = false;
+    public double e_leader = INITIAL_VALUE_OF_DSL;
+    public double e_member = INITIAL_VALUE_OF_DSM;
+    public List<Message> messages;
+    public int principle = RATIONAL;
+    public int executionTime = 0;
+    public int start = 0;                                          // その時のチーム参加要請を送った時刻
     int isLonely = 0;                                       // 過疎地域のエージェントだったら1
     int isAccompanied = 0;                                  // 過密地域のエージェントだったら1
-    int[]   required  = new int[RESOURCE_TYPES];            // そのリソースを要求するサブタスクが割り当てられた回数
-    int[][] allocated = new int[AGENT_NUM][RESOURCE_TYPES]; // そのエージェントからそのリソースを要求するサブタスクが割り当てられた回数
-    List<Agent> canReach = new ArrayList<>();
+    public int[]   required  = new int[RESOURCE_TYPES];            // そのリソースを要求するサブタスクが割り当てられた回数
+    public int[][] allocated = new int[AGENT_NUM][RESOURCE_TYPES]; // そのエージェントからそのリソースを要求するサブタスクが割り当てられた回数
+    public List<Agent> canReach = new ArrayList<>();
     int role_renewal_counter = 0;
-    List<Agent> agentsCommunicatingWith = new ArrayList<>(); // 今通信をしていて，返信を期待しているエージェントのリスト．返信が返ってきたらリストから消す
+    public List<Agent> agentsCommunicatingWith = new ArrayList<>(); // 今通信をしていて，返信を期待しているエージェントのリスト．返信が返ってきたらリストから消す
 
     // リーダーエージェントが持つパラメータ
-    List<Agent> candidates;         // これからチームへの参加を要請するエージェントのリスト
-    int proposalNum = 0;            // 送ったproposalの数を覚えておく
-    List<Agent> teamMembers;        // すでにサブタスクを送っていてメンバの選定から外すエージェントのリスト
-    Map<Agent, SubTask> preAllocations;       // サブタスクの割り当て候補を< agent, subtask >のHashMapで保持
-    List<Message> replies;
-    List<Message> results;
-    Task ourTask;                  // 持ってきた(割り振られた)タスク
-    int restSubTask;               // 残りのサブタスク数
+    public List<Agent> candidates;         // これからチームへの参加を要請するエージェントのリスト
+    public int proposalNum = 0;            // 送ったproposalの数を覚えておく
+    public List<Agent> teamMembers;        // すでにサブタスクを送っていてメンバの選定から外すエージェントのリスト
+    public Map<Agent, SubTask> preAllocations;       // サブタスクの割り当て候補を< agent, subtask >のHashMapで保持
+    public List<Message> replies;
+    public List<Message> results;
+    public Task ourTask;                  // 持ってきた(割り振られた)タスク
+    public int restSubTask;               // 残りのサブタスク数
     int index = 0;                 // 一回要請を送ったメンバにもう一度送らないようにindex管理
-    int replyNum = 0;
+    public int replyNum = 0;
     int prevIndex = 0;
     int acceptances = 0;           // 今まで自分の元に帰って来た受理応答
     int untilAcceptances = 0;      // 今まで自分の元に返って来た受理応答の合計応答時間(= 往復の通信時間 + メンバの処理時間)
     double meanUA = 0;             // 今まで自分の元に返って来た受理応答の平均応答時間(=  untilAcceptances/acceptances)
-    double threshold_for_reciprocity_as_leader;
-    List<Task> pastTasks = new ArrayList<>();
-    double[] reliabilities_l = new double[AGENT_NUM];
-    List<Agent> relAgents_l = new ArrayList<>();
-    List<Agent> relRanking_l = new ArrayList<>();
+    public double threshold_for_reciprocity_as_leader;
+    public List<Task> pastTasks = new ArrayList<>();
+    public double[] reliabilities_l = new double[AGENT_NUM];
+    public List<Agent> relAgents_l = new ArrayList<>();
+    public List<Agent> relRanking_l = new ArrayList<>();
 
     // メンバエージェントのみが持つパラメータ
-    Agent leader;
+    public Agent leader;
     int totalOffers = 0;            // 今まで自分が受理して来たオファー数
     int totalResponseTicks = 0;     // 受理応答からの待ち時間の合計
     double meanRT = 0;     // 受理応答からの待ち時間の平均
-    double threshold_for_reciprocity_as_member;
-    SubTask mySubTask;
-    List<SubTask> mySubTaskQueue = new ArrayList<>();       // メンバはサブタスクを溜め込むことができる(実質的に，同時に複数のチームに参加することができるようになる)
-    int tbd = 0;                                            // 返事待ちの数
-    double[] reliabilities_m = new double[AGENT_NUM];
-    List<Agent> relAgents_m = new ArrayList<>();
-    List<Agent> relRanking_m = new ArrayList<>();
-    List<Agent> myLeaders = new ArrayList<>();
+    public double threshold_for_reciprocity_as_member;
+    public SubTask mySubTask;
+    public List<SubTask> mySubTaskQueue = new ArrayList<>();       // メンバはサブタスクを溜め込むことができる(実質的に，同時に複数のチームに参加することができるようになる)
+    public int tbd = 0;                                            // 返事待ちの数
+    public double[] reliabilities_m = new double[AGENT_NUM];
+    public List<Agent> relAgents_m = new ArrayList<>();
+    public List<Agent> relRanking_m = new ArrayList<>();
+    public List<Agent> myLeaders = new ArrayList<>();
 
     // seedが変わった(各タームの最初の)エージェントの生成
-    Agent(long seed, int x, int y, Strategy strategy) {
+    public Agent(long seed, int x, int y, Strategy strategy) {
         setSeed(seed);
         int rand;
         this.id = _id;
@@ -101,7 +112,7 @@ public class Agent implements SetParam , Cloneable{
         Arrays.fill(reliabilities_m, INITIAL_VALUE_OF_DEC);
         threshold_for_reciprocity_as_leader = THRESHOLD_FOR_RECIPROCITY_FROM_LEADER;
         threshold_for_reciprocity_as_member = (double)resSum/resCount * THRESHOLD_FOR_RECIPROCITY_RATE;
-        if (strategy.getClass().getName().startsWith("CNP")
+        if (strategy.getClass().getName().startsWith("research.strategy.CNP")
                 || strategy.getClass().getName().startsWith("Rational")
                 || strategy.getClass().getName().endsWith("RoleFixed")) {
             selectRoleWithoutLearning();
@@ -112,7 +123,7 @@ public class Agent implements SetParam , Cloneable{
     }
 
     // 残りのエージェントの生成
-    Agent(int x, int y, Strategy strategy) {
+    public Agent(int x, int y, Strategy strategy) {
         int rand;
         this.id = _id;
         _id++;
@@ -124,7 +135,7 @@ public class Agent implements SetParam , Cloneable{
         Arrays.fill(reliabilities_m, INITIAL_VALUE_OF_DEC);
         threshold_for_reciprocity_as_leader = THRESHOLD_FOR_RECIPROCITY_FROM_LEADER;
         threshold_for_reciprocity_as_member = (double)resSum/resCount * THRESHOLD_FOR_RECIPROCITY_RATE;
-        if (strategy.getClass().getName().startsWith("CNP")
+        if (strategy.getClass().getName().startsWith("research.strategy.CNP")
                 || strategy.getClass().getName().startsWith("Rational")
                 || strategy.getClass().getName().endsWith("RoleFixed")
                 || strategy.getClass().getName().endsWith("withoutReciprocity")
@@ -155,15 +166,15 @@ public class Agent implements SetParam , Cloneable{
         }
     }
 
-    void actAsLeader() {
+    public void actAsLeader() {
         strategy.actAsLeader(this);
     }
-    void actAsMember() {
+    public void actAsMember() {
         strategy.actAsMember(this);
     }
 
-    void selectRole() {
-        validatedTicks = Manager.getTicks();
+    public void selectRole() {
+        validatedTicks = Main.getTicks();
         if( mySubTaskQueue.size() > 0 ){
             mySubTask = mySubTaskQueue.remove(0);
             leader = mySubTask.from;
@@ -267,7 +278,7 @@ public class Agent implements SetParam , Cloneable{
      * inactiveメソッド
      * チームが解散になったときに待機状態になる.
      */
-    void inactivate(double success) {
+    public void inactivate(double success) {
         if (role == LEADER) {
             e_leader = e_leader * (1.0 - α) + α * success;
 
@@ -316,13 +327,13 @@ public class Agent implements SetParam , Cloneable{
             prevIndex = index % relAgents_l.size();
             index = prevIndex;
         }
-        this.validatedTicks = Manager.getTicks();
+        this.validatedTicks = Main.getTicks();
     }
 
-    void sendMessage(Agent from, Agent to, int type, Object o) {
+    public void sendMessage(Agent from, Agent to, int type, Object o) {
         TransmissionPath.sendMessage(new Message(from, to, type, o));
     }
-    void sendNegative(Agent ag, Agent to, int type, SubTask subTask) {
+    public void sendNegative(Agent ag, Agent to, int type, SubTask subTask) {
         if (type == PROPOSAL) {
             // 今実行しているサブタスクをくれたリーダーが，実行中にもかかわらずまた要請を出して来たらその旨を伝える
             if( ag.phase == EXECUTION && to.equals(ag.leader) ) {
@@ -359,21 +370,21 @@ public class Agent implements SetParam , Cloneable{
      * 期待するタイプで期待するエージェントからの物だけを戻す.
      * それ以外はネガティブな返事をする
      */
-    void checkMessages(Agent self) {
+    public void checkMessages(Agent self) {
             strategy.checkMessages(self);
     }
     /**
      * inTheListメソッド
      * 引数のエージェントが引数のリスト内にあればその索引を, いなければ-1を返す
      */
-    protected int inTheList(Object a, List List) {
+    public int inTheList(Object a, List List) {
         for (int i = 0; i < List.size(); i++) {
             if( a.equals(List.get(i)) ) return i;
         }
         return -1;
     }
 
-    protected boolean haveAlreadyJoined( Agent member, Agent target ){
+    public boolean haveAlreadyJoined(Agent member, Agent target){
         if( member.leader == target ){
             return true;
         }
@@ -384,7 +395,7 @@ public class Agent implements SetParam , Cloneable{
      * taskIDを元にpastTaskからTaskを同定しそれを返す
      * @param taskID ... taskのID
      */
-    protected Task identifyTask (int taskID){
+    public Task identifyTask(int taskID){
         Task temp = null;
         for( Task t: pastTasks ){
             if( t.task_id == taskID ){
@@ -396,7 +407,7 @@ public class Agent implements SetParam , Cloneable{
         return temp;
     }
 
-    protected boolean epsilonGreedy() {
+    public boolean epsilonGreedy() {
         double random = _randSeed.nextDouble();
         if (random < ε) {
             return true;
@@ -409,12 +420,12 @@ public class Agent implements SetParam , Cloneable{
      * phaseの変更をする
      * 同時にvalidTimeを更新する
      */
-    protected void nextPhase() {
+    public void nextPhase() {
         if (this.phase == PROPOSITION) this.phase = REPORT;
         else if (this.phase == WAITING) this.phase = RECEPTION;
         else if (this.phase == REPORT){
             if( this.executionTime < 0 ){
-                if (_coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
+                if (_coalition_check_end_time - Main.getTicks() < COALITION_CHECK_SPAN) {
                     if (role == LEADER) {
                         for (Agent ag : teamMembers) workWithAsL[ag.id]++;
                     } else {
@@ -428,7 +439,7 @@ public class Agent implements SetParam , Cloneable{
             }
         }
         else if (this.phase == RECEPTION) this.phase = EXECUTION;
-        this.validatedTicks = Manager.getTicks();
+        this.validatedTicks = Main.getTicks();
         this.role_renewal_counter=0;
     }
 
@@ -450,17 +461,17 @@ public class Agent implements SetParam , Cloneable{
         _randSeed = new Random(_seed);
     }
 
-    static void renewEpsilonLenear(){
+    public static void renewEpsilonLenear(){
         ε -= DIFFERENCE;
         if( ε < FLOOR ) ε = FLOOR;
     }
 
-    static void renewEpsilonExponential(){
+    public static void renewEpsilonExponential(){
         ε =  (ε - FLOOR) * RATE;
         ε += FLOOR;
     }
 
-    static void clearA() {
+    public static void clearA() {
         _id = 0;
         _leader_num = 0;
         _member_num = 0;
@@ -494,7 +505,7 @@ public class Agent implements SetParam , Cloneable{
         return temp;
     }
 
-    static void makeLonelyORAccompaniedAgentList(List<Agent> agents){
+    public static void makeLonelyORAccompaniedAgentList(List<Agent> agents){
         for( Agent ag: agents ){
             if( ag.isLonely == 1 ){
                 _lonelyAgents.add(ag.id);
@@ -534,7 +545,7 @@ public class Agent implements SetParam , Cloneable{
      */
     public static int countNEETmembers(List<Agent> agents, int span){
         int neetM = 0;
-        int now = Manager.getTicks();
+        int now = Main.getTicks();
         for( Agent ag: agents ){
                 if ( now - ag.validatedTicks > span) {
                     neetM++;
@@ -566,7 +577,7 @@ public class Agent implements SetParam , Cloneable{
 /*
         if( this.principle == RECIPROCAL ) {
             str.append(", The most reliable agent: " + relRanking.get(0).id + "← reliability: " + reliabilities[relRanking.get(0).id]);
-            str.append(", the delay: " + Manager.delays[this.id][relRanking.get(0).id]);
+            str.append(", the delay: " + research.Main.delays[this.id][relRanking.get(0).id]);
         }
 // */
         str.append("[");

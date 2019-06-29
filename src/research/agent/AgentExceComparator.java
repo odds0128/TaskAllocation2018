@@ -1,3 +1,5 @@
+package research.agent;
+
 import java.util.Comparator;
 
 public class AgentExceComparator implements Comparator<Agent>{
