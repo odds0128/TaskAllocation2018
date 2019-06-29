@@ -1,0 +1,8 @@
+task runCompile {
+  println 'Run compile.'
+}
+
+task runTestSuite(dependsOn: runCompile) {
+  println 'Execute test.'
+}
+
