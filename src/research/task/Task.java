@@ -21,6 +21,7 @@ public class Task implements SetParam {
     public boolean flag = false;
     public List<SubTask> subTasks = new ArrayList<>();
     public int subTaskNum ;
+    public int deadline = 0;
     int fromBirth = 0;
     int fromPicked = 0;
 
