@@ -1,0 +1,1015 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="BookmarkManager">
+    <bookmark url="file://$PROJECT_DIR$/src/main/research/agent/Agent.java" line="97" mnemonic="8" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="b5b56e3a-f18e-436b-a79d-63ddb599acf3" name="Default" comment="">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/figures/TaskAllocation.puml" beforeDir="false" afterPath="$PROJECT_DIR$/figures/TaskAllocation.puml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/research/Main.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/research/OutPut.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/research/ProcessMultiple.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/research/SetParam.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/research/agent/Agent.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/research/agent/AgentExceComparator.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/research/agent/AgentIDcomparator.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/research/communication/Message.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/research/communication/TransmissionPath.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/research/graph/Edge.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/research/graph/MyNode.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/research/random/Sfmt.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/research/strategy/PM2.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/research/strategy/PM2withRoleFixed.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/research/strategy/Strategy.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/research/task/AllocatedSubTask.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/research/task/SubTask.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/research/task/SubtaskRewardComparator.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/research/task/Task.java" beforeDir="false" />
+    </list>
+    <ignored path="$PROJECT_DIR$/out/" />
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="DatabaseView">
+    <option name="SHOW_INTERMEDIATE" value="true" />
+    <option name="GROUP_DATA_SOURCES" value="true" />
+    <option name="GROUP_SCHEMA" value="true" />
+    <option name="GROUP_CONTENTS" value="false" />
+    <option name="SORT_POSITIONED" value="false" />
+    <option name="SHOW_EMPTY_GROUPS" value="false" />
+    <option name="AUTO_SCROLL_FROM_SOURCE" value="false" />
+    <option name="HIDDEN_KINDS">
+      <set />
+    </option>
+    <expand />
+    <select />
+  </component>
+  <component name="DefaultGradleProjectSettings">
+    <option name="isMigrated" value="true" />
+  </component>
+  <component name="ErrorTreeViewConfiguration">
+    <option name="hideWarnings" value="true" />
+    <option name="HIDE_WARNINGS" value="true" />
+  </component>
+  <component name="FavoritesManager">
+    <favorites_list name="TaskAllocation" />
+  </component>
+  <component name="FileEditorManager">
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/main/research/Manager.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="178">
+              <caret line="15" column="13" selection-start-line="15" selection-start-column="13" selection-end-line="15" selection-end-column="13" />
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/research/task/Task.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="858">
+              <caret line="67" column="24" selection-start-line="67" selection-start-column="24" selection-end-line="67" selection-end-column="24" />
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/research/strategy/PM2.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="594">
+              <caret line="640" column="48" selection-start-line="640" selection-start-column="48" selection-end-line="640" selection-end-column="48" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/research/random/Sfmt.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="260">
+              <caret line="20" column="71" selection-start-line="20" selection-start-column="71" selection-end-line="20" selection-end-column="71" />
+              <folding>
+                <element signature="e#673#674#0" expanded="true" />
+                <element signature="e#753#754#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/research/agent/Agent.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="208">
+              <caret line="16" column="13" selection-start-line="16" selection-start-column="13" selection-end-line="16" selection-end-column="13" />
+              <folding>
+                <element signature="n#!!doc" expanded="true" />
+                <element signature="imports" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/research/SetParam.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="143">
+              <caret line="11" column="24" selection-start-line="11" selection-start-column="24" selection-end-line="11" selection-end-column="24" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/research/ProcessMultiple.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state>
+              <caret column="13" selection-start-column="13" selection-end-column="13" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/research/OutPut.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="325">
+              <caret line="25" column="13" selection-start-line="25" selection-start-column="13" selection-end-line="25" selection-end-column="13" />
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/research/agent/AgentExceComparator.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="52">
+              <caret line="4" column="13" selection-start-line="4" selection-start-column="13" selection-end-line="4" selection-end-column="13" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="FxmlFile" />
+        <option value="Class" />
+        <option value="Arquillian JUnit Test Class" />
+        <option value="JUnit5 Test Class" />
+        <option value="UML Sequence" />
+        <option value="UML Class" />
+      </list>
+    </option>
+  </component>
+  <component name="FindInProjectRecents">
+    <findStrings>
+      <find>teamHistory</find>
+      <find>select</find>
+      <find>checkSolici</find>
+      <find>alloca</find>
+      <find>solicitation</find>
+      <find>dispose</find>
+      <find>ACCEPT</find>
+      <find>Syste</find>
+      <find>check</find>
+      <find>HashMap</find>
+      <find>HashMa</find>
+      <find>haveA</find>
+      <find>IS_HEAVY_TASKS_HAPPENS</find>
+      <find>IS_HE</find>
+      <find>execute</find>
+      <find>chec</find>
+      <find>finish</find>
+      <find>rene</find>
+      <find>renewRel</find>
+      <find>mySubTaskQ</find>
+      <find>IS_MORE</find>
+      <find>SubtaskRewardComparator</find>
+      <find>Subtask</find>
+      <find>SubTask</find>
+      <find>.x</find>
+      <find>Director</find>
+      <find>AgentFactory</find>
+      <find>Communication</find>
+      <find>research.</find>
+      <find>Main</find>
+    </findStrings>
+    <replaceStrings>
+      <replace>leader</replace>
+      <replace>271</replace>
+      <replace>359</replace>
+      <replace>from</replace>
+      <replace>responseType</replace>
+      <replace>mem</replace>
+      <replace>ag</replace>
+      <replace>sdf1.format(date)</replace>
+      <replace>agent.threshold_for_dependability</replace>
+      <replace>agent.threshold_for_reciprocity</replace>
+      <replace>,yyyy:MM:dd,HH:mm:ss</replace>
+      <replace>THRESHOLD_FOR_ROLE_RECIPROCITY</replace>
+      <replace>agent.relAgents = decreaseDEC</replace>
+      <replace>communicationTimes</replace>
+      <replace>_communicationTimes</replace>
+      <replace>_taskQueue</replace>
+      <replace>_grid</replace>
+      <replace>MAX_X</replace>
+      <replace>MAX_Y</replace>
+      <replace />
+      <replace>selectSolicitations</replace>
+      <replace>m</replace>
+      <replace>member</replace>
+      <replace>323</replace>
+      <replace>24090</replace>
+      <replace>Output</replace>
+      <replace>MessageManager</replace>
+      <replace>main.research</replace>
+      <replace>main.research.</replace>
+      <replace>Manager</replace>
+    </replaceStrings>
+  </component>
+  <component name="FrameworkCommandLineHistory">
+    <commandsHistory>
+      <command text="hd -n &quot;A&quot; " />
+      <command text="hd run -n &quot;A&quot; " />
+    </commandsHistory>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="IdeDocumentHistory">
+    <option name="CHANGED_PATHS">
+      <list>
+        <option value="$PROJECT_DIR$/src/escape/PM2withoutReciprocity.java" />
+        <option value="$PROJECT_DIR$/src/myUtilTest.java" />
+        <option value="$PROJECT_DIR$/src/myUtil.java" />
+        <option value="$PROJECT_DIR$/src/test/myUtilTest.java" />
+        <option value="$PROJECT_DIR$/poi-3.17/docs/apidocs/org/apache/poi/hssf/model/InternalSheet.html" />
+        <option value="$PROJECT_DIR$/src/PM2withoutReciprocalMemberWithRoleFixed.java" />
+        <option value="$PROJECT_DIR$/src/PM2withoutRoleRenewal.java" />
+        <option value="$PROJECT_DIR$/src/Task.java" />
+        <option value="$PROJECT_DIR$/src/PM2withoutReciprocity.java" />
+        <option value="$PROJECT_DIR$/src/Strategy.java" />
+        <option value="$PROJECT_DIR$/src/Member.puml" />
+        <option value="$PROJECT_DIR$/src/AllocatedSubTask.java" />
+        <option value="$PROJECT_DIR$/src/CNP.java" />
+        <option value="$PROJECT_DIR$/src/CNP_area_restricted.java" />
+        <option value="$PROJECT_DIR$/src/Edge.java" />
+        <option value="$PROJECT_DIR$/src/Agent.kt" />
+        <option value="$PROJECT_DIR$/src/OutPut.java" />
+        <option value="$PROJECT_DIR$/src/SubTask.java" />
+        <option value="$PROJECT_DIR$/src/Message.java" />
+        <option value="$PROJECT_DIR$/src/PM2.java" />
+        <option value="$PROJECT_DIR$/src/PM2withRoleFixed.java" />
+        <option value="$PROJECT_DIR$/src/Leader.puml" />
+        <option value="$PROJECT_DIR$/src/AgentPackage.puml" />
+        <option value="$PROJECT_DIR$/src/SetParam.java" />
+        <option value="$PROJECT_DIR$/src/.gitignore" />
+        <option value="$PROJECT_DIR$/figures/Leader.puml" />
+        <option value="$PROJECT_DIR$/figures/AgentPackage.puml" />
+        <option value="$PROJECT_DIR$/figures/TaskAllocation.puml" />
+        <option value="$PROJECT_DIR$/figures/Otsukas_sample.puml" />
+        <option value="$PROJECT_DIR$/.gitignore" />
+        <option value="$PROJECT_DIR$/TaskAllocation.iml" />
+        <option value="$PROJECT_DIR$/src/Manager.java" />
+        <option value="$PROJECT_DIR$/src/Agent.java" />
+        <option value="$PROJECT_DIR$/src/research/Agent.java" />
+        <option value="$PROJECT_DIR$/src/research/MyNode.java" />
+        <option value="$PROJECT_DIR$/src/research/task/AllocatedSubTask.java" />
+        <option value="$PROJECT_DIR$/src/research/SetParam.java" />
+        <option value="$PROJECT_DIR$/src/research/communication/TransmissionPath.java" />
+        <option value="$PROJECT_DIR$/src/research/strategy/CNP.java" />
+        <option value="$PROJECT_DIR$/src/research/communication/Message.java" />
+        <option value="$PROJECT_DIR$/src/research/agent/Agent.java" />
+        <option value="$PROJECT_DIR$/src/research/Main.java" />
+        <option value="$PROJECT_DIR$/src/research/strategy/PM2.java" />
+        <option value="$PROJECT_DIR$/src/research/strategy/PM2withRoleFixed.java" />
+        <option value="$PROJECT_DIR$/src/research/random/Sfmt.java" />
+        <option value="$PROJECT_DIR$/src/research/task/Task.java" />
+        <option value="$PROJECT_DIR$/src/main/research/agent/Agent.java" />
+        <option value="$PROJECT_DIR$/src/main/research/SetParam.java" />
+        <option value="$PROJECT_DIR$/src/main/research/ProcessMultiple.java" />
+        <option value="$PROJECT_DIR$/src/main/research/OutPut.java" />
+        <option value="$PROJECT_DIR$/src/main/research/Main.java" />
+      </list>
+    </option>
+  </component>
+  <component name="JsFlowSettings">
+    <service-enabled>true</service-enabled>
+    <exe-path />
+    <other-services-enabled>true</other-services-enabled>
+    <auto-save>true</auto-save>
+  </component>
+  <component name="PhpWorkspaceProjectConfiguration" backward_compatibility_performed="true" />
+  <component name="ProjectFrameBounds" fullScreen="true">
+    <option name="y" value="23" />
+    <option name="width" value="1440" />
+    <option name="height" value="877" />
+  </component>
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectView">
+    <navigator proportions="" version="1">
+      <foldersAlwaysOnTop value="true" />
+    </navigator>
+    <panes>
+      <pane id="PackagesPane" />
+      <pane id="Scope" />
+      <pane id="ProjectPane">
+        <subPane>
+          <expand>
+            <path>
+              <item name="TaskAllocation" type="b2602c69:ProjectViewProjectNode" />
+              <item name="TaskAllocation" type="47feb1d3:ProjectViewModuleNode" />
+            </path>
+            <path>
+              <item name="TaskAllocation" type="b2602c69:ProjectViewProjectNode" />
+              <item name="TaskAllocation" type="47feb1d3:ProjectViewModuleNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="TaskAllocation" type="b2602c69:ProjectViewProjectNode" />
+              <item name="TaskAllocation" type="47feb1d3:ProjectViewModuleNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="TaskAllocation" type="b2602c69:ProjectViewProjectNode" />
+              <item name="TaskAllocation" type="47feb1d3:ProjectViewModuleNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="research" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="TaskAllocation" type="b2602c69:ProjectViewProjectNode" />
+              <item name="TaskAllocation" type="47feb1d3:ProjectViewModuleNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="test" type="462c0819:PsiDirectoryNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
+    </panes>
+  </component>
+  <component name="PropertiesComponent">
+    <property name="GenerateAntBuildDialog.backupFiles" value="true" />
+    <property name="GenerateAntBuildDialog.enableUiFormCompile" value="true" />
+    <property name="GenerateAntBuildDialog.forceTargetJdk" value="true" />
+    <property name="GenerateAntBuildDialog.outputFileNameProperty" value="taskallocation" />
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+    <property name="SearchEverywhereHistoryKey" value="&#9;FILE&#9;file:///Users/r.funato/IdeaProjects/TaskAllocation/src/SetParam.java" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="aspect.path.notification.shown" value="true" />
+    <property name="com.android.tools.idea.instantapp.provision.ProvisionBeforeRunTaskProvider.myTimeStamp" value="1561423193582" />
+    <property name="com.intellij.testIntegration.createTest.CreateTestDialog.defaultLibrary" value="JUnit5" />
+    <property name="create.test.in.the.same.root" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="node.js.detected.package.eslint" value="true" />
+    <property name="node.js.path.for.package.eslint" value="project" />
+    <property name="node.js.selected.package.eslint" value="(autodetect)" />
+    <property name="project.structure.last.edited" value="Problems" />
+    <property name="project.structure.proportion" value="0.15" />
+    <property name="project.structure.side.proportion" value="0.2" />
+    <property name="settings.editor.selected.configurable" value="coverage" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CreateTestDialog.RecentsKey">
+      <recent name="" />
+    </key>
+    <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
+      <recent name="" />
+      <recent name="strategies" />
+    </key>
+    <key name="CreateTestDialog.Recents.Supers">
+      <recent name="" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src" />
+      <recent name="$PROJECT_DIR$/out/production" />
+      <recent name="$PROJECT_DIR$/out" />
+      <recent name="$PROJECT_DIR$/" />
+      <recent name="$PROJECT_DIR$" />
+    </key>
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
+  <component name="RunManager">
+    <configuration default="true" type="Applet">
+      <option name="POLICY_FILE" value="$APPLICATION_HOME_DIR$/bin/appletviewer.policy" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Manager" type="Application" factoryName="Application" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="main.research.Manager" />
+      <module name="TaskAllocation" />
+      <option name="PROGRAM_PARAMETERS" value="| hd run -n &quot;A&quot;" />
+      <option name="VM_PARAMETERS" value="-ea" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="Application" factoryName="Application">
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="JUnit" factoryName="JUnit">
+      <option name="TEST_OBJECT" value="class" />
+      <option name="WORKING_DIRECTORY" value="$MODULE_DIR$" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="TestNG">
+      <option name="TEST_OBJECT" value="CLASS" />
+      <option name="WORKING_DIRECTORY" value="$MODULE_DIR$" />
+      <properties />
+      <listeners />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="#org.jetbrains.idea.devkit.run.PluginConfigurationType">
+      <module name="" />
+      <option name="VM_PARAMETERS" value="-Xmx512m -Xms256m -XX:MaxPermSize=250m -ea" />
+      <option name="PROGRAM_PARAMETERS" />
+      <predefined_log_file enabled="true" id="idea.log" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="b5b56e3a-f18e-436b-a79d-63ddb599acf3" name="Default" comment="" />
+      <created>1514205478530</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1514205478530</updated>
+      <workItem from="1514205480291" duration="2261000" />
+      <workItem from="1514207953020" duration="94215000" />
+      <workItem from="1515564164787" duration="62376000" />
+      <workItem from="1516118461020" duration="11546000" />
+      <workItem from="1517369336198" duration="1201000" />
+      <workItem from="1517382966586" duration="659000" />
+      <workItem from="1519735489288" duration="7469000" />
+      <workItem from="1520333802531" duration="8743000" />
+      <workItem from="1520494998145" duration="1347000" />
+      <workItem from="1520926639033" duration="12366000" />
+      <workItem from="1521083240023" duration="302000" />
+      <workItem from="1521125468261" duration="4002000" />
+      <workItem from="1521383897267" duration="247000" />
+      <workItem from="1521385139848" duration="3689000" />
+      <workItem from="1521436137002" duration="2321000" />
+      <workItem from="1521696530944" duration="4522000" />
+      <workItem from="1522394693717" duration="1607000" />
+      <workItem from="1522408283448" duration="22390000" />
+      <workItem from="1522639906135" duration="25383000" />
+      <workItem from="1522836636281" duration="8922000" />
+      <workItem from="1522911173221" duration="2036000" />
+      <workItem from="1522992205117" duration="14951000" />
+      <workItem from="1523348595587" duration="5649000" />
+      <workItem from="1523357745554" duration="936000" />
+      <workItem from="1523422179412" duration="10729000" />
+      <workItem from="1523601490353" duration="16465000" />
+      <workItem from="1523936520698" duration="35584000" />
+      <workItem from="1524133840319" duration="36968000" />
+      <workItem from="1524374769521" duration="472000" />
+      <workItem from="1524377325401" duration="11525000" />
+      <workItem from="1524642324279" duration="437000" />
+      <workItem from="1524643073278" duration="69630000" />
+      <workItem from="1526017521412" duration="66903000" />
+      <workItem from="1526448381558" duration="2600000" />
+      <workItem from="1526467360870" duration="3408000" />
+      <workItem from="1526631000738" duration="982000" />
+      <workItem from="1526632334462" duration="575000" />
+      <workItem from="1526632937741" duration="8169000" />
+      <workItem from="1526819052747" duration="6087000" />
+      <workItem from="1527059935827" duration="5661000" />
+      <workItem from="1527653351016" duration="1547000" />
+      <workItem from="1527675281725" duration="461000" />
+      <workItem from="1527675795397" duration="1008000" />
+      <workItem from="1528178211333" duration="132000" />
+      <workItem from="1528188840650" duration="2608000" />
+      <workItem from="1528892495472" duration="663000" />
+      <workItem from="1529471136926" duration="580000" />
+      <workItem from="1529480717928" duration="1667000" />
+      <workItem from="1529975914022" duration="85000" />
+      <workItem from="1529993568257" duration="9996000" />
+      <workItem from="1530676123093" duration="1537000" />
+      <workItem from="1531461434358" duration="2859000" />
+      <workItem from="1532002438264" duration="1043000" />
+      <workItem from="1543383795420" duration="7228000" />
+      <workItem from="1543923181813" duration="872000" />
+      <workItem from="1543924425064" duration="43552000" />
+      <workItem from="1544437722226" duration="1373000" />
+      <workItem from="1544502265807" duration="39782000" />
+      <workItem from="1544854452498" duration="1539000" />
+      <workItem from="1547966930312" duration="23676000" />
+      <workItem from="1549873083033" duration="3671000" />
+      <workItem from="1550137203503" duration="16582000" />
+      <workItem from="1555824706781" duration="1788000" />
+      <workItem from="1557387401874" duration="1036000" />
+      <workItem from="1560752478065" duration="917000" />
+      <workItem from="1560922508469" duration="4543000" />
+      <workItem from="1560929803018" duration="1990000" />
+      <workItem from="1561272873965" duration="2385000" />
+      <workItem from="1561310505079" duration="3317000" />
+      <workItem from="1561423592034" duration="5670000" />
+      <workItem from="1561430440503" duration="115000" />
+      <workItem from="1561430585296" duration="3121000" />
+      <workItem from="1561434145595" duration="335000" />
+      <workItem from="1561441707000" duration="1340000" />
+      <workItem from="1561453538974" duration="654000" />
+      <workItem from="1561456446000" duration="1253000" />
+      <workItem from="1561501389845" duration="209000" />
+      <workItem from="1561501752869" duration="5519000" />
+      <workItem from="1561769402660" duration="565000" />
+      <workItem from="1561771163970" duration="3052000" />
+      <workItem from="1561792678555" duration="5844000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TimeTrackingManager">
+    <option name="totallyTimeSpent" value="888414000" />
+  </component>
+  <component name="TodoView" selected-index="3">
+    <todo-panel id="selected-file">
+      <is-autoscroll-to-source value="true" />
+    </todo-panel>
+    <todo-panel id="all">
+      <are-packages-shown value="true" />
+      <is-autoscroll-to-source value="true" />
+    </todo-panel>
+  </component>
+  <component name="ToolWindowManager">
+    <frame x="0" y="0" width="1440" height="900" extended-state="0" />
+    <editor active="true" />
+    <layout>
+      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.49916247" visible="true" weight="0.16547278" />
+      <window_info id="Structure" order="1" weight="0.24928367" />
+      <window_info id="Capture Tool" order="2" />
+      <window_info id="Designer" order="3" />
+      <window_info id="UI Designer" order="4" />
+      <window_info id="Favorites" order="5" sideWeight="0.5008375" side_tool="true" weight="0.25894135" />
+      <window_info id="Image Layers" order="6" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Find" order="1" sideWeight="0.49541286" weight="0.32771084" />
+      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.47424892" visible="true" weight="0.2807229" />
+      <window_info anchor="bottom" id="Debug" order="3" sideWeight="0.4960981" weight="0.33373493" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="TODO" order="6" weight="0.32891566" />
+      <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.52575105" side_tool="true" weight="0.2807229" />
+      <window_info anchor="bottom" id="Messages" order="8" sideWeight="0.4773022" weight="0.32650602" />
+      <window_info anchor="bottom" id="Terminal" order="9" weight="0.32891566" />
+      <window_info anchor="bottom" id="Run with VisualVM" order="10" weight="0.32921812" />
+      <window_info anchor="bottom" id="Debug with VisualVM" order="11" />
+      <window_info anchor="bottom" id="Version Control" order="12" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Database Changes" order="13" show_stripe_button="false" />
+      <window_info active="true" anchor="bottom" id="Command Line Tools Console" order="14" weight="0.32891566" />
+      <window_info anchor="bottom" id="Docker" order="15" show_stripe_button="false" />
+      <window_info anchor="right" id="Commander" order="0" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+      <window_info anchor="right" id="Palette" order="3" />
+      <window_info anchor="right" id="Maven Projects" order="4" />
+      <window_info anchor="right" id="Database" order="5" weight="0.4237805" />
+      <window_info anchor="right" id="Capture Analysis" order="6" />
+      <window_info anchor="right" id="Theme Preview" order="7" />
+      <window_info anchor="right" id="Palette&#9;" order="8" />
+      <window_info anchor="right" x="0" y="22" width="1440" height="878" id="PlantUML" maximized="true" order="9" type="WINDOWED" weight="0.32618025" />
+      <window_info anchor="right" x="0" y="0" width="310" height="700" id="Documentation" order="10" side_tool="true" weight="0.3297568" />
+      <window_info anchor="right" id="Maven" order="11" />
+      <window_info anchor="right" id="Key Promoter X" order="12" />
+    </layout>
+    <layout-to-restore>
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.25965664" />
+      <window_info id="Structure" order="1" weight="0.25" />
+      <window_info id="Capture Tool" order="2" />
+      <window_info id="Designer" order="3" />
+      <window_info id="UI Designer" order="4" />
+      <window_info id="Favorites" order="5" side_tool="true" weight="0.32996207" />
+      <window_info id="Image Layers" order="6" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Find" order="1" sideWeight="0.49541286" weight="0.3281027" />
+      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.47424892" visible="true" weight="0.2807229" />
+      <window_info anchor="bottom" id="Debug" order="3" sideWeight="0.4960981" weight="0.33373493" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="TODO" order="6" weight="0.32891566" />
+      <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.52575105" side_tool="true" weight="0.2807229" />
+      <window_info anchor="bottom" id="Messages" order="8" sideWeight="0.4773022" weight="0.32650602" />
+      <window_info anchor="bottom" id="Terminal" order="9" weight="0.32891566" />
+      <window_info anchor="bottom" id="Run with VisualVM" order="10" weight="0.32921812" />
+      <window_info anchor="bottom" id="Debug with VisualVM" order="11" />
+      <window_info anchor="bottom" id="Version Control" order="12" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Database Changes" order="13" show_stripe_button="false" />
+      <window_info active="true" anchor="bottom" id="Command Line Tools Console" order="14" weight="0.32891566" />
+      <window_info anchor="bottom" id="Docker" order="15" show_stripe_button="false" />
+      <window_info anchor="right" id="Commander" order="0" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+      <window_info anchor="right" id="Palette" order="3" />
+      <window_info anchor="right" id="Maven Projects" order="4" />
+      <window_info anchor="right" id="Database" order="5" weight="0.4237805" />
+      <window_info anchor="right" id="Capture Analysis" order="6" />
+      <window_info anchor="right" id="Theme Preview" order="7" />
+      <window_info anchor="right" id="Palette&#9;" order="8" />
+      <window_info anchor="right" id="PlantUML" order="9" weight="0.32618025" />
+      <window_info anchor="right" x="0" y="0" width="310" height="700" id="Documentation" order="10" side_tool="true" weight="0.3297568" />
+      <window_info anchor="right" id="Maven" order="11" />
+    </layout-to-restore>
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <ignored-roots>
+      <path value="$PROJECT_DIR$/.." />
+      <path value="$PROJECT_DIR$/pictures" />
+      <path value="$PROJECT_DIR$/src" />
+    </ignored-roots>
+  </component>
+  <component name="antWorkspaceConfiguration">
+    <option name="IS_AUTOSCROLL_TO_SOURCE" value="false" />
+    <option name="FILTER_TARGETS" value="false" />
+  </component>
+  <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/src/AgentPackage.puml" />
+    <entry file="file://$PROJECT_DIR$/src/READ_ME" />
+    <entry file="file://$PROJECT_DIR$/src/memo.txt" />
+    <entry file="file://$PROJECT_DIR$/out/results/PM2withRoleFixed,λ=7.50,2019_06_24,03_13_46.csv" />
+    <entry file="file://$PROJECT_DIR$/figures/Otsukas_sample.puml" />
+    <entry file="file://$PROJECT_DIR$/figures/AgentPackage.puml" />
+    <entry file="file://$PROJECT_DIR$/figures/Leader.puml" />
+    <entry file="file://$PROJECT_DIR$/figures/MemberWithQueue.puml">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/.gitignore">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="91">
+          <caret line="7" selection-start-line="7" selection-end-line="7" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/out/.class" />
+    <entry file="file://$PROJECT_DIR$/out/results/PM2withRoleFixed,λ=7.50,2019_06_25,12_14_02.csv" />
+    <entry file="file://$PROJECT_DIR$/out/production/Agent.class" />
+    <entry file="file://$PROJECT_DIR$/out/production/AllocatedSubTask.class" />
+    <entry file="file://$PROJECT_DIR$/out/production/Edge.class" />
+    <entry file="file://$PROJECT_DIR$/out/production/Manager.class" />
+    <entry file="file://$PROJECT_DIR$/out/production/Message.class" />
+    <entry file="file://$PROJECT_DIR$/out/production/MyNode.class" />
+    <entry file="file://$PROJECT_DIR$/out/production/CNP_area_restricted.class" />
+    <entry file="file://$PROJECT_DIR$/out/production/CNP.class" />
+    <entry file="file://$PROJECT_DIR$/out/production/AgentIDcomparator.class" />
+    <entry file="file://$PROJECT_DIR$/out/production/AgentExceComparator.class" />
+    <entry file="file://$PROJECT_DIR$/TaskAllocation.iml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="169">
+          <caret line="13" column="9" lean-forward="true" selection-start-line="13" selection-start-column="9" selection-end-line="13" selection-end-column="9" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/libs/poi-3.17/docs/hpbf/index.html">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/libs/poi-3.17/docs/hpbf/file-format.xml">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/libs/poi-3.17/docs/hpbf/file-format.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="208">
+          <caret line="16" column="4" lean-forward="true" selection-start-line="16" selection-start-column="4" selection-end-line="16" selection-end-column="4" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/libs/poi-3.17/docs/hmef/index.html">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/figures/TaskAllocation.puml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="182">
+          <caret line="14" column="21" selection-end-line="123" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/research/strategy/CNP_area_restricted.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/research/strategy/Strategy.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="26">
+          <caret line="2" column="7" lean-forward="true" selection-start-line="2" selection-start-column="7" selection-end-line="2" selection-end-column="7" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/research/task/AllocatedSubTask.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="26">
+          <caret line="2" column="13" selection-start-line="2" selection-start-column="13" selection-end-line="2" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/research/task/SubTask.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="91">
+          <caret line="10" column="13" selection-start-line="10" selection-start-column="13" selection-end-line="10" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/research/strategy/CNP.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/research/agent/AgentIDcomparator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="52">
+          <caret line="4" column="13" selection-start-line="4" selection-start-column="13" selection-end-line="4" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/research/communication/TransmissionPath.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="884">
+          <caret line="70" column="18" selection-start-line="70" selection-start-column="18" selection-end-line="70" selection-end-column="18" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/research/communication/Message.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="117">
+          <caret line="12" column="13" selection-start-line="12" selection-start-column="13" selection-end-line="12" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/research/task/SubtaskRewardComparator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="52">
+          <caret line="4" column="13" selection-start-line="4" selection-start-column="13" selection-end-line="4" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/research/graph/Edge.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="858">
+          <caret line="71" column="37" selection-start-line="71" selection-start-column="37" selection-end-line="71" selection-end-column="37" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/research/graph/MyNode.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="104">
+          <caret line="8" column="26" selection-start-line="8" selection-start-column="26" selection-end-line="8" selection-end-column="26" />
+          <folding>
+            <element signature="e#125#126#0" expanded="true" />
+            <element signature="e#159#160#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/out/results/PM2withRoleFixed,λ=7.50,2019_06_25,12_41_03.csv">
+      <provider editor-type-id="csv-table-editor">
+        <state showInfoPanel="true" fixedHeaders="false" rowLines="3" />
+      </provider>
+      <provider selected="true" editor-type-id="csv-text-editor">
+        <state relative-caret-position="-192" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/research/strategy/PM2withRoleFixed.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="286">
+          <caret line="32" column="61" selection-start-line="32" selection-start-column="61" selection-end-line="32" selection-end-column="61" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/Downloads/sfmt/SfmtJAVA/Sfmt.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="247">
+          <caret line="19" column="58" selection-start-line="19" selection-start-column="58" selection-end-line="19" selection-end-column="58" />
+          <folding>
+            <element signature="e#0#2029#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/research/strategy/PM2.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="594">
+          <caret line="640" column="48" selection-start-line="640" selection-start-column="48" selection-end-line="640" selection-end-column="48" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/research/random/Sfmt.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="260">
+          <caret line="20" column="71" selection-start-line="20" selection-start-column="71" selection-end-line="20" selection-end-column="71" />
+          <folding>
+            <element signature="e#673#674#0" expanded="true" />
+            <element signature="e#753#754#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/research/task/Task.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="858">
+          <caret line="67" column="24" selection-start-line="67" selection-start-column="24" selection-end-line="67" selection-end-column="24" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/research/SetParam.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="143">
+          <caret line="11" column="24" selection-start-line="11" selection-start-column="24" selection-end-line="11" selection-end-column="24" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/research/ProcessMultiple.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret column="13" selection-start-column="13" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/research/agent/AgentExceComparator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="52">
+          <caret line="4" column="13" selection-start-line="4" selection-start-column="13" selection-end-line="4" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/research/agent/Agent.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="208">
+          <caret line="16" column="13" selection-start-line="16" selection-start-column="13" selection-end-line="16" selection-end-column="13" />
+          <folding>
+            <element signature="n#!!doc" expanded="true" />
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/test/java/TaskAllocation/AppTest.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="91">
+          <caret line="7" lean-forward="true" selection-start-line="7" selection-end-line="7" />
+          <folding>
+            <element signature="e#0#356#0" expanded="true" />
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/research/OutPut.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="325">
+          <caret line="25" column="13" selection-start-line="25" selection-start-column="13" selection-end-line="25" selection-end-column="13" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/research/Manager.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="178">
+          <caret line="15" column="13" selection-start-line="15" selection-start-column="13" selection-end-line="15" selection-end-column="13" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+  </component>
+  <component name="masterDetails">
+    <states>
+      <state key="ArtifactsStructureConfigurable.UI">
+        <settings>
+          <artifact-editor />
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="FacetStructureConfigurable.UI">
+        <settings>
+          <last-edited>No facets are configured</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="GlobalLibrariesConfigurable.UI">
+        <settings>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="JdkListConfigurable.UI">
+        <settings>
+          <last-edited>1.8</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="ModuleStructureConfigurable.UI">
+        <settings>
+          <last-edited>TaskAllocation</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+                <option value="0.6" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="ProjectJDKs.UI">
+        <settings>
+          <last-edited>1.8</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="ProjectLibrariesConfigurable.UI">
+        <settings>
+          <last-edited>poi-3</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="ScopeChooserConfigurable.UI">
+        <settings>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+    </states>
+  </component>
+</project>

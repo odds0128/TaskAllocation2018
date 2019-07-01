@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module version="4">
+  <component name="NewModuleRootManager">
+    <output url="file://$MODULE_DIR$/out/production" />
+    <exclude-output />
+    <content url="file://$MODULE_DIR$/figures">
+      <excludeFolder url="file://$MODULE_DIR$/figures" />
+    </content>
+    <content url="file://$MODULE_DIR$/out">
+      <excludeFolder url="file://$MODULE_DIR$/out" />
+    </content>
+    <content url="file://$MODULE_DIR$/src">
+      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+    </content>
+    <content url="file://$MODULE_DIR$/src/libs" />
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="poi-3" level="project" />
+  </component>
+</module>

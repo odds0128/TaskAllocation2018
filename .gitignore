@@ -1,8 +1,5 @@
-*.class
-.DS_Store
-unti
-.idea
-out/
-libs
-*.iml
+# Ignore Gradle project-specific cache directory
 .gradle
+
+# Ignore Gradle build output directory
+build
