@@ -1,8 +1,8 @@
 *.class
 .DS_Store
 unti
-.idea
+.idea/
 out/
-libs
+libs/
 *.iml
 .gradle

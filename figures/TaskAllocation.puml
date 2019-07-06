@@ -13,11 +13,11 @@ package agent {
 
 package task {
     class TaskFactory
-    class research.task.Task
+    class main.research.task.Task
     class Subtask
 
-    TaskFactory --> research.task.Task :create
-    research.task.Task "1" *-- "1.." Subtask
+    TaskFactory --> main.research.task.Task :create
+    main.research.task.Task "1" *-- "1.." Subtask
 }
 
 package team {
@@ -26,7 +26,7 @@ package team {
     class ActualTeam
 
     Team *---> Agent
-    Team --- research.task.Task
+    Team --- main.research.task.Task
 
     Team <|.. PreTeam
     Team <|.. ActualTeam
@@ -34,20 +34,20 @@ package team {
 
 package communication {
     class MessageManager
-    interface research.communication.Message
+    interface main.research.communication.Message
     abstract AbstractMessage
 
-    research.communication.Message <|.. AbstractMessage
+    main.research.communication.Message <|.. AbstractMessage
 
     AbstractMessage <|-down- Proposal
     AbstractMessage <|-down- Reply
     AbstractMessage <|-down- Allocation
     AbstractMessage <|-down- Finished
 
-    MessageManager"1"*--"1" research.communication.Message
+    MessageManager"1"*--"1" main.research.communication.Message
     Team --> MessageManager :use
     MessageManager --> Agent :use
-    research.communication.Message -- Subtask
+    main.research.communication.Message -- Subtask
 
 
 }
@@ -107,11 +107,11 @@ package output {
 
 package graph {
     class Node
-    class research.graph.Edge
+    class main.research.graph.Edge
 
-    CsvBuilder  "1"--"0..*" research.graph.Edge
-    XlsxBuilder "1"--"0..*" research.graph.Edge
-    research.graph.Edge "1" *-- "2" Node
+    CsvBuilder  "1"--"0..*" main.research.graph.Edge
+    XlsxBuilder "1"--"0..*" main.research.graph.Edge
+    main.research.graph.Edge "1" *-- "2" Node
 }
 
 class Main
