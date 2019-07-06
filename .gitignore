@@ -3,6 +3,6 @@
 unti
 .idea/
 out/
-libs
+libs/
 *.iml
 .gradle
