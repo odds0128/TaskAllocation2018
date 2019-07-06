@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Random;
 
 public class Task implements SetParam {
-    private static int _task_id = 0;
     private static long _seed;
     private static Random _randSeed ;
     public int task_id;
@@ -22,8 +21,6 @@ public class Task implements SetParam {
     public List<SubTask> subTasks = new ArrayList<>();
     public int subTaskNum ;
     public int deadline = 0;
-    int fromBirth = 0;
-    int fromPicked = 0;
 
     /**
      * コンストラクタ
@@ -31,8 +28,6 @@ public class Task implements SetParam {
      * パラメータで指定されたseedのサブタスクをランダムに生成する.
      */
     public Task(long seed){
-        this.task_id = _task_id;
-        _task_id++;
         setSeed(seed);
         this.subTaskNum = _randSeed.nextInt(4) + 3;
         totalSubtaskNum += subTaskNum;
@@ -49,7 +44,6 @@ public class Task implements SetParam {
         subTasks.add(new SubTask( RESET, seed) );
         for(int i = 1; i < subTaskNum; i++) subTasks.add( new SubTask(CONT) );
         Collections.sort(subTasks, new SubtaskRewardComparator() );
-//        System.out.println(subTasks);
     }
 
     /**
@@ -57,8 +51,6 @@ public class Task implements SetParam {
      * 残りのタスクを生成する.
      */
     public Task( String heavy ){
-        this.task_id = _task_id;
-        _task_id++;
         if( heavy == "HEAVY" ) {
             this.subTaskNum = _randSeed.nextInt(3) + 8;
         }else{
@@ -74,10 +66,9 @@ public class Task implements SetParam {
      * @param
      */
     private void setSubTasks(){
-        subTasks.add(new SubTask( RESET ) );
         for(int i = 1; i < subTaskNum; i++) subTasks.add( new SubTask(CONT) );
+        subTasks.add(new SubTask( RESET ) );
         Collections.sort(subTasks, new SubtaskRewardComparator() );
-//        System.out.println(subTasks);
     }
 
     public void setFrom(Agent agent){
@@ -91,7 +82,6 @@ public class Task implements SetParam {
         _randSeed = new Random(_seed);
     }
     public static void clearT(){
-        _task_id = 0;
     }
 
     @Override

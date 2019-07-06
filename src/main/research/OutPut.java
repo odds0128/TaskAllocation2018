@@ -80,7 +80,7 @@ public class OutPut implements SetParam {
         finishedTasksInDepopulatedAreaArray[index] += ftida ;
         finishedTasksInPopulatedAreaArray[index]   += ftipa ;
 // */
-    }
+    }/**/
 
     static void aggregateTaskExecutionTime(Agent leader) {
         if (leader.mySubTask != null) {
