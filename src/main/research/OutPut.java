@@ -6,7 +6,6 @@ import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import main.research.agent.Agent;
-import main.research.agent.AgentExceComparator;
 import main.research.communication.TransmissionPath;
 import main.research.graph.Edge;
 import main.research.strategy.Strategy;
@@ -169,7 +168,7 @@ public class OutPut implements SetParam {
             temp.add(a.clone());
         }
         System.out.println();
-        Collections.sort(temp, new AgentExceComparator());
+        Collections.sort(temp, new Agent.AgentExceComparator());
 
         // 平均及び四分位点以下のexcellenceのエージェントを集計する
         int temp2 = 0;

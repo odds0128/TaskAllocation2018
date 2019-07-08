@@ -7,6 +7,8 @@ import main.research.SetParam;
 import main.research.agent.Agent;
 import main.research.random.MyRandom;
 
+import java.util.Comparator;
+
 public class Subtask implements SetParam {
     private static int _subtask_id;
     int subtask_id;
@@ -44,5 +46,16 @@ public class Subtask implements SetParam {
         for (int i = 0; i < RESOURCE_TYPES; i++) str.append(String.format("%3d", reqRes[i]) + ", ");
         str.append("]");
         return str.toString();
+    }
+
+
+    public static class SubtaskRewardComparator implements Comparator<Subtask> {
+        public int compare(Subtask a, Subtask b ){
+            int no1 = a.reqRes[a.resType];
+            int no2 = b.reqRes[b.resType];
+
+            if( no1 < no2 ) return 1;
+            else return -1;
+        }
     }
 }

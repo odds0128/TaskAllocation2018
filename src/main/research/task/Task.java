@@ -1,22 +1,19 @@
-package main.research.task; /**
- * @author Funato
- * @version 2.0
- */
+package main.research.task;
 
 import main.research.SetParam;
 import main.research.agent.Agent;
 import main.research.random.MyRandom;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class Task implements SetParam {
-    public static int _task_id = 0;
+    private static int _task_id = 0;
 
     public int task_id;
     public List<Subtask> subtasks = new ArrayList<>();
     public int deadline = 0;
+
 
     public Task( int minSubtask, int maxSubtask ){
         task_id = _task_id++;
@@ -35,7 +32,7 @@ public class Task implements SetParam {
             subtasks.add( new Subtask(CONT) );
         }
         subtasks.add( new Subtask( RESET ) );
-        Collections.sort( subtasks, new SubtaskRewardComparator() );
+        subtasks.sort(new Subtask.SubtaskRewardComparator());
     }
 
     public void setFrom(Agent agent){
@@ -50,10 +47,9 @@ public class Task implements SetParam {
 
     @Override
     public String toString(){
-        String sep = System.getProperty("line.separator");
         StringBuilder str = new StringBuilder();
-        str.append("Task " + task_id + "(Subtasks :" + subtasks.size() +" [");
-        for( int i = 0 ; i < subtasks.size() ; i++ ) str.append(subtasks.get(i));
+        str.append("Task ").append(task_id).append("(Subtasks :").append(subtasks.size()).append(" [");
+        for (Subtask subtask : subtasks) str.append(subtask);
         str.append("] ) ");
         return str.toString();
     }
