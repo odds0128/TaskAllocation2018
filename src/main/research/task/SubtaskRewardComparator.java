@@ -2,8 +2,8 @@ package main.research.task;
 
 import java.util.Comparator;
 
-public class SubtaskRewardComparator implements Comparator<SubTask> {
-    public int compare(SubTask a, SubTask b ){
+public class SubtaskRewardComparator implements Comparator<Subtask> {
+    public int compare(Subtask a, Subtask b ){
         int no1 = a.reqRes[a.resType];
         int no2 = b.reqRes[b.resType];
 

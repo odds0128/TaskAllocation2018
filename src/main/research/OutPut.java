@@ -10,7 +10,7 @@ import main.research.agent.AgentExceComparator;
 import main.research.communication.TransmissionPath;
 import main.research.graph.Edge;
 import main.research.strategy.Strategy;
-import main.research.task.SubTask;
+import main.research.task.Subtask;
 import main.research.task.Task;
 
 import java.text.SimpleDateFormat;
@@ -83,8 +83,8 @@ public class OutPut implements SetParam {
     }/**/
 
     static void aggregateTaskExecutionTime(Agent leader) {
-        if (leader.mySubTask != null) {
-            tempTaskExecutionTimeArray[index] += leader.calcExecutionTime(leader, leader.mySubTask);
+        if (leader.mySubtask != null) {
+            tempTaskExecutionTimeArray[index] += leader.calcExecutionTime(leader, leader.mySubtask);
             taskExecutionTimes++;
         }
         for (Agent tm : leader.teamMembers) {
@@ -233,7 +233,7 @@ public class OutPut implements SetParam {
         System.out.println("Leaders is " + Agent._leader_num + ", Members is " + Agent._member_num);
         for (int i = 0; i < MAX_X; i++) {
             for (int j = 0; j < MAX_Y; j++) {
-                if (grids[i][j] == null) System.out.print("　　");
+                if (grids[i][j] == null) System.out.print("    ");
                 else System.out.print(String.format("%3d ", grids[i][j].id));
             }
             System.out.println();
@@ -322,12 +322,12 @@ public class OutPut implements SetParam {
         }
         System.out.println("are good team!");
 
-        if (leader.mySubTask != null) {
-            System.out.println(" leader: " + leader + "→" + leader.mySubTask + ": " + leader.calcExecutionTime(leader, leader.mySubTask) + "[tick(s)]");
+        if (leader.mySubtask != null) {
+            System.out.println(" leader: " + leader + "→" + leader.mySubtask + ": " + leader.calcExecutionTime(leader, leader.mySubtask) + "[tick(s)]");
         } else {
             System.out.println(" leader: " + leader);
         }
-        for (Map.Entry<Agent, SubTask> al : leader.preAllocations.entrySet()) {
+        for (Map.Entry<Agent, Subtask> al : leader.preAllocations.entrySet()) {
             System.out.println(" member: " + al.getKey() + "→" + al.getValue() + ": " + leader.calcExecutionTime(al.getKey(), al.getValue()) + "[tick(s)]");
         }
         // */
@@ -708,7 +708,7 @@ public class OutPut implements SetParam {
                 }else{
                     _singleton.writeCell(row, colNumber++, style_int, 1);
                 }
-                _singleton.writeCell(row, colNumber++, style_int, agent.mySubTaskQueue.size());
+                _singleton.writeCell(row, colNumber++, style_int, agent.mySubtaskQueue.size());
             }
 
             //ファイル出力

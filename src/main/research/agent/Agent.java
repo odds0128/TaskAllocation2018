@@ -9,8 +9,9 @@ package main.research.agent;
 import main.research.*;
 import main.research.communication.Message;
 import main.research.communication.TransmissionPath;
+import main.research.random.MyRandom;
 import main.research.strategy.Strategy;
-import main.research.task.SubTask;
+import main.research.task.Subtask;
 import main.research.task.Task;
 import java.util.*;
 
@@ -20,8 +21,6 @@ public class Agent implements SetParam , Cloneable{
     public static int _member_num = 0;
     public static int _recipro_num = 0;
     public static int _rational_num = AGENT_NUM;
-    static long _seed;
-    public static Random _randSeed;
     static int[] resSizeArray = new int[RESOURCE_TYPES + 1];
     public static int _coalition_check_end_time ;
     static List<Integer> _lonelyAgents = new ArrayList<>();
@@ -62,11 +61,11 @@ public class Agent implements SetParam , Cloneable{
     public List<Agent> candidates;         // これからチームへの参加を要請するエージェントのリスト
     public int proposalNum = 0;            // 送ったproposalの数を覚えておく
     public List<Agent> teamMembers;        // すでにサブタスクを送っていてメンバの選定から外すエージェントのリスト
-    public Map<Agent, SubTask> preAllocations;       // サブタスクの割り当て候補を< agent, subtask >のHashMapで保持
+    public Map<Agent, Subtask> preAllocations;       // サブタスクの割り当て候補を< agent, subtask >のHashMapで保持
     public List<Message> replies;
     public List<Message> results;
     public Task ourTask;                  // 持ってきた(割り振られた)タスク
-    public int restSubTask;               // 残りのサブタスク数
+    public int restSubtask;               // 残りのサブタスク数
     int index = 0;                 // 一回要請を送ったメンバにもう一度送らないようにindex管理
     public int replyNum = 0;
     int prevIndex = 0;
@@ -85,46 +84,16 @@ public class Agent implements SetParam , Cloneable{
     int totalResponseTicks = 0;     // 受理応答からの待ち時間の合計
     double meanRT = 0;     // 受理応答からの待ち時間の平均
     public double threshold_for_reciprocity_as_member;
-    public SubTask mySubTask;
-    public List<SubTask> mySubTaskQueue = new ArrayList<>();       // メンバはサブタスクを溜め込むことができる(実質的に，同時に複数のチームに参加することができるようになる)
+    public Subtask mySubtask;
+    public List<Subtask> mySubtaskQueue = new ArrayList<>();       // メンバはサブタスクを溜め込むことができる(実質的に，同時に複数のチームに参加することができるようになる)
     public int tbd = 0;                                            // 返事待ちの数
     public double[] reliabilities_m = new double[AGENT_NUM];
     public List<Agent> relAgents_m = new ArrayList<>();
     public List<Agent> relRanking_m = new ArrayList<>();
     public List<Agent> myLeaders = new ArrayList<>();
 
-    // seedが変わった(各タームの最初の)エージェントの生成
-    public Agent(long seed, int x, int y, Strategy strategy) {
-        setSeed(seed);
-        int rand;
-        this.id = _id;
-        _id++;
-        if (CHECK_INTERIM_RELATIONSHIPS){
-            _coalition_check_end_time = SNAPSHOT_TIME;
-        }else{
-            _coalition_check_end_time = MAX_TURN_NUM;
-        }
-        this.x = x;
-        this.y = y;
-        this.strategy = strategy;
-        setResource(UNIFORM);
-        Arrays.fill(reliabilities_l, INITIAL_VALUE_OF_DEC);
-        Arrays.fill(reliabilities_m, INITIAL_VALUE_OF_DEC);
-        threshold_for_reciprocity_as_leader = THRESHOLD_FOR_RECIPROCITY_FROM_LEADER;
-        threshold_for_reciprocity_as_member = (double)resSum/resCount * THRESHOLD_FOR_RECIPROCITY_RATE;
-        if (strategy.getClass().getName().startsWith("main.research.strategy.CNP")
-                || strategy.getClass().getName().startsWith("Rational")
-                || strategy.getClass().getName().endsWith("RoleFixed")) {
-            selectRoleWithoutLearning();
-        } else {
-            selectRole();
-        }
-        messages = new ArrayList<>();
-    }
-
     // 残りのエージェントの生成
     public Agent(int x, int y, Strategy strategy) {
-        int rand;
         this.id = _id;
         _id++;
         this.x = x;
@@ -148,22 +117,15 @@ public class Agent implements SetParam , Cloneable{
     }
 
     void setResource(int agentType) {
-        if (agentType == BIAS) {
-/*            for (int i = 0; i < RESOURCE_NUM; i++) {
-                int rand = random.nextInt(3) + 6;
-                res[i] = rand;
-            } */
-        } else {
             while (resSum == 0) {
                 for (int i = 0; i < RESOURCE_TYPES; i++) {
-                    int rand = _randSeed.nextInt(MAX_AGENT_RESOURCE_SIZE - MIN_AGENT_RESOURCE_SIZE + 1) + MIN_AGENT_RESOURCE_SIZE;
+                    int rand = MyRandom.getRandomInt(MIN_AGENT_RESOURCE_SIZE, MAX_AGENT_RESOURCE_SIZE ) ;
                     res[i]   =  rand;
                     if( rand > 0 ) resCount++;
                     resSum += rand;
                 }
             }
             excellence = (double) resSum/resCount;
-        }
     }
 
     public void actAsLeader() {
@@ -175,9 +137,9 @@ public class Agent implements SetParam , Cloneable{
 
     public void selectRole() {
         validatedTicks = Manager.getTicks();
-        if( mySubTaskQueue.size() > 0 ){
-            mySubTask = mySubTaskQueue.remove(0);
-            leader = mySubTask.from;
+        if( mySubtaskQueue.size() > 0 ){
+            mySubtask = mySubtaskQueue.remove(0);
+            leader = mySubtask.from;
             role = MEMBER;
             this.phase = EXECUTION;
         }
@@ -197,7 +159,7 @@ public class Agent implements SetParam , Cloneable{
 //                this.phase = WAITING;
 //            } else {
 //// */
-//                int ran = _randSeed.nextInt(2);
+//                int ran = MyRandom.getRandomInt(2);
 //                if (ran == 0) {
 //                    role = LEADER;
 //                    _leader_num++;
@@ -229,7 +191,7 @@ public class Agent implements SetParam , Cloneable{
                 _member_num++;
                 this.phase = WAITING;
             } else {
-                int ran = _randSeed.nextInt(2);
+                int ran = MyRandom.getRandomInt(0, 1);
                 if (ran == 0) {
                     role = LEADER;
                     _leader_num++;
@@ -248,10 +210,10 @@ public class Agent implements SetParam , Cloneable{
         }
     }
     void selectRoleWithoutLearning() {
-        int ran = _randSeed.nextInt(7);
-        if( mySubTaskQueue.size() > 0 ){
-            mySubTask = mySubTaskQueue.remove(0);
-            leader = mySubTask.from;
+        int ran = MyRandom.getRandomInt(0, 6);
+        if( mySubtaskQueue.size() > 0 ){
+            mySubtask = mySubtaskQueue.remove(0);
+            leader = mySubtask.from;
             role = MEMBER;
             _member_num++;
             this.phase = EXECUTION;
@@ -308,13 +270,13 @@ public class Agent implements SetParam , Cloneable{
             preAllocations.clear();
             replies.clear();
             results.clear();
-            restSubTask = 0;
+            restSubtask = 0;
             proposalNum = 0;
             replyNum = 0;
         } else {
             _member_num--;
         }
-        mySubTask = null;
+        mySubtask = null;
         role_renewal_counter=0;
         joined = false;
         role = JONE_DOE;
@@ -333,7 +295,7 @@ public class Agent implements SetParam , Cloneable{
     public void sendMessage(Agent from, Agent to, int type, Object o) {
         TransmissionPath.sendMessage(new Message(from, to, type, o));
     }
-    public void sendNegative(Agent ag, Agent to, int type, SubTask subTask) {
+    public void sendNegative(Agent ag, Agent to, int type, Subtask subtask) {
         if (type == PROPOSAL) {
             // 今実行しているサブタスクをくれたリーダーが，実行中にもかかわらずまた要請を出して来たらその旨を伝える
             if( ag.phase == EXECUTION && to.equals(ag.leader) ) {
@@ -344,7 +306,7 @@ public class Agent implements SetParam , Cloneable{
         } else if (type == REPLY) {
             sendMessage(ag, to, RESULT, null);
         } else if (type == RESULT) {
-//            sendMessage(agent, to, SUBTASK_RESULT, subTask);
+//            sendMessage(agent, to, SUBTASK_RESULT, subtask);
         }
     }
 
@@ -356,7 +318,7 @@ public class Agent implements SetParam , Cloneable{
      * @param st
      * @return
      */
-    public int calcExecutionTime(Agent a, SubTask st) {
+    public int calcExecutionTime(Agent a, Subtask st) {
         if( a  == null ) System.out.println("Ghost trying to do subtask");
         if( st == null ) System.out.println("Agent trying to do nothing");
 
@@ -408,7 +370,7 @@ public class Agent implements SetParam , Cloneable{
     }
 
     public boolean epsilonGreedy() {
-        double random = _randSeed.nextDouble();
+        double random = MyRandom.getRandomDouble();
         if (random < ε) {
             return true;
         }
@@ -443,22 +405,17 @@ public class Agent implements SetParam , Cloneable{
         this.role_renewal_counter=0;
     }
 
-    protected boolean canDo(Agent agent, SubTask st) {
+    protected boolean canDo(Agent agent, Subtask st) {
         if (agent.res[st.resType] == st.reqRes[st.resType]) return true;
         else return false;
     }
 
     boolean isOccupied(){
-        assert this.mySubTaskQueue.size() > SUBTASK_QUEUE_SIZE : "YesMan";
-        if( this.mySubTaskQueue.size() == SUBTASK_QUEUE_SIZE ){
+        assert this.mySubtaskQueue.size() > SUBTASK_QUEUE_SIZE : "YesMan";
+        if( this.mySubtaskQueue.size() == SUBTASK_QUEUE_SIZE ){
             return true;
         }
         return false;
-    }
-
-    private static void setSeed(long seed) {
-        _seed = seed;
-        _randSeed = new Random(_seed);
     }
 
     public static void renewEpsilonLenear(){
@@ -516,25 +473,6 @@ public class Agent implements SetParam , Cloneable{
 //        System.out.println(_lonelyAgents.size());
 //        System.out.println(_accompaniedAgents.size());
     }
-    static int countLeadersInDepopulatedArea(List<Agent> agents){
-        int temp = 0;
-        for( int lag: _lonelyAgents ){
-            if( agents.get(lag).e_leader > agents.get(lag).e_member ){
-                temp++;
-            }
-        }
-        return temp;
-    }
-    static int countLeadersInPopulatedArea(List<Agent> agents){
-        int temp = 0;
-        for( int lag: _accompaniedAgents ){
-            if( agents.get(lag).e_leader > agents.get(lag).e_member ){
-                temp++;
-            }
-        }
-        return temp;
-    }
-
 
 
     /**
@@ -610,7 +548,7 @@ public class Agent implements SetParam , Cloneable{
 //            str.append(" teamMembers: " + teamMembers );
         }
         else if( phase == RECEPTION ) str.append(", My Leader: " + leader.id);
-        else if( phase == EXECUTION ) str.append(", My Leader: " + leader.id + ", " + mySubTask + ", resources: " + resource + ", rest:" + executionTime);
+        else if( phase == EXECUTION ) str.append(", My Leader: " + leader.id + ", " + mySubtask + ", resources: " + resource + ", rest:" + executionTime);
 
 //        if (role == LEADER) str.append(", I'm a leader. ");
 //        else str.append("I'm a member. ");

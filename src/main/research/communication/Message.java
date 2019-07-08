@@ -2,7 +2,7 @@ package main.research.communication;
 
 import main.research.SetParam;
 import main.research.agent.Agent;
-import main.research.task.SubTask;
+import main.research.task.Subtask;
 import main.research.task.Task;
 
 /**
@@ -18,9 +18,9 @@ public class Message implements SetParam {
     // メッセージにサブタスクを載せること自体は悪いことじゃないことに注意. 最終的には渡さないといけない
 
     // 提案手法チックな手法で使う変数とコンストラクタ．引数4つ
-    private SubTask proposedSubtask;
+    private Subtask proposedSubtask;
     private int reply;
-    private SubTask subtask;  // チーム編成が成功したら, 割り当てるサブタスクが入る. 失敗したらnull
+    private Subtask subtask;  // チーム編成が成功したら, 割り当てるサブタスクが入る. 失敗したらnull
     private int timeSTarrived;
 
     public Message(Agent from, Agent to, int type, Object o) {
@@ -28,11 +28,11 @@ public class Message implements SetParam {
         this.to   = to;
         this.messageType = type;
         if( type == PROPOSAL ){
-            this.proposedSubtask = (SubTask) o;
+            this.proposedSubtask = (Subtask) o;
         }else if( type == REPLY ){
             this.reply       = (int) o;
         }else if( type == RESULT ){
-            this.subtask     = (SubTask) o ;
+            this.subtask     = (Subtask) o ;
         }else if( type == DONE ){
             this.timeSTarrived = (int) o ;
         }
@@ -42,7 +42,7 @@ public class Message implements SetParam {
     private Task    bidTask;
     private int     bidStIndex;
     private int     estimation;
-    private SubTask st;  // チーム編成が成功したら割り当てるサブタスクが入る. 失敗or割り当てなしでnull
+    private Subtask st;  // チーム編成が成功したら割り当てるサブタスクが入る. 失敗or割り当てなしでnull
     Message(Agent from, Agent to, int type, Object o1, Object o2){
         this.from = from;
         this.to   = to;
@@ -57,7 +57,7 @@ public class Message implements SetParam {
             estimation = (Integer) o2;
         }else if( type == BID_RESULT ){
             // 落札結果報告時には落札者にサブタスクを，非落札者にnullをあげる
-            st = (SubTask) o1;
+            st = (Subtask) o1;
         }else if( type == DONE ){
             // 終了時は終了の旨だけでいい
         }
@@ -72,7 +72,7 @@ public class Message implements SetParam {
     public int getMessageType(){
         return messageType;
     }
-    public SubTask getSubTask() {
+    public Subtask getSubtask() {
         return subtask;
     }
     public int getReply() {
@@ -80,7 +80,7 @@ public class Message implements SetParam {
     }
     int getResType(){ return proposedSubtask.resType; }
     int getResSize(){ return proposedSubtask.reqRes[proposedSubtask.resType]; }
-    SubTask getProposedSubtask(){ return proposedSubtask; }
+    Subtask getProposedSubtask(){ return proposedSubtask; }
     int getTimeSTarrived() { return timeSTarrived; }
 
     Task getBidTask(){
@@ -93,7 +93,7 @@ public class Message implements SetParam {
 
     int getEstimation(){ return estimation; }
 
-    SubTask getSt(){ return st; }
+    Subtask getSt(){ return st; }
 
     @Override
     public String toString(){

@@ -5,9 +5,10 @@ package main.research; /**
 
 import main.research.agent.Agent;
 import main.research.communication.TransmissionPath;
+import main.research.random.MyRandom;
 import main.research.strategy.PM2withRoleFixed;
 import main.research.strategy.Strategy;
-import main.research.task.SubTask;
+import main.research.task.Subtask;
 import main.research.task.Task;
 
 import java.io.*;
@@ -16,9 +17,6 @@ import java.util.*;
 public class Manager implements SetParam {
         private static Strategy strategy = new PM2withRoleFixed();      // ICA2018における提案手法    //    private static main.research.strategy.Strategy strategy = new ProposedMethodForSingapore();
 //    private static main.research.strategy.Strategy strategy = new main.research.strategy.PM2();      // ICA2018における提案手法役割更新あり    //    private static main.research.strategy.Strategy strategy = new ProposedMethodForSingapore();
-
-    static private long _seed;
-    private static Random _randSeed;
 
     static Queue<Task> taskQueue;
     public static int[][] delays = new int[AGENT_NUM][AGENT_NUM];
@@ -40,11 +38,7 @@ public class Manager implements SetParam {
         try {
             int writeResultsSpan = MAX_TURN_NUM / WRITING_TIMES;
 
-            // seedの読み込み
             String currentPath = System.getProperty("user.dir");
-            FileReader fr = new FileReader(currentPath + "/RandomSeed.txt");
-            BufferedReader br = new BufferedReader(fr);
-            String line;
 
             FileWriter fw;
             BufferedWriter bw;
@@ -76,9 +70,9 @@ public class Manager implements SetParam {
             }
 
             // num回実験
-            while ((line = br.readLine()) != null) {
+            while (true) {
+                initiate(num);                         // シード，タスク，エージェントの初期化処理
                 System.out.println(++num + "回目");
-                initiate(line);                         // シード，タスク，エージェントの初期化処理
                 if (CHECK_INITIATION) {
                     if (num == EXECUTION_TIMES) break;
                     clearAll();
@@ -101,7 +95,7 @@ public class Manager implements SetParam {
                         OutPut.aggregateAgentData(agents);
                         assert Agent._recipro_num + Agent._rational_num == AGENT_NUM : "Illegal principle numbers, reciprocal:" + Agent._recipro_num + ", rational:" + Agent._rational_num;
                     }
-
+//                    OutPut.checkTask(taskQueue);
                     if (turn == SNAPSHOT_TIME && CHECK_INTERIM_RELATIONSHIPS) {
                         OutPut.writeGraphInformationX(agents, strategy);
 //                        snapshot = takeAgentsSnapshot(agents);
@@ -148,7 +142,6 @@ public class Manager implements SetParam {
             if (CHECK_RELATIONSHIPS) OutPut.writeGraphInformationX(agents, strategy);
 // */
             if (CHECK_Eleader_Emember) pw.close();
-            br.close();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e2) {
@@ -157,13 +150,14 @@ public class Manager implements SetParam {
     }
 
     // 環境の準備に使うメソッド
-    private static void initiate(String line) {
+    private static void initiate(int times) {
         // シードの設定
-        setSeed(line);
+        MyRandom.newSfmt(times);
         // タスクキューの初期化
         taskQueue = new LinkedList<>();
-        taskQueue.add(new Task(_seed));
-        for (int i = 1; i < INITIAL_TASK_NUM; i++) taskQueue.add(new Task("NOT HEAVY"));
+        for (int i = 0; i < INITIAL_TASK_NUM; i++) {
+            taskQueue.add(new Task(3, 6));
+        }
 
         // エージェントの初期化
         agents = generateAgents(strategy);
@@ -171,7 +165,7 @@ public class Manager implements SetParam {
         if (CHECK_INITIATION) {
 //            main.research.OutPut.checkAgent(agents);
 //            main.research.OutPut.checkGrids(grids);
-            OutPut.checkDelay(delays);
+//            OutPut.checkDelay(delays);
         }
 //        main.research.OutPut.countDelays(delays);
 //        main.research.OutPut.checkGrids(grids);
@@ -179,27 +173,23 @@ public class Manager implements SetParam {
 //        main.research.OutPut.checkAgent(agents);
     }
 
-    private static void setSeed(String line) {
-        _seed = Long.parseLong(line);
-        _randSeed = new Random(_seed);
-    }
-
     private static List<Agent> generateAgents(Strategy strategy) {
         Agent temp;
         List tempList = new ArrayList();
-        int randX = _randSeed.nextInt(MAX_Y);
-        int randY = _randSeed.nextInt(MAX_X);
-        while (checkDuplication(randX, randY) == false) {
-            randX = _randSeed.nextInt(MAX_Y);
-            randY = _randSeed.nextInt(MAX_X);
-        }
-        temp = new Agent(_seed, randX, randY, strategy);
+        int randX, randY;
+
+        do {
+            randX = MyRandom.getRandomInt(0, MAX_Y - 1);
+            randY = MyRandom.getRandomInt(0, MAX_X - 1);
+        } while (checkDuplication(randX, randY) == false);
+
+        temp = new Agent(randX, randY, strategy);
         grids[temp.y][temp.x] = temp;
         tempList.add(temp);
         for (int i = 1; i < AGENT_NUM; i++) {
             while (checkDuplication(randX, randY) == false) {
-                randX = _randSeed.nextInt(MAX_Y);
-                randY = _randSeed.nextInt(MAX_X);
+                randX = MyRandom.getRandomInt(0, MAX_Y - 1);
+                randY = MyRandom.getRandomInt(0, MAX_X - 1);
             }
             temp = new Agent(randX, randY, strategy);
             grids[temp.y][temp.x] = temp;
@@ -211,10 +201,10 @@ public class Manager implements SetParam {
     }
 
     public static Agent getAgentRandomly(Agent self, List<Agent> exceptions, List<Agent> targets) {
-        int random = _randSeed.nextInt(targets.size());
+        int random = MyRandom.getRandomInt(0, targets.size() - 1);
         Agent candidate = targets.get(random);
         while (candidate.equals(self) || self.inTheList(candidate, exceptions) >= 0) {
-            random = _randSeed.nextInt(targets.size());
+            random = MyRandom.getRandomInt(0, targets.size() - 1);
             candidate = targets.get(random);
         }
         return candidate;
@@ -276,7 +266,7 @@ public class Manager implements SetParam {
                 else {
                     int restSize = AREA_LIMIT - agent.canReach.size();
                     for (int j = 0; j < restSize; j++) {
-                        int rand = _randSeed.nextInt(tempList.size());
+                        int rand = MyRandom.getRandomInt(0, tempList.size());
                         agent.canReach.add(tempList.remove(rand));
                     }
                     tempList.clear();
@@ -297,7 +287,7 @@ public class Manager implements SetParam {
             Agent ag;
             agent = agents.get(i);
             while (temp.size() != 0) {
-                rand = _randSeed.nextInt(temp.size());
+                rand = MyRandom.getRandomInt(0, temp.size() - 1);
                 ag = temp.remove(rand);
                 if (!ag.equals(agent)) agent.relRanking_l.add(ag);
             }
@@ -309,7 +299,7 @@ public class Manager implements SetParam {
             Agent ag;
             agent = agents.get(i);
             while (temp.size() != 0) {
-                rand = _randSeed.nextInt(temp.size());
+                rand = MyRandom.getRandomInt(0, temp.size() - 1);
                 ag = temp.remove(rand);
                 if (!ag.equals(agent)) agent.relRanking_m.add(ag);
             }
@@ -356,7 +346,6 @@ public class Manager implements SetParam {
         Task temp;
         temp = taskQueue.poll();
         if (temp != null) {
-            temp.flag = PROCESSING;
             temp.setFrom(agent);
         }
         return temp;
@@ -375,7 +364,7 @@ public class Manager implements SetParam {
 //            System.out.println(additionalTasksNum + ", " + decimalPart);
 
         if (decimalPart != 0) {
-            double random = _randSeed.nextDouble();
+            double random = MyRandom.getRandomDouble();
             if (random < decimalPart) {
                 additionalTasksNum++;
             }
@@ -389,18 +378,18 @@ public class Manager implements SetParam {
 
         if (additionalTasksNum <= room) {
             if (START_HAPPENS <= turn && turn < START_HAPPENS + BUSY_PERIOD && IS_HEAVY_TASKS_HAPPENS) {
-                for (int i = 0; i < additionalTasksNum; i++) taskQueue.add(new Task("HEAVY"));
+                for (int i = 0; i < additionalTasksNum; i++) taskQueue.add(new Task(8, 11));
             }else{
-                for (int i = 0; i < additionalTasksNum; i++) taskQueue.add(new Task("NOT HEAVY"));
+                for (int i = 0; i < additionalTasksNum; i++) taskQueue.add(new Task(3, 6));
             }
         }
         // タスクキューからタスクがはみ出そうなら, 入れるだけ入れてはみ出る分はオーバーフローとする
         else {
             int i;
             if (START_HAPPENS <= turn && turn < START_HAPPENS + BUSY_PERIOD && IS_HEAVY_TASKS_HAPPENS) {
-                for (i = 0; i < room; i++) taskQueue.add(new Task("HEAVY"));
+                for (i = 0; i < room; i++) taskQueue.add(new Task(8, 11));
             } else {
-                for (i = 0; i < room; i++) taskQueue.add(new Task("NOT HEAVY"));
+                for (i = 0; i < room; i++) taskQueue.add(new Task(3, 6));
             }
             overflowTasks += additionalTasksNum - i;
         }
@@ -428,17 +417,17 @@ public class Manager implements SetParam {
         int rand;
         if (command == "select role") {
             while (temp.size() != 0) {
-                rand = _randSeed.nextInt(temp.size());
+                rand = MyRandom.getRandomInt(0, temp.size() - 1);
                 temp.remove(rand).selectRole();
             }
         } else if (command == "act as member") {
             while (temp.size() != 0) {
-                rand = _randSeed.nextInt(temp.size());
+                rand = MyRandom.getRandomInt(0, temp.size() - 1);
                 temp.remove(rand).actAsMember();
             }
         } else if (command == "act as leader") {
             while (temp.size() != 0) {
-                rand = _randSeed.nextInt(temp.size());
+                rand = MyRandom.getRandomInt(0, temp.size() - 1);
                 temp.remove(rand).actAsLeader();
             }
         }
@@ -489,7 +478,7 @@ public class Manager implements SetParam {
             }
         }
         TransmissionPath.clearTP();
-        SubTask.clearST();
+        Subtask.clearST();
         Task.clearT();
         Agent.clearA();
         strategy.clearStrategy();
