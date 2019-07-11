@@ -24,9 +24,7 @@ public class MyRandom<T> {
             4007 };
 
 
-    static Sfmt rnd;
-    // ランダムなint, double(0~1), booleanを得るメソッド
-    // toString
+    static Sfmt sfmt;
 
     /**
      * 施行のたびに乱数のシードを変える必要がある．
@@ -35,8 +33,8 @@ public class MyRandom<T> {
      * @return 新しいSfmtオブジェクト
      */
     public static Sfmt newSfmt( int times ) {
-        rnd = new Sfmt( _seeds[times] );
-        return rnd;
+        sfmt = new Sfmt( _seeds[times] );
+        return sfmt;
     }
 
     /**
@@ -46,11 +44,11 @@ public class MyRandom<T> {
      * @return int型の整数．
      */
     public static int getRandomInt( int min, int max ){
-        return rnd.NextInt( max - min + 1 ) + min ;
+        return sfmt.NextInt( max - min + 1 ) + min ;
     }
 
     public static double getRandomDouble() {
-        return rnd.NextUnif();
+        return sfmt.NextUnif();
     }
 
 }

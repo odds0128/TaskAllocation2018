@@ -4,6 +4,8 @@ package main.research.communication; /**
 
 import main.research.Manager;
 import main.research.SetParam;
+import main.research.agent.AgentManager;
+import main.research.grid.Grid;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,7 +44,7 @@ public class TransmissionPath implements SetParam {
         if( message.getTo() == message.getFrom() ) return;
         messageQueue.add(message);
 
-        int temp = Manager.delays[message.getFrom().id][message.getTo().id];
+        int temp = Grid.getDelay( message.getFrom(), message.getTo() );
         delays.add(temp);
         calcCT(temp);
         if (message.getMessageType() == PROPOSAL) proposals++;

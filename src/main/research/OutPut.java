@@ -1,5 +1,7 @@
 package main.research;
 
+import main.research.agent.AgentManager;
+import main.research.grid.Grid;
 import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
@@ -227,13 +229,13 @@ public class OutPut implements SetParam {
      * checkGridメソッド
      * 二次元配列の場合
      */
-    static void checkGrids(Agent[][] grids) {
+    static void checkgrid(Agent[][] grid) {
         System.out.println("Total Agents is " + Agent._id);
         System.out.println("Leaders is " + Agent._leader_num + ", Members is " + Agent._member_num);
         for (int i = 0; i < MAX_X; i++) {
             for (int j = 0; j < MAX_Y; j++) {
-                if (grids[i][j] == null) System.out.print("    ");
-                else System.out.print(String.format("%3d ", grids[i][j].id));
+                if (grid[i][j] == null) System.out.print("    ");
+                else System.out.print(String.format("%3d ", grid[i][j].id));
             }
             System.out.println();
         }
@@ -806,7 +808,6 @@ public class OutPut implements SetParam {
             int rowNumber;
             int colNumber;
 
-
             Sheet sheet;
 
             for (int i = 0; i < 3; i++) {
@@ -889,8 +890,8 @@ public class OutPut implements SetParam {
                             _singleton.writeCell(row, colNumber++, style_string, "Triangle");
                         }
 
-                        _singleton.writeCell(row, colNumber++, style_int, agent.x * 10);
-                        _singleton.writeCell(row, colNumber++, style_int, agent.y * 10);
+                        _singleton.writeCell(row, colNumber++, style_int, agent.p.getX() * 10);
+                        _singleton.writeCell(row, colNumber++, style_int, agent.p.getY() * 10);
 
                         if (agent.e_leader > agent.e_member) _singleton.writeCell(row, colNumber++, style_int, -1);
                         else if (agent.relRanking_m.size() > 0)
@@ -899,7 +900,7 @@ public class OutPut implements SetParam {
 
                         if (agent.e_leader > agent.e_member) _singleton.writeCell(row, colNumber++, style_int, 0);
                         else if (agent.relRanking_m.size() > 0)
-                            _singleton.writeCell(row, colNumber++, style_int, Manager.delays[agent.id][agent.relRanking_m.get(0).id]);
+                            _singleton.writeCell(row, colNumber++, style_int, Grid.getDelay( agent, agent.relRanking_m.get(0) ) );
                         else _singleton.writeCell(row, colNumber++, style_int, -1);
 
                         /*

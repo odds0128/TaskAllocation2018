@@ -2,6 +2,7 @@ package main.research.strategy;
 
 import main.research.*;
 import main.research.agent.Agent;
+import main.research.agent.AgentManager;
 import main.research.communication.Message;
 import main.research.random.MyRandom;
 import main.research.task.AllocatedSubtask;
@@ -103,7 +104,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
                 int i = leader.inTheList(from, leader.candidates);
                 assert i >= 0 : "alert: Leader got reply from a ghost.";
                 leader.candidates.set(i, null);
-                leader.relAgents_l = renewRel(leader, from, 0);
+                leader.relAgents_l = renewDE(leader, from, 0);
             }
         }
         Agent A, B;
@@ -209,7 +210,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
                 agent.sendMessage(agent, agent.leader, DONE, 0);
                 agent.myLeaders.remove(agent.leader);
                 agent.required[agent.mySubtask.resType]++;
-                agent.relAgents_m = renewRel(agent, agent.leader, (double) agent.mySubtask.reqRes[agent.mySubtask.resType] / (double) Manager.getTicks() - agent.start);
+                agent.relAgents_m = renewDE(agent, agent.leader, (double) agent.mySubtask.reqRes[agent.mySubtask.resType] / (double) Manager.getTicks() - agent.start);
                 if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
                     agent.workWithAsM[agent.leader.id]++;
                     agent.didTasksAsMember++;
@@ -253,7 +254,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
                 // εの確率でランダムに割り振る
                 if (leader.epsilonGreedy()) {
                     do {
-                        candidate = Manager.getAgentRandomly(leader, exceptions, Manager.getAgents());
+                        candidate = Manager.getAgentRandomly(leader, exceptions, AgentManager.getAgentList());
                     } while ( leader.calcExecutionTime(candidate, st) < 0);
                 } else {
                     // 信頼度ランキングの上から割り当てを試みる．
@@ -385,7 +386,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
             allocatedSubtask = result.getSubtask();
             assert result.getMessageType() == RESULT: "Leader Must Confuse Someone";
             if( allocatedSubtask == null ){   // 割り当てがなかった場合
-                renewRel(member, result.getFrom(), 0);
+                renewDE(member, result.getFrom(), 0);
                 member.myLeaders.remove(result.getFrom());
             }else{    // 割り当てられた場合
                 // TODO: すでにサブタスクを持っているならそれを優先して今もらったやつはキューに入れておく
@@ -401,13 +402,13 @@ public class PM2withRoleFixed implements Strategy, SetParam {
     }
 
     /**
-     * renewRelメソッド
+     * renewDEメソッド
      * 信頼度を更新し, 同時に信頼エージェントも更新する
      * agentのtargetに対する信頼度をevaluationによって更新し, 同時に信頼エージェントを更新する
      *
      * @param agent
      */
-    private List<Agent> renewRel(Agent agent, Agent target, double evaluation) {
+    private List<Agent> renewDE(Agent agent, Agent target, double evaluation) {
         assert !agent.equals(target) : "alert4";
 
         if (agent.role == LEADER) {
@@ -627,7 +628,7 @@ public class PM2withRoleFixed implements Strategy, SetParam {
                 }
                 int rt = Manager.getTicks() - as.getAllocatedTime();
                 int reward = as.getRequiredResources() * 5;
-                ag.relAgents_l = renewRel(ag, m.getFrom(), (double) reward / rt);
+                ag.relAgents_l = renewDE(ag, m.getFrom(), (double) reward / rt);
 
                 // TODO: タスク全体が終わったかどうかの判定と，それによる処理
                 /*

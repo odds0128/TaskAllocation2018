@@ -1,6 +1,5 @@
 package main.research.random;
 
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.*;
 
 import static org.hamcrest.CoreMatchers.*;
@@ -56,7 +55,7 @@ class MyRandomTest {
 
     @Nested
     class getRandomIntのテスト {
-        Sfmt rnd;
+        Sfmt sfmt;
         int actual;
         int max;
         int min;
@@ -64,7 +63,7 @@ class MyRandomTest {
 
         @BeforeEach
         void Setup(){
-            rnd = MyRandom.newSfmt( 0 );
+            sfmt = MyRandom.newSfmt( 0 );
             max = 9;
             min = 3;
         }

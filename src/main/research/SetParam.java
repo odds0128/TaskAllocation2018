@@ -7,7 +7,7 @@ package main.research;
 
 public interface SetParam {
     // 環境の設定( 変更していく部分 )
-    int EXECUTION_TIMES = 1;             // 実験の回数
+    int EXECUTION_TIMES = 4;             // 実験の回数
     int MAX_TURN_NUM    = 50000;         // 一回の実験のターン数
     int WRITING_TIMES   = 500;           // データのファイルへの出力回数
     boolean CHECK_RELATIONSHIPS    = false;  // エージェント関係の協調関係を録るか
@@ -40,7 +40,7 @@ public interface SetParam {
 
     int INITIAL_TASK_NUM = 0;       // 最初のタスク数
     int TASK_QUEUE_SIZE  = 500;     // タスクキューのサイズ
-    int AGENT_NUM = 100;            // エージェントの数
+    int AGENT_NUM = 500;            // エージェントの数
 
     // トーラスを考えた時に，中心が自分であるほうが考えやすいので，一片の長さは奇数にする
     int MAX_X    = 51, MAX_Y = 51;
@@ -117,4 +117,10 @@ public interface SetParam {
     int lPHASE2 = 3;
     int mPHASE2 = 4;
     int PHASE3  = 5;
+
+    int MIN_DEADLINE = 20;
+    int MAX_DEADLINE = 80;
+
+    int MIN_SUBTASK_NUM = 3;
+    int MAX_SUBTASK_NUM = 6;
 }

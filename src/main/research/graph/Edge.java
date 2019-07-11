@@ -1,8 +1,9 @@
 package main.research.graph;
 
-import main.research.Manager;
 import main.research.SetParam;
 import main.research.agent.Agent;
+import main.research.agent.AgentManager;
+import main.research.grid.Grid;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,7 +43,7 @@ public class Edge implements SetParam {
                     if ( temp >= THRESHOLD_FOR_COALITION) {
                         from_id.add(ag.id);
                         to_id.add(id);
-                        delays.add(Manager.delays[ag.id][id]);
+                        delays.add(Grid.getDelay(ag, agents.get(id) ) );
                         times.add(temp);
                         hard_worker_flag = true;
                         edges_per_hard_worker++;
@@ -73,7 +74,7 @@ public class Edge implements SetParam {
                     if ( temp >= THRESHOLD_FOR_COALITION) {
                         from_id.add(ag.id);
                         to_id.add(id);
-                        delays.add(Manager.delays[ag.id][id]);
+                        delays.add(Grid.getDelay(ag, agents.get(id) ) );
                         times.add(temp);
                         if (agents.get(id).principle == RECIPROCAL) isRecipro.add(true);
                         else isRecipro.add(false);

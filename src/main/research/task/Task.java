@@ -12,26 +12,21 @@ public class Task implements SetParam {
 
     public int task_id;
     public List<Subtask> subtasks = new ArrayList<>();
-    public int deadline = 0;
+    private int deadline;
 
 
-    public Task( int minSubtask, int maxSubtask ){
+    public Task( int minSubtask, int maxSubtask , int minDeadline, int maxDeadline ){
         task_id = _task_id++;
 
         int subtaskNum = MyRandom.getRandomInt(minSubtask, maxSubtask);
         generateSubtasks( subtaskNum );
+        deadline = setDeadline(minDeadline, maxDeadline);
     }
 
-    /**
-     * generateSubtasksメソッド
-     * サブタスクを指定数作成する.
-     * @param subtaskNum ... 生成するサブタスクの個数
-     */
     private void generateSubtasks( int subtaskNum ){
         for(int i = 0; i < subtaskNum; i++) {
-            subtasks.add( new Subtask(CONT) );
+            subtasks.add( new Subtask() );
         }
-        subtasks.add( new Subtask( RESET ) );
         subtasks.sort(new Subtask.SubtaskRewardComparator());
     }
 
@@ -39,6 +34,14 @@ public class Task implements SetParam {
         for(Subtask st: subtasks){
             st.setFrom(agent);
         }
+    }
+
+    private int setDeadline( int min, int max ) {
+        return MyRandom.getRandomInt(min, max);
+    }
+
+    public int getDeadline() {
+        return deadline;
     }
 
     public static void clearT(){

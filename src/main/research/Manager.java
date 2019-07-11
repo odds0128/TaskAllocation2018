@@ -1,32 +1,29 @@
-package main.research; /**
- * @author Funato
- * @version 2.0
- */
+package main.research;
 
 import main.research.agent.Agent;
+import main.research.agent.AgentManager;
 import main.research.communication.TransmissionPath;
+import main.research.grid.Grid;
 import main.research.random.MyRandom;
+import main.research.strategy.PM2;
 import main.research.strategy.PM2withRoleFixed;
 import main.research.strategy.Strategy;
-import main.research.task.Subtask;
 import main.research.task.Task;
 
 import java.io.*;
 import java.util.*;
 
 public class Manager implements SetParam {
-        private static Strategy strategy = new PM2withRoleFixed();      // ICA2018における提案手法    //    private static main.research.strategy.Strategy strategy = new ProposedMethodForSingapore();
-//    private static main.research.strategy.Strategy strategy = new main.research.strategy.PM2();      // ICA2018における提案手法役割更新あり    //    private static main.research.strategy.Strategy strategy = new ProposedMethodForSingapore();
+    //TODO: こんな風にするならsingletonにしたほうがいいよね
+//        private static Strategy strategy = new PM2withRoleFixed();      // ICA2018における提案手法    //    private static main.research.strategy.Strategy strategy = new ProposedMethodForSingapore();
+    private static main.research.strategy.Strategy strategy = new PM2();      // ICA2018における提案手法役割更新あり    //    private static main.research.strategy.Strategy strategy = new ProposedMethodForSingapore();
 
-    static Queue<Task> taskQueue;
-    public static int[][] delays = new int[AGENT_NUM][AGENT_NUM];
-    private static Agent[][] grids = new Agent[MAX_X][MAX_Y];
-    private static List<Agent> agents;
-    static int disposedTasks = 0;
-    static int overflowTasks = 0;
-    static int finishedTasks = 0;
-    static int turn;
-    static List<Agent> snapshot = new ArrayList<>();
+    private static Queue<Task> taskQueue;
+    private static int disposedTasks = 0;
+    private static int overflowTasks = 0;
+    private static int finishedTasks = 0;
+    private static int turn;
+    private static List<Agent> snapshot = new ArrayList<>();
 
     public static void main(String[] args) {
         assert MAX_RELIABLE_AGENTS < AGENT_NUM : "alert0";
@@ -92,23 +89,23 @@ public class Manager implements SetParam {
                     addNewTasksToQueue();
                     actFreeLancer();
                     if (turn % writeResultsSpan == 0 && CHECK_RESULTS) {
-                        OutPut.aggregateAgentData(agents);
+                        OutPut.aggregateAgentData(AgentManager.getAgentList());
                         assert Agent._recipro_num + Agent._rational_num == AGENT_NUM : "Illegal principle numbers, reciprocal:" + Agent._recipro_num + ", rational:" + Agent._rational_num;
                     }
 //                    OutPut.checkTask(taskQueue);
                     if (turn == SNAPSHOT_TIME && CHECK_INTERIM_RELATIONSHIPS) {
-                        OutPut.writeGraphInformationX(agents, strategy);
-//                        snapshot = takeAgentsSnapshot(agents);
-                        Agent.resetWorkHistory(agents);
+                        OutPut.writeGraphInformationX(AgentManager.getAgentList(), strategy);
+//                        snapshot = takeAgentsSnapshot(AgentManager.getAgentList());
+                        Agent.resetWorkHistory(AgentManager.getAgentList());
                     }
 // */
                     TransmissionPath.transmit();                // 通信遅延あり
-                    checkMessage(agents);          // 要請の確認, 無効なメッセージに対する返信
+                    checkMessage(AgentManager.getAgentList());          // 要請の確認, 無効なメッセージに対する返信
 
                     actLeadersAndMembers();
 
                     if (turn % writeResultsSpan == 0 && CHECK_RESULTS) {
-                        int rmNum = Agent.countReciprocalMember(agents);
+                        int rmNum = Agent.countReciprocalMember(AgentManager.getAgentList());
                         OutPut.aggregateData(finishedTasks, disposedTasks, overflowTasks, rmNum, 0, 0);
                         OutPut.indexIncrement();
                         finishedTasks = 0;
@@ -117,7 +114,7 @@ public class Manager implements SetParam {
 
                         if (CHECK_Eleader_Emember && turn % writeResultsSpan == 0) {
                             pw.print(turn + ", ");
-                            for (Agent ag : agents.subList(start, end)) {
+                            for (Agent ag : AgentManager.getAgentList().subList(start, end)) {
                                 pw.print(String.format("%.5f", ag.e_leader) + ", " + String.format("%.5f", ag.e_member) + ", ");
                             }
                             pw.println();
@@ -128,18 +125,18 @@ public class Manager implements SetParam {
                 // ↑ 一回の実験のカッコ．以下は実験の合間で作業する部分
                 if (CHECK_AGENTS) {
                     System.out.println("leaders:" + Agent._leader_num + ", members:" + Agent._member_num);
-                    OutPut.aggregateDataOnce(agents, num);
+                    OutPut.aggregateDataOnce(AgentManager.getAgentList(), num);
                 }
                 if (num == EXECUTION_TIMES) break;
                 clearAll();
             }
             // ↑ 全実験の終了のカッコ．以下は後処理
             if (CHECK_RESULTS) OutPut.writeResults(strategy);
-            if (CHECK_AGENTS) OutPut.writeAgentsInformationX(strategy, agents);
+            if (CHECK_AGENTS) OutPut.writeAgentsInformationX(strategy, AgentManager.getAgentList());
 //            main.research.OutPut.writeDelays(delays);
-//            main.research.OutPut.writeReliabilities(agents, strategy);
-//            main.research.OutPut.writeDelaysAndRels(delays, agents, strategy);
-            if (CHECK_RELATIONSHIPS) OutPut.writeGraphInformationX(agents, strategy);
+//            main.research.OutPut.writeReliabilities(AgentManager.getAgentList(), strategy);
+//            main.research.OutPut.writeDelaysAndRels(delays, AgentManager.getAgentList(), strategy);
+            if (CHECK_RELATIONSHIPS) OutPut.writeGraphInformationX(AgentManager.getAgentList(), strategy);
 // */
             if (CHECK_Eleader_Emember) pw.close();
         } catch (FileNotFoundException e) {
@@ -156,48 +153,20 @@ public class Manager implements SetParam {
         // タスクキューの初期化
         taskQueue = new LinkedList<>();
         for (int i = 0; i < INITIAL_TASK_NUM; i++) {
-            taskQueue.add(new Task(3, 6));
+            taskQueue.add(new Task( MIN_SUBTASK_NUM, MAX_SUBTASK_NUM, MIN_DEADLINE, MAX_DEADLINE ) );
         }
 
         // エージェントの初期化
-        agents = generateAgents(strategy);
+        AgentManager.initiateAgents(strategy);
 
         if (CHECK_INITIATION) {
-//            main.research.OutPut.checkAgent(agents);
-//            main.research.OutPut.checkGrids(grids);
-//            OutPut.checkDelay(delays);
+            main.research.OutPut.checkAgent(AgentManager.getAgentList());
+            main.research.OutPut.checkgrid(Grid.getGrid());
         }
 //        main.research.OutPut.countDelays(delays);
-//        main.research.OutPut.checkGrids(grids);
+//        main.research.OutPut.checkgrid(grid);
 //        main.research.OutPut.checkDelay(delays);
-//        main.research.OutPut.checkAgent(agents);
-    }
-
-    private static List<Agent> generateAgents(Strategy strategy) {
-        Agent temp;
-        List tempList = new ArrayList();
-        int randX, randY;
-
-        do {
-            randX = MyRandom.getRandomInt(0, MAX_Y - 1);
-            randY = MyRandom.getRandomInt(0, MAX_X - 1);
-        } while (checkDuplication(randX, randY) == false);
-
-        temp = new Agent(randX, randY, strategy);
-        grids[temp.y][temp.x] = temp;
-        tempList.add(temp);
-        for (int i = 1; i < AGENT_NUM; i++) {
-            while (checkDuplication(randX, randY) == false) {
-                randX = MyRandom.getRandomInt(0, MAX_Y - 1);
-                randY = MyRandom.getRandomInt(0, MAX_X - 1);
-            }
-            temp = new Agent(randX, randY, strategy);
-            grids[temp.y][temp.x] = temp;
-            tempList.add(temp);
-        }
-        setRelAg(tempList);
-        Agent.makeLonelyORAccompaniedAgentList(tempList);
-        return tempList;
+//        main.research.OutPut.checkAgent(AgentManager.getAgentList());
     }
 
     public static Agent getAgentRandomly(Agent self, List<Agent> exceptions, List<Agent> targets) {
@@ -209,138 +178,6 @@ public class Manager implements SetParam {
         }
         return candidate;
     }
-
-    static boolean checkDuplication(int x, int y) {
-        if (grids[y][x] == null) return true;
-        else return false;
-    }
-
-    static void setRelAg(List<Agent> agents) {
-        int dist = 0;
-        List<Agent> tempList = new ArrayList();
-
-        // 距離の計算 & iから距離1にいるエージェントのカウント
-        int min = Integer.MAX_VALUE;
-        int max = 0;
-        int quartile = AGENT_NUM / 4;
-        int[] density = new int[AGENT_NUM];     // エージェント周辺の密度(距離x=2以下にいるエージェントの数)
-        for (int i = 0; i < AGENT_NUM; i++) {
-            int temp;
-            for (int j = 0; j < AGENT_NUM; j++) {
-                delays[i][j] = calcurateDelay(agents.get(i), agents.get(j));
-            }
-            if (density[i] < min) min = density[i];
-            if (density[i] > max) max = density[i];
-        }
-
-        // エリア制限手法において，知っているエージェントを定義する
-        if (strategy.getClass().getName().endsWith("_area_restricted")) {
-            Agent agent;
-            System.out.println("area_restricted");
-            // iが起点となるエージェント
-            for (int i = 0; i < AGENT_NUM; ) {
-                agent = agents.get(i);
-                dist++;
-                assert dist <= MAX_DELAY : "alert 8: " + dist;
-                // 距離に基づいて信頼エージェントを設定する
-                for (int j = 0; j < AGENT_NUM; j++) {
-                    // 距離がdistなら既知エージェント候補とする
-                    if (delays[i][j] == dist) {
-                        tempList.add(agents.get(j));
-                    }
-                }
-                // 近い方から100体のエージェントを既知エージェントとする
-                // 100体に足りてなかったら距離を広げてもう一周
-                if (tempList.size() + agent.canReach.size() < AREA_LIMIT) {
-                    agent.canReach.addAll(tempList);
-                    tempList.clear();
-                }
-                // ピッタリだったら次のエージェントへ
-                else if (tempList.size() + agent.canReach.size() == AREA_LIMIT) {
-                    agent.canReach.addAll(tempList);
-                    tempList.clear();
-                    i++;
-                    dist = 0;
-                }
-                // はみ出たらtempListの中からはみ出ない分だけ選んで既知エージェントとする
-                else {
-                    int restSize = AREA_LIMIT - agent.canReach.size();
-                    for (int j = 0; j < restSize; j++) {
-                        int rand = MyRandom.getRandomInt(0, tempList.size());
-                        agent.canReach.add(tempList.remove(rand));
-                    }
-                    tempList.clear();
-                    i++;
-                    dist = 0;
-                }
-            }
-        }
-
-        // 信頼度ランキングをランダムに初期化
-
-        // 信頼度ランキングをランダムに初期化
-        Agent agent;
-        // リーダー側
-        for (int i = 0; i < AGENT_NUM; i++) {
-            List<Agent> temp = new ArrayList<>(agents);
-            int rand;
-            Agent ag;
-            agent = agents.get(i);
-            while (temp.size() != 0) {
-                rand = MyRandom.getRandomInt(0, temp.size() - 1);
-                ag = temp.remove(rand);
-                if (!ag.equals(agent)) agent.relRanking_l.add(ag);
-            }
-        }
-        // メンバ側
-        for (int i = 0; i < AGENT_NUM; i++) {
-            List<Agent> temp = new ArrayList<>(agents);
-            int rand;
-            Agent ag;
-            agent = agents.get(i);
-            while (temp.size() != 0) {
-                rand = MyRandom.getRandomInt(0, temp.size() - 1);
-                ag = temp.remove(rand);
-                if (!ag.equals(agent)) agent.relRanking_m.add(ag);
-            }
-        }
-
-    }
-
-    /**
-     * calcurateDelayメソッド
-     * エージェント間のマンハッタン距離を計算し，returnするメソッド
-     * □□□
-     * □■□
-     * □□□
-     * このように座標を拡張し，真ん中からの距離を計算，その最短距離をとることで
-     * トーラス構造の距離関係を割り出す
-     */
-    static int calcurateDelay(Agent from, Agent to) {
-        int tillEnd = MAX_X / 2 + MAX_Y / 2;
-        int minDistance = Integer.MAX_VALUE;
-        int tilesX = 3;
-        int tilesY = 3;
-
-        int fromX = from.x;
-        int fromY = from.y;
-
-        for (int i = 0; i < tilesX; i++) {
-            int toX = to.x + (i - 1) * MAX_X;
-
-            for (int j = 0; j < tilesY; j++) {
-                int toY = to.y + (j - 1) * MAX_Y;
-                int tempDistance = Math.abs(fromX - toX) + Math.abs(fromY - toY);
-
-                if (tempDistance < minDistance) {
-                    minDistance = tempDistance;
-                }
-            }
-        }
-
-        return (int) Math.ceil((double) minDistance / tillEnd * MAX_DELAY);
-    }
-
     // taskQueueにあるタスクをリーダーに渡すメソッド
     public static Task getTask(Agent agent) {
         Task temp;
@@ -378,18 +215,26 @@ public class Manager implements SetParam {
 
         if (additionalTasksNum <= room) {
             if (START_HAPPENS <= turn && turn < START_HAPPENS + BUSY_PERIOD && IS_HEAVY_TASKS_HAPPENS) {
-                for (int i = 0; i < additionalTasksNum; i++) taskQueue.add(new Task(8, 11));
+                for (int i = 0; i < additionalTasksNum; i++) {
+                    taskQueue.add( new Task(8, 11, MIN_DEADLINE, MAX_DEADLINE ) );
+                }
             }else{
-                for (int i = 0; i < additionalTasksNum; i++) taskQueue.add(new Task(3, 6));
+                for (int i = 0; i < additionalTasksNum; i++) {
+                    taskQueue.add( new Task( MIN_SUBTASK_NUM, MAX_SUBTASK_NUM, MIN_DEADLINE, MAX_DEADLINE ) );
+                }
             }
         }
         // タスクキューからタスクがはみ出そうなら, 入れるだけ入れてはみ出る分はオーバーフローとする
         else {
             int i;
             if (START_HAPPENS <= turn && turn < START_HAPPENS + BUSY_PERIOD && IS_HEAVY_TASKS_HAPPENS) {
-                for (i = 0; i < room; i++) taskQueue.add(new Task(8, 11));
+                for (i = 0; i < room; i++) {
+                    taskQueue.add( new Task(8, 11, MIN_DEADLINE, MAX_DEADLINE ) );
+                }
             } else {
-                for (i = 0; i < room; i++) taskQueue.add(new Task(3, 6));
+                for (i = 0; i < room; i++) {
+                    taskQueue.add( new Task( MIN_SUBTASK_NUM, MAX_SUBTASK_NUM, MIN_DEADLINE, MAX_DEADLINE ) );
+                }
             }
             overflowTasks += additionalTasksNum - i;
         }
@@ -397,14 +242,14 @@ public class Manager implements SetParam {
 
     static void actFreeLancer() {
         List<Agent> freelancer;
-        freelancer = getFreelancerList(agents);
+        freelancer = getFreelancerList(AgentManager.getAgentList());
         actRandom(freelancer, "select role");
     }
 
     static void actLeadersAndMembers() {
         List<Agent> leaders = new ArrayList<>();
         List<Agent> members = new ArrayList<>();
-        for (Agent ag : agents) {
+        for (Agent ag : AgentManager.getAgentList()) {
             if (ag.role == MEMBER) members.add(ag);
             else if (ag.role == LEADER) leaders.add(ag);
         }
@@ -432,7 +277,6 @@ public class Manager implements SetParam {
             }
         }
         temp.clear();
-
     }
 
     static public void disposeTask(Agent leader) {
@@ -450,42 +294,27 @@ public class Manager implements SetParam {
 
     static List<Agent> getFreelancerList(List<Agent> agents) {
         List<Agent> temp = new ArrayList<>();
-        for (Agent ag : agents) {
+        for ( Agent ag : agents ) {
             if (ag.role == JONE_DOE) temp.add(ag);
         }
         return temp;
     }
 
-    private static void checkMessage(List<Agent> agents) {
+    private static void checkMessage(List<Agent> agents ){
         for (Agent ag : agents) ag.checkMessages(ag);
     }
 
     private static void clearAll() {
         taskQueue.clear();
-        agents = null;
         snapshot = null;
         disposedTasks = 0;
         finishedTasks = 0;
         overflowTasks = 0;
-        for (int i = 0; i < AGENT_NUM; i++) {
-            for (int j = 0; j < AGENT_NUM; j++) {
-                delays[i][j] = 0;
-            }
-        }
-        for (int i = 0; i < MAX_X; i++) {
-            for (int j = 0; j < MAX_Y; j++) {
-                grids[i][j] = null;
-            }
-        }
         TransmissionPath.clearTP();
-        Subtask.clearST();
         Task.clearT();
         Agent.clearA();
+        Grid.clear();
+        AgentManager.clear();
         strategy.clearStrategy();
     }
-
-    static public List<Agent> getAgents() {
-        return agents;
-    }
-
 }
