@@ -24,7 +24,7 @@ class MyRandomTest {
                  乱数の値で比較することにする
                 */
                 for (int j = 0; j < 100; j++) {
-                    assertThat( actual.NextInt(100), is( equalTo(expected.NextInt(100) ) ) );
+                    assertThat( actual.NextInt(100), is( expected.NextInt(100) ) );
                 }
 
             }

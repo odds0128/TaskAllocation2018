@@ -15,6 +15,7 @@ import main.research.strategy.Strategy;
 import main.research.task.Subtask;
 import main.research.task.Task;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Agent implements SetParam , Cloneable {
     public static int _id = 0;
@@ -32,7 +33,7 @@ public class Agent implements SetParam , Cloneable {
     public Coordinates p;
     public int role = JONE_DOE;
     public int phase = SELECT_ROLE;
-    private Strategy strategy;
+    public Strategy strategy;
     private int resSum = 0, resCount = 0;
     public int[] res = new int[RESOURCE_TYPES];
     public double excellence;
@@ -51,7 +52,6 @@ public class Agent implements SetParam , Cloneable {
     public int[] required = new int[RESOURCE_TYPES];            // そのリソースを要求するサブタスクが割り当てられた回数
     public int[][] allocated = new int[AGENT_NUM][RESOURCE_TYPES]; // そのエージェントからそのリソースを要求するサブタスクが割り当てられた回数
     public List<Agent> canReach = new ArrayList<>();
-    private int role_renewal_counter = 0;
     public List<Agent> agentsCommunicatingWith = new ArrayList<>(); // 今通信をしていて，返信を期待しているエージェントのリスト．返信が返ってきたらリストから消す
 
     // リーダーエージェントが持つパラメータ
@@ -67,10 +67,7 @@ public class Agent implements SetParam , Cloneable {
     public int replyNum = 0;
     public double threshold_for_reciprocity_as_leader;
     public List<Task> pastTasks = new ArrayList<>();
-    public double[] reliabilities_l = new double[AGENT_NUM];
-    public List<Agent> relAgents_l = new ArrayList<>();
-    public List<Agent> relRanking_l = new ArrayList<>();
-    public Map<Agent, Double> relRanking_ll = new LinkedHashMap<>();
+    public Map<Agent, Double> relRanking_l = new LinkedHashMap<>();
 
     // メンバエージェントのみが持つパラメータ
     public Agent leader;
@@ -78,9 +75,7 @@ public class Agent implements SetParam , Cloneable {
     public Subtask mySubtask;
     public List<Subtask> mySubtaskQueue = new ArrayList<>();       // メンバはサブタスクを溜め込むことができる(実質的に，同時に複数のチームに参加することができるようになる)
     public int tbd = 0;                                            // 返事待ちの数
-    public double[] reliabilities_m = new double[AGENT_NUM];
-    public List<Agent> relAgents_m = new ArrayList<>();
-    public List<Agent> relRanking_m = new ArrayList<>();
+    public Map<Agent, Double> relRanking_m = new LinkedHashMap<>();
     public List<Agent> myLeaders = new ArrayList<>();
 
     public Agent(Strategy strategy) {
@@ -88,13 +83,11 @@ public class Agent implements SetParam , Cloneable {
         this.strategy = strategy;
 
         setResource();
-        setInitialReliabilities(reliabilities_l);
-        setInitialReliabilities(reliabilities_m);
-
         threshold_for_reciprocity_as_leader = THRESHOLD_FOR_RECIPROCITY_FROM_LEADER;
         threshold_for_reciprocity_as_member = (double) resSum / resCount * THRESHOLD_FOR_RECIPROCITY_RATE;
-
         selectRole();
+
+        initiateParameters();
     }
 
     private void setResource() {
@@ -113,13 +106,20 @@ public class Agent implements SetParam , Cloneable {
         this.p = new Coordinates(x,y);
     }
 
-    private void setInitialReliabilities(double[] reliabilities) {
-        Arrays.fill(reliabilities, INITIAL_VALUE_OF_DSL);
-    }
-
     void setReliabilityRankingRandomly(List<Agent> agentList) {
-        this.relRanking_l = generateRandomAgentList(agentList);
-        this.relRanking_m = generateRandomAgentList(agentList);
+        List<Agent> rl = generateRandomAgentList(agentList);
+        this.relRanking_l = rl.stream()
+                .collect( Collectors.toMap(
+                        ag -> ag,
+                        ag -> INITIAL_VALUE_OF_DSL
+                ));
+
+        List<Agent> rm = generateRandomAgentList(agentList);
+        this.relRanking_m = rm.stream()
+                .collect( Collectors.toMap(
+                        ag -> ag,
+                        ag -> INITIAL_VALUE_OF_DSM
+                ));
     }
 
     private List<Agent> generateRandomAgentList( List<Agent> agentList ) {
@@ -138,6 +138,12 @@ public class Agent implements SetParam , Cloneable {
             randomAgentList.add(ag);
         }
         return randomAgentList;
+    }
+
+    private void initiateParameters() {
+        int hashMapSize = (int) (AGENT_NUM * 1.3);
+        this.relRanking_l = new LinkedHashMap<>(hashMapSize);
+        this.relRanking_m = new LinkedHashMap<>(hashMapSize);
     }
 
     public void actAsLeader() {
@@ -291,18 +297,11 @@ public class Agent implements SetParam , Cloneable {
             _member_num--;
         }
         mySubtask = null;
-        role_renewal_counter = 0;
         joined = false;
         role = JONE_DOE;
         phase = SELECT_ROLE;
         leader = null;
         executionTime = 0;
-        if (strategy.getClass().getName() != "RoundRobin") {
-            index = 0;
-        } else {
-            int prevIndex = index % relAgents_l.size();
-            index = prevIndex;
-        }
         this.validatedTicks = Manager.getTicks();
     }
 
@@ -419,7 +418,6 @@ public class Agent implements SetParam , Cloneable {
             }
         } else if (this.phase == RECEPTION) this.phase = EXECUTION;
         this.validatedTicks = Manager.getTicks();
-        this.role_renewal_counter = 0;
     }
 
     public static void renewEpsilonLenear() {

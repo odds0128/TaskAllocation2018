@@ -1,9 +1,7 @@
 package main.research.agent;
 
 import main.research.SetParam;
-import main.research.grid.Coordinates;
 import main.research.grid.Grid;
-import main.research.random.MyRandom;
 import main.research.strategy.Strategy;
 
 import java.util.ArrayList;

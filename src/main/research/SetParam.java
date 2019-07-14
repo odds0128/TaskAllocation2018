@@ -40,7 +40,7 @@ public interface SetParam {
 
     int INITIAL_TASK_NUM = 0;       // 最初のタスク数
     int TASK_QUEUE_SIZE  = 500;     // タスクキューのサイズ
-    int AGENT_NUM = 500;            // エージェントの数
+    int AGENT_NUM = 10;            // エージェントの数
 
     // トーラスを考えた時に，中心が自分であるほうが考えやすいので，一片の長さは奇数にする
     int MAX_X    = 51, MAX_Y = 51;

@@ -38,8 +38,8 @@ class AgentTest {
             boolean isFullySame = true;
 
             for( Agent ag: agentList ) {
-                ranking_l = ag.relRanking_l;
-                ranking_m = ag.relRanking_m;
+                ranking_l = (List<Agent>) ag.relRanking_l.keySet();
+                ranking_m = (List<Agent>) ag.relRanking_m.keySet();
 
                 for (int i = 0; i < agentList.size() - 1; i++) {
                    if( ! ranking_l.get(i).equals(ranking_m.get(i)) ) {

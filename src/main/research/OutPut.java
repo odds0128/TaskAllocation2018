@@ -122,17 +122,13 @@ public class OutPut implements SetParam {
 
                 leadersExcAveArray[times] += ag.excellence;
                 int temp = 0;
-                for( Agent relAg:  ag.relRanking_l ){
-                    if( ag.reliabilities_l[relAg.id] > ag.threshold_for_reciprocity_as_leader ){
+                for( Agent relAg:  ag.relRanking_l.keySet() ){
+                    if( ag.relRanking_l.get(relAg) > ag.threshold_for_reciprocity_as_leader ){
                         mDependableAgentsFromAllLeaders[times]++;
                         mDependableAgentsFromLeadersTrustsSomeone[times] ++;
                         if( ag.didTasksAsLeader > 100 ){
                             mDependableMembersFromExcellentLeader[times]++;
                         }
-                        if( relAg.inTheList(ag, relAg.relAgents_l) >= 0 ){
-                            mMutualDependency[times]++;
-                        }
-
                         temp++;
                     }else{
                         if( temp > 0 ) leadersTrustSomeone++;
@@ -893,25 +889,11 @@ public class OutPut implements SetParam {
                         _singleton.writeCell(row, colNumber++, style_int, agent.p.getX() * 10);
                         _singleton.writeCell(row, colNumber++, style_int, agent.p.getY() * 10);
 
-                        if (agent.e_leader > agent.e_member) _singleton.writeCell(row, colNumber++, style_int, -1);
-                        else if (agent.relRanking_m.size() > 0)
-                            _singleton.writeCell(row, colNumber++, style_int, agent.relRanking_m.get(0).id);
-                        else _singleton.writeCell(row, colNumber++, style_int, -1);
-
-                        if (agent.e_leader > agent.e_member) _singleton.writeCell(row, colNumber++, style_int, 0);
-                        else if (agent.relRanking_m.size() > 0)
-                            _singleton.writeCell(row, colNumber++, style_int, Grid.getDelay( agent, agent.relRanking_m.get(0) ) );
-                        else _singleton.writeCell(row, colNumber++, style_int, -1);
-
-                        /*
-                        _singleton.writeCell(row, colNumber++, style_int,agent.isLonely);
-                        _singleton.writeCell(row, colNumber++, style_int,agent.isAccompanied);
-// */
                         for (int j = 0; j < RESOURCE_TYPES; j++) {
                             _singleton.writeCell(row, colNumber++, style_int, agent.res[j]);
                             _singleton.writeCell(row, colNumber++, style_int, agent.required[j]);
                             if (agent.relRanking_m.size() > 0)
-                                _singleton.writeCell(row, colNumber++, style_int, agent.allocated[agent.relRanking_m.get(0).id][j]);
+                                _singleton.writeCell(row, colNumber++, style_int, agent.allocated[agent.relRanking_m.keySet().iterator().next().id][j]);
                             else _singleton.writeCell(row, colNumber++, style_int, -1);
                         }
                         _singleton.writeCell(row, colNumber++, style_double, agent.excellence);
@@ -1119,7 +1101,7 @@ public class OutPut implements SetParam {
 
             for (int from = 0; from < AGENT_NUM; from++) {
                 for (int to = 0; to < AGENT_NUM; to++) {
-//                    pw.println(delays[from][to] + ", " + agents.get(from).reliabilities[to]);
+//                    pw.println(delays[from][to] + ", " + agents.get(from).relRanking[to]);
                 }
             }
 
@@ -1130,7 +1112,7 @@ public class OutPut implements SetParam {
 
             for(int from = 0; from < AGENT_NUM; from++){
                 for( int to = 0; to < AGENT_NUM; to++ ){
-                    delayLists[delays[from][to]].add(agents.get(from).reliabilities[to]);
+                    delayLists[delays[from][to]].add(agents.get(from).relRanking[to]);
                 }
             }
             System.out.println(delayLists.length);
@@ -1187,8 +1169,8 @@ public class OutPut implements SetParam {
                     if( target.equals(from) ){
                         pw.print(" , ,");
                     }else{
-                        pw.print(from.reliabilities_l[target.id] + ", ");
-                        pw.print(from.reliabilities_m[target.id] + ", ");
+                        pw.print(from.relRanking_l.get(target.id) + ", ");
+                        pw.print(from.relRanking_m.get(target.id) + ", ");
                     }
                 }
                 pw.println();
@@ -1202,7 +1184,7 @@ public class OutPut implements SetParam {
 // */
 
 /*        pw.print("I'm 4 "+ ", ");
-        for (int i = 0; i < AGENT_NUM; i++) pw.print(agents.get(4).reliabilities[i] + ", ");
+        for (int i = 0; i < AGENT_NUM; i++) pw.print(agents.get(4).relRanking[i] + ", ");
         pw.println();
 // */
     }
@@ -1214,7 +1196,7 @@ public class OutPut implements SetParam {
         }
 // */
         for (Agent agent : agents) {
-//            if (agent.reliabilities[agent.relRanking.get(0).id] > agent.threshold_for_reciprocity_as_member
+//            if (agent.relRanking[agent.relRanking.get(0).id] > agent.threshold_for_reciprocity_as_member
 //                    && (agent.e_member > THRESHOLD_FOR_ROLE_RECIPROCITY
 //                    || agent.e_leader > THRESHOLD_FOR_ROLE_RECIPROCITY))
 //                temp++;
@@ -1239,7 +1221,7 @@ public class OutPut implements SetParam {
         }
 // */
         for (Agent agent : agents) {
-//            if (agent.reliabilities[agent.relRanking.get(0).id] > agent.threshold_for_reciprocity_as_member
+//            if (agent.relRanking[agent.relRanking.get(0).id] > agent.threshold_for_reciprocity_as_member
 //                    && agent.e_member > THRESHOLD_FOR_ROLE_RECIPROCITY
 //                    && agent.e_member > agent.e_leader)
 //                temp++;
