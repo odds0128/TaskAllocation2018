@@ -5,9 +5,7 @@ import main.research.agent.AgentManager;
 import main.research.communication.TransmissionPath;
 import main.research.grid.Grid;
 import main.research.random.MyRandom;
-import main.research.strategy.PM2;
-import main.research.strategy.PM2withRoleFixed;
-import main.research.strategy.Strategy;
+import main.research.strategy.ProposedStrategy.PM2;
 import main.research.task.Task;
 
 import java.io.*;

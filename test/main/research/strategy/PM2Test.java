@@ -3,6 +3,7 @@ package main.research.strategy;
 import main.research.agent.Agent;
 import main.research.agent.AgentManager;
 import main.research.random.MyRandom;
+import main.research.strategy.ProposedStrategy.PM2;
 import org.junit.jupiter.api.BeforeEach;
 
 import java.util.List;

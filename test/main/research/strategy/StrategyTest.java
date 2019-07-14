@@ -3,6 +3,7 @@ package main.research.strategy;
 import main.research.agent.Agent;
 import main.research.agent.AgentManager;
 import main.research.random.MyRandom;
+import main.research.strategy.ProposedStrategy.PM2;
 import main.research.task.Subtask;
 import org.hamcrest.Matcher;
 import org.junit.jupiter.api.BeforeAll;
@@ -20,7 +21,8 @@ import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
 
 class StrategyTest implements Strategy{
-    static Strategy strategy = new PM2();
+    static Strategy sl = new PM2();
+    static Strategy sm = new ;
     static List<Agent> agentList;
 
     @BeforeAll
@@ -28,6 +30,12 @@ class StrategyTest implements Strategy{
         MyRandom.newSfmt(0);
         AgentManager.initiateAgents(strategy);
         agentList = AgentManager.getAgentList();
+    }
+
+    // TODO
+    @Nested
+    class renewDEby0or1のテスト {
+
     }
 
     @Nested

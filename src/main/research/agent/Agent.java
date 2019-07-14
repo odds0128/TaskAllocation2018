@@ -11,6 +11,8 @@ import main.research.communication.Message;
 import main.research.communication.TransmissionPath;
 import main.research.grid.Coordinates;
 import main.research.random.MyRandom;
+import main.research.strategy.LeaderStrategy;
+import main.research.strategy.MemberStrategy;
 import main.research.strategy.Strategy;
 import main.research.task.Subtask;
 import main.research.task.Task;
@@ -27,13 +29,14 @@ public class Agent implements SetParam , Cloneable {
 
     public static int _coalition_check_end_time;
     private static double ε = INITIAL_ε;
+    private static LeaderStrategy sl;
+    private static MemberStrategy sm;
 
     // リーダーもメンバも持つパラメータ
     public int id;
     public Coordinates p;
     public int role = JONE_DOE;
     public int phase = SELECT_ROLE;
-    public Strategy strategy;
     private int resSum = 0, resCount = 0;
     public int[] res = new int[RESOURCE_TYPES];
     public double excellence;
@@ -78,9 +81,10 @@ public class Agent implements SetParam , Cloneable {
     public Map<Agent, Double> relRanking_m = new LinkedHashMap<>();
     public List<Agent> myLeaders = new ArrayList<>();
 
-    public Agent(Strategy strategy) {
+    public Agent(LeaderStrategy sl, MemberStrategy sm) {
         this.id = _id++;
-        this.strategy = strategy;
+        this.sl = sl;
+        this.sm = sm;
 
         setResource();
         threshold_for_reciprocity_as_leader = THRESHOLD_FOR_RECIPROCITY_FROM_LEADER;
@@ -147,11 +151,11 @@ public class Agent implements SetParam , Cloneable {
     }
 
     public void actAsLeader() {
-        strategy.actAsLeader(this);
+        sl.actAsLeader(this);
     }
 
     public void actAsMember() {
-        strategy.actAsMember(this);
+        sm.actAsMember(this);
     }
 
     public void selectRole() {
@@ -348,7 +352,11 @@ public class Agent implements SetParam , Cloneable {
      * それ以外はネガティブな返事をする
      */
     public void checkMessages(Agent self) {
-        strategy.checkMessages(self);
+        if( self.role == LEADER ) {
+                sl.checkMessages(self);
+        }else if( self.role == MEMBER ) {
+            sm.checkMessages(self);
+        }
     }
 
     /**

@@ -9,18 +9,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import static main.research.SetParam.α;
 import static main.research.SetParam.γ_r;
 
 public interface Strategy {
 
-    void actAsLeader(Agent agent);
-    void actAsMember(Agent agent);
-    List<Agent> selectMembers(Agent agent, List<Subtask> subtasks);
-
     void checkMessages(Agent self);
-    void clearStrategy();
 
-    // TODO: test
+    default double renewDEby0or1( double former, boolean isPositive ){
+        double multiplier = isPositive ? 1 : 0;
+        return former * ( 1.0 - α ) + multiplier * α;
+    }
+
+    default double renewDEbyArbitraryReward( double former, double reward ){
+        return former * ( 1.0 - α ) + reward * α;
+    }
+
     default void evaporateDE( Map<Agent, Double> relMap ) {
         relMap.forEach(
                 (key, value) -> {
@@ -30,7 +34,6 @@ public interface Strategy {
         );
     }
 
-    // TODO: test
     default Map<Agent, Double> sortReliabilityRanking(Map<Agent, Double> relMap) {
         List<Entry<Agent, Double>> entries = new ArrayList(relMap.entrySet());
         entries.sort(Strategy::compare);

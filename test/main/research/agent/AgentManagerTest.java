@@ -1,7 +1,7 @@
 package main.research.agent;
 
 import main.research.random.MyRandom;
-import main.research.strategy.PM2withRoleFixed;
+import main.research.strategy.ComparativeStrategy.PM2withRoleFixed;
 import main.research.strategy.Strategy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
