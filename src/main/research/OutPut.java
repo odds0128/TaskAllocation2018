@@ -1,7 +1,5 @@
 package main.research;
 
-import main.research.agent.AgentManager;
-import main.research.grid.Grid;
 import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
@@ -330,13 +328,12 @@ public class OutPut implements SetParam {
         // */
     }
 
-    static void writeResults(Strategy st) {
-        String outputFilePath = _singleton.setPath("results", st.getClass().getName(), "csv");
-
+    static void writeResults(String st) {
+        String outputFilePath = _singleton.setPath("results", st, "csv");
+        System.out.println("writing now");
         FileWriter fw;
         BufferedWriter bw;
         PrintWriter pw;
-        String fileName = st.getClass().getName();
         try {
             fw = new FileWriter(outputFilePath, false);
             bw = new BufferedWriter(fw);
@@ -388,8 +385,8 @@ public class OutPut implements SetParam {
         }
     }
 
-    static void writeResultsX(Strategy st) throws FileNotFoundException, IOException {
-        String outputFilePath = _singleton.setPath("results", st.getClass().getName(), "xlsx");
+    static void writeResultsX(String st) throws FileNotFoundException, IOException {
+        String outputFilePath = _singleton.setPath("results", st, "xlsx");
 
         try {
             book = new SXSSFWorkbook();
@@ -467,7 +464,7 @@ public class OutPut implements SetParam {
                 ((SXSSFSheet) sheet).trackAllColumnsForAutoSizing();
             }
             //シート名称の設定
-            book.setSheetName(0, st.getClass().getName());
+            book.setSheetName(0, st);
 
             row = sheet.createRow(rowNumber);
             _singleton.writeCell(row, colNumber++, style_header, "Turn");
@@ -533,8 +530,8 @@ public class OutPut implements SetParam {
         }
     }
 
-    static void writeAgentsInformationX(Strategy st, List<Agent> agents) throws FileNotFoundException, IOException {
-        String outputFilePath = _singleton.setPath("agentInfo", st.getClass().getName(), "xlsx");
+    static void writeAgentsInformationX(String st, List<Agent> agents) throws IOException {
+        String outputFilePath = _singleton.setPath("agentInfo", st, "xlsx");
         try {
             book = new SXSSFWorkbook();
             Font font = book.createFont();
@@ -611,7 +608,7 @@ public class OutPut implements SetParam {
                 ((SXSSFSheet) sheet).trackAllColumnsForAutoSizing();
             }
             //シート名称の設定
-            book.setSheetName(0, st.getClass().getName());
+            book.setSheetName(0, st );
 
             row = sheet.createRow(rowNumber);
             _singleton.writeCell(row, colNumber++, style_header, "Trials");
@@ -675,7 +672,7 @@ public class OutPut implements SetParam {
                 ((SXSSFSheet) sheet).trackAllColumnsForAutoSizing();
             }
             //シート名称の設定
-            book.setSheetName(0, st.getClass().getName());
+            book.setSheetName(0, st );
 
             row = sheet.createRow(rowNumber);
             _singleton.writeCell(row, colNumber++, style_header, "ID");
@@ -731,8 +728,8 @@ public class OutPut implements SetParam {
         }
     }
 
-    static void writeGraphInformationX(List<Agent> agents, Strategy st) throws FileNotFoundException, IOException {
-        String outputFilePath = _singleton.setPath("relationships", st.getClass().getName(), "xlsx");
+    static void writeGraphInformationX(List<Agent> agents, String st ) throws IOException {
+        String outputFilePath = _singleton.setPath("relationships", st, "xlsx");
         Edge edge = new Edge();
         edge.makeEdge(agents);
         try {
@@ -1085,11 +1082,11 @@ public class OutPut implements SetParam {
         }
     }
 
-    static void writeDelaysAndRels(int[][] delays, List<Agent> agents, Strategy st) {
+    static void writeDelaysAndRels(int[][] delays, List<Agent> agents, String st) {
         FileWriter fw;
         BufferedWriter bw;
         PrintWriter pw;
-        String fileName = st.getClass().getName();
+        String fileName = st;
 
         try {
             String currentPath = System.getProperty("user.dir");
@@ -1132,11 +1129,11 @@ public class OutPut implements SetParam {
         }
     }
 
-    static void writeReliabilities(List<Agent> agents, Strategy st) {
+    static void writeReliabilities(List<Agent> agents, String st) {
         FileWriter fw;
         BufferedWriter bw;
         PrintWriter pw;
-        String fileName = st.getClass().getName();
+        String fileName = st;
         try {
             String currentPath = System.getProperty("user.dir");
             Date date = new Date();
@@ -1169,8 +1166,8 @@ public class OutPut implements SetParam {
                     if( target.equals(from) ){
                         pw.print(" , ,");
                     }else{
-                        pw.print(from.relRanking_l.get(target.id) + ", ");
-                        pw.print(from.relRanking_m.get(target.id) + ", ");
+                        pw.print(from.relRanking_l.get(target) + ", ");
+                        pw.print(from.relRanking_m.get(target) + ", ");
                     }
                 }
                 pw.println();

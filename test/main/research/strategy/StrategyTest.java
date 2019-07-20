@@ -3,13 +3,10 @@ package main.research.strategy;
 import main.research.agent.Agent;
 import main.research.agent.AgentManager;
 import main.research.random.MyRandom;
-import main.research.strategy.ProposedStrategy.PM2;
-import main.research.task.Subtask;
+import main.research.strategy.ProposedStrategy.LeaderProposedStrategy;
+import main.research.strategy.ProposedStrategy.MemberProposedStrategy;
 import org.hamcrest.Matcher;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import java.util.Iterator;
 import java.util.List;
@@ -20,15 +17,16 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
 
+@Tag("strategy")
 class StrategyTest implements Strategy{
-    static Strategy sl = new PM2();
-    static Strategy sm = new ;
+    static LeaderStrategy ls = new LeaderProposedStrategy();
+    static MemberStrategy ms = new MemberProposedStrategy();
     static List<Agent> agentList;
 
     @BeforeAll
     static void setUp() {
         MyRandom.newSfmt(0);
-        AgentManager.initiateAgents(strategy);
+        AgentManager.initiateAgents(ls, ms);
         agentList = AgentManager.getAgentList();
     }
 
@@ -52,8 +50,8 @@ class StrategyTest implements Strategy{
 
         @Test
         void evaporateDEを一回呼び出した結果全エージェントの全DEが初期値からγを引いたものになる() {
-            Double expected_l = INITIAL_VALUE_OF_DSL - γ_r;
-            Double expected_m = INITIAL_VALUE_OF_DSM - γ_r;
+            Double expected_l = INITIAL_VALUE_OF_DE - γ_r;
+            Double expected_m = INITIAL_VALUE_OF_DE - γ_r;
 
             evaporateDE(sample.relRanking_l);
             evaporateDE(sample.relRanking_m);
@@ -85,8 +83,6 @@ class StrategyTest implements Strategy{
                         assertThat( temp, is(greaterThanOrEqualToZero) );
                     }
             );
-            System.out.println("After: ");
-            System.out.println(sample.relRanking_l.entrySet());
         }
     }
 
@@ -111,7 +107,7 @@ class StrategyTest implements Strategy{
             for( int i = 0; i <= index; i++ ) {
                 reliable = iterator.next();
             }
-            sample.relRanking_l.replace( reliable, INITIAL_VALUE_OF_DSL * 10.0 );
+            sample.relRanking_l.replace( reliable, INITIAL_VALUE_OF_DE * 10.0 );
                 sample.relRanking_l = sortReliabilityRanking( sample.relRanking_l );
             Agent top = sample.relRanking_l.keySet().iterator().next();
             assertThat( top, is(reliable) );
@@ -121,10 +117,6 @@ class StrategyTest implements Strategy{
 
     // Strategyインタフェースのテストのためにかりそめの実装をする {
     @Override
-    public void actAsLeader(Agent agent) {}
-    public void actAsMember(Agent agent) {}
-    public List<Agent> selectMembers(Agent agent, List<Subtask> subtasks) { return null; }
     public void checkMessages(Agent self) {}
-    public void clearStrategy() {}
 
 }

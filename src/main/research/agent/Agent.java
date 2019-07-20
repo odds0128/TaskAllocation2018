@@ -6,18 +6,19 @@
 package main.research.agent;
 
 
-import main.research.*;
+import main.research.Manager;
+import main.research.SetParam;
 import main.research.communication.Message;
 import main.research.communication.TransmissionPath;
-import main.research.grid.Coordinates;
 import main.research.random.MyRandom;
 import main.research.strategy.LeaderStrategy;
 import main.research.strategy.MemberStrategy;
-import main.research.strategy.Strategy;
 import main.research.task.Subtask;
 import main.research.task.Task;
+
+import java.awt.*;
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.List;
 
 public class Agent implements SetParam , Cloneable {
     public static int _id = 0;
@@ -29,12 +30,12 @@ public class Agent implements SetParam , Cloneable {
 
     public static int _coalition_check_end_time;
     private static double ε = INITIAL_ε;
-    private static LeaderStrategy sl;
-    private static MemberStrategy sm;
+    private static LeaderStrategy ls;
+    private static MemberStrategy ms;
 
     // リーダーもメンバも持つパラメータ
     public int id;
-    public Coordinates p;
+    public Point p;
     public int role = JONE_DOE;
     public int phase = SELECT_ROLE;
     private int resSum = 0, resCount = 0;
@@ -70,7 +71,7 @@ public class Agent implements SetParam , Cloneable {
     public int replyNum = 0;
     public double threshold_for_reciprocity_as_leader;
     public List<Task> pastTasks = new ArrayList<>();
-    public Map<Agent, Double> relRanking_l = new LinkedHashMap<>();
+    public Map<Agent, Double> relRanking_l = new LinkedHashMap<>(HASH_MAP_SIZE);
 
     // メンバエージェントのみが持つパラメータ
     public Agent leader;
@@ -78,20 +79,17 @@ public class Agent implements SetParam , Cloneable {
     public Subtask mySubtask;
     public List<Subtask> mySubtaskQueue = new ArrayList<>();       // メンバはサブタスクを溜め込むことができる(実質的に，同時に複数のチームに参加することができるようになる)
     public int tbd = 0;                                            // 返事待ちの数
-    public Map<Agent, Double> relRanking_m = new LinkedHashMap<>();
+    public Map<Agent, Double> relRanking_m = new LinkedHashMap<>(HASH_MAP_SIZE);
     public List<Agent> myLeaders = new ArrayList<>();
 
-    public Agent(LeaderStrategy sl, MemberStrategy sm) {
+    public Agent() {
         this.id = _id++;
-        this.sl = sl;
-        this.sm = sm;
 
         setResource();
         threshold_for_reciprocity_as_leader = THRESHOLD_FOR_RECIPROCITY_FROM_LEADER;
         threshold_for_reciprocity_as_member = (double) resSum / resCount * THRESHOLD_FOR_RECIPROCITY_RATE;
         selectRole();
 
-        initiateParameters();
     }
 
     private void setResource() {
@@ -107,23 +105,18 @@ public class Agent implements SetParam , Cloneable {
     }
 
     public void setPosition(int x, int y) {
-        this.p = new Coordinates(x,y);
+        this.p = new Point(x,y);
     }
 
     void setReliabilityRankingRandomly(List<Agent> agentList) {
         List<Agent> rl = generateRandomAgentList(agentList);
-        this.relRanking_l = rl.stream()
-                .collect( Collectors.toMap(
-                        ag -> ag,
-                        ag -> INITIAL_VALUE_OF_DSL
-                ));
-
+        for( Agent ag : rl ) {
+            this.relRanking_l.put( ag, INITIAL_VALUE_OF_DE );
+        }
         List<Agent> rm = generateRandomAgentList(agentList);
-        this.relRanking_m = rm.stream()
-                .collect( Collectors.toMap(
-                        ag -> ag,
-                        ag -> INITIAL_VALUE_OF_DSM
-                ));
+        for( Agent ag : rm ) {
+            this.relRanking_m.put( ag, INITIAL_VALUE_OF_DE );
+        }
     }
 
     private List<Agent> generateRandomAgentList( List<Agent> agentList ) {
@@ -144,18 +137,12 @@ public class Agent implements SetParam , Cloneable {
         return randomAgentList;
     }
 
-    private void initiateParameters() {
-        int hashMapSize = (int) (AGENT_NUM * 1.3);
-        this.relRanking_l = new LinkedHashMap<>(hashMapSize);
-        this.relRanking_m = new LinkedHashMap<>(hashMapSize);
-    }
-
     public void actAsLeader() {
-        sl.actAsLeader(this);
+        ls.actAsLeader(this);
     }
 
     public void actAsMember() {
-        sm.actAsMember(this);
+        ms.actAsMember(this);
     }
 
     public void selectRole() {
@@ -206,7 +193,7 @@ public class Agent implements SetParam , Cloneable {
             this.phase = PROPOSITION;
             candidates = new ArrayList<>();
             teamMembers = new ArrayList<>();
-            preAllocations = new HashMap<>();
+            preAllocations = new HashMap<>(HASH_MAP_SIZE);
             replies = new ArrayList<>();
             results = new ArrayList<>();
         } else if (e_member > e_leader) {
@@ -221,7 +208,7 @@ public class Agent implements SetParam , Cloneable {
                 this.phase = PROPOSITION;
                 candidates = new ArrayList<>();
                 teamMembers = new ArrayList<>();
-                preAllocations = new HashMap<>();
+                preAllocations = new HashMap<>(HASH_MAP_SIZE);
                 replies = new ArrayList<>();
                 results = new ArrayList<>();
             } else {
@@ -249,7 +236,7 @@ public class Agent implements SetParam , Cloneable {
             this.phase = PROPOSITION;
             candidates = new ArrayList<>();
             teamMembers = new ArrayList<>();
-            preAllocations = new HashMap<>();
+            preAllocations = new HashMap<>(HASH_MAP_SIZE);
             replies = new ArrayList<>();
             results = new ArrayList<>();
         } else {
@@ -353,9 +340,9 @@ public class Agent implements SetParam , Cloneable {
      */
     public void checkMessages(Agent self) {
         if( self.role == LEADER ) {
-                sl.checkMessages(self);
+                ls.checkMessages(self);
         }else if( self.role == MEMBER ) {
-            sm.checkMessages(self);
+            ms.checkMessages(self);
         }
     }
 
@@ -582,6 +569,11 @@ public class Agent implements SetParam , Cloneable {
 //        */
 
         return str.toString();
+    }
+
+    static void setStrategies( LeaderStrategy ls, MemberStrategy ms ) {
+       Agent.ls = ls;
+       Agent.ms = ms;
     }
 
     public static class AgentExceComparator implements Comparator<Agent> {

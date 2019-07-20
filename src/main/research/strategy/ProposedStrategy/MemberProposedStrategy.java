@@ -3,7 +3,6 @@ package main.research.strategy.ProposedStrategy;
 import main.research.Manager;
 import main.research.SetParam;
 import main.research.agent.Agent;
-import main.research.agent.AgentManager;
 import main.research.communication.Message;
 import main.research.random.MyRandom;
 import main.research.strategy.MemberStrategy;
@@ -12,20 +11,11 @@ import main.research.task.Subtask;
 import main.research.task.Task;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 // TODO: 中身を表したクラス名にする
+// TODO: Singletonにする
 public class MemberProposedStrategy extends MemberStrategy implements SetParam {
-
-    Map<Agent, AllocatedSubtask>[] teamHistory = new HashMap[AGENT_NUM];
-
-    public MemberProposedStrategy() {
-        for (int i = 0; i < AGENT_NUM; i++) {
-            teamHistory[i] = new HashMap<>();
-        }
-    }
 
     protected void replyAsM(Agent member) {
         if (member.mySubtask == null) {
@@ -193,18 +183,10 @@ public class MemberProposedStrategy extends MemberStrategy implements SetParam {
     protected void renewDE(Agent from, Agent target, double evaluation) {
         assert !from.equals(target) : "alert4";
 
-        if (from.role == LEADER) {
-            double temp = from.relRanking_l.get(target);
-            // 信頼度の更新式
-            temp = temp * (1.0 - α) + α * evaluation;
-            sortReliabilityRanking( from.relRanking_l );
-        }
-        else {
-            double temp = from.relRanking_m.get(target);
-            // 信頼度の更新式
-            temp = temp * (1.0 - α) + α * evaluation;
-            sortReliabilityRanking( from.relRanking_m );
-        }
+        double formerDE = from.relRanking_m.get( target );
+        double newDE = renewDEbyArbitraryReward( formerDE, evaluation);
+        from.relRanking_m.put( target, newDE );
+        from.relRanking_m = sortReliabilityRanking( from.relRanking_m );
     }
 
 
@@ -270,12 +252,6 @@ public class MemberProposedStrategy extends MemberStrategy implements SetParam {
                     else ag.sendNegative(ag, m.getFrom(), m.getMessageType(), m.getSubtask());
                 }
             }
-        }
-    }
-
-    public void clearStrategy() {
-        for (int i = 0; i < AGENT_NUM; i++) {
-            teamHistory[i].clear();
         }
     }
 }

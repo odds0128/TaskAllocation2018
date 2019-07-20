@@ -4,22 +4,19 @@ import main.research.*;
 import main.research.agent.Agent;
 import main.research.agent.AgentManager;
 import main.research.communication.Message;
-import main.research.random.MyRandom;
 import main.research.strategy.LeaderStrategy;
 import main.research.task.AllocatedSubtask;
 import main.research.task.Subtask;
 import main.research.task.Task;
 
 import java.util.*;
-import java.util.Map.*;
 
 // TODO: 中身を表したクラス名にする
+// TODO: Singletonにする
 public class LeaderProposedStrategy extends LeaderStrategy implements SetParam {
 
-    Map<Agent, AllocatedSubtask>[] teamHistory = new HashMap[AGENT_NUM];
-
-    public LeaderProposedStrategy() {
-        for (int i = 0; i < AGENT_NUM; i++) {
+    static {
+        for( int i = 0; i < AGENT_NUM; i++ ) {
             teamHistory[i] = new HashMap<>();
         }
     }
@@ -110,7 +107,7 @@ public class LeaderProposedStrategy extends LeaderStrategy implements SetParam {
                 leader.sendMessage(leader, tm, RESULT, leader.preAllocations.get(tm));
             }
             if( leader.executionTime < 0 ){
-                if (leader._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
+                if (Agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
                     for (Agent ag : leader.teamMembers) {
                         leader.workWithAsL[ag.id]++;
                     }
@@ -118,10 +115,8 @@ public class LeaderProposedStrategy extends LeaderStrategy implements SetParam {
                 leader.pastTasks.add(leader.ourTask);
                 leader.ourTask = null;
                 leader.inactivate(1);
-                return;
             }else {
                 leader.nextPhase();
-                return;
             }
         }
         // 未割り当てのサブタスクが残っていれば失敗
@@ -131,7 +126,6 @@ public class LeaderProposedStrategy extends LeaderStrategy implements SetParam {
             }
             Manager.disposeTask(leader);
             leader.inactivate(-1);
-            return;
         }
     }
 
@@ -210,20 +204,11 @@ public class LeaderProposedStrategy extends LeaderStrategy implements SetParam {
     protected void renewDE(Agent from, Agent target, double evaluation) {
         assert !from.equals(target) : "alert4";
 
-        if (from.role == LEADER) {
-            double temp = from.relRanking_l.get(target);
-            // 信頼度の更新式
-            temp = temp * (1.0 - α) + α * evaluation;
-            sortReliabilityRanking( from.relRanking_l );
-        }
-        else {
-            double temp = from.relRanking_m.get(target);
-            // 信頼度の更新式
-            temp = temp * (1.0 - α) + α * evaluation;
-            sortReliabilityRanking( from.relRanking_m );
-        }
+        double formerDE = from.relRanking_l.get( target );
+        double newDE = renewDEbyArbitraryReward( formerDE, evaluation);
+        from.relRanking_l.put( target, newDE );
+        from.relRanking_l = sortReliabilityRanking( from.relRanking_l );
     }
-
 
     public void checkMessages(Agent ag) {
         int size = ag.messages.size();
@@ -289,9 +274,4 @@ public class LeaderProposedStrategy extends LeaderStrategy implements SetParam {
         }
     }
 
-    public void clearStrategy() {
-        for (int i = 0; i < AGENT_NUM; i++) {
-            teamHistory[i].clear();
-        }
-    }
 }

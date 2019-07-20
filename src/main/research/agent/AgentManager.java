@@ -2,43 +2,40 @@ package main.research.agent;
 
 import main.research.SetParam;
 import main.research.grid.Grid;
-import main.research.strategy.Strategy;
+import main.research.strategy.LeaderStrategy;
+import main.research.strategy.MemberStrategy;
 
 import java.util.ArrayList;
 import java.util.List;
 
 
 public class AgentManager implements SetParam {
-
     private static List<Agent> agents;
 
-
     // TODO: Agentインスタンスを生成する → 被らないように座標を設定する
-    public static void initiateAgents( Strategy strategy ) {
-        agents = generateAgents(strategy);
+    public static void initiateAgents( LeaderStrategy ls, MemberStrategy ms ) {
+        Agent.setStrategies(ls, ms);
+        agents = generateAgents();
         deployAgents();
         setReliabilityRanking();
     }
 
-    public static List<Agent> generateAgents(Strategy strategy) {
-        List agentList = new ArrayList();
+    private static List<Agent> generateAgents( ) {
+        List<Agent> agentList = new ArrayList();
 
         for (int i = 0; i < AGENT_NUM; i++) {
-            agentList.add( new Agent( strategy ) );
+            agentList.add( new Agent() );
         }
         return agentList;
     }
 
-    static void deployAgents() {
+    private static void deployAgents() {
         agents.forEach(
-                agent -> {
-                    agent.p = Grid.newVacantSpot();
-                    Grid.setAgentOnEnvironment(agent, agent.p.getX(), agent.p.getY() );
-                }
+                agent -> Grid.setAgentOnEnvironment(agent)
         );
     }
 
-    static void setReliabilityRanking() {
+    private static void setReliabilityRanking() {
         agents.forEach(
                 agent -> agent.setReliabilityRankingRandomly(agents)
         );

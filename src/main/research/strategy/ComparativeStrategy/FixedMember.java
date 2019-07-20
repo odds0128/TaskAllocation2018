@@ -3,7 +3,6 @@ package main.research.strategy.ComparativeStrategy;
 import main.research.Manager;
 import main.research.SetParam;
 import main.research.agent.Agent;
-import main.research.agent.AgentManager;
 import main.research.communication.Message;
 import main.research.random.MyRandom;
 import main.research.strategy.MemberStrategy;
@@ -33,14 +32,6 @@ import java.util.Map;
 
 
 public class FixedMember extends MemberStrategy implements SetParam {
-    static final double γ = γ_r;
-    Map<Agent, AllocatedSubtask>[] teamHistory = new HashMap[AGENT_NUM];
-
-    public FixedMember() {
-        for (int i = 0; i < AGENT_NUM; i++) {
-            teamHistory[i] = new HashMap<>();
-        }
-    }
 
     protected void replyAsM(Agent member) {
         // どのリーダーからの要請も受けないのならinactivate

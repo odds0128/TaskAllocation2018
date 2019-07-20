@@ -5,16 +5,25 @@ import main.research.agent.AgentManager;
 import main.research.communication.TransmissionPath;
 import main.research.grid.Grid;
 import main.research.random.MyRandom;
-import main.research.strategy.ProposedStrategy.PM2;
+import main.research.strategy.LeaderStrategy;
+import main.research.strategy.MemberStrategy;
+import main.research.strategy.ProposedStrategy.LeaderProposedStrategy;
+import main.research.strategy.ProposedStrategy.MemberProposedStrategy;
+import main.research.strategy.Strategy;
 import main.research.task.Task;
 
 import java.io.*;
+import java.time.LocalDateTime;
 import java.util.*;
+import java.util.regex.Pattern;
 
 public class Manager implements SetParam {
     //TODO: こんな風にするならsingletonにしたほうがいいよね
+    // TODO: lsとmsで分けて指定しなきゃいけないの無駄じゃない?
+
 //        private static Strategy strategy = new PM2withRoleFixed();      // ICA2018における提案手法    //    private static main.research.strategy.Strategy strategy = new ProposedMethodForSingapore();
-    private static main.research.strategy.Strategy strategy = new PM2();      // ICA2018における提案手法役割更新あり    //    private static main.research.strategy.Strategy strategy = new ProposedMethodForSingapore();
+    private static LeaderStrategy ls = new LeaderProposedStrategy();      // ICA2018における提案手法役割更新あり    //    private static main.research.strategy.Strategy strategy = new ProposedMethodForSingapore();
+    private static MemberStrategy ms = new MemberProposedStrategy();
 
     private static Queue<Task> taskQueue;
     private static int disposedTasks = 0;
@@ -30,6 +39,7 @@ public class Manager implements SetParam {
         assert COALITION_CHECK_SPAN < MAX_TURN_NUM : "alert3";
         assert !(IS_MORE_TASKS_HAPPENS && IS_HEAVY_TASKS_HAPPENS) : "alert4";
 
+
         try {
             int writeResultsSpan = MAX_TURN_NUM / WRITING_TIMES;
 
@@ -41,14 +51,18 @@ public class Manager implements SetParam {
             int start, end;
 
             int num = 0;
-            System.out.println(strategy.getClass().getName() + ", λ=" + ADDITIONAL_TASK_NUM +
+            String[] temp = ls.getClass().getPackage().toString().split( Pattern.quote("."), 0);
+            int end_index = temp.length - 1;
+            String strategy_name = temp[end_index];
+            System.out.println( strategy_name + ", λ=" + ADDITIONAL_TASK_NUM +
                     ", ε:" + INITIAL_ε + ": " + HOW_EPSILON +
                     ", XF: " + MAX_RELIABLE_AGENTS +
-                    ", Role_renewal: " + THRESHOLD_FOR_ROLE_RENEWAL
+                    ", Role_renewal: " + THRESHOLD_FOR_ROLE_RENEWAL +
+                    ", From " + LocalDateTime.now()
             );
 
             if (CHECK_Eleader_Emember) {
-                String fileName = strategy.getClass().getName();
+                String fileName = strategy_name;
                 fw = new FileWriter(currentPath + "/out/role" + fileName + ".csv", false);
                 bw = new BufferedWriter(fw);
                 pw = new PrintWriter(bw);
@@ -92,7 +106,7 @@ public class Manager implements SetParam {
                     }
 //                    OutPut.checkTask(taskQueue);
                     if (turn == SNAPSHOT_TIME && CHECK_INTERIM_RELATIONSHIPS) {
-                        OutPut.writeGraphInformationX(AgentManager.getAgentList(), strategy);
+                        OutPut.writeGraphInformationX(AgentManager.getAgentList(), strategy_name );
 //                        snapshot = takeAgentsSnapshot(AgentManager.getAgentList());
                         Agent.resetWorkHistory(AgentManager.getAgentList());
                     }
@@ -129,12 +143,12 @@ public class Manager implements SetParam {
                 clearAll();
             }
             // ↑ 全実験の終了のカッコ．以下は後処理
-            if (CHECK_RESULTS) OutPut.writeResults(strategy);
-            if (CHECK_AGENTS) OutPut.writeAgentsInformationX(strategy, AgentManager.getAgentList());
+            if (CHECK_RESULTS) OutPut.writeResults( strategy_name );
+            if (CHECK_AGENTS) OutPut.writeAgentsInformationX( strategy_name, AgentManager.getAgentList());
 //            main.research.OutPut.writeDelays(delays);
-//            main.research.OutPut.writeReliabilities(AgentManager.getAgentList(), strategy);
+//            main.research.OutPut.writeReliabilities(AgentManager.getAgentList(), strategy_name);
 //            main.research.OutPut.writeDelaysAndRels(delays, AgentManager.getAgentList(), strategy);
-            if (CHECK_RELATIONSHIPS) OutPut.writeGraphInformationX(AgentManager.getAgentList(), strategy);
+            if (CHECK_RELATIONSHIPS) OutPut.writeGraphInformationX(AgentManager.getAgentList(), ls.getClass().getPackage().toString());
 // */
             if (CHECK_Eleader_Emember) pw.close();
         } catch (FileNotFoundException e) {
@@ -155,7 +169,7 @@ public class Manager implements SetParam {
         }
 
         // エージェントの初期化
-        AgentManager.initiateAgents(strategy);
+        AgentManager.initiateAgents(ls, ms);
 
         if (CHECK_INITIATION) {
             main.research.OutPut.checkAgent(AgentManager.getAgentList());
@@ -311,8 +325,8 @@ public class Manager implements SetParam {
         TransmissionPath.clearTP();
         Task.clearT();
         Agent.clearA();
+        Strategy.clear();
         Grid.clear();
         AgentManager.clear();
-        strategy.clearStrategy();
     }
 }

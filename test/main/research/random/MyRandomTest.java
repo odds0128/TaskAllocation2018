@@ -8,7 +8,7 @@ import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.closeTo;
 
-
+@Tag("random")
 class MyRandomTest {
 
     @Nested

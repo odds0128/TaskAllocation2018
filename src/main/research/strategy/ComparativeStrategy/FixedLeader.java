@@ -4,7 +4,6 @@ import main.research.*;
 import main.research.agent.Agent;
 import main.research.agent.AgentManager;
 import main.research.communication.Message;
-import main.research.random.MyRandom;
 import main.research.strategy.LeaderStrategy;
 import main.research.task.AllocatedSubtask;
 import main.research.task.Subtask;
@@ -13,7 +12,6 @@ import main.research.task.Task;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * ProposedMethodForSingapore クラス
@@ -32,12 +30,10 @@ import java.util.Map;
 
 
 public class FixedLeader extends LeaderStrategy implements SetParam {
-    static final double γ = γ_r;
-    Map<Agent, AllocatedSubtask>[] teamHistory = new HashMap[AGENT_NUM];
 
-    public FixedLeader() {
+    static {
         for (int i = 0; i < AGENT_NUM; i++) {
-            teamHistory[i] = new HashMap<>();
+            teamHistory[i] = new HashMap<>(HASH_MAP_SIZE);
         }
     }
 

@@ -3,6 +3,7 @@ package main.research.grid;
 import main.research.agent.Agent;
 import main.research.random.MyRandom;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,27 +13,26 @@ public class Grid {
     private static Agent[][] grid = new Agent[MAX_X][MAX_Y];
     private static int[][] delays = new int[AGENT_NUM][AGENT_NUM];
 
-    public static Coordinates newVacantSpot() {
+    public static void setAgentOnEnvironment( Agent ag ) {
+        ag.p = newVacantSpot();
+        int tempX = (int) ag.p.getX();
+        int tempY = (int) ag.p.getY();
+
+        grid[tempY][tempX] = ag;
+        setDelay(ag);
+    }
+
+    private static Point newVacantSpot() {
         int tempX, tempY;
         do {
             tempX = MyRandom.getRandomInt(0, MAX_Y - 1);
             tempY = MyRandom.getRandomInt(0, MAX_X - 1);
         } while ( !isVacant( tempX, tempY ) );
-        return new Coordinates( tempX, tempY );
+        return new Point( tempX, tempY );
     }
 
     private static boolean isVacant(int x, int y) {
-        if (grid[y][x] == null) return true;
-        else return false;
-    }
-
-    public static boolean setAgentOnEnvironment( Agent ag, int x, int y ) {
-        if ( grid[y][x] != null ) {
-            return false;
-        }
-        grid[y][x] = ag;
-        setDelay(ag);
-        return true;
+        return grid[y][x] == null;
     }
 
     private static List<Agent> agentList = new ArrayList<>();
@@ -62,19 +62,19 @@ public class Grid {
      * このように座標を拡張し，真ん中からの距離を計算，その最短距離をとることで
      * トーラス構造の距離関係を割り出す
      */
-    private static int calculateDelay(Coordinates from, Coordinates to) {
+    private static int calculateDelay(Point from, Point to) {
         int tillEnd = MAX_X / 2 + MAX_Y / 2;
         int minDistance = Integer.MAX_VALUE;
         int tilesX = 3, tilesY = 3;
 
-        int fromX = from.getX();
-        int fromY = from.getY();
+        int fromX = (int) from.getX();
+        int fromY = (int) from.getY();
 
         for (int i = 0; i < tilesX; i++) {
-            int toX = to.getX() + (i - 1) * MAX_X;
+            int toX = (int) to.getX() + (i - 1) * MAX_X;
 
             for (int j = 0; j < tilesY; j++) {
-                int toY = to.getY() + (j - 1) * MAX_Y;
+                int toY = (int) to.getY() + (j - 1) * MAX_Y;
                 int tempDistance = Math.abs(fromX - toX) + Math.abs(fromY - toY);
 
                 if (tempDistance < minDistance) {

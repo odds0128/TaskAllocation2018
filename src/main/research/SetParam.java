@@ -7,7 +7,7 @@ package main.research;
 
 public interface SetParam {
     // 環境の設定( 変更していく部分 )
-    int EXECUTION_TIMES = 4;             // 実験の回数
+    int EXECUTION_TIMES = 1;             // 実験の回数
     int MAX_TURN_NUM    = 50000;         // 一回の実験のターン数
     int WRITING_TIMES   = 500;           // データのファイルへの出力回数
     boolean CHECK_RELATIONSHIPS    = false;  // エージェント関係の協調関係を録るか
@@ -40,7 +40,8 @@ public interface SetParam {
 
     int INITIAL_TASK_NUM = 0;       // 最初のタスク数
     int TASK_QUEUE_SIZE  = 500;     // タスクキューのサイズ
-    int AGENT_NUM = 10;            // エージェントの数
+    int AGENT_NUM = 500;            // エージェントの数
+    int HASH_MAP_SIZE = (int) Math.ceil(AGENT_NUM * 1.3);
 
     // トーラスを考えた時に，中心が自分であるほうが考えやすいので，一片の長さは奇数にする
     int MAX_X    = 51, MAX_Y = 51;
@@ -56,27 +57,16 @@ public interface SetParam {
 
     int RESEND_TIMES   = 2;              // あるサブタスクについて要請を出すエージェントの数
     int MAX_RELIABLE_AGENTS = 1;         // メンバの信頼エージェントの上限
-//    int THRESHOLD_FOR_ROLE_RENEWAL  = 10;
-//    int THRESHOLD_FOR_ROLE_RENEWAL  = 1;
-//int THRESHOLD_FOR_ROLE_RENEWAL  = 100;
     int THRESHOLD_FOR_ROLE_RENEWAL  = 50;
 
     // パラメータ
-    double INITIAL_VALUE_OF_DEC =  0;
+    double INITIAL_VALUE_OF_DE =  0.5;
     double INITIAL_VALUE_OF_DSL =  0.5;
     double INITIAL_VALUE_OF_DSM =  0.5;
     double α = 0.05;
     double γ_r = 0.00005;
-    double THRESHOLD_FOR_ROLE_RECIPROCITY   = 0;
     double THRESHOLD_FOR_RECIPROCITY_FROM_LEADER = 1.5;
-    int BIAS = 0;
-    int UNIFORM = 1;
-    int AREA_LIMIT = 100; // 近い方からn体のエージェントを知っている
 
-    // タスク
-    boolean RESET = true;
-    boolean CONT  = false;
-    boolean PROCESSING = true;
 
     // エージェント
     int LEADER     = 1    ;
@@ -96,7 +86,6 @@ public interface SetParam {
     int PUBLICITY     = 1;
     int BIDDINGorNOT  = 2;
     int BID_RESULT    = 3;
-//    int DONE          = 4;
 
     // REPLYの種類
     int ACCEPT = 1 ;
@@ -111,7 +100,6 @@ public interface SetParam {
     int RECEPTION    = 4;  // メンバ
     int EXECUTION    = 5;  // 全員
 
-    int PHASE0  = 0;
     int lPHASE1 = 1;
     int mPHASE1 = 2;
     int lPHASE2 = 3;
