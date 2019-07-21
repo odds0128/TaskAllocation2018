@@ -324,7 +324,7 @@ public class Manager implements SetParam {
         overflowTasks = 0;
         TransmissionPath.clearTP();
         Task.clearT();
-        Agent.clearA();
+        Agent.clear();
         Strategy.clear();
         Grid.clear();
         AgentManager.clear();

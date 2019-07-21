@@ -2,6 +2,7 @@ package main.research.strategy;
 
 import main.research.agent.Agent;
 import main.research.agent.AgentManager;
+import main.research.grid.Grid;
 import main.research.random.MyRandom;
 import main.research.strategy.ProposedStrategy.LeaderProposedStrategy;
 import main.research.strategy.ProposedStrategy.MemberProposedStrategy;
@@ -23,17 +24,15 @@ class StrategyTest implements Strategy{
     static MemberStrategy ms = new MemberProposedStrategy();
     static List<Agent> agentList;
 
+    static {
+        System.out.println("StrategyTest");
+    }
+
     @BeforeAll
     static void setUp() {
         MyRandom.newSfmt(0);
         AgentManager.initiateAgents(ls, ms);
         agentList = AgentManager.getAgentList();
-    }
-
-    // TODO
-    @Nested
-    class renewDEby0or1のテスト {
-
     }
 
     @Nested
@@ -118,5 +117,12 @@ class StrategyTest implements Strategy{
     // Strategyインタフェースのテストのためにかりそめの実装をする {
     @Override
     public void checkMessages(Agent self) {}
+
+    @AfterAll
+    static void tearDown() {
+        AgentManager.clear();
+        Agent.clear();
+        Grid.clear();
+    }
 
 }

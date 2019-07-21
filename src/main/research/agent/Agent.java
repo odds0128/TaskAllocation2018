@@ -89,7 +89,6 @@ public class Agent implements SetParam , Cloneable {
         threshold_for_reciprocity_as_leader = THRESHOLD_FOR_RECIPROCITY_FROM_LEADER;
         threshold_for_reciprocity_as_member = (double) resSum / resCount * THRESHOLD_FOR_RECIPROCITY_RATE;
         selectRole();
-
     }
 
     private void setResource() {
@@ -425,7 +424,7 @@ public class Agent implements SetParam , Cloneable {
         ε += FLOOR;
     }
 
-    public static void clearA() {
+    public static void clear() {
         _id = 0;
         _leader_num = 0;
         _member_num = 0;

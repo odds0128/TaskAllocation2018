@@ -18,6 +18,7 @@ public class Grid {
         int tempX = (int) ag.p.getX();
         int tempY = (int) ag.p.getY();
 
+        if( tempX >= AGENT_NUM || tempY >= AGENT_NUM ) System.out.println("午後ごごご");
         grid[tempY][tempX] = ag;
         setDelay(ag);
     }
@@ -37,8 +38,10 @@ public class Grid {
 
     private static List<Agent> agentList = new ArrayList<>();
     private static void setDelay( Agent from) {
+        if( from.id >= AGENT_NUM ) System.out.println("clear Agent._id from");
         int delay;
         for ( Agent to: agentList ) {
+            if( to.id >= AGENT_NUM ) System.out.println("clear Agent._id to");
             delay = calculateDelay( from.p, to.p );
             delays[from.id][to.id] = delay;
             delays[to.id][from.id] = delay;

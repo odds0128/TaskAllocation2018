@@ -7,6 +7,7 @@ import main.research.strategy.LeaderStrategy;
 import main.research.strategy.MemberStrategy;
 import main.research.strategy.ProposedStrategy.LeaderProposedStrategy;
 import main.research.strategy.ProposedStrategy.MemberProposedStrategy;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -39,18 +40,24 @@ class GridTest {
             int actual = 0;
             int vacuous = 0;
             int expected = AGENT_NUM;
-           for( Agent[] row : grid ) {
-               for( Agent item : row ) {
-                   if( item instanceof Agent ) {
-                       actual++;
-                   }
-                   if( item == null ) {
-                       vacuous++;
-                   }
-               }
-           }
-            System.out.println(vacuous);
-           assertThat( actual, is(expected) );
+            for( Agent[] row : grid ) {
+                for( Agent item : row ) {
+                    if( item instanceof Agent ) {
+                        actual++;
+                    }
+                    if( item == null ) {
+                        vacuous++;
+                    }
+                }
+            }
+            assertThat( actual, is(expected) );
+        }
+
+        @AfterEach
+        void tearDown() {
+            AgentManager.clear();
+            Agent.clear();
+            Grid.clear();
         }
     }
 

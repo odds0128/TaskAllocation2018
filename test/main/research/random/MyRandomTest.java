@@ -10,6 +10,9 @@ import static org.hamcrest.Matchers.closeTo;
 
 @Tag("random")
 class MyRandomTest {
+    static {
+        System.out.println("MyRandomTest");
+    }
 
     @Nested
     class newSfmtのテスト {
@@ -72,7 +75,6 @@ class MyRandomTest {
         void getRandomIntで生成される乱数がmin以上max以下におさまる() {
             for (int i = 0; i < 100; i++) {
                 actual = MyRandom.getRandomInt(min, max);
-                System.out.println(actual);
                 assertThat(actual, is( both( greaterThanOrEqualTo(min) ).and( lessThanOrEqualTo(max) ) ) );
             }
         }

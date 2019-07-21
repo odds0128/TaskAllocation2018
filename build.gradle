@@ -1,0 +1,53 @@
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+  dependencies {
+    classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.0'
+  }
+}
+
+apply plugin: 'application'
+apply plugin: 'org.junit.platform.gradle.plugin'
+
+buildDir = 'out'
+mainClassName = 'main.research.Manager'
+
+repositories {
+  mavenCentral()
+    jcenter()
+}
+
+dependencies {
+  compile 'org.apache.poi:poi:4.1.0'
+    compile 'org.apache.poi:poi-ooxml:4.1.0'
+
+    testCompile 'org.hamcrest:hamcrest-all:1.3'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.1'
+    testRuntime 'org.junit.jupiter:junit-jupiter-engine:5.3.1'
+}
+
+test {
+  useJUnitPlatform {
+    includeEngines 'junit-jupiter'
+  }
+}
+
+sourceSets {
+  main {
+    java {
+      outputDir = file("$buildDir/production")
+        srcDir 'src/main/research'
+    }
+  }
+  test {
+    java {
+      srcDir 'test'
+    }
+  }
+}
+
+compileJava {
+  options.compilerArgs << '-Xlint:deprecation'
+}
+

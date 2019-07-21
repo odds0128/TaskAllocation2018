@@ -8,7 +8,6 @@ import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import main.research.agent.Agent;
 import main.research.communication.TransmissionPath;
 import main.research.graph.Edge;
-import main.research.strategy.Strategy;
 import main.research.task.Subtask;
 import main.research.task.Task;
 
@@ -1256,17 +1255,14 @@ public class OutPut implements SetParam {
         if (o.getClass().getName() == "java.lang.String") {
             cell = row.createCell(col_number++);
             cell.setCellStyle(style);
-            cell.setCellType(CellType.STRING);
-            cell.setCellValue(o.toString());
+            cell.setCellFormula(o.toString());
         } else if (o.getClass().getName() == "java.lang.Integer") {
             cell = row.createCell(col_number++);
             cell.setCellStyle(style);
-            cell.setCellType(CellType.NUMERIC);
             cell.setCellValue((int) o);
         } else {
             cell = row.createCell(col_number++);
             cell.setCellStyle(style);
-            cell.setCellType(CellType.NUMERIC);
             cell.setCellValue((double) o);
         }
         return cell;

@@ -1,5 +1,6 @@
 package main.research.agent;
 
+import main.research.grid.Grid;
 import main.research.random.MyRandom;
 import main.research.strategy.LeaderStrategy;
 import main.research.strategy.MemberStrategy;
@@ -18,12 +19,16 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 @Tag("agent")
 public class AgentTest {
-    List<Agent> agentList = new ArrayList<>();
+    static List<Agent> agentList = new ArrayList<>();
     LeaderStrategy ls = new LeaderProposedStrategy();
     MemberStrategy ms = new MemberProposedStrategy();
 
-    @BeforeEach
-    void setUp() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, NoSuchFieldException {
+    static {
+        System.out.println("AgentTest");
+    }
+
+    @BeforeAll
+    static void setUp() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, NoSuchFieldException {
         MyRandom.newSfmt(0);
         AgentManager am = new AgentManager();
 
@@ -45,9 +50,7 @@ public class AgentTest {
         @BeforeEach
         void setUp() {
             agentList.forEach(
-                    agent -> {
-                        agent.setReliabilityRankingRandomly(agentList);
-                    }
+                    agent -> agent.setReliabilityRankingRandomly(agentList)
             );
         }
 
@@ -56,11 +59,9 @@ public class AgentTest {
             List<Agent> ranking_l;
             List<Agent> ranking_m;
             boolean isFullySame = true;
-
             for( Agent ag: agentList ) {
                 ranking_l = new ArrayList<>( ag.relRanking_l.keySet() );
                 ranking_m = new ArrayList<>( ag.relRanking_m.keySet() );
-                System.out.println();
                 for (int i = 0; i < agentList.size() - 1; i++) {
                    if( ! ranking_l.get(i).equals(ranking_m.get(i)) ) {
                        isFullySame = false;
@@ -82,5 +83,12 @@ public class AgentTest {
             );
         }
 
+    }
+
+    @AfterAll
+    static void tearDown() {
+        AgentManager.clear();
+        Agent.clear();
+        Grid.clear();
     }
 }

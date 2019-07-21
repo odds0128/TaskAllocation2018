@@ -5,22 +5,30 @@ import main.research.agent.AgentManager;
 import main.research.random.MyRandom;
 import main.research.strategy.ProposedStrategy.LeaderProposedStrategy;
 import main.research.strategy.ProposedStrategy.MemberProposedStrategy;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.*;
 
 import java.util.List;
 
 @Tag("strategy")
 class ProposedStrategyTest {
-    LeaderStrategy ls = new LeaderProposedStrategy();
-    MemberStrategy ms = new MemberProposedStrategy();
-    List<Agent> agentList;
+    static LeaderStrategy ls = new LeaderProposedStrategy();
+    static MemberStrategy ms = new MemberProposedStrategy();
+    static List<Agent> agentList;
 
-    @BeforeEach
-    void setUp() {
+    static {
+        System.out.println("ProposedStrategyTest");
+    }
+
+    @BeforeAll
+    static void setUp() {
         MyRandom.newSfmt(0);
         AgentManager.initiateAgents(ls, ms);
         agentList = AgentManager.getAgentList();
     }
 
+    @AfterAll
+    static void tearDown() {
+        AgentManager.clear();
+        Agent.clear();
+    }
 }
