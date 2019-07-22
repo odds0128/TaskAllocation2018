@@ -4,6 +4,7 @@ buildscript {
   }
   dependencies {
     classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.0'
+    classpath 'org.ajoberstar:gradle-git:0.2.3' 
   }
 }
 
@@ -27,12 +28,6 @@ dependencies {
     testRuntime 'org.junit.jupiter:junit-jupiter-engine:5.3.1'
 }
 
-test {
-  useJUnitPlatform {
-    includeEngines 'junit-jupiter'
-  }
-}
-
 sourceSets {
   main {
     java {
@@ -51,3 +46,24 @@ compileJava {
   options.compilerArgs << '-Xlint:deprecation'
 }
 
+test {
+  useJUnitPlatform {
+    includeEngines 'junit-jupiter'
+  }
+  ext.msg = ''<<''
+  ext.res = [testCount:0, successfulTestCount:0, failedTestCount:0, skippedTestCount:0]
+  afterTest { d, r -> res.each { it.value += r."$it.key" } }
+  ignoreFailures = true
+  doLast {
+    msg << "${res.testCount} tests completed"
+    if (res.failedTestCount > 0) msg << ", ${res.failedTestCount} failed"
+    if (res.skippedTestCount > 0) msg << ", ${res.skippedTestCount} skipped"
+  }
+}
+
+// gitとの連携
+import org.ajoberstar.gradle.git.tasks.*
+task add(type: GitAdd)
+task commit(dependsOn: [clean, test, add], type: GitCommit) {
+  message = test.ext.msg
+}
