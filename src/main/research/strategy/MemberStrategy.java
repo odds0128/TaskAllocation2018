@@ -9,7 +9,7 @@ public abstract class MemberStrategy implements Strategy, SetParam {
         if (agent.phase == REPLY) replyAsM(agent);
         else if (agent.phase == RECEPTION) receiveAsM(agent);
         else if (agent.phase == EXECUTION) execute(agent);
-        evaporateDE(agent.relRanking_m);
+        evaporateDE(agent.reliabilityRankingAsM);
     }
 
     abstract public void checkMessages(Agent self);

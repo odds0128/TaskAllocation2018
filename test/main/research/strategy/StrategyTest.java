@@ -52,13 +52,13 @@ class StrategyTest implements Strategy{
             Double expected_l = INITIAL_VALUE_OF_DE - γ_r;
             Double expected_m = INITIAL_VALUE_OF_DE - γ_r;
 
-            evaporateDE(sample.relRanking_l);
-            evaporateDE(sample.relRanking_m);
+            evaporateDE(sample.reliabilityRankingAsL);
+            evaporateDE(sample.reliabilityRankingAsM);
 
-            sample.relRanking_l.forEach(
+            sample.reliabilityRankingAsL.forEach(
                     (key, value) -> assertThat( value, is( expected_l ) )
             );
-            sample.relRanking_m.forEach(
+            sample.reliabilityRankingAsM.forEach(
                     (key, value) -> assertThat( value, is( expected_m ) )
             );
         }
@@ -68,14 +68,14 @@ class StrategyTest implements Strategy{
             // 適当なやつのDEをいじってγ未満にする
             int index = rnd.nextInt(AGENT_NUM - 1 );
             Agent unreliable = null;
-            Iterator<Agent> iterator = sample.relRanking_l.keySet().iterator();
+            Iterator<Agent> iterator = sample.reliabilityRankingAsL.keySet().iterator();
             for( int i = 0; i <= index; i++ ) {
                 unreliable = iterator.next();
             }
-            sample.relRanking_l.replace( unreliable, (γ_r / 2.0) );
-            evaporateDE(sample.relRanking_l);
+            sample.reliabilityRankingAsL.replace( unreliable, (γ_r / 2.0) );
+            evaporateDE(sample.reliabilityRankingAsL);
 
-            sample.relRanking_l.forEach(
+            sample.reliabilityRankingAsL.forEach(
                     (key, value) -> {
                         double temp = value;
                         Matcher<Double> greaterThanOrEqualToZero = greaterThanOrEqualTo( 0.0);
@@ -102,13 +102,13 @@ class StrategyTest implements Strategy{
             // 適当なやつのDEを大きくする
             int index = rnd.nextInt(AGENT_NUM - 1 );
             Agent reliable = null;
-            Iterator<Agent> iterator = sample.relRanking_l.keySet().iterator();
+            Iterator<Agent> iterator = sample.reliabilityRankingAsL.keySet().iterator();
             for( int i = 0; i <= index; i++ ) {
                 reliable = iterator.next();
             }
-            sample.relRanking_l.replace( reliable, INITIAL_VALUE_OF_DE * 10.0 );
-                sample.relRanking_l = sortReliabilityRanking( sample.relRanking_l );
-            Agent top = sample.relRanking_l.keySet().iterator().next();
+            sample.reliabilityRankingAsL.replace( reliable, INITIAL_VALUE_OF_DE * 10.0 );
+                sample.reliabilityRankingAsL = sortReliabilityRanking( sample.reliabilityRankingAsL);
+            Agent top = sample.reliabilityRankingAsL.keySet().iterator().next();
             assertThat( top, is(reliable) );
         }
     }

@@ -60,8 +60,8 @@ public class AgentTest {
             List<Agent> ranking_m;
             boolean isFullySame = true;
             for( Agent ag: agentList ) {
-                ranking_l = new ArrayList<>( ag.relRanking_l.keySet() );
-                ranking_m = new ArrayList<>( ag.relRanking_m.keySet() );
+                ranking_l = new ArrayList<>( ag.reliabilityRankingAsL.keySet() );
+                ranking_m = new ArrayList<>( ag.reliabilityRankingAsM.keySet() );
                 for (int i = 0; i < agentList.size() - 1; i++) {
                    if( ! ranking_l.get(i).equals(ranking_m.get(i)) ) {
                        isFullySame = false;
@@ -77,8 +77,8 @@ public class AgentTest {
         void tearDown() {
             agentList.forEach(
                     agent -> {
-                        agent.relRanking_l.clear();
-                        agent.relRanking_m.clear();
+                        agent.reliabilityRankingAsL.clear();
+                        agent.reliabilityRankingAsM.clear();
                     }
             );
         }

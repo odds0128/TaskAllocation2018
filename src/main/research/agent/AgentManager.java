@@ -4,6 +4,7 @@ import main.research.SetParam;
 import main.research.grid.Grid;
 import main.research.strategy.LeaderStrategy;
 import main.research.strategy.MemberStrategy;
+import main.research.strategy.ProposedStrategy.LeaderProposedStrategy;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,17 +15,16 @@ public class AgentManager implements SetParam {
 
     // TODO: Agentインスタンスを生成する → 被らないように座標を設定する
     public static void initiateAgents( LeaderStrategy ls, MemberStrategy ms ) {
-        Agent.setStrategies(ls, ms);
-        agents = generateAgents();
+        agents = generateAgents(ls, ms);
         deployAgents();
         setReliabilityRanking();
     }
 
-    private static List<Agent> generateAgents( ) {
+    private static List<Agent> generateAgents(LeaderStrategy ls, MemberStrategy ms) {
         List<Agent> agentList = new ArrayList();
 
         for (int i = 0; i < AGENT_NUM; i++) {
-            agentList.add( new Agent() );
+            agentList.add( new Agent(ls, ms) );
         }
         return agentList;
     }

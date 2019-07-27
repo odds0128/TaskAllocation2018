@@ -78,7 +78,7 @@ public class FixedLeader extends LeaderStrategy implements SetParam {
                 assert i >= 0 : "alert: Leader got reply from a ghost.";
                 leader.candidates.set(i, null);
                 renewDE( leader, from, 0);
-                sortReliabilityRanking( leader.relRanking_m );
+                sortReliabilityRanking( leader.reliabilityRankingAsM);
             }
         }
         Agent A, B;
@@ -94,7 +94,7 @@ public class FixedLeader extends LeaderStrategy implements SetParam {
             // もし両方から受理が返ってきたら, 信頼度の高い方に割り当てる
             else if (A != null && B != null) {
                 // Bの方がAより信頼度が高い場合
-                if (leader.relRanking_l.get(A) < leader.relRanking_l.get(B)) {
+                if (leader.reliabilityRankingAsL.get(A) < leader.reliabilityRankingAsL.get(B)) {
                     leader.preAllocations.put(B, leader.ourTask.subtasks.get(indexA));
                     leader.sendMessage(leader, A, RESULT, null);
                     leader.teamMembers.add(B);
@@ -195,8 +195,8 @@ public class FixedLeader extends LeaderStrategy implements SetParam {
                     // 2. すでにチームに参加してもらっていて，まだ終了連絡がこない
                     // 3. すでに別のサブタスクを割り当てる予定がある
                     // に当てはまらなければ割り当て候補とする．
-                    int rankingSize = leader.relRanking_l.size();
-                    for( Agent ag : leader.relRanking_l.keySet() ){
+                    int rankingSize = leader.reliabilityRankingAsL.size();
+                    for( Agent ag : leader.reliabilityRankingAsL.keySet() ){
                         if( leader.inTheList( ag, exceptions ) < 0 &&
                                 leader.calcExecutionTime( ag, st ) > 0 ) {
                             candidate = ag;
@@ -227,16 +227,16 @@ public class FixedLeader extends LeaderStrategy implements SetParam {
         assert !from.equals(target) : "alert4";
 
         if (from.role == LEADER) {
-            double temp = from.relRanking_l.get(target);
+            double temp = from.reliabilityRankingAsL.get(target);
             // 信頼度の更新式
             temp = temp * (1.0 - α) + α * evaluation;
-            sortReliabilityRanking( from.relRanking_l );
+            sortReliabilityRanking( from.reliabilityRankingAsL);
         }
         else {
-            double temp = from.relRanking_m.get(target);
+            double temp = from.reliabilityRankingAsM.get(target);
             // 信頼度の更新式
             temp = temp * (1.0 - α) + α * evaluation;
-            sortReliabilityRanking( from.relRanking_m );
+            sortReliabilityRanking( from.reliabilityRankingAsM);
         }
     }
 
@@ -259,7 +259,7 @@ public class FixedLeader extends LeaderStrategy implements SetParam {
                 int reward = as.getRequiredResources() * 5;
 
                 renewDE( ag, m.getFrom(), (double) reward/rt );
-                sortReliabilityRanking( ag.relRanking_l );
+                sortReliabilityRanking( ag.reliabilityRankingAsL);
                 // TODO: タスク全体が終わったかどうかの判定と，それによる処理
                 /*
                 1. 終わったサブタスクがどのタスクのものだったか確認する
@@ -324,8 +324,7 @@ public class FixedLeader extends LeaderStrategy implements SetParam {
                 ag.phase = EXECUTION;
             } else {
                 ag.mySubtask = null;
-                ag.joined = false;
-                ag.phase = mPHASE1;
+				ag.phase = mPHASE1;
             }
         }
         ag.validatedTicks = Manager.getTicks();

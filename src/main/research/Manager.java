@@ -95,14 +95,13 @@ public class Manager implements SetParam {
                     // 徐々に小さくして安定させる
                     // 上が定数を引いて行くもので下が指数で減少させるもの．
                     // いずれも下限を設定できる
-                    if (HOW_EPSILON == "linear") Agent.renewEpsilonLenear();
+                    if (HOW_EPSILON == "linear") Agent.renewEpsilonLinear();
                     else if (HOW_EPSILON == "exponential") Agent.renewEpsilonExponential();
 
                     addNewTasksToQueue();
                     actFreeLancer();
                     if (turn % writeResultsSpan == 0 && CHECK_RESULTS) {
                         OutPut.aggregateAgentData(AgentManager.getAgentList());
-                        assert Agent._recipro_num + Agent._rational_num == AGENT_NUM : "Illegal principle numbers, reciprocal:" + Agent._recipro_num + ", rational:" + Agent._rational_num;
                     }
 //                    OutPut.checkTask(taskQueue);
                     if (turn == SNAPSHOT_TIME && CHECK_INTERIM_RELATIONSHIPS) {
@@ -118,7 +117,7 @@ public class Manager implements SetParam {
 
                     if (turn % writeResultsSpan == 0 && CHECK_RESULTS) {
                         int rmNum = Agent.countReciprocalMember(AgentManager.getAgentList());
-                        OutPut.aggregateData(finishedTasks, disposedTasks, overflowTasks, rmNum, 0, 0);
+                        OutPut.aggregateData(finishedTasks, disposedTasks, overflowTasks, rmNum, AgentManager.getAgentList());
                         OutPut.indexIncrement();
                         finishedTasks = 0;
                         disposedTasks = 0;
@@ -136,7 +135,13 @@ public class Manager implements SetParam {
                 }
                 // ↑ 一回の実験のカッコ．以下は実験の合間で作業する部分
                 if (CHECK_AGENTS) {
-                    System.out.println("leaders:" + Agent._leader_num + ", members:" + Agent._member_num);
+                  int leader_num = (int) AgentManager.getAgentList().stream()
+                          .filter( agent -> agent.role == LEADER )
+                          .count();
+                  int member_num = (int) AgentManager.getAgentList().stream()
+                          .filter( agent -> agent.role == MEMBER )
+                          .count();
+                    System.out.println("leaders:" + leader_num + ", members:" + member_num);
                     OutPut.aggregateDataOnce(AgentManager.getAgentList(), num);
                 }
                 if (num == EXECUTION_TIMES) break;
@@ -151,10 +156,8 @@ public class Manager implements SetParam {
             if (CHECK_RELATIONSHIPS) OutPut.writeGraphInformationX(AgentManager.getAgentList(), ls.getClass().getPackage().toString());
 // */
             if (CHECK_Eleader_Emember) pw.close();
-        } catch (FileNotFoundException e) {
+        } catch (IOException e) {
             e.printStackTrace();
-        } catch (IOException e2) {
-            e2.printStackTrace();
         }
     }
 

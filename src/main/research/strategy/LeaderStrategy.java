@@ -10,7 +10,7 @@ public abstract class LeaderStrategy implements Strategy, SetParam {
     public void actAsLeader(Agent agent) {
         if (agent.phase == PROPOSITION) proposeAsL(agent);
         else if (agent.phase == REPORT) reportAsL(agent);
-        evaporateDE(agent.relRanking_l);
+        evaporateDE(agent.reliabilityRankingAsL);
     }
 
     abstract public List<Agent> selectMembers(Agent agent, List<Subtask> subtasks);

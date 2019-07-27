@@ -50,8 +50,8 @@ public class OutPut implements SetParam {
     static int taskExecutionTimes = 0;
 
     static void aggregateAgentData(List<Agent> agents) {
-        leaderNumArray[index] += Agent._leader_num;
         neetMembersArray[index] += Agent.countNEETmembers(agents, MAX_TURN_NUM / WRITING_TIMES);
+		leaderNumArray[index] += countLeader(agents);
 /*
         memberNumArray[index] += Agent._member_num;
 
@@ -65,14 +65,34 @@ public class OutPut implements SetParam {
 // */
     }
 
-    static void aggregateData(int ft, int dt, int ot, int rm, int ftida, int ftipa) {
+    private static int countLeader( List<Agent> agentList ) {
+    	return (int) agentList.stream()
+			.filter( agent -> agent.role == LEADER )
+			.count();
+    }
+
+	private static int countMember( List<Agent> agentList ) {
+		return (int) agentList.stream()
+			.filter( agent -> agent.role == MEMBER )
+			.count();
+	}
+
+
+	private static int countReciprocalMember( List<Agent> agentList ) {
+		return (int) agentList.stream()
+			.filter( agent -> agent.principle == RECIPROCAL )
+			.count();
+	}
+
+
+    static void aggregateData(int ft, int dt, int ot, int rm, List<Agent> agentList) {
         finishedTasksArray[index] += ft;
         messagesArray[index] += TransmissionPath.getMessageNum();
         communicationDelayArray[index] += TransmissionPath.getCT();
         disposedTasksArray[index] += dt;
         overflownTasksArray[index] += ot;
         reciprocalMembersArray[index] += rm;
-        reciprocalistsArray[index] += Agent._recipro_num;
+        reciprocalistsArray[index] += countReciplocalist(agentList);
 /*        rationalistsArray[index] += Agent._rational_num;
         reciprocalMembersArray[index] += rm;
         finishedTasksInDepopulatedAreaArray[index] += ftida ;
@@ -109,18 +129,25 @@ public class OutPut implements SetParam {
         times--;
         int leadersTrustSomeone = 0;
         int excellentLeaders    = 0;
+        int resCount;
+        double excellence;
         for (Agent ag : agents) {
-            agentsExcAveArray[times] += ag.excellence;
+            resCount = (int) Arrays.stream( ag.resources )
+                .filter( res -> res > 0 )
+                .count();
+            excellence = (double) Arrays.stream( ag.resources ).sum() / resCount;
+
+            agentsExcAveArray[times] += excellence;
             if (ag.e_leader > ag.e_member) {
                 leadersArray[times]++;
                 if( ag.didTasksAsLeader > 100 ){
                     excellentLeaders++;
                 }
 
-                leadersExcAveArray[times] += ag.excellence;
+                leadersExcAveArray[times] += excellence;
                 int temp = 0;
-                for( Agent relAg:  ag.relRanking_l.keySet() ){
-                    if( ag.relRanking_l.get(relAg) > ag.threshold_for_reciprocity_as_leader ){
+                for( Agent relAg:  ag.reliabilityRankingAsL.keySet() ){
+                    if( ag.reliabilityRankingAsL.get(relAg) > ag.threshold_for_reciprocity_as_leader ){
                         mDependableAgentsFromAllLeaders[times]++;
                         mDependableAgentsFromLeadersTrustsSomeone[times] ++;
                         if( ag.didTasksAsLeader > 100 ){
@@ -133,10 +160,10 @@ public class OutPut implements SetParam {
                     }
                 }
             } else {
-                membersExcAveArray[times] += ag.excellence;
+                membersExcAveArray[times] += excellence;
             }
         }
-        mDependableAgentsFromAllLeaders[times] /= (double)Agent._leader_num;
+        mDependableAgentsFromAllLeaders[times] /= (double)countLeader(agents);
 
         if( leadersTrustSomeone == 0 ){
             mDependableAgentsFromLeadersTrustsSomeone[times] = 0;
@@ -163,23 +190,28 @@ public class OutPut implements SetParam {
             temp.add(a.clone());
         }
         System.out.println();
-        Collections.sort(temp, new Agent.AgentExceComparator());
+        Collections.sort(temp, new Agent.AgentExcellenceComparator());
 
         // 平均及び四分位点以下のexcellenceのエージェントを集計する
         int temp2 = 0;
         double quartile = Integer.MAX_VALUE, ave = Integer.MAX_VALUE;
         for (Agent ag : temp) {
+            resCount = (int) Arrays.stream( ag.resources )
+                .filter( res -> res > 0 )
+                .count();
+            excellence = (double) Arrays.stream( ag.resources ).sum() / resCount;
+
             temp2++;
             // 下から数えて4分の1に達したらその時のexcellenceが四分位点
-            if (temp2 == AGENT_NUM / 4) quartile = ag.excellence;
-            if (temp2 == AGENT_NUM / 2) ave = ag.excellence;
-            if (ag.excellence <= quartile) {
+            if (temp2 == AGENT_NUM / 4) quartile = excellence;
+            if (temp2 == AGENT_NUM / 2) ave = excellence;
+            if (excellence <= quartile) {
                 agentsLessThanQuaArray[times]++;
                 if (ag.e_leader > ag.e_member) {
                     leadersLessThanQuaArray[times]++;
                 }
             }
-            if (ag.excellence <= ave) {
+            if (excellence <= ave) {
                 agentsLessThanAveArray[times]++;
                 if (ag.e_leader > ag.e_member) {
                     leadersLessThanAveArray[times]++;
@@ -224,7 +256,6 @@ public class OutPut implements SetParam {
      */
     static void checkgrid(Agent[][] grid) {
         System.out.println("Total Agents is " + Agent._id);
-        System.out.println("Leaders is " + Agent._leader_num + ", Members is " + Agent._member_num);
         for (int i = 0; i < MAX_X; i++) {
             for (int j = 0; j < MAX_Y; j++) {
                 if (grid[i][j] == null) System.out.print("    ");
@@ -259,13 +290,12 @@ public class OutPut implements SetParam {
     static void checkAgent(List<Agent> agents) {
         List<Agent> temp = new ArrayList<>(agents);
         System.out.println("Total Agents is " + agents.size());
-        System.out.println("Leaders is " + Agent._leader_num + ", Members is " + Agent._member_num);
+        System.out.println("Leaders is " + countLeader(agents) + ", Members is " + countLeader(agents));
 
         int recipro = 0;
         for (Agent agent : agents) {
             System.out.print("ID: " + agent.id + " Resources : ");
-            System.out.println("Reachable: " + agent.canReach.size());
-            for (int i = 0; i < RESOURCE_TYPES; i++) System.out.print(agent.res[i] + ", ");
+            for (int i = 0; i < RESOURCE_TYPES; i++) System.out.print(agent.resources[i] + ", ");
 //            System.out.println(" Reliable Agents: " + agent.relAgents.size());
             System.out.println("Threshold: " + agent.threshold_for_reciprocity_as_member);
             System.out.println("Principle: " + agent.principle);
@@ -886,13 +916,17 @@ public class OutPut implements SetParam {
                         _singleton.writeCell(row, colNumber++, style_int, agent.p.getY() * 10);
 
                         for (int j = 0; j < RESOURCE_TYPES; j++) {
-                            _singleton.writeCell(row, colNumber++, style_int, agent.res[j]);
+                            _singleton.writeCell(row, colNumber++, style_int, agent.resources[j]);
                             _singleton.writeCell(row, colNumber++, style_int, agent.required[j]);
-                            if (agent.relRanking_m.size() > 0)
-                                _singleton.writeCell(row, colNumber++, style_int, agent.allocated[agent.relRanking_m.keySet().iterator().next().id][j]);
+                            if (agent.reliabilityRankingAsM.size() > 0)
+                                _singleton.writeCell(row, colNumber++, style_int, agent.allocated[agent.reliabilityRankingAsM.keySet().iterator().next().id][j]);
                             else _singleton.writeCell(row, colNumber++, style_int, -1);
                         }
-                        _singleton.writeCell(row, colNumber++, style_double, agent.excellence);
+                        int resCount = (int) Arrays.stream( agent.resources )
+                            .filter( resource -> resource > 0 )
+                            .count();
+                        double excellence = (double) Arrays.stream(agent.resources).sum() / resCount;
+                        _singleton.writeCell(row, colNumber++, style_double, excellence);
                         _singleton.writeCell(row, colNumber++, style_int, agent.didTasksAsLeader);
                         _singleton.writeCell(row, colNumber++, style_int, agent.didTasksAsMember);
                         _singleton.writeCell(row, colNumber++, style_double, agent.e_leader);
@@ -1165,8 +1199,8 @@ public class OutPut implements SetParam {
                     if( target.equals(from) ){
                         pw.print(" , ,");
                     }else{
-                        pw.print(from.relRanking_l.get(target) + ", ");
-                        pw.print(from.relRanking_m.get(target) + ", ");
+                        pw.print(from.reliabilityRankingAsL.get(target) + ", ");
+                        pw.print(from.reliabilityRankingAsM.get(target) + ", ");
                     }
                 }
                 pw.println();

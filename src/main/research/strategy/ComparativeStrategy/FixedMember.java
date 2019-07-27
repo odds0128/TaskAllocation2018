@@ -11,9 +11,7 @@ import main.research.task.Subtask;
 import main.research.task.Task;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * ProposedMethodForSingapore クラス
@@ -75,7 +73,7 @@ public class FixedMember extends MemberStrategy implements SetParam {
                 agent.required[agent.mySubtask.resType]++;
 
                 renewDE( agent, agent.leader, (double) agent.mySubtask.reqRes[agent.mySubtask.resType] / (double) agent.calcExecutionTime(agent, agent.mySubtask));
-                sortReliabilityRanking( agent.relRanking_m );
+                sortReliabilityRanking( agent.reliabilityRankingAsM);
 
                 if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
                     agent.workWithAsM[agent.leader.id]++;
@@ -149,7 +147,7 @@ public class FixedMember extends MemberStrategy implements SetParam {
                     message2 = solicitations.get(i);
                     temp     = message2.getFrom();
                     // もし暫定信頼度一位のやつより信頼度高いやついたら, 暫定のやつを断って今のやつを暫定(ryに入れる
-                    if (member.relRanking_m.get(tempLeader.id) < member.relRanking_m.get(temp)) {
+                    if (member.reliabilityRankingAsM.get(tempLeader.id) < member.reliabilityRankingAsM.get(temp)) {
                         tempLeader = temp;
                         index = i;
                     }
@@ -159,7 +157,7 @@ public class FixedMember extends MemberStrategy implements SetParam {
                 member.sendMessage(member, l, REPLY, ACCEPT);
                 member.myLeaders.add(l);
             } else {
-                if (member.inTheList(tempLeader, (List) member.relRanking_m.keySet()) > -1) {
+                if (member.inTheList(tempLeader, (List) member.reliabilityRankingAsM.keySet()) > -1) {
                     Agent l = solicitations.remove(index).getFrom();
                     member.sendMessage(member, l, REPLY, ACCEPT);
                     member.myLeaders.add(l);
@@ -201,16 +199,16 @@ public class FixedMember extends MemberStrategy implements SetParam {
         assert !from.equals(target) : "alert4";
 
         if (from.role == LEADER) {
-            double temp = from.relRanking_l.get(target);
+            double temp = from.reliabilityRankingAsL.get(target);
             // 信頼度の更新式
             temp = temp * (1.0 - α) + α * evaluation;
-            sortReliabilityRanking( from.relRanking_l );
+            sortReliabilityRanking( from.reliabilityRankingAsL);
         }
         else {
-            double temp = from.relRanking_m.get(target);
+            double temp = from.reliabilityRankingAsM.get(target);
             // 信頼度の更新式
             temp = temp * (1.0 - α) + α * evaluation;
-            sortReliabilityRanking( from.relRanking_m );
+            sortReliabilityRanking( from.reliabilityRankingAsM);
         }
     }
 
@@ -234,7 +232,7 @@ public class FixedMember extends MemberStrategy implements SetParam {
                 int reward = as.getRequiredResources() * 5;
 
                 renewDE( ag, m.getFrom(), (double) reward/rt );
-                sortReliabilityRanking( ag.relRanking_l );
+                sortReliabilityRanking( ag.reliabilityRankingAsL);
                 // TODO: タスク全体が終わったかどうかの判定と，それによる処理
                 /*
                 1. 終わったサブタスクがどのタスクのものだったか確認する
@@ -300,7 +298,6 @@ public class FixedMember extends MemberStrategy implements SetParam {
                 ag.phase = EXECUTION;
             } else {
                 ag.mySubtask = null;
-                ag.joined = false;
                 ag.phase = mPHASE1;
             }
         }
