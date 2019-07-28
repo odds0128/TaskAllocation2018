@@ -31,7 +31,7 @@ public class AgentManager implements SetParam {
 
     private static void deployAgents() {
         agents.forEach(
-                agent -> Grid.setAgentOnEnvironment(agent)
+            Grid::setAgentOnEnvironment
         );
     }
 

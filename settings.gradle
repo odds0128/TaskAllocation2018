@@ -1,4 +1,2 @@
-include 'ta'
-findProject(':ta')?.name = '!'
 rootProject.name = 'TaskAllocation'
 
