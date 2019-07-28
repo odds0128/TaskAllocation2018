@@ -6,6 +6,7 @@ import main.research.strategy.LeaderStrategy;
 import main.research.strategy.MemberStrategy;
 import main.research.strategy.ProposedStrategy.LeaderProposedStrategy;
 import main.research.strategy.ProposedStrategy.MemberProposedStrategy;
+import org.junit.Ignore;
 import org.junit.jupiter.api.*;
 
 import java.lang.reflect.Field;
@@ -20,8 +21,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @Tag("agent")
 public class AgentTest {
     static List<Agent> agentList = new ArrayList<>();
-    LeaderStrategy ls = new LeaderProposedStrategy();
-    MemberStrategy ms = new MemberProposedStrategy();
+    static LeaderStrategy ls = new LeaderProposedStrategy();
+    static MemberStrategy ms = new MemberProposedStrategy();
 
     static {
         System.out.println("AgentTest");
@@ -32,9 +33,9 @@ public class AgentTest {
         MyRandom.newSfmt(0);
         AgentManager am = new AgentManager();
 
-        Method ga = AgentManager.class.getDeclaredMethod("generateAgents");
+        Method ga = AgentManager.class.getDeclaredMethod("generateAgents", LeaderStrategy.class, MemberStrategy.class);
         ga.setAccessible(true);
-        agentList = (List<Agent>) ga.invoke( am );
+        agentList = (List<Agent>) ga.invoke( am, ls, ms );
 
         Field field = am.getClass().getDeclaredField("agents");
         field.setAccessible(true);

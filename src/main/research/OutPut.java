@@ -420,7 +420,7 @@ public class OutPut implements SetParam {
         try {
             book = new SXSSFWorkbook();
             Font font = book.createFont();
-            font.setFontName("ＭＳ ゴシック");
+            font.setFontName("Times New Roman");
             font.setFontHeightInPoints((short) 9);
 
             DataFormat format = book.createDataFormat();
@@ -564,7 +564,7 @@ public class OutPut implements SetParam {
         try {
             book = new SXSSFWorkbook();
             Font font = book.createFont();
-            font.setFontName("ＭＳ ゴシック");
+            font.setFontName("Times New Roman");
             font.setFontHeightInPoints((short) 9);
 
             DataFormat format = book.createDataFormat();
@@ -764,7 +764,7 @@ public class OutPut implements SetParam {
         try {
             book = new SXSSFWorkbook();
             Font font = book.createFont();
-            font.setFontName("ＭＳ ゴシック");
+            font.setFontName("Times New Roman");
             font.setFontHeightInPoints((short) 9);
 
             DataFormat format = book.createDataFormat();

@@ -1,26 +1,31 @@
 buildscript {
-  repositories {
-    mavenCentral()
-  }
-  dependencies {
-    classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.0'
-    classpath 'org.ajoberstar:gradle-git:0.2.3' 
-  }
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.0'
+        classpath 'org.ajoberstar:gradle-git:0.2.3'
+    }
+}
+
+plugins {
+    id 'java'
 }
 
 apply plugin: 'application'
 apply plugin: 'org.junit.platform.gradle.plugin'
 
 buildDir = 'out'
+
 mainClassName = 'main.research.Manager'
 
 repositories {
-  mavenCentral()
+    mavenCentral()
     jcenter()
 }
 
 dependencies {
-  compile 'org.apache.poi:poi:4.1.0'
+    compile 'org.apache.poi:poi:4.1.0'
     compile 'org.apache.poi:poi-ooxml:4.1.0'
 
     testCompile 'org.hamcrest:hamcrest-all:1.3'
@@ -29,41 +34,52 @@ dependencies {
 }
 
 sourceSets {
-  main {
-    java {
-      outputDir = file("$buildDir/production")
-        srcDir 'src/main/research'
+    main {
+        java {
+            outputDir = file("$buildDir/production")
+            srcDir 'src'
+        }
     }
-  }
-  test {
-    java {
-      srcDir 'test'
+    test {
+        java {
+            srcDir 'test'
+        }
     }
-  }
 }
 
 compileJava {
-  options.compilerArgs << '-Xlint:deprecation'
+    options.compilerArgs << '-Xlint:deprecation'
 }
 
 test {
-  useJUnitPlatform {
-    includeEngines 'junit-jupiter'
-  }
-  ext.msg = ''<<''
-  ext.res = [testCount:0, successfulTestCount:0, failedTestCount:0, skippedTestCount:0]
-  afterTest { d, r -> res.each { it.value += r."$it.key" } }
-  ignoreFailures = true
-  doLast {
-    msg << "${res.testCount} tests completed"
-    if (res.failedTestCount > 0) msg << ", ${res.failedTestCount} failed"
-    if (res.skippedTestCount > 0) msg << ", ${res.skippedTestCount} skipped"
-  }
+    useJUnitPlatform {
+        includeEngines 'junit-jupiter'
+    }
+    ext.msg = ''<<''
+    ext.res = [testCount:0, successfulTestCount:0, failedTestCount:0, skippedTestCount:0]
+    afterTest { d, r -> res.each { it.value += r."$it.key" } }
+    ignoreFailures = true
+    doLast {
+        msg << "${res.testCount} tests completed"
+        if (res.failedTestCount > 0) msg << ", ${res.failedTestCount} failed"
+        if (res.skippedTestCount > 0) msg << ", ${res.skippedTestCount} skipped"
+    }
 }
 
 // gitとの連携
 import org.ajoberstar.gradle.git.tasks.*
 task add(type: GitAdd)
 task commit(dependsOn: [clean, test, add], type: GitCommit) {
-  message = test.ext.msg
+    message = test.ext.msg
+}
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
 }
