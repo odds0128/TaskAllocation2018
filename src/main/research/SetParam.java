@@ -8,9 +8,9 @@ package main.research;
 public interface SetParam {
     // 環境の設定( 変更していく部分 )
     int EXECUTION_TIMES = 1;             // 実験の回数
-    int MAX_TURN_NUM    = 5000;         // 一回の実験のターン数
-    int WRITING_TIMES   = 50;           // データのファイルへの出力回数
-    boolean CHECK_RELATIONSHIPS    = true;  // エージェント関係の協調関係を録るか
+    int MAX_TURN_NUM    = 50000;         // 一回の実験のターン数
+    int WRITING_TIMES   = 500;           // データのファイルへの出力回数
+    boolean CHECK_RELATIONSHIPS    = false;  // エージェント関係の協調関係を録るか
     boolean CHECK_INTERIM_RELATIONSHIPS    = false;  // エージェント関係の協調関係のスナップショットを録るか
     boolean CHECK_INITIATION       = false;  // エージェントやタスクの初期設定を確認するか
     boolean CHECK_RESULTS          = true;  // チーム編成成功数などを確認するか
@@ -40,7 +40,7 @@ public interface SetParam {
 
     int INITIAL_TASK_NUM = 0;       // 最初のタスク数
     int TASK_QUEUE_SIZE  = 500;     // タスクキューのサイズ
-    int AGENT_NUM = 100;            // エージェントの数
+    int AGENT_NUM = 500;            // エージェントの数
     int HASH_MAP_SIZE = (int) Math.ceil(AGENT_NUM * 1.3);
 
     // トーラスを考えた時に，中心が自分であるほうが考えやすいので，一片の長さは奇数にする
@@ -111,4 +111,7 @@ public interface SetParam {
 
     int MIN_SUBTASK_NUM = 3;
     int MAX_SUBTASK_NUM = 6;
+
+    // リソース推定にまつわる定数
+    int RESOURCE_CACHE_TIME = 100;
 }

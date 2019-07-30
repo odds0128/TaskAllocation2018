@@ -148,54 +148,37 @@ public class Agent implements SetParam, Cloneable {
 			role = MEMBER;
 			this.phase = EXECUTION;
 		}
-//        if (epsilonGreedy()) {
-//            if (e_leader < e_member) {
-//                role = LEADER;
-//                _leader_num++;
-//                this.phase = PROPOSITION;
-//                candidates = new ArrayList<>();
-//                teamMembers = new ArrayList<>();
-//                preAllocations = new HashMap<>();
-//                replies = new ArrayList<>();
-//                results = new ArrayList<>();
-//            } else if (e_member < e_leader) {
-//                role = MEMBER;
-//                _member_num++;
-//                this.phase = WAITING;
-//            } else {
-//// */
-//                int ran = MyRandom.getRandomInt(2);
-//                if (ran == 0) {
-//                    role = LEADER;
-//                    _leader_num++;
-//                    this.phase = PROPOSITION;
-//                    candidates = new ArrayList<>();
-//                    teamMembers = new ArrayList<>();
-//                    preAllocations = new HashMap<>();
-//                    replies = new ArrayList<>();
-//                    results = new ArrayList<>();
-//                } else {
-//                    role = MEMBER;
-//                    _member_num++;
-//                    this.phase = WAITING;
-//                }
-//            }
-//        // εじゃない時
-//        } else {
-		if (e_leader > e_member) {
-			role = LEADER;
-			this.phase = PROPOSITION;
-			candidates = new ArrayList<>();
-			teamMembers = new ArrayList<>();
-			preAllocations = new HashMap<>(HASH_MAP_SIZE);
-			replies = new ArrayList<>();
-			results = new ArrayList<>();
-		} else if (e_member > e_leader) {
-			role = MEMBER;
-			this.phase = WAITING;
+		if (epsilonGreedy()) {
+			if (e_leader < e_member) {
+				role = LEADER;
+				this.phase = PROPOSITION;
+				candidates = new ArrayList<>();
+				teamMembers = new ArrayList<>();
+				preAllocations = new HashMap<>();
+				replies = new ArrayList<>();
+				results = new ArrayList<>();
+			} else if (e_member < e_leader) {
+				role = MEMBER;
+				this.phase = WAITING;
+			} else {
+// */
+				int ran = MyRandom.getRandomInt(0, 1);
+				if (ran == 0) {
+					role = LEADER;
+					this.phase = PROPOSITION;
+					candidates = new ArrayList<>();
+					teamMembers = new ArrayList<>();
+					preAllocations = new HashMap<>();
+					replies = new ArrayList<>();
+					results = new ArrayList<>();
+				} else {
+					role = MEMBER;
+					this.phase = WAITING;
+				}
+			}
+			// εじゃない時
 		} else {
-			int ran = MyRandom.getRandomInt(0, 1);
-			if (ran == 0) {
+			if (e_leader > e_member) {
 				role = LEADER;
 				this.phase = PROPOSITION;
 				candidates = new ArrayList<>();
@@ -203,11 +186,24 @@ public class Agent implements SetParam, Cloneable {
 				preAllocations = new HashMap<>(HASH_MAP_SIZE);
 				replies = new ArrayList<>();
 				results = new ArrayList<>();
-			} else {
+			} else if (e_member > e_leader) {
 				role = MEMBER;
 				this.phase = WAITING;
+			} else {
+				int ran = MyRandom.getRandomInt(0, 1);
+				if (ran == 0) {
+					role = LEADER;
+					this.phase = PROPOSITION;
+					candidates = new ArrayList<>();
+					teamMembers = new ArrayList<>();
+					preAllocations = new HashMap<>(HASH_MAP_SIZE);
+					replies = new ArrayList<>();
+					results = new ArrayList<>();
+				} else {
+					role = MEMBER;
+					this.phase = WAITING;
+				}
 			}
-//            }
 		}
 	}
 
@@ -351,10 +347,7 @@ public class Agent implements SetParam, Cloneable {
 
 	public boolean epsilonGreedy() {
 		double random = MyRandom.getRandomDouble();
-		if (random < ε) {
-			return true;
-		}
-		return false;
+		return random < ε;
 	}
 
 	/**

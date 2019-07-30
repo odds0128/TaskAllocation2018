@@ -169,12 +169,17 @@ public class MemberProposedStrategy extends MemberStrategy implements SetParam {
 		assert member.mySubtaskQueue.size() <= SUBTASK_QUEUE_SIZE : member.mySubtaskQueue + " Overwork!";
 	}
 
+	// TODO: コメントアウトで手動で切り替えるのをやめる
 	@Override
 	protected void renewDE(Agent from, Agent target, double evaluation) {
 		assert !from.equals(target) : "alert4";
 
 		double formerDE = from.reliabilityRankingAsM.get(target);
-		double newDE = renewDEbyArbitraryReward(formerDE, evaluation);
+//		double newDE = renewDEbyArbitraryReward(formerDE, evaluation);
+
+		boolean b = evaluation > 0 ? true : false;
+		double newDE = renewDEby0or1(formerDE, b);
+
 		from.reliabilityRankingAsM.put(target, newDE);
 		from.reliabilityRankingAsM = sortReliabilityRanking(from.reliabilityRankingAsM);
 	}
@@ -197,6 +202,7 @@ public class MemberProposedStrategy extends MemberStrategy implements SetParam {
 				}
 				int rt = Manager.getTicks() - as.getAllocatedTime();
 				int reward = as.getRequiredResources() * 5;
+
 
 				renewDE(ag, m.getFrom(), (double) reward / rt);
 				sortReliabilityRanking(ag.reliabilityRankingAsL);

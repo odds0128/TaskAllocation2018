@@ -1289,7 +1289,7 @@ public class OutPut implements SetParam {
         if (o.getClass().getName() == "java.lang.String") {
             cell = row.createCell(col_number++);
             cell.setCellStyle(style);
-            cell.setCellFormula(o.toString());
+            cell.setCellValue(o.toString());
         } else if (o.getClass().getName() == "java.lang.Integer") {
             cell = row.createCell(col_number++);
             cell.setCellStyle(style);

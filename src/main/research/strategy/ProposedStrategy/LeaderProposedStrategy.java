@@ -13,9 +13,9 @@ import java.util.*;
 
 // TODO: 中身を表したクラス名にする
 public class LeaderProposedStrategy extends LeaderStrategy implements SetParam {
+	List<Arrays> resource_cache = new ArrayList<>();
 
-
-	static {
+	public LeaderProposedStrategy() {
 		for (int i = 0; i < AGENT_NUM; i++) {
 			teamHistory[i] = new HashMap<>();
 		}
@@ -106,18 +106,14 @@ public class LeaderProposedStrategy extends LeaderStrategy implements SetParam {
 				teamHistory[leader.id].put(tm, new AllocatedSubtask(leader.preAllocations.get(tm), Manager.getTicks(), leader.ourTask.task_id));
 				leader.sendMessage(leader, tm, RESULT, leader.preAllocations.get(tm));
 			}
-			if (leader.executionTime < 0) {
-				if (Agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
-					for (Agent ag : leader.teamMembers) {
-						leader.workWithAsL[ag.id]++;
-					}
+			if (Agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
+				for (Agent ag : leader.teamMembers) {
+					leader.workWithAsL[ag.id]++;
 				}
-				leader.pastTasks.add(leader.ourTask);
-				leader.ourTask = null;
-				leader.inactivate(1);
-			} else {
-				leader.nextPhase();
 			}
+			leader.pastTasks.add(leader.ourTask);
+			leader.ourTask = null;
+			leader.inactivate(1);
 		}
 		// 未割り当てのサブタスクが残っていれば失敗
 		else {
@@ -204,7 +200,11 @@ public class LeaderProposedStrategy extends LeaderStrategy implements SetParam {
 		assert !from.equals(target) : "alert4";
 
 		double formerDE = from.reliabilityRankingAsL.get(target);
-		double newDE = renewDEbyArbitraryReward(formerDE, evaluation);
+//		double newDE = renewDEbyArbitraryReward(formerDE, evaluation);
+
+		boolean b = evaluation > 0;
+		double newDE = renewDEby0or1(formerDE, b);
+
 		from.reliabilityRankingAsL.put(target, newDE);
 		from.reliabilityRankingAsL = sortReliabilityRanking(from.reliabilityRankingAsL);
 	}
@@ -270,4 +270,6 @@ public class LeaderProposedStrategy extends LeaderStrategy implements SetParam {
 		}
 	}
 
+	void clear() {
+	}
 }

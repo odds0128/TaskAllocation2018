@@ -4,7 +4,6 @@ import main.research.SetParam;
 import main.research.grid.Grid;
 import main.research.strategy.LeaderStrategy;
 import main.research.strategy.MemberStrategy;
-import main.research.strategy.ProposedStrategy.LeaderProposedStrategy;
 
 import java.util.ArrayList;
 import java.util.List;
