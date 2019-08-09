@@ -1,6 +1,6 @@
 package main.research;
 
-import main.research.strategy.Strategy;
+import main.research.agent.strategy.Strategy;
 
 import java.util.ArrayList;
 import java.util.List;

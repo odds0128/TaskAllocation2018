@@ -1,6 +1,5 @@
-package main.research.strategy;
+package main.research.agent.strategy;
 
-import main.research.random.MyRandom;
 import main.research.task.AllocatedSubtask;
 import main.research.agent.Agent;
 

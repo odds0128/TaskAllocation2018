@@ -1,10 +1,10 @@
 package main.research.agent;
 
 import main.research.random.MyRandom;
-import main.research.strategy.LeaderStrategy;
-import main.research.strategy.MemberStrategy;
-import main.research.strategy.ProposedStrategy.LeaderProposedStrategy;
-import main.research.strategy.ProposedStrategy.MemberProposedStrategy;
+import main.research.agent.strategy.LeaderStrategy;
+import main.research.agent.strategy.MemberStrategy;
+import main.research.agent.strategy.ProposedStrategy.LeaderProposedStrategy;
+import main.research.agent.strategy.ProposedStrategy.MemberProposedStrategy;
 import org.junit.jupiter.api.*;
 
 import static main.research.SetParam.AGENT_NUM;

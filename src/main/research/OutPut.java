@@ -101,15 +101,9 @@ public class OutPut implements SetParam {
     }/**/
 
     static void aggregateTaskExecutionTime(Agent leader) {
-        if (leader.mySubtask != null) {
-            tempTaskExecutionTimeArray[index] += leader.calcExecutionTime(leader, leader.mySubtask);
-            taskExecutionTimes++;
-        }
         for (Agent tm : leader.teamMembers) {
-            tempTaskExecutionTimeArray[index] += leader.calcExecutionTime(tm, leader.preAllocations.get(tm));
             taskExecutionTimes++;
         }
-//        System.out.println(tempTaskExecutionTimeArray[index] + ", " + taskExecutionTimes);
     }
 
     static int[] leadersArray = new int[EXECUTION_TIMES];
@@ -254,7 +248,7 @@ public class OutPut implements SetParam {
      * checkGridメソッド
      * 二次元配列の場合
      */
-    static void checkgrid(Agent[][] grid) {
+    static void checkGrid(Agent[][] grid) {
         System.out.println("Total Agents is " + Agent._id);
         for (int i = 0; i < MAX_X; i++) {
             for (int j = 0; j < MAX_Y; j++) {
@@ -350,9 +344,6 @@ public class OutPut implements SetParam {
             System.out.println(" leader: " + leader + "→" + leader.mySubtask + ": " + leader.calcExecutionTime(leader, leader.mySubtask) + "[tick(s)]");
         } else {
             System.out.println(" leader: " + leader);
-        }
-        for (Map.Entry<Agent, Subtask> al : leader.preAllocations.entrySet()) {
-            System.out.println(" member: " + al.getKey() + "→" + al.getValue() + ": " + leader.calcExecutionTime(al.getKey(), al.getValue()) + "[tick(s)]");
         }
         // */
     }
@@ -726,7 +717,7 @@ public class OutPut implements SetParam {
                 row = sheet.createRow(rowNumber);
                 agent = agents.get(wt);
                 _singleton.writeCell(row, colNumber++, style_int, wt);
-                if( agent.ourTask == null ) {
+                if( agent.myTask == null ) {
                     _singleton.writeCell(row, colNumber++, style_int, 0);
                 }else{
                     _singleton.writeCell(row, colNumber++, style_int, 1);

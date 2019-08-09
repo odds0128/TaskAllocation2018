@@ -1,11 +1,11 @@
-package main.research.strategy.ProposedStrategy;
+package main.research.agent.strategy.ProposedStrategy;
 
 import main.research.Manager;
 import main.research.SetParam;
 import main.research.agent.Agent;
 import main.research.communication.Message;
 import main.research.random.MyRandom;
-import main.research.strategy.MemberStrategy;
+import main.research.agent.strategy.MemberStrategy;
 import main.research.task.AllocatedSubtask;
 import main.research.task.Subtask;
 import main.research.task.Task;
@@ -32,8 +32,8 @@ public class MemberProposedStrategy extends MemberStrategy implements SetParam {
 	protected void receiveAsM(Agent member) {
 		// サブタスクがもらえたなら実行フェイズへ移る.
 		if (member.mySubtask != null) {
-			member.leader = member.mySubtask.from;
-			member.allocated[member.leader.id][member.mySubtask.resType]++;
+			member.myLeader = member.mySubtask.from;
+			member.allocated[member.myLeader.id][member.mySubtask.resType]++;
 			member.executionTime = member.calcExecutionTime(member, member.mySubtask);
 			member.phase = PHASE3;
 			member.validatedTicks = Manager.getTicks();
@@ -48,13 +48,12 @@ public class MemberProposedStrategy extends MemberStrategy implements SetParam {
 		agent.executionTime--;
 		agent.validatedTicks = Manager.getTicks();
 		if (agent.executionTime == 0) {
-			agent.sendMessage(agent, agent.leader, DONE, 0);
-			agent.myLeaders.remove(agent.leader);
+			agent.sendMessage(agent, agent.myLeader, DONE, 0);
+			agent.myLeaders.remove(agent.myLeader);
 			agent.required[agent.mySubtask.resType]++;
-			renewDE(agent, agent.leader, (double) agent.mySubtask.reqRes[agent.mySubtask.resType] / (double) agent.calcExecutionTime(agent, agent.mySubtask));
-			sortReliabilityRanking(agent.reliabilityRankingAsM);
+			renewDE(agent, agent.myLeader, (double) agent.mySubtask.reqRes[agent.mySubtask.resType] / (double) agent.calcExecutionTime(agent, agent.mySubtask));
 			if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
-				agent.workWithAsM[agent.leader.id]++;
+				agent.workWithAsM[agent.myLeader.id]++;
 				agent.didTasksAsMember++;
 			}
 			// 自分のサブタスクが終わったら役割適応度を1で更新して非活性状態へ
@@ -177,11 +176,10 @@ public class MemberProposedStrategy extends MemberStrategy implements SetParam {
 		double formerDE = from.reliabilityRankingAsM.get(target);
 //		double newDE = renewDEbyArbitraryReward(formerDE, evaluation);
 
-		boolean b = evaluation > 0 ? true : false;
+		boolean b = evaluation > 0;
 		double newDE = renewDEby0or1(formerDE, b);
 
 		from.reliabilityRankingAsM.put(target, newDE);
-		from.reliabilityRankingAsM = sortReliabilityRanking(from.reliabilityRankingAsM);
 	}
 
 
@@ -205,7 +203,6 @@ public class MemberProposedStrategy extends MemberStrategy implements SetParam {
 
 
 				renewDE(ag, m.getFrom(), (double) reward / rt);
-				sortReliabilityRanking(ag.reliabilityRankingAsL);
 				// TODO: タスク全体が終わったかどうかの判定と，それによる処理
                 /*
                 1. 終わったサブタスクがどのタスクのものだったか確認する

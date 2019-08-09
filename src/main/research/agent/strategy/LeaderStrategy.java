@@ -1,4 +1,4 @@
-package main.research.strategy;
+package main.research.agent.strategy;
 
 import main.research.SetParam;
 import main.research.agent.Agent;
@@ -8,6 +8,7 @@ import java.util.*;
 
 public abstract class LeaderStrategy implements Strategy, SetParam {
     public void actAsLeader(Agent agent) {
+        sortReliabilityRanking(agent.reliabilityRankingAsL);
         if (agent.phase == PROPOSITION) proposeAsL(agent);
         else if (agent.phase == REPORT) reportAsL(agent);
         evaporateDE(agent.reliabilityRankingAsL);

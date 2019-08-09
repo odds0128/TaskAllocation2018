@@ -11,8 +11,8 @@ import main.research.SetParam;
 import main.research.communication.Message;
 import main.research.communication.TransmissionPath;
 import main.research.random.MyRandom;
-import main.research.strategy.LeaderStrategy;
-import main.research.strategy.MemberStrategy;
+import main.research.agent.strategy.LeaderStrategy;
+import main.research.agent.strategy.MemberStrategy;
 import main.research.task.Subtask;
 import main.research.task.Task;
 
@@ -42,7 +42,6 @@ public class Agent implements SetParam, Cloneable {
 	public double e_member = INITIAL_VALUE_OF_DSM;
 	public List<Message> messages = new ArrayList<>();
 	public int principle = RATIONAL;
-	public int executionTime = 0;
 	public int[] required = new int[RESOURCE_TYPES];            // そのリソースを要求するサブタスクが割り当てられた回数
 	public int[][] allocated = new int[AGENT_NUM][RESOURCE_TYPES]; // そのエージェントからそのリソースを要求するサブタスクが割り当てられた回数
 	public List<Agent> agentsCommunicatingWith = new ArrayList<>(); // 今通信をしていて，返信を期待しているエージェントのリスト．返信が返ってきたらリストから消す
@@ -52,10 +51,9 @@ public class Agent implements SetParam, Cloneable {
 	public List<Agent> candidates;         // これからチームへの参加を要請するエージェントのリスト
 	public int proposalNum = 0;            // 送ったproposalの数を覚えておく
 	public List<Agent> teamMembers;        // すでにサブタスクを送っていてメンバの選定から外すエージェントのリスト
-	public Map<Agent, Subtask> preAllocations;       // サブタスクの割り当て候補を< agent, subtask >のHashMapで保持
 	public List<Message> replies;
 	public List<Message> results;
-	public Task ourTask;                  // 持ってきた(割り振られた)タスク
+	public Task myTask;                  // 持ってきた(割り振られた)タスク
 	public int restSubtask;               // 残りのサブタスク数
 	public int replyNum = 0;
 	public double threshold_for_reciprocity_as_leader;
@@ -64,13 +62,13 @@ public class Agent implements SetParam, Cloneable {
 
 	// メンバエージェントのみが持つパラメータ
 	public int didTasksAsMember = 0;
-	public Agent leader;
+	public Agent myLeader;
+	public int executionTime = 0;
 	public double threshold_for_reciprocity_as_member;
 	public Subtask mySubtask;
 	public List<Subtask> mySubtaskQueue = new ArrayList<>();       // メンバはサブタスクを溜め込むことができる(実質的に，同時に複数のチームに参加することができるようになる)
 	public int tbd = 0;                                            // 返事待ちの数
 	public Map<Agent, Double> reliabilityRankingAsM = new LinkedHashMap<>(HASH_MAP_SIZE);
-
 	public List<Agent> myLeaders = new ArrayList<>();
 
 	public Agent(LeaderStrategy ls, MemberStrategy ms) {
@@ -144,46 +142,45 @@ public class Agent implements SetParam, Cloneable {
 		validatedTicks = Manager.getTicks();
 		if (mySubtaskQueue.size() > 0) {
 			mySubtask = mySubtaskQueue.remove(0);
-			leader = mySubtask.from;
+			myLeader = mySubtask.from;
 			role = MEMBER;
 			this.phase = EXECUTION;
 		}
-		if (epsilonGreedy()) {
-			if (e_leader < e_member) {
-				role = LEADER;
-				this.phase = PROPOSITION;
-				candidates = new ArrayList<>();
-				teamMembers = new ArrayList<>();
-				preAllocations = new HashMap<>();
-				replies = new ArrayList<>();
-				results = new ArrayList<>();
-			} else if (e_member < e_leader) {
-				role = MEMBER;
-				this.phase = WAITING;
-			} else {
-// */
-				int ran = MyRandom.getRandomInt(0, 1);
-				if (ran == 0) {
-					role = LEADER;
-					this.phase = PROPOSITION;
-					candidates = new ArrayList<>();
-					teamMembers = new ArrayList<>();
-					preAllocations = new HashMap<>();
-					replies = new ArrayList<>();
-					results = new ArrayList<>();
-				} else {
-					role = MEMBER;
-					this.phase = WAITING;
-				}
-			}
-			// εじゃない時
-		} else {
+//		if (epsilonGreedy()) {
+//			if (e_leader < e_member) {
+//				role = LEADER;
+//				this.phase = PROPOSITION;
+//				candidates = new ArrayList<>();
+//				teamMembers = new ArrayList<>();
+//				preAllocations = new HashMap<>();
+//				replies = new ArrayList<>();
+//				results = new ArrayList<>();
+//			} else if (e_member < e_leader) {
+//				role = MEMBER;
+//				this.phase = WAITING;
+//			} else {
+//// */
+//				int ran = MyRandom.getRandomInt(0, 1);
+//				if (ran == 0) {
+//					role = LEADER;
+//					this.phase = PROPOSITION;
+//					candidates = new ArrayList<>();
+//					teamMembers = new ArrayList<>();
+//					preAllocations = new HashMap<>();
+//					replies = new ArrayList<>();
+//					results = new ArrayList<>();
+//				} else {
+//					role = MEMBER;
+//					this.phase = WAITING;
+//				}
+//			}
+//			// εじゃない時
+//		} else {
 			if (e_leader > e_member) {
 				role = LEADER;
 				this.phase = PROPOSITION;
 				candidates = new ArrayList<>();
 				teamMembers = new ArrayList<>();
-				preAllocations = new HashMap<>(HASH_MAP_SIZE);
 				replies = new ArrayList<>();
 				results = new ArrayList<>();
 			} else if (e_member > e_leader) {
@@ -196,7 +193,6 @@ public class Agent implements SetParam, Cloneable {
 					this.phase = PROPOSITION;
 					candidates = new ArrayList<>();
 					teamMembers = new ArrayList<>();
-					preAllocations = new HashMap<>(HASH_MAP_SIZE);
 					replies = new ArrayList<>();
 					results = new ArrayList<>();
 				} else {
@@ -204,14 +200,14 @@ public class Agent implements SetParam, Cloneable {
 					this.phase = WAITING;
 				}
 			}
-		}
+	//	}
 	}
 
 	void selectRoleWithoutLearning() {
 		int ran = MyRandom.getRandomInt(0, 6);
 		if (mySubtaskQueue.size() > 0) {
 			mySubtask = mySubtaskQueue.remove(0);
-			leader = mySubtask.from;
+			myLeader = mySubtask.from;
 			role = MEMBER;
 			this.phase = EXECUTION;
 		}
@@ -221,7 +217,6 @@ public class Agent implements SetParam, Cloneable {
 			this.phase = PROPOSITION;
 			candidates = new ArrayList<>();
 			teamMembers = new ArrayList<>();
-			preAllocations = new HashMap<>(HASH_MAP_SIZE);
 			replies = new ArrayList<>();
 			results = new ArrayList<>();
 		} else {
@@ -255,13 +250,12 @@ public class Agent implements SetParam, Cloneable {
 //        if( (e_member + e_leader) != 1.0  ) System.out.println("Illegal renewal ");
 
 		if (role == LEADER) {
-			if (ourTask != null) {
+			if (myTask != null) {
 				System.out.println("バカな");
-				ourTask = null;
+				myTask = null;
 			}
 			candidates.clear();
 			teamMembers.clear();
-			preAllocations.clear();
 			replies.clear();
 			results.clear();
 			restSubtask = 0;
@@ -271,7 +265,7 @@ public class Agent implements SetParam, Cloneable {
 		mySubtask = null;
 		role = JONE_DOE;
 		phase = SELECT_ROLE;
-		leader = null;
+		myLeader = null;
 		executionTime = 0;
 		this.validatedTicks = Manager.getTicks();
 	}
@@ -283,7 +277,7 @@ public class Agent implements SetParam, Cloneable {
 	public void sendNegative(Agent ag, Agent to, int type, Subtask subtask) {
 		if (type == PROPOSAL) {
 			// 今実行しているサブタスクをくれたリーダーが，実行中にもかかわらずまた要請を出して来たらその旨を伝える
-			if (ag.phase == EXECUTION && to.equals(ag.leader)) {
+			if (ag.phase == EXECUTION && to.equals(ag.myLeader)) {
 				sendMessage(ag, to, REPLY, REJECT_FOR_DOING_YOUR_ST);
 			} else {
 				sendMessage(ag, to, REPLY, REJECT);
@@ -338,7 +332,7 @@ public class Agent implements SetParam, Cloneable {
 	}
 
 	public boolean haveAlreadyJoined(Agent member, Agent target) {
-		if (member.leader == target) {
+		if (member.myLeader == target) {
 			return true;
 		}
 		return inTheList(target, myLeaders) >= 0 ? true : false;
@@ -376,19 +370,15 @@ public class Agent implements SetParam, Cloneable {
 		if (this.phase == PROPOSITION) this.phase = REPORT;
 		else if (this.phase == WAITING) this.phase = RECEPTION;
 		else if (this.phase == REPORT) {
-			if (this.executionTime < 0) {
-				if (_coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
-					if (role == LEADER) {
-						for (Agent ag : teamMembers) workWithAsL[ag.id]++;
-					} else {
-						workWithAsM[leader.id]++;
-					}
+			if (_coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
+				if (role == LEADER) {
+					for (Agent ag : teamMembers) workWithAsL[ag.id]++;
+				} else {
+					workWithAsM[myLeader.id]++;
 				}
-				// 自分のサブタスクが終わったら役割適応度を1で更新して非活性状態へ
-				inactivate(1);
-			} else {
-				this.phase = EXECUTION;
 			}
+			// 自分のサブタスクが終わったら役割適応度を1で更新して非活性状態へ
+			inactivate(1);
 		} else if (this.phase == RECEPTION) this.phase = EXECUTION;
 		this.validatedTicks = Manager.getTicks();
 	}

@@ -1,4 +1,4 @@
-package main.research.strategy;
+package main.research.agent.strategy;
 
 import main.research.SetParam;
 import main.research.agent.Agent;
@@ -6,6 +6,7 @@ import main.research.agent.Agent;
 
 public abstract class MemberStrategy implements Strategy, SetParam {
     public void actAsMember(Agent agent) {
+        sortReliabilityRanking(agent.reliabilityRankingAsM);
         if (agent.phase == REPLY) replyAsM(agent);
         else if (agent.phase == RECEPTION) receiveAsM(agent);
         else if (agent.phase == EXECUTION) execute(agent);

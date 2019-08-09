@@ -1,11 +1,11 @@
-package main.research.strategy;
+package main.research.agent.strategy;
 
 import main.research.agent.Agent;
 import main.research.agent.AgentManager;
 import main.research.grid.Grid;
 import main.research.random.MyRandom;
-import main.research.strategy.ProposedStrategy.LeaderProposedStrategy;
-import main.research.strategy.ProposedStrategy.MemberProposedStrategy;
+import main.research.agent.strategy.ProposedStrategy.LeaderProposedStrategy;
+import main.research.agent.strategy.ProposedStrategy.MemberProposedStrategy;
 import org.hamcrest.Matcher;
 import org.junit.jupiter.api.*;
 
@@ -19,7 +19,7 @@ import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
 
 @Tag("strategy")
-class StrategyTest implements Strategy{
+class StrategyTest implements Strategy {
     static LeaderStrategy ls = new LeaderProposedStrategy();
     static MemberStrategy ms = new MemberProposedStrategy();
     static List<Agent> agentList;

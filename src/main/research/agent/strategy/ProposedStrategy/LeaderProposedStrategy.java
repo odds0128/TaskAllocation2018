@@ -1,10 +1,10 @@
-package main.research.strategy.ProposedStrategy;
+package main.research.agent.strategy.ProposedStrategy;
 
 import main.research.*;
 import main.research.agent.Agent;
 import main.research.agent.AgentManager;
 import main.research.communication.Message;
-import main.research.strategy.LeaderStrategy;
+import main.research.agent.strategy.LeaderStrategy;
 import main.research.task.AllocatedSubtask;
 import main.research.task.Subtask;
 import main.research.task.Task;
@@ -13,7 +13,20 @@ import java.util.*;
 
 // TODO: 中身を表したクラス名にする
 public class LeaderProposedStrategy extends LeaderStrategy implements SetParam {
-	List<Arrays> resource_cache = new ArrayList<>();
+	List<TeamHistoryCache> teamHistoryCache = new ArrayList<>();
+	Map<Agent, Integer> timeToStartCommunicatingMap;
+//	Map<Agent, Integer> roundTripTimeMap;
+//	Map<Agent, int[]> estimatedResourceMap  = new HashMap<>();
+
+
+	@Override
+	public void actAsLeader(Agent agent){
+		sortReliabilityRanking(agent.reliabilityRankingAsL);
+		if (agent.phase == PROPOSITION) proposeAsL(agent);
+		else if (agent.phase == REPORT) reportAsL(agent);
+		evaporateDE(agent.reliabilityRankingAsL);
+//		TeamHistoryCache.updateCache( teamHistoryCache );
+	}
 
 	public LeaderProposedStrategy() {
 		for (int i = 0; i < AGENT_NUM; i++) {
@@ -22,26 +35,22 @@ public class LeaderProposedStrategy extends LeaderStrategy implements SetParam {
 	}
 
 	protected void proposeAsL(Agent leader) {
-		leader.ourTask = Manager.getTask(leader);
-		if (leader.ourTask == null) {
+		leader.myTask = Manager.getTask(leader);
+		if (leader.myTask == null) {
 			leader.inactivate(0);
 			return;
 		}
-//        leader.ourTask.setFrom(leader);
-		leader.restSubtask = leader.ourTask.subtasks.size();                       // 残りサブタスク数を設定
-		leader.executionTime = -1;
-		leader.candidates = selectMembers(leader, leader.ourTask.subtasks);   // メッセージ送信
-		if (leader.candidates == null) {
-			leader.candidates = new ArrayList<>();
+		leader.restSubtask = leader.myTask.subtasks.size();                       // 残りサブタスク数を設定
+		leader.candidates = selectMembers(leader, leader.myTask.subtasks);   // メッセージ送信
+		if (leader.candidates.isEmpty()) {
 			Manager.disposeTask(leader);
 			leader.inactivate(0);
 			return;
-		} else {
-			for (int i = 0; i < leader.candidates.size(); i++) {
-				if (leader.candidates.get(i) != null) {
-					leader.proposalNum++;
-					leader.sendMessage(leader, leader.candidates.get(i), PROPOSAL, leader.ourTask.subtasks.get(i % leader.restSubtask));
-				}
+		}
+		for (int i = 0; i < leader.candidates.size(); i++) {
+			if (leader.candidates.get(i) != null) {
+				leader.proposalNum++;
+				leader.sendMessage(leader, leader.candidates.get(i), PROPOSAL, leader.myTask.subtasks.get(i % leader.restSubtask));
 			}
 		}
 		leader.nextPhase();  // 次のフェイズへ
@@ -58,30 +67,26 @@ public class LeaderProposedStrategy extends LeaderStrategy implements SetParam {
 				assert i >= 0 : "alert: Leader got reply from a ghost.";
 				leader.candidates.set(i, null);
 				renewDE(leader, from, 0);
-				sortReliabilityRanking(leader.reliabilityRankingAsM);
 			}
 		}
 		Agent A, B;
 
+		Map<Agent, Subtask> preAllocations = new HashMap<>();
 		// if 全candidatesから返信が返ってきてタスクが実行可能なら割り当てを考えていく
 		for (int indexA = 0, indexB = leader.restSubtask; indexA < leader.restSubtask; indexA++, indexB++) {
 			A = leader.candidates.get(indexA);
 			B = leader.candidates.get(indexB);
-			// 両方ダメだったらオワコン
-			if (A == null && B == null) {
-				continue;
-			}
 			// もし両方から受理が返ってきたら, 信頼度の高い方に割り当てる
-			else if (A != null && B != null) {
+			if (A != null && B != null) {
 				// Bの方がAより信頼度が高い場合
 				if (leader.reliabilityRankingAsL.get(A) < leader.reliabilityRankingAsL.get(B)) {
-					leader.preAllocations.put(B, leader.ourTask.subtasks.get(indexA));
+					preAllocations.put(B, leader.myTask.subtasks.get(indexA));
 					leader.sendMessage(leader, A, RESULT, null);
 					leader.teamMembers.add(B);
 				}
 				// Aの方がBより信頼度が高い場合
 				else {
-					leader.preAllocations.put(A, leader.ourTask.subtasks.get(indexA));
+					preAllocations.put(A, leader.myTask.subtasks.get(indexA));
 					leader.sendMessage(leader, B, RESULT, null);
 					leader.teamMembers.add(A);
 				}
@@ -90,29 +95,29 @@ public class LeaderProposedStrategy extends LeaderStrategy implements SetParam {
 			else {
 				// Bだけ受理してくれた
 				if (A == null) {
-					leader.preAllocations.put(B, leader.ourTask.subtasks.get(indexA));
+					preAllocations.put(B, leader.myTask.subtasks.get(indexA));
 					leader.teamMembers.add(B);
 				}
 				// Aだけ受理してくれた
-				else {
-					leader.preAllocations.put(A, leader.ourTask.subtasks.get(indexA));
+				if (B == null){
+					preAllocations.put(A, leader.myTask.subtasks.get(indexA));
 					leader.teamMembers.add(A);
 				}
 			}
 		}
 		// 未割り当てが残っていないのなら実行へ
-		if (leader.teamMembers.size() == leader.ourTask.subtasks.size()) {
+		if (leader.teamMembers.size() == leader.myTask.subtasks.size()) {
 			for (Agent tm : leader.teamMembers) {
-				teamHistory[leader.id].put(tm, new AllocatedSubtask(leader.preAllocations.get(tm), Manager.getTicks(), leader.ourTask.task_id));
-				leader.sendMessage(leader, tm, RESULT, leader.preAllocations.get(tm));
+				teamHistory[leader.id].put(tm, new AllocatedSubtask(preAllocations.get(tm), Manager.getTicks(), leader.myTask.task_id));
+				leader.sendMessage(leader, tm, RESULT, preAllocations.get(tm));
 			}
 			if (Agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
 				for (Agent ag : leader.teamMembers) {
 					leader.workWithAsL[ag.id]++;
 				}
 			}
-			leader.pastTasks.add(leader.ourTask);
-			leader.ourTask = null;
+			leader.pastTasks.add(leader.myTask);
+			leader.myTask = null;
 			leader.inactivate(1);
 		}
 		// 未割り当てのサブタスクが残っていれば失敗
@@ -188,7 +193,7 @@ public class LeaderProposedStrategy extends LeaderStrategy implements SetParam {
 				// 候補が見つからないサブタスクがあったら直ちにチーム編成を失敗とする
 				else {
 					System.out.println("It can't be executed.");
-					return null;
+					return new ArrayList<>();
 				}
 			}
 		}
@@ -206,7 +211,6 @@ public class LeaderProposedStrategy extends LeaderStrategy implements SetParam {
 		double newDE = renewDEby0or1(formerDE, b);
 
 		from.reliabilityRankingAsL.put(target, newDE);
-		from.reliabilityRankingAsL = sortReliabilityRanking(from.reliabilityRankingAsL);
 	}
 
 	public void checkMessages(Agent ag) {
@@ -230,6 +234,9 @@ public class LeaderProposedStrategy extends LeaderStrategy implements SetParam {
 				int reward = as.getRequiredResources() * 5;
 				renewDE(ag, m.getFrom(), (double) reward / rt);
 
+				int now = Manager.getTicks();
+				TeamHistoryCache temp = new TeamHistoryCache( now, ag, as.getSt().resType, rt );
+				teamHistoryCache.add(temp);
 				// タスク全体が終わったかどうかの判定と，それによる処理
                 /*
                 1. 終わったサブタスクがどのタスクのものだったか確認する

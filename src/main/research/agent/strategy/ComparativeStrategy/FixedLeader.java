@@ -1,10 +1,10 @@
-package main.research.strategy.ComparativeStrategy;
+package main.research.agent.strategy.ComparativeStrategy;
 
 import main.research.*;
 import main.research.agent.Agent;
 import main.research.agent.AgentManager;
 import main.research.communication.Message;
-import main.research.strategy.LeaderStrategy;
+import main.research.agent.strategy.LeaderStrategy;
 import main.research.task.AllocatedSubtask;
 import main.research.task.Subtask;
 import main.research.task.Task;
@@ -12,6 +12,7 @@ import main.research.task.Task;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * ProposedMethodForSingapore クラス
@@ -39,15 +40,15 @@ public class FixedLeader extends LeaderStrategy implements SetParam {
 
 
     protected void proposeAsL(Agent leader) {
-        leader.ourTask = Manager.getTask(leader);
-        if (leader.ourTask == null) {
+        leader.myTask = Manager.getTask(leader);
+        if (leader.myTask == null) {
             inactivate(leader, 0);
             return;
         }
 //        leader.ourTask.setFrom(leader);
-        leader.restSubtask = leader.ourTask.subtasks.size();                       // 残りサブタスク数を設定
+        leader.restSubtask = leader.myTask.subtasks.size();                       // 残りサブタスク数を設定
         leader.executionTime = -1;
-        leader.candidates = selectMembers(leader, leader.ourTask.subtasks);   // メッセージ送信
+        leader.candidates = selectMembers(leader, leader.myTask.subtasks);   // メッセージ送信
         if (leader.candidates == null) {
             leader.candidates = new ArrayList<>();
             inactivate(leader, 0);
@@ -59,7 +60,7 @@ public class FixedLeader extends LeaderStrategy implements SetParam {
                 if (candidate != null) {
                     leader.proposalNum++;
                     leader.agentsCommunicatingWith.add(candidate);
-                    leader.sendMessage(leader, candidate, PROPOSAL, leader.ourTask.subtasks.get(i % leader.restSubtask));
+                    leader.sendMessage(leader, candidate, PROPOSAL, leader.myTask.subtasks.get(i % leader.restSubtask));
                 }
             }
         }
@@ -82,6 +83,7 @@ public class FixedLeader extends LeaderStrategy implements SetParam {
             }
         }
         Agent A, B;
+        Map<Agent, Subtask> preAllocations = new HashMap<>();
         // if 全candidatesから返信が返ってきてタスクが実行可能なら割り当てを考えていく
         for (int indexA = 0, indexB = leader.restSubtask; indexA < leader.restSubtask; indexA++, indexB++) {
             A = leader.candidates.get(indexA);
@@ -95,13 +97,13 @@ public class FixedLeader extends LeaderStrategy implements SetParam {
             else if (A != null && B != null) {
                 // Bの方がAより信頼度が高い場合
                 if (leader.reliabilityRankingAsL.get(A) < leader.reliabilityRankingAsL.get(B)) {
-                    leader.preAllocations.put(B, leader.ourTask.subtasks.get(indexA));
+                    preAllocations.put(B, leader.myTask.subtasks.get(indexA));
                     leader.sendMessage(leader, A, RESULT, null);
                     leader.teamMembers.add(B);
                 }
                 // Aの方がBより信頼度が高い場合
                 else {
-                    leader.preAllocations.put(A, leader.ourTask.subtasks.get(indexA));
+                    preAllocations.put(A, leader.myTask.subtasks.get(indexA));
                     leader.sendMessage(leader, B, RESULT, null);
                     leader.teamMembers.add(A);
                 }
@@ -110,22 +112,22 @@ public class FixedLeader extends LeaderStrategy implements SetParam {
             else {
                 // Bだけ受理してくれた
                 if (A == null) {
-                    leader.preAllocations.put(B, leader.ourTask.subtasks.get(indexA));
+                    preAllocations.put(B, leader.myTask.subtasks.get(indexA));
                     leader.teamMembers.add(B);
                 }
                 // Aだけ受理してくれた
                 else {
-                    leader.preAllocations.put(A, leader.ourTask.subtasks.get(indexA));
+                    preAllocations.put(A, leader.myTask.subtasks.get(indexA));
                     leader.teamMembers.add(A);
                 }
             }
         }
         // 未割り当てが残っていないのなら実行へ
-        if (leader.teamMembers.size() == leader.ourTask.subtasks.size()) {
-            leader.pastTasks.add(leader.ourTask);
+        if (leader.teamMembers.size() == leader.myTask.subtasks.size()) {
+            leader.pastTasks.add(leader.myTask);
             for (Agent tm : leader.teamMembers) {
-                teamHistory[leader.id].put(tm, new AllocatedSubtask(leader.preAllocations.get(tm), Manager.getTicks(), leader.ourTask.task_id));
-                leader.sendMessage(leader, tm, RESULT, leader.preAllocations.get(tm));
+                teamHistory[leader.id].put(tm, new AllocatedSubtask(preAllocations.get(tm), Manager.getTicks(), leader.myTask.task_id));
+                leader.sendMessage(leader, tm, RESULT, preAllocations.get(tm));
 
                 leader.agentsCommunicatingWith.add(tm);
             }
@@ -306,12 +308,11 @@ public class FixedLeader extends LeaderStrategy implements SetParam {
         if (ag.role == LEADER) {
             ag.phase = lPHASE1;
             ag.teamMembers.clear();        // すでにサブタスクを送っていてメンバの選定から外すエージェントのリスト
-            ag.ourTask = null;
+            ag.myTask = null;
             ag.candidates.clear();
             ag.replyNum = 0;
             ag.replies.clear();
             ag.results.clear();
-            ag.preAllocations.clear();
             ag.restSubtask = 0;
             ag.proposalNum = 0;
         } else if (ag.role == MEMBER) {
@@ -320,7 +321,7 @@ public class FixedLeader extends LeaderStrategy implements SetParam {
                 assert ag.mySubtask != ag.mySubtaskQueue.get(0) : "Same subtask";
                 ag.mySubtask = ag.mySubtaskQueue.remove(0);
                 ag.executionTime = ag.calcExecutionTime(ag, ag.mySubtask);
-                ag.leader = ag.mySubtask.from;
+                ag.myLeader = ag.mySubtask.from;
                 ag.phase = EXECUTION;
             } else {
                 ag.mySubtask = null;

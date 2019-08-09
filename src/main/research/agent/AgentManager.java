@@ -2,8 +2,8 @@ package main.research.agent;
 
 import main.research.SetParam;
 import main.research.grid.Grid;
-import main.research.strategy.LeaderStrategy;
-import main.research.strategy.MemberStrategy;
+import main.research.agent.strategy.LeaderStrategy;
+import main.research.agent.strategy.MemberStrategy;
 
 import java.util.ArrayList;
 import java.util.List;

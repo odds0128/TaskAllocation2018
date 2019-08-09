@@ -3,10 +3,10 @@ package main.research.grid;
 import main.research.agent.Agent;
 import main.research.agent.AgentManager;
 import main.research.random.MyRandom;
-import main.research.strategy.LeaderStrategy;
-import main.research.strategy.MemberStrategy;
-import main.research.strategy.ProposedStrategy.LeaderProposedStrategy;
-import main.research.strategy.ProposedStrategy.MemberProposedStrategy;
+import main.research.agent.strategy.LeaderStrategy;
+import main.research.agent.strategy.MemberStrategy;
+import main.research.agent.strategy.ProposedStrategy.LeaderProposedStrategy;
+import main.research.agent.strategy.ProposedStrategy.MemberProposedStrategy;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -38,15 +38,11 @@ class GridTest {
         void AGENT_NUM体のエージェントがみんな別の場所に配置される(){
             Agent[][] grid = Grid.getGrid();
             int actual = 0;
-            int vacuous = 0;
             int expected = AGENT_NUM;
             for( Agent[] row : grid ) {
                 for( Agent item : row ) {
                     if( item instanceof Agent ) {
                         actual++;
-                    }
-                    if( item == null ) {
-                        vacuous++;
                     }
                 }
             }

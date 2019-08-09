@@ -5,11 +5,11 @@ import main.research.agent.AgentManager;
 import main.research.communication.TransmissionPath;
 import main.research.grid.Grid;
 import main.research.random.MyRandom;
-import main.research.strategy.LeaderStrategy;
-import main.research.strategy.MemberStrategy;
-import main.research.strategy.ProposedStrategy.LeaderProposedStrategy;
-import main.research.strategy.ProposedStrategy.MemberProposedStrategy;
-import main.research.strategy.Strategy;
+import main.research.agent.strategy.LeaderStrategy;
+import main.research.agent.strategy.MemberStrategy;
+import main.research.agent.strategy.ProposedStrategy.LeaderProposedStrategy;
+import main.research.agent.strategy.ProposedStrategy.MemberProposedStrategy;
+import main.research.agent.strategy.Strategy;
 import main.research.task.Task;
 
 import java.io.*;
@@ -176,10 +176,10 @@ public class Manager implements SetParam {
 
         if (CHECK_INITIATION) {
             main.research.OutPut.checkAgent(AgentManager.getAgentList());
-            main.research.OutPut.checkgrid(Grid.getGrid());
+            main.research.OutPut.checkGrid(Grid.getGrid());
         }
 //        main.research.OutPut.countDelays(delays);
-//        main.research.OutPut.checkgrid(grid);
+//        main.research.OutPut.checkGrid(grid);
 //        main.research.OutPut.checkDelay(delays);
 //        main.research.OutPut.checkAgent(AgentManager.getAgentList());
     }
@@ -296,7 +296,7 @@ public class Manager implements SetParam {
 
     static public void disposeTask(Agent leader) {
         disposedTasks++;
-        leader.ourTask = null;
+        leader.myTask = null;
     }
 
     public static void finishTask(Agent leader, Task task) {

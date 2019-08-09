@@ -1,11 +1,11 @@
-package main.research.strategy.ComparativeStrategy;
+package main.research.agent.strategy.ComparativeStrategy;
 
 import main.research.Manager;
 import main.research.SetParam;
 import main.research.agent.Agent;
 import main.research.communication.Message;
 import main.research.random.MyRandom;
-import main.research.strategy.MemberStrategy;
+import main.research.agent.strategy.MemberStrategy;
 import main.research.task.AllocatedSubtask;
 import main.research.task.Subtask;
 import main.research.task.Task;
@@ -44,8 +44,8 @@ public class FixedMember extends MemberStrategy implements SetParam {
     protected void receiveAsM(Agent member) {
         // サブタスクがもらえたなら実行フェイズへ移る.
         if (member.mySubtask != null) {
-            member.leader = member.mySubtask.from;
-            member.allocated[member.leader.id][member.mySubtask.resType]++;
+            member.myLeader = member.mySubtask.from;
+            member.allocated[member.myLeader.id][member.mySubtask.resType]++;
             member.executionTime = member.calcExecutionTime(member, member.mySubtask);
             member.phase = PHASE3;
             member.validatedTicks = Manager.getTicks();
@@ -68,15 +68,15 @@ public class FixedMember extends MemberStrategy implements SetParam {
                     agent.didTasksAsLeader++;
                 }
             } else {
-                agent.sendMessage(agent, agent.leader, DONE, 0);
-                agent.myLeaders.remove(agent.leader);
+                agent.sendMessage(agent, agent.myLeader, DONE, 0);
+                agent.myLeaders.remove(agent.myLeader);
                 agent.required[agent.mySubtask.resType]++;
 
-                renewDE( agent, agent.leader, (double) agent.mySubtask.reqRes[agent.mySubtask.resType] / (double) agent.calcExecutionTime(agent, agent.mySubtask));
+                renewDE( agent, agent.myLeader, (double) agent.mySubtask.reqRes[agent.mySubtask.resType] / (double) agent.calcExecutionTime(agent, agent.mySubtask));
                 sortReliabilityRanking( agent.reliabilityRankingAsM);
 
                 if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
-                    agent.workWithAsM[agent.leader.id]++;
+                    agent.workWithAsM[agent.myLeader.id]++;
                     agent.didTasksAsMember++;
                 }
             }
@@ -280,12 +280,11 @@ public class FixedMember extends MemberStrategy implements SetParam {
         if (ag.role == LEADER) {
             ag.phase = lPHASE1;
             ag.teamMembers.clear();        // すでにサブタスクを送っていてメンバの選定から外すエージェントのリスト
-            ag.ourTask = null;
+            ag.myTask = null;
             ag.candidates.clear();
             ag.replyNum = 0;
             ag.replies.clear();
             ag.results.clear();
-            ag.preAllocations.clear();
             ag.restSubtask = 0;
             ag.proposalNum = 0;
         } else if (ag.role == MEMBER) {
@@ -294,7 +293,7 @@ public class FixedMember extends MemberStrategy implements SetParam {
                 assert ag.mySubtask != ag.mySubtaskQueue.get(0) : "Same subtask";
                 ag.mySubtask = ag.mySubtaskQueue.remove(0);
                 ag.executionTime = ag.calcExecutionTime(ag, ag.mySubtask);
-                ag.leader = ag.mySubtask.from;
+                ag.myLeader = ag.mySubtask.from;
                 ag.phase = EXECUTION;
             } else {
                 ag.mySubtask = null;
