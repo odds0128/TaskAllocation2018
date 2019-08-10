@@ -12,6 +12,9 @@ import main.research.agent.strategy.ProposedStrategy.MemberProposedStrategy;
 import main.research.agent.strategy.Strategy;
 import main.research.task.Task;
 
+import static main.research.SetParam.Role.*;
+import static main.research.SetParam.Principle.*;
+
 import java.io.*;
 import java.time.LocalDateTime;
 import java.util.*;

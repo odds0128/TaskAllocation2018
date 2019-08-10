@@ -2,8 +2,10 @@ package main.research.graph;
 
 import main.research.SetParam;
 import main.research.agent.Agent;
-import main.research.agent.AgentManager;
 import main.research.grid.Grid;
+
+import static main.research.SetParam.Role.*;
+import static main.research.SetParam.Principle.*;
 
 import java.util.ArrayList;
 import java.util.List;

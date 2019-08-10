@@ -10,6 +10,9 @@ import main.research.task.AllocatedSubtask;
 import main.research.task.Subtask;
 import main.research.task.Task;
 
+import static main.research.SetParam.Role.*;
+import static main.research.SetParam.Principle.*;
+
 import static main.research.SetParam.MessageType.*;
 import static main.research.SetParam.ReplyType.*;
 import static main.research.SetParam.Phase.*;

@@ -8,6 +8,8 @@ package main.research.agent;
 import static main.research.SetParam.MessageType.*;
 import static main.research.SetParam.ReplyType.*;
 import static main.research.SetParam.Phase.*;
+import static main.research.SetParam.Role.*;
+import static main.research.SetParam.Principle.*;
 
 import main.research.Manager;
 import main.research.SetParam;
@@ -37,7 +39,7 @@ public class Agent implements SetParam, Cloneable {
 	// リーダーもメンバも持つパラメータ
 	public int id;
 	public Point p;
-	public int role = JONE_DOE;
+	public Role role = JONE_DOE;
 	public PhaseInterface phase = SELECT_ROLE;
 	public int[] resources = new int[RESOURCE_TYPES];
 	public int[] workWithAsL = new int[AGENT_NUM];
@@ -46,7 +48,7 @@ public class Agent implements SetParam, Cloneable {
 	public double e_leader = INITIAL_VALUE_OF_DSL;
 	public double e_member = INITIAL_VALUE_OF_DSM;
 	public List<Message> messages = new ArrayList<>();
-	public int principle = RATIONAL;
+	public Principle principle = RATIONAL;
 	public int[] required = new int[RESOURCE_TYPES];            // そのリソースを要求するサブタスクが割り当てられた回数
 	public int[][] allocated = new int[AGENT_NUM][RESOURCE_TYPES]; // そのエージェントからそのリソースを要求するサブタスクが割り当てられた回数
 	public List<Agent> agentsCommunicatingWith = new ArrayList<>(); // 今通信をしていて，返信を期待しているエージェントのリスト．返信が返ってきたらリストから消す
@@ -276,6 +278,9 @@ public class Agent implements SetParam, Cloneable {
 	}
 
 	public void sendMessage(Agent from, Agent to, MessageTypeInterface type, Object o) {
+		if(from.id == 233 && to == null ){
+			System.out.println( from.role + "type: " + type );
+		}
 		TransmissionPath.sendMessage(new Message(from, to, (MessageType) type, o));
 	}
 

@@ -8,8 +8,10 @@ import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import main.research.agent.Agent;
 import main.research.communication.TransmissionPath;
 import main.research.graph.Edge;
-import main.research.task.Subtask;
 import main.research.task.Task;
+
+import static main.research.SetParam.Role.*;
+import static main.research.SetParam.Principle.*;
 
 import java.text.SimpleDateFormat;
 

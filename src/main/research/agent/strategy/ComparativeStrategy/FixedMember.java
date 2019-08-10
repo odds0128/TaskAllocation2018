@@ -13,6 +13,8 @@ import main.research.task.Task;
 import static main.research.SetParam.MessageType.*;
 import static main.research.SetParam.ReplyType.*;
 import static main.research.SetParam.PhaseForFixedStrategy.*;
+import static main.research.SetParam.Role.*;
+import static main.research.SetParam.Principle.*;
 
 import java.util.ArrayList;
 import java.util.List;

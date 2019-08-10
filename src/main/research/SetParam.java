@@ -69,14 +69,19 @@ public interface SetParam {
     double γ_r = 0.00005;
     double THRESHOLD_FOR_RECIPROCITY_FROM_LEADER = 1.5;
 
+    int SUBTASK_QUEUE_SIZE = 5;
 
     // エージェント
-    int LEADER     = 1    ;
-    int JONE_DOE   = 0    ;
-    int MEMBER     = -1   ;
-    int RATIONAL   = 0    ;
-    int RECIPROCAL = 1    ;
-    int SUBTASK_QUEUE_SIZE = 5;
+    enum Role {
+        LEADER     ,
+        JONE_DOE   ,
+        MEMBER
+    }
+
+    enum Principle {
+        RATIONAL,
+        RECIPROCAL
+    }
 
 
     interface MessageTypeInterface { }

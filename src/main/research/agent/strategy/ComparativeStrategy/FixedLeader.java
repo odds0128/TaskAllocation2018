@@ -12,6 +12,7 @@ import main.research.task.Task;
 import static main.research.SetParam.MessageType.*;
 import static main.research.SetParam.ReplyType.*;
 import static main.research.SetParam.PhaseForFixedStrategy.*;
+import static main.research.SetParam.Role.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
