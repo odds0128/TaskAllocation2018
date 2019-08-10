@@ -12,6 +12,7 @@ import main.research.task.Task;
 
 import static main.research.SetParam.MessageType.*;
 import static main.research.SetParam.ReplyType.*;
+import static main.research.SetParam.Phase.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +28,7 @@ public class MemberProposedStrategy extends MemberStrategy implements SetParam {
 			return;     // メッセージをチェック
 		}
 		// どのリーダーからの要請も受けないのならinactivate
-		member.phase = mPHASE2;
+		member.phase = RECEPTION;
 		member.validatedTicks = Manager.getTicks();
 	}
 
@@ -38,7 +39,7 @@ public class MemberProposedStrategy extends MemberStrategy implements SetParam {
 			member.myLeader = member.mySubtask.from;
 			member.allocated[member.myLeader.id][member.mySubtask.resType]++;
 			member.executionTime = member.calcExecutionTime(member, member.mySubtask);
-			member.phase = PHASE3;
+			member.phase = EXECUTION;
 			member.validatedTicks = Manager.getTicks();
 		}
 		// サブタスクが割り当てられなかったら信頼度を0で更新し, inactivate

@@ -101,19 +101,26 @@ public interface SetParam {
         REJECT ,
         REJECT_FOR_DOING_YOUR_ST
     }
-    // フェイズ
-    int SELECT_ROLE  = 0;  // 全員
-    int PROPOSITION  = 1;  // リーダー
-    int WAITING      = 2;  // メンバ
-    int REPORT       = 3;  // リーダー
-    int RECEPTION    = 4;  // メンバ
-    int EXECUTION    = 5;  // 全員
 
-    int lPHASE1 = 1;
-    int mPHASE1 = 2;
-    int lPHASE2 = 3;
-    int mPHASE2 = 4;
-    int PHASE3  = 5;
+    // フェイズ
+    interface PhaseInterface{ }
+
+    enum Phase implements PhaseInterface{
+        SELECT_ROLE , //全員
+        PROPOSITION , // リーダー
+        WAITING ,     // メンバ
+        REPORT ,      // リーダー
+        RECEPTION,    // メンバ
+        EXECUTION     // 全員
+    }
+
+    enum PhaseForFixedStrategy implements PhaseInterface {
+        lPHASE1,
+        mPHASE1,
+        lPHASE2,
+        mPHASE2,
+        PHASE3
+    }
 
     int MIN_DEADLINE = 20;
     int MAX_DEADLINE = 80;

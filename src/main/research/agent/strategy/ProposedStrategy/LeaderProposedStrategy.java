@@ -10,6 +10,8 @@ import main.research.task.Subtask;
 import main.research.task.Task;
 
 import static main.research.SetParam.MessageType.*;
+import static main.research.SetParam.ReplyType.*;
+import static main.research.SetParam.Phase.*;
 
 import java.util.*;
 

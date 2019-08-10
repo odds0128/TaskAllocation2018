@@ -7,6 +7,7 @@ package main.research.agent;
 
 import static main.research.SetParam.MessageType.*;
 import static main.research.SetParam.ReplyType.*;
+import static main.research.SetParam.Phase.*;
 
 import main.research.Manager;
 import main.research.SetParam;
@@ -37,7 +38,7 @@ public class Agent implements SetParam, Cloneable {
 	public int id;
 	public Point p;
 	public int role = JONE_DOE;
-	public int phase = SELECT_ROLE;
+	public PhaseInterface phase = SELECT_ROLE;
 	public int[] resources = new int[RESOURCE_TYPES];
 	public int[] workWithAsL = new int[AGENT_NUM];
 	public int[] workWithAsM = new int[AGENT_NUM];

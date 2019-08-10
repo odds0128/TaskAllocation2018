@@ -11,6 +11,7 @@ import main.research.task.Task;
 
 import static main.research.SetParam.MessageType.*;
 import static main.research.SetParam.ReplyType.*;
+import static main.research.SetParam.PhaseForFixedStrategy.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -289,14 +290,14 @@ public class FixedLeader extends LeaderStrategy implements SetParam {
             size = ag.messages.size();
             if (size == 0) return;
             // リーダーでPROPOSITION or 誰でもEXECUTION → 誰からのメッセージも期待していない
-            if (ag.phase == PROPOSITION || ag.phase == EXECUTION) {
+            if (ag.phase == lPHASE1 ) {
                 for (int i = 0; i < size; i++) {
                     m = ag.messages.remove(0);
                     ag.sendNegative(ag, m.getFrom(), m.getMessageType(), m.getSubtask());
                 }
             }
             // リーダーでREPORT → REPLYを期待している
-            else if (ag.phase == REPORT) {
+            else if (ag.phase == lPHASE2) {
                 for (int i = 0; i < size; i++) {
                     m = ag.messages.remove(0);
                     Agent from = m.getFrom();
@@ -325,7 +326,7 @@ public class FixedLeader extends LeaderStrategy implements SetParam {
                 ag.mySubtask = ag.mySubtaskQueue.remove(0);
                 ag.executionTime = ag.calcExecutionTime(ag, ag.mySubtask);
                 ag.myLeader = ag.mySubtask.from;
-                ag.phase = EXECUTION;
+                ag.phase = PHASE3;
             } else {
                 ag.mySubtask = null;
 				ag.phase = mPHASE1;

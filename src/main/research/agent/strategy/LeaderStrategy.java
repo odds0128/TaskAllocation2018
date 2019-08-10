@@ -4,6 +4,8 @@ import main.research.SetParam;
 import main.research.agent.Agent;
 import main.research.task.Subtask;
 
+import static main.research.SetParam.Phase.*;
+
 import java.util.*;
 
 public abstract class LeaderStrategy implements Strategy, SetParam {

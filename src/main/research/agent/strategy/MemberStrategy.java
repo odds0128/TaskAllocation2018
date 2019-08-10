@@ -3,7 +3,7 @@ package main.research.agent.strategy;
 import main.research.SetParam;
 import main.research.agent.Agent;
 
-import static main.research.SetParam.MessageType.*;
+import static main.research.SetParam.Phase.*;
 
 public abstract class MemberStrategy implements Strategy, SetParam {
     public void actAsMember(Agent agent) {
