@@ -10,6 +10,7 @@ import main.research.task.AllocatedSubtask;
 import main.research.task.Subtask;
 import main.research.task.Task;
 import static main.research.SetParam.MessageType.*;
+import static main.research.SetParam.ReplyType.*;
 
 import java.util.ArrayList;
 import java.util.List;

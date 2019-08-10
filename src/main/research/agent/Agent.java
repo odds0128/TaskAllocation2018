@@ -6,6 +6,7 @@
 package main.research.agent;
 
 import static main.research.SetParam.MessageType.*;
+import static main.research.SetParam.ReplyType.*;
 
 import main.research.Manager;
 import main.research.SetParam;

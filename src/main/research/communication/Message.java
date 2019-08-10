@@ -22,7 +22,7 @@ public class Message implements SetParam {
 
     // 提案手法チックな手法で使う変数とコンストラクタ．引数4つ
     private Subtask proposedSubtask;
-    private int reply;
+    private ReplyType reply;
     private Subtask subtask;  // チーム編成が成功したら, 割り当てるサブタスクが入る. 失敗したらnull
     private int timeSTarrived;
 
@@ -36,7 +36,7 @@ public class Message implements SetParam {
         if( type == PROPOSAL ){
             this.proposedSubtask = (Subtask) o;
         }else if( type == REPLY ){
-            this.reply       = (int) o;
+            this.reply       = (ReplyType) o;
         }else if( type == RESULT ){
             this.subtask     = (Subtask) o ;
         }else if( type == DONE ){
@@ -81,7 +81,7 @@ public class Message implements SetParam {
     public Subtask getSubtask() {
         return subtask;
     }
-    public int getReply() {
+    public ReplyType getReply() {
         return reply;
     }
     int getResType(){ return proposedSubtask.resType; }

@@ -94,12 +94,13 @@ public interface SetParam {
         BIDDINGorNOT,
         BID_RESULT
     }
-    
-    // REPLYの種類
-    int ACCEPT = 1 ;
-    int REJECT = 0 ;
-    int REJECT_FOR_DOING_YOUR_ST = -1 ;
 
+    // REPLYの種類
+    enum ReplyType {
+        ACCEPT ,
+        REJECT ,
+        REJECT_FOR_DOING_YOUR_ST
+    }
     // フェイズ
     int SELECT_ROLE  = 0;  // 全員
     int PROPOSITION  = 1;  // リーダー

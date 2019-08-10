@@ -5,6 +5,7 @@ package main.research.communication; /**
 import main.research.SetParam;
 import main.research.grid.Grid;
 import static main.research.SetParam.MessageType.*;
+import static main.research.SetParam.ReplyType.*;
 
 import java.util.ArrayList;
 import java.util.List;
