@@ -1,5 +1,7 @@
 package main.research;
 
+import java.awt.*;
+
 /**
  * @author Funato
  * @version 2.0
@@ -23,7 +25,7 @@ public interface SetParam {
     int     BUSY_PERIOD            = 100000;
 
     String HOW_EPSILON = "constant";      // 定数:constant, 線形減少:linear, 指数減少:exponential で指定
-//    String HOW_EPSILON = "linear";          // 定数:constant, 線形減少:linear, 指数減少:exponential で指定
+    //    String HOW_EPSILON = "linear";          // 定数:constant, 線形減少:linear, 指数減少:exponential で指定
 //    String HOW_EPSILON = "exponential";   // 定数:constant, 線形減少:linear, 指数減少:exponential で指定
 //    double INITIAL_ε  = 0.5;
     double INITIAL_ε  = 0.05;
@@ -76,17 +78,23 @@ public interface SetParam {
     int RECIPROCAL = 1    ;
     int SUBTASK_QUEUE_SIZE = 5;
 
+
+    interface MessageTypeInterface { }
+
     // メッセージの種類
-    int PROPOSAL   = 1;
-    int REPLY      = 2;
-    int RESULT     = 3;
-    int DONE       = 4;
-
+    enum MessageType implements MessageTypeInterface {
+        PROPOSAL,
+        REPLY,
+        RESULT,
+        DONE
+    }
     // CNP用のメッセージの種類
-    int PUBLICITY     = 1;
-    int BIDDINGorNOT  = 2;
-    int BID_RESULT    = 3;
-
+    enum MessageTypeForCNP implements MessageTypeInterface {
+        PUBLICITY,
+        BIDDINGorNOT,
+        BID_RESULT
+    }
+    
     // REPLYの種類
     int ACCEPT = 1 ;
     int REJECT = 0 ;

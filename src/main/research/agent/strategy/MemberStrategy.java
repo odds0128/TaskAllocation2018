@@ -3,11 +3,12 @@ package main.research.agent.strategy;
 import main.research.SetParam;
 import main.research.agent.Agent;
 
+import static main.research.SetParam.MessageType.*;
 
 public abstract class MemberStrategy implements Strategy, SetParam {
     public void actAsMember(Agent agent) {
         sortReliabilityRanking(agent.reliabilityRankingAsM);
-        if (agent.phase == REPLY) replyAsM(agent);
+        if (agent.phase == WAITING) replyAsM(agent);
         else if (agent.phase == RECEPTION) receiveAsM(agent);
         else if (agent.phase == EXECUTION) execute(agent);
         evaporateDE(agent.reliabilityRankingAsM);

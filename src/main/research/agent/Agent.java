@@ -5,6 +5,7 @@
 
 package main.research.agent;
 
+import static main.research.SetParam.MessageType.*;
 
 import main.research.Manager;
 import main.research.SetParam;
@@ -19,6 +20,8 @@ import main.research.task.Task;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
+
+
 
 public class Agent implements SetParam, Cloneable {
 	public static int _id = 0;
@@ -270,11 +273,11 @@ public class Agent implements SetParam, Cloneable {
 		this.validatedTicks = Manager.getTicks();
 	}
 
-	public void sendMessage(Agent from, Agent to, int type, Object o) {
-		TransmissionPath.sendMessage(new Message(from, to, type, o));
+	public void sendMessage(Agent from, Agent to, MessageTypeInterface type, Object o) {
+		TransmissionPath.sendMessage(new Message(from, to, (MessageType) type, o));
 	}
 
-	public void sendNegative(Agent ag, Agent to, int type, Subtask subtask) {
+	public void sendNegative(Agent ag, Agent to, MessageTypeInterface type, Subtask subtask) {
 		if (type == PROPOSAL) {
 			// 今実行しているサブタスクをくれたリーダーが，実行中にもかかわらずまた要請を出して来たらその旨を伝える
 			if (ag.phase == EXECUTION && to.equals(ag.myLeader)) {

@@ -2,10 +2,9 @@ package main.research.communication; /**
  *
  */
 
-import main.research.Manager;
 import main.research.SetParam;
-import main.research.agent.AgentManager;
 import main.research.grid.Grid;
+import static main.research.SetParam.MessageType.*;
 
 import java.util.ArrayList;
 import java.util.List;

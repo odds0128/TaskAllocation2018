@@ -5,6 +5,9 @@ import main.research.agent.Agent;
 import main.research.task.Subtask;
 import main.research.task.Task;
 
+import static main.research.SetParam.MessageType.*;
+import static main.research.SetParam.MessageTypeForCNP.*;
+
 /**
  * @author Funato
  * @version 2.0
@@ -14,7 +17,7 @@ public class Message implements SetParam {
 
     private Agent from;
     private Agent to;
-    private int   messageType;
+    private MessageTypeInterface messageType;
     // メッセージにサブタスクを載せること自体は悪いことじゃないことに注意. 最終的には渡さないといけない
 
     // 提案手法チックな手法で使う変数とコンストラクタ．引数4つ
@@ -23,7 +26,7 @@ public class Message implements SetParam {
     private Subtask subtask;  // チーム編成が成功したら, 割り当てるサブタスクが入る. 失敗したらnull
     private int timeSTarrived;
 
-    public Message(Agent from, Agent to, int type, Object o) {
+    public Message(Agent from, Agent to, MessageType type, Object o) {
         if( to == null ) {
             System.out.println("to is null");
         }
@@ -46,7 +49,7 @@ public class Message implements SetParam {
     private int     bidStIndex;
     private int     estimation;
     private Subtask st;  // チーム編成が成功したら割り当てるサブタスクが入る. 失敗or割り当てなしでnull
-    Message(Agent from, Agent to, int type, Object o1, Object o2){
+    Message(Agent from, Agent to, MessageTypeInterface type, Object o1, Object o2){
         this.from = from;
         this.to   = to;
         this.messageType = type;
@@ -72,7 +75,7 @@ public class Message implements SetParam {
     Agent getTo()   {
         return to;
     }
-    public int getMessageType(){
+    public MessageTypeInterface getMessageType(){
         return messageType;
     }
     public Subtask getSubtask() {

@@ -9,6 +9,8 @@ import main.research.task.AllocatedSubtask;
 import main.research.task.Subtask;
 import main.research.task.Task;
 
+import static main.research.SetParam.MessageType.*;
+
 import java.util.*;
 
 // TODO: 中身を表したクラス名にする
