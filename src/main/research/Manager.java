@@ -177,11 +177,9 @@ public class Manager implements SetParam {
         if (CHECK_INITIATION) {
             main.research.OutPut.checkAgent(AgentManager.getAgentList());
             main.research.OutPut.checkGrid(Grid.getGrid());
+            main.research.OutPut.checkDelay(Grid.getDelays());
+            main.research.OutPut.countDelays(Grid.getDelays());
         }
-//        main.research.OutPut.countDelays(delays);
-//        main.research.OutPut.checkGrid(grid);
-//        main.research.OutPut.checkDelay(delays);
-//        main.research.OutPut.checkAgent(AgentManager.getAgentList());
     }
 
     public static Agent getAgentRandomly(Agent self, List<Agent> exceptions, List<Agent> targets) {

@@ -92,6 +92,9 @@ public class Grid {
         return grid;
     }
 
+    public static int[][] getDelays() {
+        return delays;
+    }
     /*
     TODO: clearと言っているのにその実態は新しくコレクションを生成していると言うのがおかしい．
       実験ごとにGridオブジェクトを作り直すかなんかする．

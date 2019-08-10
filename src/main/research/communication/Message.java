@@ -24,6 +24,9 @@ public class Message implements SetParam {
     private int timeSTarrived;
 
     public Message(Agent from, Agent to, int type, Object o) {
+        if( to == null ) {
+            System.out.println("to is null");
+        }
         this.from = from;
         this.to   = to;
         this.messageType = type;
