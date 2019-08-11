@@ -96,7 +96,7 @@ public class LeaderProposedStrategy extends LeaderStrategy implements SetParam {
 				}
 			}
 			// もし片っぽしか受理しなければそいつがチームメンバーとなる
-			else {
+			else if( A != null | B != null ) {
 				// Bだけ受理してくれた
 				if (A == null) {
 					preAllocations.put(B, leader.myTask.subtasks.get(indexA));
@@ -127,6 +127,10 @@ public class LeaderProposedStrategy extends LeaderStrategy implements SetParam {
 		// 未割り当てのサブタスクが残っていれば失敗
 		else {
 			for (Agent tm : leader.teamMembers) {
+				if(tm == null) {
+					System.out.println(leader.teamMembers.size());
+					System.out.println(leader.teamMembers);
+				}
 				leader.sendMessage(leader, tm, RESULT, null);
 			}
 			Manager.disposeTask(leader);

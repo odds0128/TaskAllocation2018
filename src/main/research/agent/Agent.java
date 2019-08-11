@@ -279,7 +279,7 @@ public class Agent implements SetParam, Cloneable {
 
 	public void sendMessage(Agent from, Agent to, MessageTypeInterface type, Object o) {
 		if(from.id == 233 && to == null ){
-			System.out.println( from.role + "type: " + type );
+			System.out.println( "Role: " + from.role + ", Type: " + type  + ", Subtask: " + o);
 		}
 		TransmissionPath.sendMessage(new Message(from, to, (MessageType) type, o));
 	}

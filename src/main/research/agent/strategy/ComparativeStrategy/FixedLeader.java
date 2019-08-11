@@ -116,12 +116,12 @@ public class FixedLeader extends LeaderStrategy implements SetParam {
             // もし片っぽしか受理しなければそいつがチームメンバーとなる
             else {
                 // Bだけ受理してくれた
-                if (A == null) {
+                if (A == null && B != null ) {
                     preAllocations.put(B, leader.myTask.subtasks.get(indexA));
                     leader.teamMembers.add(B);
                 }
                 // Aだけ受理してくれた
-                else {
+                else if ( A != null && B == null ){
                     preAllocations.put(A, leader.myTask.subtasks.get(indexA));
                     leader.teamMembers.add(A);
                 }
