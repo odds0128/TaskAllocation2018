@@ -51,7 +51,6 @@ public class FixedLeader extends LeaderStrategy implements SetParam {
             return;
         }
 //        leader.ourTask.setFrom(leader);
-        leader.restSubtask = leader.myTask.subtasks.size();                       // 残りサブタスク数を設定
         leader.executionTime = -1;
         leader.candidates = selectMembers(leader, leader.myTask.subtasks);   // メッセージ送信
         if (leader.candidates == null) {
@@ -65,7 +64,7 @@ public class FixedLeader extends LeaderStrategy implements SetParam {
                 if (candidate != null) {
                     leader.proposalNum++;
                     leader.agentsCommunicatingWith.add(candidate);
-                    leader.sendMessage(leader, candidate, PROPOSAL, leader.myTask.subtasks.get(i % leader.restSubtask));
+                    leader.sendMessage(leader, candidate, PROPOSAL, leader.myTask.subtasks.get(i % leader.myTask.subtasks.size()));
                 }
             }
         }
@@ -90,7 +89,7 @@ public class FixedLeader extends LeaderStrategy implements SetParam {
         Agent A, B;
         Map<Agent, Subtask> preAllocations = new HashMap<>();
         // if 全candidatesから返信が返ってきてタスクが実行可能なら割り当てを考えていく
-        for (int indexA = 0, indexB = leader.restSubtask; indexA < leader.restSubtask; indexA++, indexB++) {
+        for (int indexA = 0, indexB = leader.myTask.subtasks.size(); indexA < leader.myTask.subtasks.size(); indexA++, indexB++) {
             A = leader.candidates.get(indexA);
             B = leader.candidates.get(indexB);
             // 両方ダメだったらオワコン
@@ -318,7 +317,6 @@ public class FixedLeader extends LeaderStrategy implements SetParam {
             ag.replyNum = 0;
             ag.replies.clear();
             ag.results.clear();
-            ag.restSubtask = 0;
             ag.proposalNum = 0;
         } else if (ag.role == MEMBER) {
             if (ag.mySubtaskQueue.size() > 0) {

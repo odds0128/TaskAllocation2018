@@ -61,7 +61,6 @@ public class Agent implements SetParam, Cloneable {
 	public List<Message> replies;
 	public List<Message> results;
 	public Task myTask;                  // 持ってきた(割り振られた)タスク
-	public int restSubtask;               // 残りのサブタスク数
 	public int replyNum = 0;
 	public double threshold_for_reciprocity_as_leader;
 	public List<Task> pastTasks = new ArrayList<>();
@@ -265,7 +264,6 @@ public class Agent implements SetParam, Cloneable {
 			teamMembers.clear();
 			replies.clear();
 			results.clear();
-			restSubtask = 0;
 			proposalNum = 0;
 			replyNum = 0;
 		}
@@ -278,9 +276,6 @@ public class Agent implements SetParam, Cloneable {
 	}
 
 	public void sendMessage(Agent from, Agent to, MessageTypeInterface type, Object o) {
-		if(from.id == 233 && to == null ){
-			System.out.println( "Role: " + from.role + ", Type: " + type  + ", Subtask: " + o);
-		}
 		TransmissionPath.sendMessage(new Message(from, to, (MessageType) type, o));
 	}
 

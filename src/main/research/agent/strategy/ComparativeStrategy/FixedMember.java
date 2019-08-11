@@ -291,7 +291,6 @@ public class FixedMember extends MemberStrategy implements SetParam {
             ag.replyNum = 0;
             ag.replies.clear();
             ag.results.clear();
-            ag.restSubtask = 0;
             ag.proposalNum = 0;
         } else if (ag.role == MEMBER) {
             if (ag.mySubtaskQueue.size() > 0) {
