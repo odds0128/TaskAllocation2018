@@ -69,12 +69,20 @@ public interface SetParam {
     double γ_r = 0.00005;
     double THRESHOLD_FOR_RECIPROCITY_FROM_LEADER = 1.5;
 
+     int MIN_DEADLINE = 20;
+    int MAX_DEADLINE = 80;
+
+    int MIN_SUBTASK_NUM = 3;
+    int MAX_SUBTASK_NUM = 6;
+
+    // リソース推定にまつわる定数
+    int RESOURCE_CACHE_TIME = 100;
     int SUBTASK_QUEUE_SIZE = 5;
 
     // エージェント
     enum Role {
-        LEADER     ,
-        JONE_DOE   ,
+        LEADER,
+        JONE_DOE,
         MEMBER
     }
 
@@ -85,7 +93,6 @@ public interface SetParam {
 
 
     interface MessageTypeInterface { }
-
     // メッセージの種類
     enum MessageType implements MessageTypeInterface {
         PROPOSAL,
@@ -109,7 +116,6 @@ public interface SetParam {
 
     // フェイズ
     interface PhaseInterface{ }
-
     enum Phase implements PhaseInterface{
         SELECT_ROLE , //全員
         PROPOSITION , // リーダー
@@ -118,7 +124,6 @@ public interface SetParam {
         RECEPTION,    // メンバ
         EXECUTION     // 全員
     }
-
     enum PhaseForFixedStrategy implements PhaseInterface {
         lPHASE1,
         mPHASE1,
@@ -126,13 +131,4 @@ public interface SetParam {
         mPHASE2,
         PHASE3
     }
-
-    int MIN_DEADLINE = 20;
-    int MAX_DEADLINE = 80;
-
-    int MIN_SUBTASK_NUM = 3;
-    int MAX_SUBTASK_NUM = 6;
-
-    // リソース推定にまつわる定数
-    int RESOURCE_CACHE_TIME = 100;
 }
