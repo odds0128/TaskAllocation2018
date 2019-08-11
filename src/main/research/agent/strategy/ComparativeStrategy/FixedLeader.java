@@ -63,7 +63,6 @@ public class FixedLeader extends LeaderStrategy implements SetParam {
                 candidate = leader.candidates.get(i);
                 if (candidate != null) {
                     leader.proposalNum++;
-                    leader.agentsCommunicatingWith.add(candidate);
                     leader.sendMessage(leader, candidate, PROPOSAL, leader.myTask.subtasks.get(i % leader.myTask.subtasks.size()));
                 }
             }
@@ -132,8 +131,6 @@ public class FixedLeader extends LeaderStrategy implements SetParam {
             for (Agent tm : leader.teamMembers) {
                 teamHistory[leader.id].put(tm, new AllocatedSubtask(preAllocations.get(tm), Manager.getTicks(), leader.myTask.task_id));
                 leader.sendMessage(leader, tm, RESULT, preAllocations.get(tm));
-
-                leader.agentsCommunicatingWith.add(tm);
             }
             if (leader.executionTime < 0) {
                 if (leader._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
@@ -252,7 +249,6 @@ public class FixedLeader extends LeaderStrategy implements SetParam {
         // メンバからの作業完了報告をチェックする
         for (int i = 0; i < size; i++) {
             m = ag.messages.remove(0);
-            ag.agentsCommunicatingWith.remove(m.getFrom());
             if (m.getMessageType() == DONE) {
                 // 「リーダーとしての更新式で」信頼度を更新する
                 // そのメンバにサブタスクを送ってからリーダーがその完了報告を受けるまでの時間

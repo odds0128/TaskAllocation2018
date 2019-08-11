@@ -196,7 +196,6 @@ public class MemberProposedStrategy extends MemberStrategy implements SetParam {
 		// メンバからの作業完了報告をチェックする
 		for (int i = 0; i < size; i++) {
 			m = ag.messages.remove(0);
-			ag.agentsCommunicatingWith.remove(m.getFrom());
 			if (m.getMessageType() == DONE) {
 				// 「リーダーとしての更新式で」信頼度を更新する
 				// そのメンバにサブタスクを送ってからリーダーがその完了報告を受けるまでの時間

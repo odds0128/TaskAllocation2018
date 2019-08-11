@@ -53,9 +53,11 @@ public class LeaderProposedStrategy extends LeaderStrategy implements SetParam {
 		}
 
 		for (int i = 0; i < leader.candidates.size(); i++) {
-			if (leader.candidates.get(i) != null) {
+			Agent candidate = leader.candidates.get(i);
+			if ( candidate != null) {
 				leader.proposalNum++;
-				leader.sendMessage(leader, leader.candidates.get(i), PROPOSAL, leader.myTask.subtasks.get(i % leader.myTask.subtasks.size() ) );
+				timeToStartCommunicatingMap.put( candidate, Manager.getTicks() );
+				leader.sendMessage(leader, candidate, PROPOSAL, leader.myTask.subtasks.get(i % leader.myTask.subtasks.size() ) );
 			}
 		}
 		leader.nextPhase();  // 次のフェイズへ
@@ -229,7 +231,6 @@ public class LeaderProposedStrategy extends LeaderStrategy implements SetParam {
 		// メンバからの作業完了報告をチェックする
 		for (int i = 0; i < size; i++) {
 			m = ag.messages.remove(0);
-			ag.agentsCommunicatingWith.remove(m.getFrom());
 			if (m.getMessageType() == DONE) {
 				// 「リーダーとしての更新式で」信頼度を更新する
 				// そのメンバにサブタスクを送ってからリーダーがその完了報告を受けるまでの時間

@@ -51,7 +51,6 @@ public class Agent implements SetParam, Cloneable {
 	public Principle principle = RATIONAL;
 	public int[] required = new int[RESOURCE_TYPES];            // そのリソースを要求するサブタスクが割り当てられた回数
 	public int[][] allocated = new int[AGENT_NUM][RESOURCE_TYPES]; // そのエージェントからそのリソースを要求するサブタスクが割り当てられた回数
-	public List<Agent> agentsCommunicatingWith = new ArrayList<>(); // 今通信をしていて，返信を期待しているエージェントのリスト．返信が返ってきたらリストから消す
 
 	// リーダーエージェントのみが持つパラメータ
 	public int didTasksAsLeader = 0;
