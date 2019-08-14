@@ -2,8 +2,11 @@ package main.research.communication; /**
  *
  */
 
+import main.research.Manager;
 import main.research.SetParam;
 import main.research.grid.Grid;
+import org.apache.poi.sl.draw.geom.PresetGeometries;
+
 import static main.research.SetParam.MessageType.*;
 import static main.research.SetParam.ReplyType.*;
 
@@ -41,10 +44,13 @@ public class TransmissionPath implements SetParam {
      * @param message
      */
     public static void sendMessage(Message message) {
-        if( message.getTo() == message.getFrom() ) return;
         messageQueue.add(message);
 
         int temp = Grid.getDelay( message.getFrom(), message.getTo() );
+        // remove
+        if( message.getTo().id == 203 && message.getFrom().id == 455 ){
+            System.out.println( " delay time " + temp + ", time: " + Manager.getTicks() );
+        }
         delays.add(temp);
         calcCT(temp);
         if (message.getMessageType() == PROPOSAL) proposals++;
@@ -54,7 +60,6 @@ public class TransmissionPath implements SetParam {
             else rejects++;
         }
         else if (message.getMessageType() == RESULT) results++;
-//        System.out.println(message);
     }
 
     /**

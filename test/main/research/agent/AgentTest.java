@@ -4,8 +4,8 @@ import main.research.grid.Grid;
 import main.research.random.MyRandom;
 import main.research.agent.strategy.LeaderStrategy;
 import main.research.agent.strategy.MemberStrategy;
-import main.research.agent.strategy.ProposedStrategy.LeaderProposedStrategy;
-import main.research.agent.strategy.ProposedStrategy.MemberProposedStrategy;
+import main.research.agent.strategy.ProposedStrategy.ProposedStrategy_l;
+import main.research.agent.strategy.ProposedStrategy.ProposedStrategy_m;
 import org.junit.jupiter.api.*;
 
 import java.lang.reflect.Field;
@@ -20,8 +20,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @Tag("agent")
 public class AgentTest {
     static List<Agent> agentList = new ArrayList<>();
-    static LeaderStrategy ls = new LeaderProposedStrategy();
-    static MemberStrategy ms = new MemberProposedStrategy();
+    static LeaderStrategy ls = new ProposedStrategy_l();
+    static MemberStrategy ms = new ProposedStrategy_m();
 
     static {
         System.out.println("AgentTest");

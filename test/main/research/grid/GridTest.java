@@ -5,8 +5,8 @@ import main.research.agent.AgentManager;
 import main.research.random.MyRandom;
 import main.research.agent.strategy.LeaderStrategy;
 import main.research.agent.strategy.MemberStrategy;
-import main.research.agent.strategy.ProposedStrategy.LeaderProposedStrategy;
-import main.research.agent.strategy.ProposedStrategy.MemberProposedStrategy;
+import main.research.agent.strategy.ProposedStrategy.ProposedStrategy_l;
+import main.research.agent.strategy.ProposedStrategy.ProposedStrategy_m;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -22,8 +22,8 @@ class GridTest {
 
     @BeforeEach
     void setUp() {
-        ls = new LeaderProposedStrategy();
-        ms = new MemberProposedStrategy();
+        ls = new ProposedStrategy_l();
+        ms = new ProposedStrategy_m();
         MyRandom.newSfmt(0);
     }
 

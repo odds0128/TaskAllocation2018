@@ -5,28 +5,22 @@ import main.research.agent.AgentManager;
 import main.research.communication.TransmissionPath;
 import main.research.grid.Grid;
 import main.research.random.MyRandom;
-import main.research.agent.strategy.LeaderStrategy;
-import main.research.agent.strategy.MemberStrategy;
-import main.research.agent.strategy.ProposedStrategy.LeaderProposedStrategy;
-import main.research.agent.strategy.ProposedStrategy.MemberProposedStrategy;
 import main.research.agent.strategy.Strategy;
 import main.research.task.Task;
 
 import static main.research.SetParam.Role.*;
-import static main.research.SetParam.Principle.*;
 
 import java.io.*;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.regex.Pattern;
 
 public class Manager implements SetParam {
     //TODO: こんな風にするならsingletonにしたほうがいいよね
     // TODO: lsとmsで分けて指定しなきゃいけないの無駄じゃない?
 
 //        private static Strategy strategy = new PM2withRoleFixed();      // ICA2018における提案手法    //    private static main.research.strategy.Strategy strategy = new ProposedMethodForSingapore();
-    private static LeaderStrategy ls = new LeaderProposedStrategy();      // ICA2018における提案手法役割更新あり    //    private static main.research.strategy.Strategy strategy = new ProposedMethodForSingapore();
-    private static MemberStrategy ms = new MemberProposedStrategy();
+    private static String ls_name = "ProposedStrategy_l";      // ICA2018における提案手法役割更新あり    //    private static main.research.strategy.Strategy strategy = new ProposedMethodForSingapore();
+    private static String ms_name = "ProposedStrategy_m";
 
     private static Queue<Task> taskQueue;
     private static int disposedTasks = 0;
@@ -54,9 +48,8 @@ public class Manager implements SetParam {
             int start, end;
 
             int num = 0;
-            String[] temp = ls.getClass().getPackage().toString().split( Pattern.quote("."), 0);
-            int end_index = temp.length - 1;
-            String strategy_name = temp[end_index];
+            String strategy_name = ls_name.substring( 0, ( ls_name.length() - 2 ) );
+            System.out.println(strategy_name);
             System.out.println( strategy_name + ", λ=" + ADDITIONAL_TASK_NUM +
                     ", ε:" + INITIAL_ε + ": " + HOW_EPSILON +
                     ", XF: " + MAX_RELIABLE_AGENTS +
@@ -83,8 +76,8 @@ public class Manager implements SetParam {
 
             // num回実験
             while (true) {
-                initiate(num);                         // シード，タスク，エージェントの初期化処理
-                System.out.println(++num + "回目");
+                initiate(num++);                         // シード，タスク，エージェントの初期化処理
+                System.out.println( Grid.getDelay( AgentManager.getAgentList().get(455), AgentManager.getAgentList().get(203) ) );
                 if (CHECK_INITIATION) {
                     if (num == EXECUTION_TIMES) break;
                     clearAll();
@@ -101,6 +94,7 @@ public class Manager implements SetParam {
                     if (HOW_EPSILON == "linear") Agent.renewEpsilonLinear();
                     else if (HOW_EPSILON == "exponential") Agent.renewEpsilonExponential();
 
+//                    if( turn % 10 == 0 ) System.out.println(turn);
                     addNewTasksToQueue();
                     actFreeLancer();
                     if (turn % writeResultsSpan == 0 && CHECK_RESULTS) {
@@ -175,7 +169,7 @@ public class Manager implements SetParam {
         }
 
         // エージェントの初期化
-        AgentManager.initiateAgents(ls, ms);
+        AgentManager.initiateAgents(ls_name, ms_name);
 
         if (CHECK_INITIATION) {
             main.research.OutPut.checkAgent(AgentManager.getAgentList());
@@ -186,12 +180,15 @@ public class Manager implements SetParam {
     }
 
     public static Agent getAgentRandomly(Agent self, List<Agent> exceptions, List<Agent> targets) {
-        int random = MyRandom.getRandomInt(0, targets.size() - 1);
-        Agent candidate = targets.get(random);
-        while (candidate.equals(self) || self.inTheList(candidate, exceptions) >= 0) {
+        int random;
+        Agent candidate;
+
+        assert exceptions.size() < 100: "too much";
+    	do{
             random = MyRandom.getRandomInt(0, targets.size() - 1);
             candidate = targets.get(random);
-        }
+        } while ( candidate.equals(self) || self.inTheList(candidate, exceptions) >= 0 );
+
         return candidate;
     }
     // taskQueueにあるタスクをリーダーに渡すメソッド
@@ -292,6 +289,7 @@ public class Manager implements SetParam {
                 temp.remove(rand).actAsLeader();
             }
         }
+        assert temp.size() == 0 : "Some agents do nothing.";
         temp.clear();
     }
 

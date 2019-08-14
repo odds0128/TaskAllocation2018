@@ -63,9 +63,10 @@ public class FixedMember extends MemberStrategy implements SetParam {
     }
 
     protected void execute(Agent agent) {
-        agent.executionTime--;
         agent.validatedTicks = Manager.getTicks();
-        if (agent.executionTime == 0) {
+        agent.executionTime--;
+
+        if ( agent.executionTime == 0 ) {
             if (agent.role == LEADER) {
                 if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
                     for (Agent ag : agent.teamMembers) {
@@ -113,7 +114,7 @@ public class FixedMember extends MemberStrategy implements SetParam {
             if (message.getMessageType() == PROPOSAL) {
 //                assert message.getFrom() != member.leader : message.getFrom().id + " to " + member.id +  "Duplicated";
                 // すでにそのリーダーのチームに参加している場合は落とす
-                if( member.haveAlreadyJoined(member, message.getFrom()) ){
+                if( member.haveAlreadyJoined(member.myLeader, member.myLeaders, message.getFrom()) ){
                     member.sendMessage(member, message.getFrom(), REPLY, REJECT);
                 }else {
                     solicitations.add(message);
@@ -129,14 +130,14 @@ public class FixedMember extends MemberStrategy implements SetParam {
         // サブタスクキューの空きがある限りsolicitationを選定する
         while ( member.tbd < room && solicitations.size() > 0) {
             // εグリーディーで選択する
-            if (member.epsilonGreedy()) {
+            if ( MyRandom.epsilonGreedy( Agent.ε ) ) {
                 Message target;
                 Agent to;
                 do {
                     int index = MyRandom.getRandomInt( 0, solicitations.size() - 1 );
                     target = solicitations.remove(index);
                     to = target.getFrom();
-                }while( member.haveAlreadyJoined(member, to) );
+                }while( member.haveAlreadyJoined( member.myLeader, member.myLeaders, to) );
                 member.sendMessage(member, to, REPLY, ACCEPT);
                 member.myLeaders.add(to);
             }

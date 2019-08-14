@@ -27,6 +27,8 @@ public class Message implements SetParam {
     private int timeSTarrived;
 
     public Message(Agent from, Agent to, MessageType type, Object o) {
+    	assert from.equals(to) : from.id + " ask himself.";
+
         this.from = from;
         this.to   = to;
         this.messageType = type;
@@ -103,15 +105,15 @@ public class Message implements SetParam {
         StringBuilder str = new StringBuilder();
         str.append(" from: " + from.id );
         str.append(", to: " + to.id);
-        str.append(", type: ");
+        str.append(", type: " + messageType);
         if( messageType == PROPOSAL ){
-            str.append("proposal__ " + proposedSubtask.resType);
+            str.append( ", subtask: " + proposedSubtask.resType );
         }else if( messageType == REPLY ){
-            str.append("reply__ " + reply);
+            str.append( ", contents: " + reply);
         }else if( messageType == RESULT ){
-            str.append("result__ " + subtask);
+            str.append( ", subtask" + subtask);
         }else if( messageType == DONE ){
-            str.append("done__ " + timeSTarrived);
+            str.append( ", timeSTarrived" + timeSTarrived);
         }
         return str.toString();
     }

@@ -170,7 +170,6 @@ public class OutPut implements SetParam {
         if( excellentLeaders == 0 ){
             mDependableMembersFromExcellentLeader[times] = 0;
         }else{
-            System.out.println(excellentLeaders);
             mDependableMembersFromExcellentLeader[times] /= (double) excellentLeaders;
         }
         agentsExcAveArray[times] /= (double)AGENT_NUM;
@@ -178,7 +177,6 @@ public class OutPut implements SetParam {
         membersExcAveArray[times] /= (double)(AGENT_NUM - leadersArray[times]);
 
 
-        System.out.println("Leaders: " + leadersArray[times]);
 
         // agentをexcellenceごとにソート
         List<Agent> temp = new ArrayList<>();

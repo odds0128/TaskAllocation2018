@@ -5,6 +5,7 @@ import main.research.agent.Agent;
 import main.research.agent.AgentManager;
 import main.research.communication.Message;
 import main.research.agent.strategy.LeaderStrategy;
+import main.research.random.MyRandom;
 import main.research.task.AllocatedSubtask;
 import main.research.task.Subtask;
 import main.research.task.Task;
@@ -188,7 +189,7 @@ public class FixedLeader extends LeaderStrategy implements SetParam {
                 // 一つ目のサブタスク(報酬が最も高い)から割り当てていく
                 // 信頼度の一番高いやつから割り当てる
                 // εの確率でランダムに割り振る
-                if (leader.epsilonGreedy()) {
+                if ( MyRandom.epsilonGreedy(Agent.ε) ) {
                     do {
                         candidate = Manager.getAgentRandomly(leader, exceptions, AgentManager.getAgentList());
                     } while ( leader.calcExecutionTime(candidate, st) < 0);

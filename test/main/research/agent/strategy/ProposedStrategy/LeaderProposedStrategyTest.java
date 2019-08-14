@@ -22,13 +22,13 @@ import static org.mockito.Mockito.mock;
 class LeaderProposedStrategyTest {
 	@Nested
 	class refreshResourceCacheのテスト {
-		LeaderProposedStrategy ls = new LeaderProposedStrategy();
+		ProposedStrategy_l ls = new ProposedStrategy_l();
 		Method rrc;
 
 		@BeforeEach
 		void setUp() throws NoSuchMethodException {
 			// テスト対象privateメソッドのリフレクション
-			rrc = LeaderProposedStrategy.class.getDeclaredMethod( "refreshResourceCache");
+			rrc = ProposedStrategy_l.class.getDeclaredMethod( "refreshResourceCache");
 			rrc.setAccessible(true);
 
 			// resourceCacheモックの作成

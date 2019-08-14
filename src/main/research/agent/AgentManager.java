@@ -13,17 +13,17 @@ public class AgentManager implements SetParam {
     private static List<Agent> agents;
 
     // TODO: Agentインスタンスを生成する → 被らないように座標を設定する
-    public static void initiateAgents( LeaderStrategy ls, MemberStrategy ms ) {
-        agents = generateAgents(ls, ms);
+    public static void initiateAgents( String ls_name, String ms_name ) {
+        agents = generateAgents(ls_name, ms_name);
         deployAgents();
         setReliabilityRanking();
     }
 
-    private static List<Agent> generateAgents(LeaderStrategy ls, MemberStrategy ms) {
+    private static List<Agent> generateAgents( String ls_name, String ms_name ) {
         List<Agent> agentList = new ArrayList();
 
         for (int i = 0; i < AGENT_NUM; i++) {
-            agentList.add( new Agent(ls, ms) );
+            agentList.add( new Agent(ls_name, ms_name) );
         }
         return agentList;
     }

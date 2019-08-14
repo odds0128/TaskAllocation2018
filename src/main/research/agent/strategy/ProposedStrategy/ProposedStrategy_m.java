@@ -10,7 +10,6 @@ import main.research.task.AllocatedSubtask;
 import main.research.task.Subtask;
 import main.research.task.Task;
 
-import static main.research.SetParam.Role.*;
 import static main.research.SetParam.Principle.*;
 
 import static main.research.SetParam.MessageType.*;
@@ -21,9 +20,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 // TODO: 中身を表したクラス名にする
-public class MemberProposedStrategy extends MemberStrategy implements SetParam {
+public class ProposedStrategy_m extends MemberStrategy implements SetParam {
 
 	protected void replyAsM(Agent member) {
+		checkSolicitationsANDAllocations(member);
 		if (member.mySubtask == null) {
 			if (Manager.getTicks() - member.validatedTicks > THRESHOLD_FOR_ROLE_RENEWAL) {
 				member.inactivate(0);
@@ -44,6 +44,10 @@ public class MemberProposedStrategy extends MemberStrategy implements SetParam {
 			member.executionTime = member.calcExecutionTime(member, member.mySubtask);
 			member.phase = EXECUTION;
 			member.validatedTicks = Manager.getTicks();
+			// remove
+			if( member.myLeader.id == 455 && member.id == 203 ){
+				System.out.println( member.id + " receive subtask whose execution time is " + member.executionTime + " at " + Manager.getTicks() );
+			}
 		}
 		// サブタスクが割り当てられなかったら信頼度を0で更新し, inactivate
 		else {
@@ -52,12 +56,17 @@ public class MemberProposedStrategy extends MemberStrategy implements SetParam {
 	}
 
 	protected void execute(Agent agent) {
-		agent.executionTime--;
 		agent.validatedTicks = Manager.getTicks();
-		if (agent.executionTime == 0) {
-			agent.sendMessage(agent, agent.myLeader, DONE, 0);
+		agent.executionTime--;
+
+		if ( agent.executionTime == 0) {
 			agent.myLeaders.remove(agent.myLeader);
 			agent.required[agent.mySubtask.resType]++;
+			// remove
+			if( agent.myLeader.id == 455 && agent.id == 203 ) {
+				System.out.println(" 203 did " + agent.mySubtask + " at " + Manager.getTicks());
+			}
+			agent.sendMessage(agent, agent.myLeader, DONE, 0);
 			renewDE(agent, agent.myLeader, (double) agent.mySubtask.reqRes[agent.mySubtask.resType] / (double) agent.calcExecutionTime(agent, agent.mySubtask));
 			if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
 				agent.workWithAsM[agent.myLeader.id]++;
@@ -89,7 +98,8 @@ public class MemberProposedStrategy extends MemberStrategy implements SetParam {
 			if (message.getMessageType() == PROPOSAL) {
 				// assert message.getFrom() != member.leader : message.getFrom().id + " to " + member.id +  "Duplicated";
 				// すでにそのリーダーのチームに参加している場合は落とす
-				if (member.haveAlreadyJoined(member, message.getFrom())) {
+				if (member.haveAlreadyJoined(member.myLeader,member.myLeaders, message.getFrom())) {
+					// todo: 単なるrejectとREJECT_FOR_DOING_YOUR_STを区別する？
 					member.sendMessage(member, message.getFrom(), REPLY, REJECT);
 				} else {
 					solicitations.add(message);
@@ -102,17 +112,44 @@ public class MemberProposedStrategy extends MemberStrategy implements SetParam {
 		int room = SUBTASK_QUEUE_SIZE - member.mySubtaskQueue.size(); // サブタスクキューの空き
 
 		// サブタスクキューの空きがある限りsolicitationを選定する
-		while (member.tbd < room && solicitations.size() > 0) {
+		ProposedStrategy_m.checkSolicitations( member, member.tbd, room, solicitations );
+
+		// othersへの対処．(othersとしては，RESULTが考えられる)
+		Message result;
+		Subtask allocatedSubtask;
+		while (others.size() > 0) {
+			member.tbd--;
+			result = others.remove(0);
+			allocatedSubtask = result.getSubtask();
+			assert result.getMessageType() == RESULT : "Leader Must Confuse Someone";
+			if (allocatedSubtask == null) {   // 割り当てがなかった場合
+				renewDE(member, result.getFrom(), 0);
+				member.myLeaders.remove(result.getFrom());
+			} else {    // 割り当てられた場合
+				// すでにサブタスクを持っているならそれを優先して今もらったやつはキューに入れておく
+				// さもなければキューに"入れずに"自分の担当サブタスクとする
+				if (member.mySubtask == null) {
+					member.mySubtask = allocatedSubtask;
+				} else {
+					member.mySubtaskQueue.add(allocatedSubtask);
+				}
+			}
+		}
+		assert member.mySubtaskQueue.size() <= SUBTASK_QUEUE_SIZE : member.mySubtaskQueue + " Overwork!";
+	}
+
+	private static void checkSolicitations(Agent member, int tbd, int room, List<Message> solicitations) {
+			while (tbd < room && solicitations.size() > 0) {
 			// εグリーディーで選択する
-			if (member.epsilonGreedy()) {
+			if ( MyRandom.epsilonGreedy( Agent.ε ) ) {
 				Message target;
 				Agent to;
 				do {
 					int index = MyRandom.getRandomInt(0, solicitations.size() - 1);
 					target = solicitations.remove(index);
 					to = target.getFrom();
-				} while (member.haveAlreadyJoined(member, to));
-				member.sendMessage(member, to, REPLY, ACCEPT);
+				} while ( Agent.haveAlreadyJoined( member.myLeader, member.myLeaders, to ) );
+				Agent.sendMessage(member, to, REPLY, ACCEPT);
 				member.myLeaders.add(to);
 			}
 			// solicitationsの中から最も信頼するリーダーのsolicitを受ける
@@ -147,32 +184,11 @@ public class MemberProposedStrategy extends MemberStrategy implements SetParam {
 			}
 			member.tbd++;
 		}
+		Message message;
 		while (solicitations.size() > 0) {
 			message = solicitations.remove(0);
 			member.sendMessage(member, message.getFrom(), REPLY, REJECT);
 		}
-		// othersへの対処．(othersとしては，RESULTが考えられる)
-		Message result;
-		Subtask allocatedSubtask;
-		while (others.size() > 0) {
-			member.tbd--;
-			result = others.remove(0);
-			allocatedSubtask = result.getSubtask();
-			assert result.getMessageType() == RESULT : "Leader Must Confuse Someone";
-			if (allocatedSubtask == null) {   // 割り当てがなかった場合
-				renewDE(member, result.getFrom(), 0);
-				member.myLeaders.remove(result.getFrom());
-			} else {    // 割り当てられた場合
-				// すでにサブタスクを持っているならそれを優先して今もらったやつはキューに入れておく
-				// さもなければキューに"入れずに"自分の担当サブタスクとする
-				if (member.mySubtask == null) {
-					member.mySubtask = allocatedSubtask;
-				} else {
-					member.mySubtaskQueue.add(allocatedSubtask);
-				}
-			}
-		}
-		assert member.mySubtaskQueue.size() <= SUBTASK_QUEUE_SIZE : member.mySubtaskQueue + " Overwork!";
 	}
 
 	// TODO: コメントアウトで手動で切り替えるのをやめる
@@ -230,6 +246,5 @@ public class MemberProposedStrategy extends MemberStrategy implements SetParam {
 		// TODO: solicitを受けるか判断する
 		checkSolicitationsANDAllocations(ag);
 	}
-
 
 }

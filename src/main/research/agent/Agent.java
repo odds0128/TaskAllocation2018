@@ -22,6 +22,8 @@ import main.research.task.Subtask;
 import main.research.task.Task;
 
 import java.awt.*;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Member;
 import java.util.*;
 import java.util.List;
 
@@ -32,7 +34,7 @@ public class Agent implements SetParam, Cloneable {
 	private static int[] resSizeArray = new int[RESOURCE_TYPES + 1];
 
 	public static int _coalition_check_end_time;
-	private static double ε = INITIAL_ε;
+	public static double ε = INITIAL_ε;
 	private LeaderStrategy ls;
 	private MemberStrategy ms;
 
@@ -76,7 +78,7 @@ public class Agent implements SetParam, Cloneable {
 	public Map<Agent, Double> reliabilityRankingAsM = new LinkedHashMap<>(HASH_MAP_SIZE);
 	public List<Agent> myLeaders = new ArrayList<>();
 
-	public Agent(LeaderStrategy ls, MemberStrategy ms) {
+	public Agent( String ls_name, String ms_name ) {
 		this.id = _id++;
 
 		int resSum = Arrays.stream(resources).sum();
@@ -84,7 +86,7 @@ public class Agent implements SetParam, Cloneable {
 			.filter(res -> res > 0)
 			.count();
 		setResource();
-		setStrategies(ls, ms);
+		setStrategies(ls_name, ms_name);
 		threshold_for_reciprocity_as_leader = THRESHOLD_FOR_RECIPROCITY_FROM_LEADER;
 		threshold_for_reciprocity_as_member = (double) resSum / resCount * THRESHOLD_FOR_RECIPROCITY_RATE;
 		selectRole();
@@ -252,7 +254,6 @@ public class Agent implements SetParam, Cloneable {
 			assert e_member <= 1 && e_member >= 0 : "Illegal adaption to role";
 		}
 
-//        if( (e_member + e_leader) != 1.0  ) System.out.println("Illegal renewal ");
 
 		if (role == LEADER) {
 			if (myTask != null) {
@@ -274,7 +275,7 @@ public class Agent implements SetParam, Cloneable {
 		this.validatedTicks = Manager.getTicks();
 	}
 
-	public void sendMessage(Agent from, Agent to, MessageTypeInterface type, Object o) {
+	public static void sendMessage(Agent from, Agent to, MessageTypeInterface type, Object o) {
 		TransmissionPath.sendMessage(new Message(from, to, (MessageType) type, o));
 	}
 
@@ -302,7 +303,7 @@ public class Agent implements SetParam, Cloneable {
 	 * @param st
 	 * @return
 	 */
-	public int calcExecutionTime(Agent a, Subtask st) {
+	public static int calcExecutionTime(Agent a, Subtask st) {
 		if (a == null) System.out.println("Ghost trying to do subtask");
 		if (st == null) System.out.println("Agent trying to do nothing");
 
@@ -328,25 +329,20 @@ public class Agent implements SetParam, Cloneable {
 	 * inTheListメソッド
 	 * 引数のエージェントが引数のリスト内にあればその索引を, いなければ-1を返す
 	 */
-	public int inTheList(Object a, List List) {
+	public static int inTheList(Object a, List List) {
 		for (int i = 0; i < List.size(); i++) {
 			if (a.equals(List.get(i))) return i;
 		}
 		return -1;
 	}
 
-	public boolean haveAlreadyJoined(Agent member, Agent target) {
-		if (member.myLeader == target) {
+	public static boolean haveAlreadyJoined(Agent myLeader, List myLeaders, Agent target) {
+		if ( myLeader == target ) {
 			return true;
 		}
 		return inTheList(target, myLeaders) >= 0 ? true : false;
 	}
 
-
-	public boolean epsilonGreedy() {
-		double random = MyRandom.getRandomDouble();
-		return random < ε;
-	}
 
 	/**
 	 * taskIDを元にpastTaskからTaskを同定しそれを返す
@@ -539,9 +535,20 @@ public class Agent implements SetParam, Cloneable {
 		return str.toString();
 	}
 
-	private void setStrategies(LeaderStrategy ls, MemberStrategy ms) {
-		this.ls = ls;
-		this.ms = ms;
+	private void setStrategies( String ls_name, String  ms_name ) {
+		String package_name = "main.research.agent.strategy.ProposedStrategy." ;
+
+		Class LeaderStrategyClass;
+		Class MemberStrategyClass;
+
+		try {
+			LeaderStrategyClass = Class.forName( package_name.concat(ls_name) );
+			MemberStrategyClass = Class.forName( package_name.concat(ms_name) );
+			this.ls = (LeaderStrategy) LeaderStrategyClass.getDeclaredConstructor().newInstance() ;
+			this.ms = (MemberStrategy) MemberStrategyClass.getDeclaredConstructor().newInstance() ;
+		} catch (ClassNotFoundException | NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public static class AgentExcellenceComparator implements Comparator<Agent> {

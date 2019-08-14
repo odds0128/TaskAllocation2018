@@ -1,5 +1,7 @@
 package main.research.random;
 
+import main.research.agent.Agent;
+
 public class MyRandom<T> {
 
     private static final int[] _seeds = new int[] {
@@ -51,4 +53,8 @@ public class MyRandom<T> {
         return sfmt.NextUnif();
     }
 
+	public static boolean epsilonGreedy( double ε ) {
+		double random = getRandomDouble();
+		return random < ε;
+	}
 }
