@@ -3,13 +3,15 @@ package main.research.agent.strategy.ProposedStrategy;
 import main.research.*;
 import main.research.agent.Agent;
 import main.research.agent.AgentManager;
-import main.research.communication.Message;
+import main.research.communication.MessageDeprecated;
 import main.research.agent.strategy.LeaderStrategy;
 import main.research.random.MyRandom;
 import main.research.task.AllocatedSubtask;
 import main.research.task.Subtask;
 import main.research.task.Task;
 
+import static main.research.Manager.getCurrentTime;
+import static main.research.SetParam.DERenewalStrategy.*;
 import static main.research.SetParam.MessageType.*;
 import static main.research.SetParam.ReplyType.*;
 import static main.research.SetParam.Phase.*;
@@ -57,12 +59,12 @@ public class ProposedStrategy_l extends LeaderStrategy implements SetParam {
 			Agent candidate = leader.candidates.get(i);
 			if ( candidate != null) {
 				leader.proposalNum++;
-				timeToStartCommunicatingMap.put( candidate, Manager.getTicks() );
+				timeToStartCommunicatingMap.put( candidate, getCurrentTime() );
 				// remove
 				if( leader.id == 455 && candidate.id == 203 ) {
-					System.out.println( leader.id + " send proposition to 203 at " + Manager.getTicks() );
+					System.out.println( leader.id + " send proposition to 203 at " + getCurrentTime() );
 				}
-				leader.sendMessage(leader, candidate, PROPOSAL, leader.myTask.subtasks.get(i % leader.myTask.subtasks.size() ) );
+				leader.sendMessage(leader, candidate, SOLICITATION, leader.myTask.subtasks.get(i % leader.myTask.subtasks.size() ) );
 			}
 		}
 		leader.nextPhase();  // 次のフェイズへ
@@ -72,7 +74,7 @@ public class ProposedStrategy_l extends LeaderStrategy implements SetParam {
 		if (leader.replies.size() < leader.proposalNum) return;
 
 		Agent from;
-		for (Message reply : leader.replies) {
+		for (MessageDeprecated reply : leader.replies) {
 			// 拒否ならそのエージェントを候補リストから外し, 信頼度を0で更新する
 			from = reply.getFrom();
 			if (reply.getReply() != ACCEPT) {
@@ -80,17 +82,17 @@ public class ProposedStrategy_l extends LeaderStrategy implements SetParam {
 				int i = leader.inTheList(from, leader.candidates);
 				assert i >= 0 : "alert: Leader got reply from a ghost.";
 				leader.candidates.set(i, null);
-				renewDE(leader, from, 0);
+				renewDE( leader.reliabilityRankingAsL, from, 0, withBinary );
 			}
 			// hack: 現状リーダーは全員からの返信をもらってから割り当てを開始するため，早くに返信が到着したエージェントとの総通信時間が見かけ上長くなってしまう．
 			// だからここではそれを訂正するために，その差分をroundTripTimeの一部として足し合わせることで混雑度の計算が狂わないようにしている
-			int gap = Manager.getTicks() - timeToStartCommunicatingMap.get(from) - roundTripTimeMap.get(from);
+			int gap = getCurrentTime() - timeToStartCommunicatingMap.get(from) - roundTripTimeMap.get(from);
 			assert gap % 2 == 0 : "gap is odd.";
 			int modifiedRoundTripTime = roundTripTimeMap.get(from) + gap / 2;
 			roundTripTimeMap.put( from, modifiedRoundTripTime );
 			// remove
 			if ( leader.id == 455 && from.id == 203 ) {
-				System.out.println( leader.id + " update round trip time to " + roundTripTimeMap.get(from) + " at " + Manager.getTicks() );
+				System.out.println( leader.id + " update round trip time to " + roundTripTimeMap.get(from) + " at " + getCurrentTime() );
 			}
 		}
 
@@ -133,15 +135,21 @@ public class ProposedStrategy_l extends LeaderStrategy implements SetParam {
 		}
 		// 未割り当てが残っていないのなら実行へ
 		if (leader.teamMembers.size() == leader.myTask.subtasks.size()) {
+			if( leader.id == 35 ) {
+				System.out.println(leader.teamMembers);
+			}
 			for (Agent tm : leader.teamMembers) {
-				teamHistory[leader.id].put(tm, new AllocatedSubtask(preAllocations.get(tm), Manager.getTicks(), leader.myTask.task_id));
-				// remove
+				teamHistory[leader.id].put(tm, new AllocatedSubtask(preAllocations.get(tm), getCurrentTime(), leader.myTask.task_id));
+					// remove
+				if( leader.id == 217 && tm.id == 439 ) {
+					System.out.println( leader.id + " assigns " + preAllocations.get(tm) + " to " + tm.id + " at " + getCurrentTime() );
+				}
 				if( leader.id == 455 && tm.id == 203 ) {
-					System.out.println( leader.id + " assigns " + preAllocations.get(tm) + " to 203 at " + Manager.getTicks() );
+					System.out.println( leader.id + " assigns " + preAllocations.get(tm) + " to 203 at " + getCurrentTime() );
 				}
 				leader.sendMessage(leader, tm, RESULT, preAllocations.get(tm));
 			}
-			if (Agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
+			if (Agent._coalition_check_end_time - getCurrentTime() < COALITION_CHECK_SPAN) {
 				for (Agent ag : leader.teamMembers) {
 					leader.workWithAsL[ag.id]++;
 				}
@@ -152,6 +160,9 @@ public class ProposedStrategy_l extends LeaderStrategy implements SetParam {
 		}
 		// 未割り当てのサブタスクが残っていれば失敗
 		else {
+			if( leader.id == 217 ){
+				System.out.println( leader.id + " fails to form team.");
+			}
 			for (Agent tm : leader.teamMembers) {
 				exceptions.remove(tm);
 				leader.sendMessage(leader, tm, RESULT, null);
@@ -229,52 +240,46 @@ public class ProposedStrategy_l extends LeaderStrategy implements SetParam {
 		return memberCandidates;
 	}
 
-	@Override
-	protected void renewDE(Agent from, Agent target, double evaluation) {
-		assert !from.equals(target) : "alert4";
-
-		double formerDE = from.reliabilityRankingAsL.get(target);
-//		double newDE = renewDEbyArbitraryReward(formerDE, evaluation);
-
-		boolean b = evaluation > 0;
-		double newDE = renewDEby0or1(formerDE, b);
-
-		from.reliabilityRankingAsL.put(target, newDE);
-	}
-
-	public void checkMessages(Agent ag) {
-		int size = ag.messages.size();
-		Message m;
+	public void checkMessages(Agent ag_L) {
+		int size = ag_L.messages.size();
+		MessageDeprecated m;
 
 		// メンバからの作業完了報告をチェックする
 		for (int i = 0; i < size; i++) {
-			m = ag.messages.remove(0);
+			m = ag_L.messages.remove(0);
 			if (m.getMessageType() == DONE) {
 				// 「リーダーとしての更新式で」信頼度を更新する
 				// そのメンバにサブタスクを送ってからリーダーがその完了報告を受けるまでの時間
 				// すなわちrt = "メンバのサブタスク実行時間 + メッセージ往復時間"
-				AllocatedSubtask as = teamHistory[ag.id].remove(m.getFrom());
+				// remove
+				if( ag_L.id == 217 && m.getFrom().id == 439 ) {
+					System.out.println( "     before: " + teamHistory[ag_L.id]);
+				}
+				AllocatedSubtask as = teamHistory[ag_L.id].remove(m.getFrom());
+				if( ag_L.id == 217 && m.getFrom().id == 439 ) {
+					System.out.println( "     after: " + teamHistory[ag_L.id]);
+				}
 				if (as == null) {
-					System.out.println(Manager.getTicks() + ": " + m.getFrom() + " asserts he did " + ag.id + "'s subtask ");
+					System.out.println( "leader " + ag_L.id  + " is sent the message that " + m.getFrom() + " did " + ag_L.id + "'s subtask ");
 				}
 
-				int rt = Manager.getTicks() - as.getAllocatedTime();
+				int rt = getCurrentTime() - as.getAllocatedTime();
 				int reward = as.getRequiredResources() * 5;
-				renewDE(ag, m.getFrom(), (double) reward / rt);
+				renewDE( ag_L.reliabilityRankingAsL, m.getFrom(), 1, withBinary);
 
 				exceptions.remove( m.getFrom() );
 
-				int now = Manager.getTicks();
+				int now = getCurrentTime();
 				TeamHistoryCache temp = new TeamHistoryCache( now, m.getFrom(), as.getSt().resType, rt );
 				teamHistoryCache.add(temp);
 
-				int bindingTime = Manager.getTicks() - timeToStartCommunicatingMap.get(m.getFrom());
+				int bindingTime = getCurrentTime() - timeToStartCommunicatingMap.get(m.getFrom());
 				renewCongestionDegreeMap( congestionDegreeMap, roundTripTimeMap, m.getFrom(), as.getSt(), bindingTime );
 				// remove
-				if(  ag.id == 455 && m.getFrom().id == 203 ) {
+				if(  ag_L.id == 455 && m.getFrom().id == 203 ) {
 					String string = String.join( ", ", Integer.toString(as.getSt().reqRes[as.getSt().resType] ), Integer.toString(bindingTime), Integer.toString(roundTripTimeMap.get(m.getFrom())) );
 					System.out.println(string);
-					System.out.println( ag.id + " get execution message at " + Manager.getTicks() + " from 203." );
+					System.out.println( ag_L.id + " get execution message at " + getCurrentTime() + " from 203." );
 
 					// TODO: 距離とか考えて妥当か検証
 					System.out.println("  actual: " + m.getFrom() );
@@ -287,45 +292,45 @@ public class ProposedStrategy_l extends LeaderStrategy implements SetParam {
                 2. そのサブタスクを履歴から除く
                 3. もしそれによりタスク全体のサブタスクが0になったら終了とみなす
                  */
-				Task task = ag.identifyTask(as.getTaskId());
+				Task task = ag_L.identifyTask(as.getTaskId());
 				task.subtasks.remove(as.getSt());
 				if (task.subtasks.size() == 0) {
-					ag.pastTasks.remove(task);
-					Manager.finishTask(ag, task);
-					ag.didTasksAsLeader++;
+					ag_L.pastTasks.remove(task);
+					Manager.finishTask(ag_L, task);
+					ag_L.didTasksAsLeader++;
 				}
 			} else {
-				ag.messages.add(m); // 違うメッセージだったら戻す
+				ag_L.messages.add(m); // 違うメッセージだったら戻す
 			}
 		}
 
 		// solicitを受けるか判断する
-		size = ag.messages.size();
+		size = ag_L.messages.size();
 		if (size == 0) return;
 		// リーダーでPROPOSITION or 誰でもEXECUTION → 誰からのメッセージも期待していない
-		if (ag.phase == PROPOSITION || ag.phase == EXECUTION) {
+		if (ag_L.phase == PROPOSITION ) {
 			for (int i = 0; i < size; i++) {
-				m = ag.messages.remove(0);
-				ag.sendNegative(ag, m.getFrom(), m.getMessageType(), m.getSubtask());
+				m = ag_L.messages.remove(0);
+				ag_L.sendMessage(ag_L, m.getFrom(), REPLY, DECLINE);
 			}
 		}
 		// リーダーでREPORT → REPLYを期待している
-		else if (ag.phase == REPORT) {
+		else if (ag_L.phase == REPORT) {
 			for (int i = 0; i < size; i++) {
-				m = ag.messages.remove(0);
+				m = ag_L.messages.remove(0);
 				Agent from = m.getFrom();
-				if (m.getMessageType() == REPLY && ag.inTheList(from, ag.candidates) > -1) {
-					int roundTripTime = Manager.getTicks() - timeToStartCommunicatingMap.get(from);
+				if (m.getMessageType() == REPLY && ag_L.inTheList(from, ag_L.candidates) > -1) {
+					int roundTripTime = getCurrentTime() - timeToStartCommunicatingMap.get(from);
 					roundTripTimeMap.put( from, roundTripTime );
 
 					// remove
-					if( ag.id == 455 && from.id == 203 ) {
-						System.out.println( ag.id + " get " + m.getReply() + " message at " + Manager.getTicks() + " from 203." );
+					if( ag_L.id == 455 && from.id == 203 ) {
+						System.out.println( ag_L.id + " get " + m.getReply() + " message at " + getCurrentTime() + " from 203." );
 					}
 
-					ag.replies.add(m);
+					ag_L.replies.add(m);
 				}
-				else ag.sendNegative(ag, m.getFrom(), m.getMessageType(), m.getSubtask());
+				else ag_L.sendMessage(ag_L, m.getFrom(), REPLY, DECLINE);
 			}
 		}
 	}

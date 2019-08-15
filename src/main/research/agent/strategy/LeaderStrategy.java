@@ -23,6 +23,4 @@ public abstract class LeaderStrategy implements Strategy, SetParam {
     protected abstract void proposeAsL(Agent la);
     protected abstract void reportAsL(Agent la);
 
-    protected abstract void renewDE(Agent from, Agent to, double evaluation);
-
 }

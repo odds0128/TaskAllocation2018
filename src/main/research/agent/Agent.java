@@ -5,15 +5,13 @@
 
 package main.research.agent;
 
-import static main.research.SetParam.MessageType.*;
-import static main.research.SetParam.ReplyType.*;
 import static main.research.SetParam.Phase.*;
 import static main.research.SetParam.Role.*;
 import static main.research.SetParam.Principle.*;
 
 import main.research.Manager;
 import main.research.SetParam;
-import main.research.communication.Message;
+import main.research.communication.MessageDeprecated;
 import main.research.communication.TransmissionPath;
 import main.research.random.MyRandom;
 import main.research.agent.strategy.LeaderStrategy;
@@ -23,7 +21,6 @@ import main.research.task.Task;
 
 import java.awt.*;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Member;
 import java.util.*;
 import java.util.List;
 
@@ -42,14 +39,14 @@ public class Agent implements SetParam, Cloneable {
 	public int id;
 	public Point p;
 	public Role role = JONE_DOE;
-	public PhaseInterface phase = SELECT_ROLE;
+	public Phase phase = SELECT_ROLE;
 	public int[] resources = new int[RESOURCE_TYPES];
 	public int[] workWithAsL = new int[AGENT_NUM];
 	public int[] workWithAsM = new int[AGENT_NUM];
 	public int validatedTicks = 0;
 	public double e_leader = INITIAL_VALUE_OF_DSL;
 	public double e_member = INITIAL_VALUE_OF_DSM;
-	public List<Message> messages = new ArrayList<>();
+	public List<MessageDeprecated> messages = new ArrayList<>();
 	public Principle principle = RATIONAL;
 	public int[] required = new int[RESOURCE_TYPES];            // そのリソースを要求するサブタスクが割り当てられた回数
 	public int[][] allocated = new int[AGENT_NUM][RESOURCE_TYPES]; // そのエージェントからそのリソースを要求するサブタスクが割り当てられた回数
@@ -59,8 +56,8 @@ public class Agent implements SetParam, Cloneable {
 	public List<Agent> candidates;         // これからチームへの参加を要請するエージェントのリスト
 	public int proposalNum = 0;            // 送ったproposalの数を覚えておく
 	public List<Agent> teamMembers;        // すでにサブタスクを送っていてメンバの選定から外すエージェントのリスト
-	public List<Message> replies;
-	public List<Message> results;
+	public List<MessageDeprecated> replies;
+	public List<MessageDeprecated> results;
 	public Task myTask;                  // 持ってきた(割り振られた)タスク
 	public int replyNum = 0;
 	public double threshold_for_reciprocity_as_leader;
@@ -69,14 +66,12 @@ public class Agent implements SetParam, Cloneable {
 
 	// メンバエージェントのみが持つパラメータ
 	public int didTasksAsMember = 0;
-	public Agent myLeader;
 	public int executionTime = 0;
 	public double threshold_for_reciprocity_as_member;
-	public Subtask mySubtask;
-	public List<Subtask> mySubtaskQueue = new ArrayList<>();       // メンバはサブタスクを溜め込むことができる(実質的に，同時に複数のチームに参加することができるようになる)
-	public int tbd = 0;                                            // 返事待ちの数
+	public Map<Subtask, Agent> mySubtaskQueue = new LinkedHashMap<>();       // メンバはサブタスクを溜め込むことができる(実質的に，同時に複数のチームに参加することができるようになる)
+	public int numberOfExpectedMessages = 0;                                            // 返事待ちの数
 	public Map<Agent, Double> reliabilityRankingAsM = new LinkedHashMap<>(HASH_MAP_SIZE);
-	public List<Agent> myLeaders = new ArrayList<>();
+	// TODO: ひょっとしてリーダーをわざわざ覚えて置く必要はないのでは？
 
 	public Agent( String ls_name, String ms_name ) {
 		this.id = _id++;
@@ -146,10 +141,8 @@ public class Agent implements SetParam, Cloneable {
 	}
 
 	public void selectRole() {
-		validatedTicks = Manager.getTicks();
-		if (mySubtaskQueue.size() > 0) {
-			mySubtask = mySubtaskQueue.remove(0);
-			myLeader = mySubtask.from;
+		validatedTicks = Manager.getCurrentTime();
+		if ( mySubtaskQueue.size() > 0 ) {
 			role = MEMBER;
 			this.phase = EXECUTION;
 		}
@@ -212,9 +205,7 @@ public class Agent implements SetParam, Cloneable {
 
 	void selectRoleWithoutLearning() {
 		int ran = MyRandom.getRandomInt(0, 6);
-		if (mySubtaskQueue.size() > 0) {
-			mySubtask = mySubtaskQueue.remove(0);
-			myLeader = mySubtask.from;
+		if ( mySubtaskQueue.size() > 0 ) {
 			role = MEMBER;
 			this.phase = EXECUTION;
 		}
@@ -267,31 +258,14 @@ public class Agent implements SetParam, Cloneable {
 			proposalNum = 0;
 			replyNum = 0;
 		}
-		mySubtask = null;
 		role = JONE_DOE;
 		phase = SELECT_ROLE;
-		myLeader = null;
 		executionTime = 0;
-		this.validatedTicks = Manager.getTicks();
+		this.validatedTicks = Manager.getCurrentTime();
 	}
 
 	public static void sendMessage(Agent from, Agent to, MessageTypeInterface type, Object o) {
-		TransmissionPath.sendMessage(new Message(from, to, (MessageType) type, o));
-	}
-
-	public void sendNegative(Agent ag, Agent to, MessageTypeInterface type, Subtask subtask) {
-		if (type == PROPOSAL) {
-			// 今実行しているサブタスクをくれたリーダーが，実行中にもかかわらずまた要請を出して来たらその旨を伝える
-			if (ag.phase == EXECUTION && to.equals(ag.myLeader)) {
-				sendMessage(ag, to, REPLY, REJECT_FOR_DOING_YOUR_ST);
-			} else {
-				sendMessage(ag, to, REPLY, REJECT);
-			}
-		} else if (type == REPLY) {
-			sendMessage(ag, to, RESULT, null);
-		} else if (type == RESULT) {
-//            sendMessage(agent, to, SUBTASK_RESULT, subtask);
-		}
+		TransmissionPath.sendMessage(new MessageDeprecated(from, to, (MessageType) type, o));
 	}
 
 	/**
@@ -336,14 +310,6 @@ public class Agent implements SetParam, Cloneable {
 		return -1;
 	}
 
-	public static boolean haveAlreadyJoined(Agent myLeader, List myLeaders, Agent target) {
-		if ( myLeader == target ) {
-			return true;
-		}
-		return inTheList(target, myLeaders) >= 0 ? true : false;
-	}
-
-
 	/**
 	 * taskIDを元にpastTaskからTaskを同定しそれを返す
 	 *
@@ -366,21 +332,22 @@ public class Agent implements SetParam, Cloneable {
 	 * phaseの変更をする
 	 * 同時にvalidTimeを更新する
 	 */
+	// TODO: move this to strategy class
 	public void nextPhase() {
 		if (this.phase == PROPOSITION) this.phase = REPORT;
 		else if (this.phase == WAITING) this.phase = RECEPTION;
 		else if (this.phase == REPORT) {
-			if (_coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
+			if (_coalition_check_end_time - Manager.getCurrentTime() < COALITION_CHECK_SPAN) {
 				if (role == LEADER) {
 					for (Agent ag : teamMembers) workWithAsL[ag.id]++;
 				} else {
-					workWithAsM[myLeader.id]++;
+					workWithAsM[mySubtaskQueue.get(0).id]++;
 				}
 			}
 			// 自分のサブタスクが終わったら役割適応度を1で更新して非活性状態へ
 			inactivate(1);
 		} else if (this.phase == RECEPTION) this.phase = EXECUTION;
-		this.validatedTicks = Manager.getTicks();
+		this.validatedTicks = Manager.getCurrentTime();
 	}
 
 	public static void renewEpsilonLinear() {
@@ -431,7 +398,7 @@ public class Agent implements SetParam, Cloneable {
 	 */
 	public static int countNEETmembers(List<Agent> agents, int span) {
 		int neetM = 0;
-		int now = Manager.getTicks();
+		int now = Manager.getCurrentTime();
 		for (Agent ag : agents) {
 			if (now - ag.validatedTicks > span) {
 				neetM++;
@@ -497,7 +464,7 @@ public class Agent implements SetParam, Cloneable {
 //            str.append(" teamMembers: " + teamMembers );
         }
         else if( phase == RECEPTION ) str.append(", My Leader: " + leader.id);
-        else if( phase == EXECUTION ) str.append(", My Leader: " + leader.id + ", " + mySubtask + ", resources: " + resource + ", rest:" + executionTime);
+        else if( phase == EXECUTION ) str.append(", My Leader: " + leader.id + ", " + mySubtaskQueue.get(0) + ", resources: " + resource + ", rest:" + executionTime);
 
 //        if (role == LEADER) str.append(", I'm a leader. ");
 //        else str.append("I'm a member. ");

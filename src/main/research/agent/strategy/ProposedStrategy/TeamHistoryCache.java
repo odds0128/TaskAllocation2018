@@ -25,7 +25,7 @@ class TeamHistoryCache {
 	public int getExecutionTime() { return executionTime; }
 
 	boolean isExpired(){
-		return ( Manager.getTicks() - cachedTime)  > SetParam.RESOURCE_CACHE_TIME;
+		return ( Manager.getCurrentTime() - cachedTime)  > SetParam.RESOURCE_CACHE_TIME;
 	}
 
 	// 推測のタイミング .. cache更新時

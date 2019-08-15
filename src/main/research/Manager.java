@@ -202,7 +202,7 @@ public class Manager implements SetParam {
     }
 
     // 現在のターン数を返すメソッド
-    public static int getTicks() {
+    public static int getCurrentTime() {
         return turn;
     }
 

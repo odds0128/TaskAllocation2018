@@ -5,7 +5,6 @@ package main.research.communication; /**
 import main.research.Manager;
 import main.research.SetParam;
 import main.research.grid.Grid;
-import org.apache.poi.sl.draw.geom.PresetGeometries;
 
 import static main.research.SetParam.MessageType.*;
 import static main.research.SetParam.ReplyType.*;
@@ -27,7 +26,7 @@ public class TransmissionPath implements SetParam {
     static int failed = 0;
 
     private static TransmissionPath transmissionPath = new TransmissionPath();
-    private static List<Message> messageQueue = new ArrayList<>();
+    private static List<MessageDeprecated> messageQueue = new ArrayList<>();
     private static List<Integer> delays = new ArrayList<>();
 
     private TransmissionPath() {
@@ -43,17 +42,17 @@ public class TransmissionPath implements SetParam {
      *
      * @param message
      */
-    public static void sendMessage(Message message) {
+    public static void sendMessage(MessageDeprecated message) {
         messageQueue.add(message);
 
         int temp = Grid.getDelay( message.getFrom(), message.getTo() );
         // remove
         if( message.getTo().id == 203 && message.getFrom().id == 455 ){
-            System.out.println( " delay time " + temp + ", time: " + Manager.getTicks() );
+            System.out.println( " delay time " + temp + ", time: " + Manager.getCurrentTime() );
         }
         delays.add(temp);
         calcCT(temp);
-        if (message.getMessageType() == PROPOSAL) proposals++;
+        if (message.getMessageType() == SOLICITATION) proposals++;
         else if (message.getMessageType() == REPLY) {
             replies++;
             if( message.getReply() == ACCEPT ) acceptances++;
@@ -68,7 +67,7 @@ public class TransmissionPath implements SetParam {
      */
     public static void transmit() {
         int tempI;
-        Message tempM;
+        MessageDeprecated tempM;
         int size = messageQueue.size();
         for (int i = 0; i < size; i++) {
             tempI = delays.remove(0);
@@ -115,7 +114,7 @@ public class TransmissionPath implements SetParam {
      */
     static public void transmitWithNoDelay() {
         int size = messageQueue.size();
-        Message m;
+        MessageDeprecated m;
         for (int i = 0; i < size; i++) {
             delays.remove(0);
             m = messageQueue.remove(0);

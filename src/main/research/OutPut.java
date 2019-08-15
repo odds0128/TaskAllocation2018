@@ -335,14 +335,14 @@ public class OutPut implements SetParam {
     }
 
     static void checkTeam(Agent leader) {
-        System.out.print("Time: " + Manager.getTicks() + ", " + leader.id + " and ");
+        System.out.print("Time: " + Manager.getCurrentTime() + ", " + leader.id + " and ");
         for (Agent mem : leader.teamMembers) {
             System.out.print(mem.id + ", ");
         }
         System.out.println("are good team!");
 
-        if (leader.mySubtask != null) {
-            System.out.println(" leader: " + leader + "→" + leader.mySubtask + ": " + leader.calcExecutionTime(leader, leader.mySubtask) + "[tick(s)]");
+        if (leader.mySubtaskQueue.get(0) != null) {
+            System.out.println(" leader: " + leader + "→" + leader.mySubtaskQueue.get(0) + ": " + leader.calcExecutionTime(leader, leader.mySubtaskQueue.keySet().iterator().next() ) + "[tick(s)]");
         } else {
             System.out.println(" leader: " + leader);
         }

@@ -19,9 +19,4 @@ public abstract class MemberStrategy implements Strategy, SetParam {
     protected abstract void replyAsM(Agent ma);
     protected abstract void receiveAsM(Agent ma);
     protected abstract void execute(Agent la);
-
-    protected abstract void renewDE(Agent from, Agent to, double evaluation);
-
-
-
 }

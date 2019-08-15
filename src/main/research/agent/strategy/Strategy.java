@@ -7,9 +7,10 @@ import java.util.*;
 import java.util.Map.Entry;
 
 import static main.research.SetParam.*;
+import static main.research.SetParam.DERenewalStrategy.*;
 
 public interface Strategy {
-    // TODO: なんじゃこりゃ．AllocatedSubtaskクラスとか絶対いらんやん
+    // FIXME: なんじゃこりゃ．AllocatedSubtaskクラスとか絶対いらんやん
     Map<Agent, AllocatedSubtask>[] teamHistory = new HashMap[AGENT_NUM];
 
     void checkMessages(Agent self);
@@ -24,12 +25,12 @@ public interface Strategy {
     }
 
     default void evaporateDE( Map<Agent, Double> relMap ) {
-        // FIXME: そもそも特定のエージェントのDEのみ保持するようにすればいいのでは？
+        // CONSIDER: そもそも特定のエージェントのDEのみ保持するようにすればいいのでは？
         arrayEvaporate(relMap);
 //         mapEvaporate(relMap);
     }
 
-    // Mapがでかいとどちゃくそ遅い．Mapのせいというよりラッパークラスのせいか．こっちの方が記述は簡潔なんだけどなぁ．
+    // CONSIDER: Mapがでかいとどちゃくそ遅い．Mapのせいというよりラッパークラスのせいか．こっちの方が記述は簡潔なんだけどなぁ．
     default void mapEvaporate( Map<Agent, Double> relMap ) {
         relMap.forEach(
                 (key, value) -> {
@@ -78,7 +79,7 @@ public interface Strategy {
         }
     }
 
-    //TODO: 効率悪そう．DEが変わったエージェントの前後と比較して入れ替えればいいだけ．
+    //CONSIDER: 効率悪そう．DEが変わったエージェントの前後と比較して入れ替えればいいだけ．
     default Map<Agent, Double> sortReliabilityRanking(Map<Agent, Double> relMap) {
         List<Entry<Agent, Double>> entries = new ArrayList(relMap.entrySet());
         entries.sort(Strategy::compare);
@@ -88,6 +89,21 @@ public interface Strategy {
             sortedMap.put(entry.getKey(), entry.getValue());
         }
         return sortedMap;
+    }
+
+    default void renewDE(Map<Agent, Double> deMap, Agent target, double evaluation, DERenewalStrategy de_strategy ) {
+        double formerDE = deMap.get(target);
+
+        boolean b = evaluation > 0;
+        double newDE = 0;
+
+        if( de_strategy == withBinary ) {
+            newDE = renewDEby0or1(formerDE, b);
+        }else if( de_strategy == withReward ) {
+            newDE = renewDEbyArbitraryReward(formerDE, evaluation);
+        }
+
+        deMap.put(target, newDE);
     }
 
     static void clear(){

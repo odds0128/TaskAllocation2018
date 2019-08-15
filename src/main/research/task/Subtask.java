@@ -7,11 +7,15 @@ import main.research.random.MyRandom;
 import java.util.Comparator;
 
 public class Subtask implements SetParam {
+    private static int _id = 0;
+
+    private int id;
     public int[] reqRes = new int[RESOURCE_TYPES];
     public int resType;
     public Agent from;
 
     Subtask() {
+        this.id = _id++;
         setResources();
     }
 
@@ -30,7 +34,7 @@ public class Subtask implements SetParam {
 
     @Override
     public String toString() {
-        StringBuilder str = new StringBuilder("[");
+        StringBuilder str = new StringBuilder( id + "[");
         for (int i = 0; i < RESOURCE_TYPES; i++) str.append(String.format("%3d", reqRes[i])).append(", ");
         str.append("]");
         return str.toString();

@@ -95,7 +95,7 @@ public interface SetParam {
     interface MessageTypeInterface { }
     // メッセージの種類
     enum MessageType implements MessageTypeInterface {
-        PROPOSAL,
+        SOLICITATION,
         REPLY,
         RESULT,
         DONE
@@ -110,13 +110,12 @@ public interface SetParam {
     // REPLYの種類
     enum ReplyType {
         ACCEPT ,
-        REJECT ,
+        DECLINE,
         REJECT_FOR_DOING_YOUR_ST
     }
 
     // フェイズ
-    interface PhaseInterface{ }
-    enum Phase implements PhaseInterface{
+    enum Phase {
         SELECT_ROLE , //全員
         PROPOSITION , // リーダー
         WAITING ,     // メンバ
@@ -124,11 +123,9 @@ public interface SetParam {
         RECEPTION,    // メンバ
         EXECUTION     // 全員
     }
-    enum PhaseForFixedStrategy implements PhaseInterface {
-        lPHASE1,
-        mPHASE1,
-        lPHASE2,
-        mPHASE2,
-        PHASE3
+
+    enum DERenewalStrategy {
+        withBinary,
+        withReward
     }
 }

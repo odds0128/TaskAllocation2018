@@ -34,20 +34,20 @@ package team {
 
 package communication {
     class MessageManager
-    interface main.research.communication.Message
+    interface main.research.communication.MessageDeprecated
     abstract AbstractMessage
 
-    main.research.communication.Message <|.. AbstractMessage
+    main.research.communication.MessageDeprecated <|.. AbstractMessage
 
     AbstractMessage <|-down- Proposal
     AbstractMessage <|-down- Reply
     AbstractMessage <|-down- Allocation
     AbstractMessage <|-down- Finished
 
-    MessageManager"1"*--"1" main.research.communication.Message
+    MessageManager"1"*--"1" main.research.communication.MessageDeprecated
     Team --> MessageManager :use
     MessageManager --> Agent :use
-    main.research.communication.Message -- Subtask
+    main.research.communication.MessageDeprecated -- Subtask
 
 
 }

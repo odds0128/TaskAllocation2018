@@ -3,16 +3,17 @@ package main.research.agent.strategy.ComparativeStrategy;
 import main.research.*;
 import main.research.agent.Agent;
 import main.research.agent.AgentManager;
-import main.research.communication.Message;
+import main.research.communication.MessageDeprecated;
 import main.research.agent.strategy.LeaderStrategy;
 import main.research.random.MyRandom;
 import main.research.task.AllocatedSubtask;
 import main.research.task.Subtask;
 import main.research.task.Task;
 
+import static main.research.SetParam.DERenewalStrategy.*;
 import static main.research.SetParam.MessageType.*;
 import static main.research.SetParam.ReplyType.*;
-import static main.research.SetParam.PhaseForFixedStrategy.*;
+import static main.research.SetParam.Phase.*;
 import static main.research.SetParam.Role.*;
 
 import java.util.ArrayList;
@@ -64,25 +65,25 @@ public class FixedLeader extends LeaderStrategy implements SetParam {
                 candidate = leader.candidates.get(i);
                 if (candidate != null) {
                     leader.proposalNum++;
-                    leader.sendMessage(leader, candidate, PROPOSAL, leader.myTask.subtasks.get(i % leader.myTask.subtasks.size()));
+                    leader.sendMessage(leader, candidate, SOLICITATION, leader.myTask.subtasks.get(i % leader.myTask.subtasks.size()));
                 }
             }
         }
-        leader.phase = lPHASE2;
-        leader.validatedTicks = Manager.getTicks();
+        leader.phase = REPORT;
+        leader.validatedTicks = Manager.getCurrentTime();
     }
 
     protected void reportAsL(Agent leader) {
         if (leader.replies.size() != leader.proposalNum) return;
         Agent from;
-        for (Message reply : leader.replies) {
+        for (MessageDeprecated reply : leader.replies) {
             // 拒否ならそのエージェントを候補リストから外し, 信頼度を0で更新する
             if (reply.getReply() != ACCEPT) {
                 from = reply.getFrom();
                 int i = leader.inTheList(from, leader.candidates);
                 assert i >= 0 : "alert: Leader got reply from a ghost.";
                 leader.candidates.set(i, null);
-                renewDE( leader, from, 0);
+                renewDE( leader.reliabilityRankingAsL, from, 0, withReward);
                 sortReliabilityRanking( leader.reliabilityRankingAsM);
             }
         }
@@ -130,11 +131,11 @@ public class FixedLeader extends LeaderStrategy implements SetParam {
         if (leader.teamMembers.size() == leader.myTask.subtasks.size()) {
             leader.pastTasks.add(leader.myTask);
             for (Agent tm : leader.teamMembers) {
-                teamHistory[leader.id].put(tm, new AllocatedSubtask(preAllocations.get(tm), Manager.getTicks(), leader.myTask.task_id));
+                teamHistory[leader.id].put(tm, new AllocatedSubtask(preAllocations.get(tm), Manager.getCurrentTime(), leader.myTask.task_id));
                 leader.sendMessage(leader, tm, RESULT, preAllocations.get(tm));
             }
             if (leader.executionTime < 0) {
-                if (leader._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
+                if (leader._coalition_check_end_time - Manager.getCurrentTime() < COALITION_CHECK_SPAN) {
                     for (Agent ag : leader.teamMembers) {
                         leader.workWithAsL[ag.id]++;
                     }
@@ -142,8 +143,8 @@ public class FixedLeader extends LeaderStrategy implements SetParam {
                 inactivate(leader, 1);
                 return;
             } else {
-                leader.phase = PHASE3;
-                leader.validatedTicks = Manager.getTicks();
+                leader.phase = EXECUTION;
+                leader.validatedTicks = Manager.getCurrentTime();
                 return;
             }
         }
@@ -226,27 +227,9 @@ public class FixedLeader extends LeaderStrategy implements SetParam {
         return memberCandidates;
     }
 
-    @Override
-    protected void renewDE(Agent from, Agent target, double evaluation) {
-        assert !from.equals(target) : "alert4";
-
-        if (from.role == LEADER) {
-            double temp = from.reliabilityRankingAsL.get(target);
-            // 信頼度の更新式
-            temp = temp * (1.0 - α) + α * evaluation;
-            sortReliabilityRanking( from.reliabilityRankingAsL);
-        }
-        else {
-            double temp = from.reliabilityRankingAsM.get(target);
-            // 信頼度の更新式
-            temp = temp * (1.0 - α) + α * evaluation;
-            sortReliabilityRanking( from.reliabilityRankingAsM);
-        }
-    }
-
     public void checkMessages(Agent ag) {
         int size = ag.messages.size();
-        Message m;
+        MessageDeprecated m;
         // メンバからの作業完了報告をチェックする
         for (int i = 0; i < size; i++) {
             m = ag.messages.remove(0);
@@ -256,12 +239,12 @@ public class FixedLeader extends LeaderStrategy implements SetParam {
                 // すなわちrt = "メンバのサブタスク実行時間 + メッセージ往復時間"
                 AllocatedSubtask as = teamHistory[ag.id].remove(m.getFrom());
                 if (as == null) {
-                    System.out.println(Manager.getTicks() + ": " + m.getFrom() + " asserts he did " + ag.id + "'s subtask ");
+                    System.out.println(Manager.getCurrentTime() + ": " + m.getFrom() + " asserts he did " + ag.id + "'s subtask ");
                 }
-                int rt = Manager.getTicks() - as.getAllocatedTime();
+                int rt = Manager.getCurrentTime() - as.getAllocatedTime();
                 int reward = as.getRequiredResources() * 5;
 
-                renewDE( ag, m.getFrom(), (double) reward/rt );
+                renewDE( ag.reliabilityRankingAsL, m.getFrom(), (double) reward/rt, withReward );
                 sortReliabilityRanking( ag.reliabilityRankingAsL);
                 // TODO: タスク全体が終わったかどうかの判定と，それによる処理
                 /*
@@ -287,19 +270,19 @@ public class FixedLeader extends LeaderStrategy implements SetParam {
             size = ag.messages.size();
             if (size == 0) return;
             // リーダーでPROPOSITION or 誰でもEXECUTION → 誰からのメッセージも期待していない
-            if (ag.phase == lPHASE1 ) {
+            if (ag.phase == PROPOSITION) {
                 for (int i = 0; i < size; i++) {
                     m = ag.messages.remove(0);
-                    ag.sendNegative(ag, m.getFrom(), m.getMessageType(), m.getSubtask());
+                    ag.sendMessage(ag, m.getFrom(), REPLY, DECLINE);
                 }
             }
             // リーダーでREPORT → REPLYを期待している
-            else if (ag.phase == lPHASE2) {
+            else if (ag.phase == REPORT) {
                 for (int i = 0; i < size; i++) {
                     m = ag.messages.remove(0);
                     Agent from = m.getFrom();
                     if (m.getMessageType() == REPLY && ag.inTheList(from, ag.candidates) > -1) ag.replies.add(m);
-                    else ag.sendNegative(ag, m.getFrom(), m.getMessageType(), m.getSubtask());
+                    else ag.sendMessage(ag, m.getFrom(), REPLY, DECLINE);
                 }
             }
         }
@@ -307,7 +290,7 @@ public class FixedLeader extends LeaderStrategy implements SetParam {
 
     void inactivate(Agent ag, int success) {
         if (ag.role == LEADER) {
-            ag.phase = lPHASE1;
+            ag.phase = PROPOSITION;
             ag.teamMembers.clear();        // すでにサブタスクを送っていてメンバの選定から外すエージェントのリスト
             ag.myTask = null;
             ag.candidates.clear();
@@ -316,19 +299,14 @@ public class FixedLeader extends LeaderStrategy implements SetParam {
             ag.results.clear();
             ag.proposalNum = 0;
         } else if (ag.role == MEMBER) {
-            if (ag.mySubtaskQueue.size() > 0) {
-                //FIXME: どうやらサブタスクがキューから除かれずにmySubtaskとしてしまうときがある
-                assert ag.mySubtask != ag.mySubtaskQueue.get(0) : "Same subtask";
-                ag.mySubtask = ag.mySubtaskQueue.remove(0);
-                ag.executionTime = ag.calcExecutionTime(ag, ag.mySubtask);
-                ag.myLeader = ag.mySubtask.from;
-                ag.phase = PHASE3;
+            if ( ag.mySubtaskQueue.isEmpty() ) {
+                ag.phase = WAITING;
             } else {
-                ag.mySubtask = null;
-				ag.phase = mPHASE1;
+                ag.executionTime = ag.calcExecutionTime(ag, ag.mySubtaskQueue.keySet().iterator().next());
+                ag.phase = EXECUTION;
             }
         }
-        ag.validatedTicks = Manager.getTicks();
+        ag.validatedTicks = Manager.getCurrentTime();
     }
 
     public void clearStrategy() {

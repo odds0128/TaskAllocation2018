@@ -3,248 +3,178 @@ package main.research.agent.strategy.ProposedStrategy;
 import main.research.Manager;
 import main.research.SetParam;
 import main.research.agent.Agent;
-import main.research.communication.Message;
+import main.research.communication.MessageDeprecated;
 import main.research.random.MyRandom;
 import main.research.agent.strategy.MemberStrategy;
 import main.research.task.AllocatedSubtask;
 import main.research.task.Subtask;
 import main.research.task.Task;
 
-import static main.research.SetParam.Principle.*;
+import static main.research.Manager.getCurrentTime;
+import static main.research.SetParam.DERenewalStrategy.*;
 
 import static main.research.SetParam.MessageType.*;
 import static main.research.SetParam.ReplyType.*;
 import static main.research.SetParam.Phase.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 // TODO: 中身を表したクラス名にする
 public class ProposedStrategy_m extends MemberStrategy implements SetParam {
+	private List<MessageDeprecated> solicitations = new ArrayList<>();
 
 	protected void replyAsM(Agent member) {
-		checkSolicitationsANDAllocations(member);
-		if (member.mySubtask == null) {
-			if (Manager.getTicks() - member.validatedTicks > THRESHOLD_FOR_ROLE_RENEWAL) {
-				member.inactivate(0);
-			}
-			return;     // メッセージをチェック
-		}
-		// どのリーダーからの要請も受けないのならinactivate
-		member.phase = RECEPTION;
-		member.validatedTicks = Manager.getTicks();
+		boolean flag = replyToSolicitations( member, SUBTASK_QUEUE_SIZE, solicitations );
+
+		if ( flag && getCurrentTime() - member.validatedTicks > THRESHOLD_FOR_ROLE_RENEWAL) member.inactivate(0);
+		else proceedToNextPhase(member);
 	}
 
-
+	// TODO: リーダーとサブタスクの対応がバラバラ侍
 	protected void receiveAsM(Agent member) {
-		// サブタスクがもらえたなら実行フェイズへ移る.
-		if (member.mySubtask != null) {
-			member.myLeader = member.mySubtask.from;
-			member.allocated[member.myLeader.id][member.mySubtask.resType]++;
-			member.executionTime = member.calcExecutionTime(member, member.mySubtask);
-			member.phase = EXECUTION;
-			member.validatedTicks = Manager.getTicks();
-			// remove
-			if( member.myLeader.id == 455 && member.id == 203 ){
-				System.out.println( member.id + " receive subtask whose execution time is " + member.executionTime + " at " + Manager.getTicks() );
-			}
-		}
-		// サブタスクが割り当てられなかったら信頼度を0で更新し, inactivate
-		else {
+		if ( member.mySubtaskQueue.isEmpty() ) {
 			member.inactivate(0);
+		} else {
+			// HACK
+			Subtask currentSubtask = member.mySubtaskQueue.keySet().iterator().next();
+			Agent currentLeader    = member.mySubtaskQueue.get(currentSubtask);
+
+			member.allocated[currentLeader.id][currentSubtask.resType]++;
+			member.executionTime = member.calcExecutionTime(member, currentSubtask);
+			proceedToNextPhase(member);
 		}
 	}
 
-	protected void execute(Agent agent) {
-		agent.validatedTicks = Manager.getTicks();
-		agent.executionTime--;
+	protected void execute(Agent agent_m) {
+		agent_m.validatedTicks = getCurrentTime();
 
-		if ( agent.executionTime == 0) {
-			agent.myLeaders.remove(agent.myLeader);
-			agent.required[agent.mySubtask.resType]++;
-			// remove
-			if( agent.myLeader.id == 455 && agent.id == 203 ) {
-				System.out.println(" 203 did " + agent.mySubtask + " at " + Manager.getTicks());
-			}
-			agent.sendMessage(agent, agent.myLeader, DONE, 0);
-			renewDE(agent, agent.myLeader, (double) agent.mySubtask.reqRes[agent.mySubtask.resType] / (double) agent.calcExecutionTime(agent, agent.mySubtask));
-			if (agent._coalition_check_end_time - Manager.getTicks() < COALITION_CHECK_SPAN) {
-				agent.workWithAsM[agent.myLeader.id]++;
-				agent.didTasksAsMember++;
+		if ( --agent_m.executionTime == 0) {
+			// HACK
+			Subtask currentSubtask = agent_m.mySubtaskQueue.keySet().iterator().next();
+			Agent currentLeader = agent_m.mySubtaskQueue.get(currentSubtask);
+
+			agent_m.required[currentSubtask.resType]++;
+			agent_m.sendMessage(agent_m, currentLeader, DONE, 0);
+			renewDE( agent_m.reliabilityRankingAsM , currentLeader, 1, withBinary);
+
+			if (agent_m._coalition_check_end_time - getCurrentTime() < COALITION_CHECK_SPAN) {
+				agent_m.workWithAsM[currentLeader.id]++;
+				agent_m.didTasksAsMember++;
 			}
 			// 自分のサブタスクが終わったら役割適応度を1で更新して非活性状態へ
-			agent.inactivate(1);
+			agent_m.mySubtaskQueue.remove(currentSubtask);
+			// consider: nextPhaseと一緒にできない？
+			agent_m.inactivate(1);
 		}
 	}
 
-	/**
-	 * selectLeaderメソッド
-	 * メンバがどのリーダーの要請を受けるかを判断する
-	 * 信頼エージェントのリストにあるリーダーエージェントからの要請を受ける
-	 */
-	// 互恵主義と合理主義のどちらかによって行動を変える
-	public void checkSolicitationsANDAllocations(Agent member) {
-		List<Message> others = new ArrayList<>();
-		List<Message> solicitations = new ArrayList<>();
-		Message message;
+	public void checkMessages(Agent ag_m) {
+		while ( ! ag_m.messages.isEmpty() ) {
+			MessageDeprecated m = ag_m.messages.remove(0);
 
-
-		// 有効なメッセージがなければリターンする
-		if (member.messages.size() == 0) return;
-
-		// メッセージの分類
-		while (member.messages.size() > 0) {
-			message = member.messages.remove(0);
-			if (message.getMessageType() == PROPOSAL) {
-				// assert message.getFrom() != member.leader : message.getFrom().id + " to " + member.id +  "Duplicated";
-				// すでにそのリーダーのチームに参加している場合は落とす
-				if (member.haveAlreadyJoined(member.myLeader,member.myLeaders, message.getFrom())) {
-					// todo: 単なるrejectとREJECT_FOR_DOING_YOUR_STを区別する？
-					member.sendMessage(member, message.getFrom(), REPLY, REJECT);
-				} else {
-					solicitations.add(message);
-				}
-			} else {
-				others.add(message);
+			switch ( ( MessageType ) m.getMessageType() ) {
+				case DONE:
+					reactToDoneMessage( ag_m, m.getFrom() );
+					break;
+				case SOLICITATION:
+					reactToSolicitingMessage(ag_m, m);
+					break;
+				case RESULT:
+					reactToResultMessage(ag_m, m);
+					break;
+				default:
+					System.out.println( ag_m.id + " , type : " + m.getMessageType() );
 			}
 		}
-		member.messages = others;
-		int room = SUBTASK_QUEUE_SIZE - member.mySubtaskQueue.size(); // サブタスクキューの空き
-
-		// サブタスクキューの空きがある限りsolicitationを選定する
-		ProposedStrategy_m.checkSolicitations( member, member.tbd, room, solicitations );
-
-		// othersへの対処．(othersとしては，RESULTが考えられる)
-		Message result;
-		Subtask allocatedSubtask;
-		while (others.size() > 0) {
-			member.tbd--;
-			result = others.remove(0);
-			allocatedSubtask = result.getSubtask();
-			assert result.getMessageType() == RESULT : "Leader Must Confuse Someone";
-			if (allocatedSubtask == null) {   // 割り当てがなかった場合
-				renewDE(member, result.getFrom(), 0);
-				member.myLeaders.remove(result.getFrom());
-			} else {    // 割り当てられた場合
-				// すでにサブタスクを持っているならそれを優先して今もらったやつはキューに入れておく
-				// さもなければキューに"入れずに"自分の担当サブタスクとする
-				if (member.mySubtask == null) {
-					member.mySubtask = allocatedSubtask;
-				} else {
-					member.mySubtaskQueue.add(allocatedSubtask);
-				}
-			}
-		}
-		assert member.mySubtaskQueue.size() <= SUBTASK_QUEUE_SIZE : member.mySubtaskQueue + " Overwork!";
 	}
 
-	private static void checkSolicitations(Agent member, int tbd, int room, List<Message> solicitations) {
-			while (tbd < room && solicitations.size() > 0) {
+	// TODO: leaderの側に移動してstatic化する
+	void reactToDoneMessage(Agent ag_m, Agent from ) {
+		renewDE( ag_m.reliabilityRankingAsL, from, 1, withBinary );
+		AllocatedSubtask as = teamHistory[ag_m.id].remove( from );
+
+		// タスク全体が終わったかどうかの判定と，それによる処理
+		Task task = ag_m.identifyTask(as.getTaskId());
+		task.subtasks.remove(as.getSt());
+		if ( task.subtasks.isEmpty() ) {
+			ag_m.pastTasks.remove(task);
+			Manager.finishTask(ag_m, task);
+			ag_m.didTasksAsLeader++;
+		}
+	}
+
+	private void reactToSolicitingMessage(Agent ag_m, MessageDeprecated m) {
+		if( ! ( ag_m.mySubtaskQueue.size() < SUBTASK_QUEUE_SIZE ) ) {
+			Agent.sendMessage(ag_m, m.getFrom(), REPLY, DECLINE);
+		} else {
+			solicitations.add(m);
+		}
+	}
+
+	private void reactToResultMessage(Agent ag_m, MessageDeprecated m) {
+		if( m.getSubtask() == null ) {
+			renewDE( ag_m.reliabilityRankingAsM, m.getFrom(), 0, withBinary);
+		} else {
+			ag_m.mySubtaskQueue.put( m.getSubtask(), m.getFrom() );
+		}
+	}
+
+	private static boolean replyToSolicitations(Agent member, int room, List<MessageDeprecated> solicitations) {
+		if(  solicitations.isEmpty() ) return false;
+
+		boolean joinFlag = false;
+		sortSolicitationByDEofLeader(  solicitations, member.reliabilityRankingAsM );
+
+		while (  solicitations.size() > 0 && room > 0 ) {
 			// εグリーディーで選択する
 			if ( MyRandom.epsilonGreedy( Agent.ε ) ) {
-				Message target;
-				Agent to;
-				do {
-					int index = MyRandom.getRandomInt(0, solicitations.size() - 1);
-					target = solicitations.remove(index);
-					to = target.getFrom();
-				} while ( Agent.haveAlreadyJoined( member.myLeader, member.myLeaders, to ) );
-				Agent.sendMessage(member, to, REPLY, ACCEPT);
-				member.myLeaders.add(to);
+				Agent myRandomLeader = selectLeaderRandomly(  solicitations );
+				Agent.sendMessage( member, myRandomLeader, REPLY, ACCEPT);
+				joinFlag = true;
+				continue;
 			}
-			// solicitationsの中から最も信頼するリーダーのsolicitを受ける
-			else {
-				int index = 0;
-				int solicitationNum = solicitations.size();
-				Message message1 = solicitations.get(0);
-				Message message2;
-				Agent tempLeader = message1.getFrom();
-				Agent temp;
-
-				for (int i = 1; i < solicitationNum; i++) {
-					message2 = solicitations.get(i);
-					temp = message2.getFrom();
-					// もし暫定信頼度一位のやつより信頼度高いやついたら, 暫定のやつを断って今のやつを暫定(ryに入れる
-					if (member.reliabilityRankingAsM.get(tempLeader) < member.reliabilityRankingAsM.get(temp)) {
-						tempLeader = temp;
-						index = i;
-					}
-				}
-				if (member.principle == RATIONAL) {
-					Agent l = solicitations.remove(index).getFrom();
-					member.sendMessage(member, l, REPLY, ACCEPT);
-					member.myLeaders.add(l);
-				} else {
-					if (member.inTheList(tempLeader, (List) member.reliabilityRankingAsM.keySet()) > -1) {
-						Agent l = solicitations.remove(index).getFrom();
-						member.sendMessage(member, l, REPLY, ACCEPT);
-						member.myLeaders.add(l);
-					} else member.sendMessage(member, tempLeader, REPLY, REJECT);
-				}
-			}
-			member.tbd++;
+			Agent.sendMessage( member, solicitations.remove(0).getFrom(), REPLY, ACCEPT);
+			member.numberOfExpectedMessages++;
+			joinFlag = true;
 		}
-		Message message;
-		while (solicitations.size() > 0) {
-			message = solicitations.remove(0);
-			member.sendMessage(member, message.getFrom(), REPLY, REJECT);
+		while ( ! solicitations.isEmpty() ) {
+			member.sendMessage(member,  solicitations.remove(0).getFrom(), REPLY, DECLINE);
 		}
-	}
-
-	// TODO: コメントアウトで手動で切り替えるのをやめる
-	@Override
-	protected void renewDE(Agent from, Agent target, double evaluation) {
-		assert !from.equals(target) : "alert4";
-
-		double formerDE = from.reliabilityRankingAsM.get(target);
-//		double newDE = renewDEbyArbitraryReward(formerDE, evaluation);
-
-		boolean b = evaluation > 0;
-		double newDE = renewDEby0or1(formerDE, b);
-
-		from.reliabilityRankingAsM.put(target, newDE);
+		return joinFlag;
 	}
 
 
-	public void checkMessages(Agent ag) {
-		int size = ag.messages.size();
-		Message m;
-		// メンバからの作業完了報告をチェックする
-		for (int i = 0; i < size; i++) {
-			m = ag.messages.remove(0);
-			if (m.getMessageType() == DONE) {
-				// 「リーダーとしての更新式で」信頼度を更新する
-				// そのメンバにサブタスクを送ってからリーダーがその完了報告を受けるまでの時間
-				// すなわちrt = "メンバのサブタスク実行時間 + メッセージ往復時間"
-				AllocatedSubtask as = teamHistory[ag.id].remove(m.getFrom());
-				if (as == null) {
-					System.out.println(Manager.getTicks() + ": " + m.getFrom() + " asserts he did " + ag.id + "'s subtask ");
-				}
-				int rt = Manager.getTicks() - as.getAllocatedTime();
-				int reward = as.getRequiredResources() * 5;
-
-
-				renewDE(ag, m.getFrom(), (double) reward / rt);
-				// TODO: タスク全体が終わったかどうかの判定と，それによる処理
-                /*
-                1. 終わったサブタスクがどのタスクのものだったか確認する
-                2. そのサブタスクを履歴から除く
-                3. もしそれによりタスク全体のサブタスクが0になったら終了とみなす
-                 */
-				Task task = ag.identifyTask(as.getTaskId());
-				task.subtasks.remove(as.getSt());
-				if (task.subtasks.size() == 0) {
-					ag.pastTasks.remove(task);
-					Manager.finishTask(ag, task);
-					ag.didTasksAsLeader++;
-				}
-
-			} else {
-				ag.messages.add(m); // 違うメッセージだったら戻す
-			}
+	private static void sortSolicitationByDEofLeader(List<MessageDeprecated> solicitations, Map<Agent, Double> DEs ) {
+		solicitations.sort( ( solicitation1, solicitation2 ) ->
+			(int) ( DEs.get( solicitation2.getFrom() ) - DEs.get( solicitation1.getFrom() ) ));
+		// remove
+		if( solicitations.get(0).getTo().id == 439 ) {
+			List<Double> values = new ArrayList<>( DEs.values() );
+			System.out.println( values.subList(0, 5));
 		}
-		// TODO: solicitを受けるか判断する
-		checkSolicitationsANDAllocations(ag);
+	}
+
+	static private Agent selectLeaderRandomly( List<MessageDeprecated> solicitations ) {
+		int index = MyRandom.getRandomInt(0, solicitations.size() - 1);
+		MessageDeprecated target = solicitations.remove(index);
+
+		return target.getFrom();
+	}
+
+	// TODO: Agentクラスのstaticにする
+	private void proceedToNextPhase(Agent m ) {
+		switch ( m.phase ) {
+			case WAITING:
+				m.phase = RECEPTION;
+				break;
+			case RECEPTION:
+				m.phase = EXECUTION;
+				break;
+			case EXECUTION:
+				m.phase = SELECT_ROLE;
+				break;
+		}
+		m.validatedTicks = getCurrentTime();
 	}
 
 }
