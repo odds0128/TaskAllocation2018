@@ -76,33 +76,20 @@ public class ProposedStrategy_m extends MemberStrategy implements SetParam {
 		}
 	}
 
-	private void reactToSolicitingMessage(Agent ag_m, Solicitation s) {
-		if( ! ( ag_m.mySubtaskQueue.size() < SUBTASK_QUEUE_SIZE ) ) {
-			TransmissionPath.sendMessage( new ReplyToSolicitation( ag_m, s.getFrom(), DECLINE ) );
-		} else {
-			solicitationList.add( s );
-		}
-	}
-
 	protected void replyToSolicitations( Agent member, List< Solicitation > solicitations ) {
 		if(  solicitations.isEmpty() ) return;
 
 		sortSolicitationByDEofLeader(  solicitations, member.reliabilityRankingAsM );
 
-		while (  solicitations.size() > 0 && SetParam.SUBTASK_QUEUE_SIZE > 0 ) {
-			// εグリーディーで選択する
-			if ( MyRandom.epsilonGreedy( Agent.ε ) ) {
-				Agent myRandomLeader = selectLeaderRandomly(  solicitations );
-				TransmissionPath.sendMessage( new ReplyToSolicitation( member, myRandomLeader, ACCEPT ) );
-				joinFlag = true;
-				continue;
-			}
-			TransmissionPath.sendMessage( new ReplyToSolicitation( member, solicitations.remove(0).getFrom(), ACCEPT ) );
-			member.numberOfExpectedMessages++;
+		int acceptationCount = 0;
+		while (  solicitations.size() > 0 && acceptationCount++ <= SUBTASK_QUEUE_SIZE ) {
+			Solicitation s = MyRandom.epsilonGreedy( Agent.ε ) ? selectSolicitationRandomly( solicitations ) : solicitations.remove( 0 );
+			TransmissionPath.sendMessage( new ReplyToSolicitation( member, s.getFrom(), ACCEPT, s.getExpectedSubtask() ) );
 			joinFlag = true;
 		}
 		while ( ! solicitations.isEmpty() ) {
-			TransmissionPath.sendMessage( new ReplyToSolicitation( member,  solicitations.remove(0).getFrom(), DECLINE ) );
+			Solicitation s = solicitations.remove( 0 );
+			TransmissionPath.sendMessage( new ReplyToSolicitation( member,  s.getFrom(), DECLINE, s.getExpectedSubtask() ) );
 		}
 	}
 
@@ -112,10 +99,9 @@ public class ProposedStrategy_m extends MemberStrategy implements SetParam {
 			(int) ( DEs.get( solicitation2.getFrom() ) - DEs.get( solicitation1.getFrom() ) ));
 	}
 
-	static private Agent selectLeaderRandomly( List< Solicitation > solicitations ) {
+	static private Solicitation selectSolicitationRandomly( List< Solicitation > solicitations ) {
 		int index = MyRandom.getRandomInt(0, solicitations.size() - 1);
-		Solicitation target = solicitations.remove(index);
-
-		return target.getFrom();
+		return solicitations.remove(index);
 	}
 }
+

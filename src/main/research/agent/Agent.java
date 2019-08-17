@@ -51,11 +51,7 @@ public class Agent implements SetParam, Cloneable {
 
 	// リーダーエージェントのみが持つパラメータ
 	public int didTasksAsLeader = 0;
-	public List< Agent > candidates;         // これからチームへの参加を要請するエージェントのリスト
-	public int proposalNum = 0;            // 送ったproposalの数を覚えておく
-	public List< Agent > teamMembers;        // すでにサブタスクを送っていてメンバの選定から外すエージェントのリスト
 	public Task myTask;                  // 持ってきた(割り振られた)タスク
-	public int replyNum = 0;
 	public double threshold_for_reciprocity_as_leader;
 	public List< Task > pastTasks = new ArrayList<>();
 	public Map< Agent, Double > reliabilityRankingAsL = new LinkedHashMap<>( HASH_MAP_SIZE );
@@ -64,7 +60,6 @@ public class Agent implements SetParam, Cloneable {
 	public int didTasksAsMember = 0;
 	public int executionTime = 0;
 	public double threshold_for_reciprocity_as_member;
-	// TODO: List< Pair<Agent, Subtask> にしましょ
 	public List<Pair<Agent, Subtask>> mySubtaskQueue = new ArrayList<>(  );
 	public int numberOfExpectedMessages = 0;                                            // 返事待ちの数
 	public Map< Agent, Double > reliabilityRankingAsM = new LinkedHashMap<>( HASH_MAP_SIZE );
@@ -115,11 +110,10 @@ public class Agent implements SetParam, Cloneable {
 		List< Agent > randomAgentList = new ArrayList<>();
 
 		originalList.remove( this );
-
 		int size = originalList.size();
-
 		int index;
 		Agent ag;
+
 		for ( int i = 1; i <= size; i++ ) {
 			index = MyRandom.getRandomInt( 0, size - i );
 			ag = originalList.remove( index );
@@ -142,58 +136,37 @@ public class Agent implements SetParam, Cloneable {
 			role = MEMBER;
 			this.phase = EXECUTE_SUBTASK;
 		}
-//		if (epsilonGreedy()) {
-//			if (e_leader < e_member) {
-//				role = LEADER;
-//				this.phase = PROPOSITION;
-//				candidates = new ArrayList<>();
-//				teamMembers = new ArrayList<>();
-//				preAllocations = new HashMap<>();
-//				replies = new ArrayList<>();
-//				results = new ArrayList<>();
-//			} else if (e_member < e_leader) {
-//				role = MEMBER;
-//				this.phase = WAITING;
-//			} else {
-//// */
-//				int ran = MyRandom.getRandomInt(0, 1);
-//				if (ran == 0) {
-//					role = LEADER;
-//					this.phase = PROPOSITION;
-//					candidates = new ArrayList<>();
-//					teamMembers = new ArrayList<>();
-//					preAllocations = new HashMap<>();
-//					replies = new ArrayList<>();
-//					results = new ArrayList<>();
-//				} else {
-//					role = MEMBER;
-//					this.phase = WAITING;
-//				}
-//			}
-//			// εじゃない時
-//		} else {
-		if ( e_leader > e_member ) {
-			role = LEADER;
-			this.phase = SOLICIT;
-			candidates = new ArrayList<>();
-			teamMembers = new ArrayList<>();
-		} else if ( e_member > e_leader ) {
-			role = MEMBER;
-			this.phase = WAIT_FOR_SOLICITATION;
-		} else {
-			int ran = MyRandom.getRandomInt( 0, 1 );
-			if ( ran == 0 ) {
-				role = LEADER;
-				this.phase = SOLICIT;
-				candidates = new ArrayList<>();
-				teamMembers = new ArrayList<>();
-			} else {
-				role = MEMBER;
-				this.phase = WAIT_FOR_SOLICITATION;
-			}
-		}
-		//	}
+
+		if( e_leader == e_member ) { selectRandomRole(); return; }
+		if( MyRandom.epsilonGreedy( Agent.ε ) ) { selectReverseRole(); return; }
+		if ( e_leader > e_member ) { selectLeaderRole(); return; }
+		if ( e_member > e_leader ) { selectMemberRole(); return; }
 	}
+
+	void selectLeaderRole(  ) {
+		this.role  = LEADER;
+		this.phase = SOLICIT;
+	}
+
+	void selectMemberRole(  ) {
+		this.role  = MEMBER;
+		this.phase = WAIT_FOR_SOLICITATION;
+	}
+
+	void selectRandomRole() {
+		int toBeLeader = MyRandom.getRandomInt( 0, 1 );
+		if( toBeLeader == 1 ) selectLeaderRole();
+		else selectMemberRole();
+	}
+
+	void selectReverseRole(  ) {
+		if( e_leader > e_member ) {
+			selectLeaderRole();
+		}
+
+	}
+
+
 
 	void selectRoleWithoutLearning() {
 		int ran = MyRandom.getRandomInt( 0, 6 );
@@ -201,36 +174,16 @@ public class Agent implements SetParam, Cloneable {
 			role = MEMBER;
 			this.phase = EXECUTE_SUBTASK;
 		}
-		if ( ran == 0 ) {
-			role = LEADER;
-			e_leader = 1;
-			this.phase = SOLICIT;
-			candidates = new ArrayList<>();
-			teamMembers = new ArrayList<>();
-		} else {
-			role = MEMBER;
-			e_member = 1;
-			this.phase = WAIT_FOR_SOLICITATION;
-		}
+
+		if ( ran == 0 ) selectLeaderRole();
+		else selectMemberRole();
 	}
 
-	/**
-	 * inactiveメソッド
-	 * チームが解散になったときに待機状態になる.
-	 */
 	public void inactivate( double success ) {
-		if ( role == LEADER ) {
-			e_leader = e_leader * ( 1.0 - α ) + α * success;
-		} else {
-			e_member = e_member * ( 1.0 - α ) + α * success;
-		}
+		if ( role == LEADER ) e_leader = e_leader * ( 1.0 - α ) + α * success;
+		else                  e_member = e_member * ( 1.0 - α ) + α * success;
 
-		if ( role == LEADER ) {
-			candidates.clear();
-			teamMembers.clear();
-			proposalNum = 0;
-			replyNum = 0;
-		}
+		if ( role == LEADER && myTask != null) Manager.disposeTask( this );
 		role = JONE_DOE;
 		phase = SELECT_ROLE;
 		this.validatedTicks = Manager.getCurrentTime();
@@ -244,7 +197,6 @@ public class Agent implements SetParam, Cloneable {
 		return ( int ) Math.ceil( ( double ) st.reqRes[ st.resType ] / ( double ) a.resources[ st.resType ] );
 	}
 
-	// consider: そもそもいるのか問題と，出来合いのメソッドがあるのでは問題
 
 	/**
 	 * inTheListメソッド
@@ -336,82 +288,8 @@ public class Agent implements SetParam, Cloneable {
 	@Override
 	public String toString() {
 		String sep = System.getProperty( "line.separator" );
-		StringBuilder str = new StringBuilder();
-		str = new StringBuilder( String.format( "%3d", id ) );
-//        str = new StringBuilder("ID:" + String.format("%3d", id) + ", " + "x: " + x + ", y: " + y + ", ");
-//        str = new StringBuilder("ID:" + String.format("%3d", id) + "  " + messages );
-//        str = new StringBuilder("ID: " + String.format("%3d", id) + ", " + String.format("%.3f", e_leader) + ", " + String.format("%.3f", e_member)  );
-//        str = new StringBuilder("ID:" + String.format("%3d", id) + ", Resources: " + resSize + ", " + String.format("%3d", didTasksAsMember)  );
-/*
-        if( this.principle == RECIPROCAL ) {
-            str.append(", The most reliable agent: " + relRanking.get(0).id + "← reliability: " + reliabilities[relRanking.get(0).id]);
-            str.append(", the delay: " + main.research.Manager.delays[this.id][relRanking.get(0).id]);
-        }
-// */
-		str.append( "[" );
-		for ( int i = 0; i < RESOURCE_TYPES; i++ ) str.append( String.format( "%3d", resources[ i ] ) + "," );
+		StringBuilder str = new StringBuilder( String.format( "%3d", id ) );
 		str.append( "]" );
-// */
-        /*
-        if( role == LEADER ) {
-            List<Agent> temp = new ArrayList<>();
-            temp.addAll(candidates);
-            temp.addAll(teamMembers);
-            str.append( " Waiting: " );
-            for( Agent ag: temp ) str.append( String.format("%3d", ag.id ) + ", ");
-        }
-// */
-/*       if (e_member > e_leader) str.append(", member: ");
-        else if (e_leader > e_member) str.append(", leader: ");
-        else if (role == JONE_DOE) str.append(", free: ");
-//        str.append(String.format(", %.3f", e_leader) + ", " + String.format("%.3f", e_member) + sep);
-
-        for( int i = 0; i < AGENT_NUM; i++ ) str.append( i + ": " + String.format("%.3f", reliabilities[i] ) + ",  " );
-// */
-/*        str.append("e_leader: " + e_leader + ", e_member: " + e_member);
-        if( role == MEMBER ) str.append(", member: ");
-        else if( role == LEADER ) str.append(", leader: " );
-        else if( role == JONE_DOE ) str.append(", free: ");
-/*
-        if( phase == REPORT ){
-            str.append(" allocations: " + allocations  );
-//            str.append(" teamMembers: " + teamMembers );
-        }
-        else if( phase == RECEPTION ) str.append(", My Leader: " + leader.id);
-        else if( phase == EXECUTION ) str.append(", My Leader: " + leader.id + ", " + mySubtaskQueue.get(0) + ", resources: " + resource + ", rest:" + executionTime);
-
-//        if (role == LEADER) str.append(", I'm a leader. ");
-//        else str.append("I'm a member. ");
-// */
-/*
-        if (relAgents.size() != 0) {
-            int temp;
-            str.append(sep + "   Reliable Agents:");
-            for (int i = 0; i < relAgents.size(); i++) {
-                temp = relAgents.get(i).id;
-                str.append(String.format("%3d", temp));
-            }
-        }
-// */
-/*
-        int temp;
-        str.append( sep + "   Reliability Ranking:");
-        for( int i = 0; i < 5; i++ ){
-            temp = relRanking.get(i).id;
-            str.append(String.format("%3d", temp) );
-            str.append("→" + reliabilities[temp]);
-        }
-// */
-// */
-        /*
-        if( role == MEMBER ) {
-            str.append(",  Reliable Agents:");
-            for (int i = 0; i < MAX_REL_AGENTS; i++) {
-                temp = relAgents.get(i);
-                str.append(String.format("%3d", temp));
-            }
-        }
-//        */
 
 		return str.toString();
 	}
@@ -455,7 +333,7 @@ public class Agent implements SetParam, Cloneable {
 	}
 
 
-	public static class AgentIDcomparator implements Comparator< Agent > {
+	public static class AgentIdComparator implements Comparator< Agent > {
 		public int compare( Agent a, Agent b ) {
 			return a.id >= b.id ? 1 : -1;
 		}

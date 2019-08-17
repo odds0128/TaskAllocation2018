@@ -28,41 +28,46 @@ public class ProposedStrategy_l extends LeaderStrategy implements SetParam {
 
 	protected void solicitAsL( Agent leader ) {
 		leader.myTask = Manager.getTask( leader );
-		if ( leader.myTask == null ) {
-			leader.inactivate( 0 );
-			return;
-		}
-		leader.candidates = selectMembers( leader, leader.myTask.subtasks );   // メッセージ送信
-		if ( leader.candidates.isEmpty() ) {
-			Manager.disposeTask( leader );
-			leader.inactivate( 0 );
-			return;
-		}
+		if ( leader.myTask == null ) { leader.inactivate( 0 ); return; }
 
-		for ( int i = 0; i < leader.candidates.size(); i++ ) {
-			Agent candidate = leader.candidates.get( i );
-			if ( candidate != null ) {
-				leader.proposalNum++;
-				timeToStartCommunicatingMap.put( candidate, getCurrentTime() );
-				// TODO: 長すぎ
-				Message solicitation = new Solicitation( leader, candidate, leader.myTask.subtasks.get( i % leader.myTask.subtasks.size() ) );
-				TransmissionPath.sendMessage( solicitation );
-			}
+		List<Agent> candidates = selectMembers( leader, leader.myTask.subtasks );
+		repliesToCome = candidates.size();
+
+		if ( candidates.isEmpty() ) {
+			leader.inactivate( 0 );
+			return;
+		} else {
+			sendSolicitations( leader, candidates );
 		}
 		proceedToNextPhase(leader);  // 次のフェイズへ
 	}
 
+	private void sendSolicitations( Agent leader, List<Agent> targets ){
+		for ( int i = 0; i < targets.size(); i++ ) {
+			Agent target = targets.get( i );
+			if ( target != null ) {
+				timeToStartCommunicatingMap.put( target, getCurrentTime() );
+				// TODO: 長すぎ
+				Message solicitation = new Solicitation( leader, target, leader.myTask.subtasks.get( i % leader.myTask.subtasks.size() ) );
+				TransmissionPath.sendMessage( solicitation );
+			}
+		}
+	}
+
 	// HACK: 長すぎ
 	protected void formTeamAsL( Agent leader ) {
-		if ( replyList.size() < leader.proposalNum ) return;
+		if ( replyList.size() < repliesToCome ) return;
+		else repliesToCome = 0;
 
-		while ( !replyList.isEmpty() ) {
+		// 拒否のやつの評価を下げる．受理の奴らだけで全ての
+		while ( ! replyList.isEmpty() ) {
 			ReplyToSolicitation reply = replyList.remove( 0 );
 			Agent betrayer = reply.getFrom();
+
 			if ( reply.getReplyType() != ACCEPT ) {
 				exceptions.remove( betrayer );
-				int i = leader.inTheList( betrayer, leader.candidates );
-				leader.candidates.set( i, null );
+				int i = leader.inTheList( betrayer, agentsNegotiatingWith );
+				agentsNegotiatingWith.set( i, null );
 				renewDE( leader.reliabilityRankingAsL, betrayer, 0, withBinary );
 			}
 			// hack: 現状リーダーは全員からの返信をもらってから割り当てを開始するため，早くに返信が到着したエージェントとの総通信時間が見かけ上長くなってしまう．
@@ -74,11 +79,12 @@ public class ProposedStrategy_l extends LeaderStrategy implements SetParam {
 		}
 
 		Agent A, B;
+		List<Agent> teamMembers = new ArrayList<>(  );
 		Map< Agent, Subtask > preAllocations = new HashMap<>();
 		// if 全candidatesから返信が返ってきてタスクが実行可能なら割り当てを考えていく
 		for ( int indexA = 0, indexB = leader.myTask.subtasks.size(); indexA < leader.myTask.subtasks.size(); indexA++, indexB++ ) {
-			A = leader.candidates.get( indexA );
-			B = leader.candidates.get( indexB );
+			A = agentsNegotiatingWith.get( indexA );
+			B = agentsNegotiatingWith.get( indexB );
 			// もし両方から受理が返ってきたら, 信頼度の高い方に割り当てる
 			if ( A != null && B != null ) {
 				// Bの方がAより信頼度が高い場合
@@ -93,7 +99,7 @@ public class ProposedStrategy_l extends LeaderStrategy implements SetParam {
 					preAllocations.put( A, leader.myTask.subtasks.get( indexA ) );
 					exceptions.remove( B );
 					TransmissionPath.sendMessage( new ResultOfTeamFormation( leader, B, FAILURE, null ) );
-					leader.teamMembers.add( A );
+					teamMembers.add( A );
 				}
 			}
 			// もし片っぽしか受理しなければそいつがチームメンバーとなる
@@ -101,23 +107,23 @@ public class ProposedStrategy_l extends LeaderStrategy implements SetParam {
 				// Bだけ受理してくれた
 				if ( A == null ) {
 					preAllocations.put( B, leader.myTask.subtasks.get( indexA ) );
-					leader.teamMembers.add( B );
+					teamMembers.add( B );
 				}
 				// Aだけ受理してくれた
 				if ( B == null ) {
 					preAllocations.put( A, leader.myTask.subtasks.get( indexA ) );
-					leader.teamMembers.add( A );
+					teamMembers.add( A );
 				}
 			}
 		}
 		// 未割り当てが残っていないのなら実行へ
-		if ( leader.teamMembers.size() == leader.myTask.subtasks.size() ) {
-			for ( Agent tm: leader.teamMembers ) {
+		if ( teamMembers.size() == leader.myTask.subtasks.size() ) {
+			for ( Agent tm: teamMembers ) {
 				appendAllocationHistory( tm, preAllocations.get( tm ) );
 				TransmissionPath.sendMessage( new ResultOfTeamFormation( leader, tm, SUCCESS, preAllocations.get( tm ) ) );
 			}
 			if ( Agent._coalition_check_end_time - getCurrentTime() < COALITION_CHECK_SPAN ) {
-				for ( Agent ag: leader.teamMembers ) {
+				for ( Agent ag: teamMembers ) {
 					leader.workWithAsL[ ag.id ]++;
 				}
 			}
@@ -127,7 +133,7 @@ public class ProposedStrategy_l extends LeaderStrategy implements SetParam {
 		}
 		// 未割り当てのサブタスクが残っていれば失敗
 		else {
-			for ( Agent tm: leader.teamMembers ) {
+			for ( Agent tm: teamMembers ) {
 				exceptions.remove( tm );
 				TransmissionPath.sendMessage( new ResultOfTeamFormation( leader, tm, FAILURE, null ) );
 			}
@@ -146,7 +152,7 @@ public class ProposedStrategy_l extends LeaderStrategy implements SetParam {
 	 */
 
 	// TODO: HACK: Map使って作り直す．
-	public List< Agent > selectMembers( Agent leader, List< Subtask > subtasks ) {
+	public List<Agent> selectMembers( Agent leader, List< Subtask > subtasks ) {
 		List< Agent > memberCandidates = new ArrayList<>();
 		Agent candidate = null;
 		List< Subtask > skips = new ArrayList<>();  // 互恵エージェントがいるために他のエージェントに要請を送らないサブタスクを格納

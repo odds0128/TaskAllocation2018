@@ -18,6 +18,7 @@ import java.util.*;
 
 public abstract class LeaderStrategy implements Strategy, SetParam {
 	protected List< Agent > exceptions = new ArrayList<>();
+	public int repliesToCome = 0;            // 送ったsolicitationの数を覚えておく
 	public Map< Agent, List<Subtask> > allocationHistory = new HashMap<>();
 
 	protected List< ReplyToSolicitation > replyList = new ArrayList<>();
@@ -45,7 +46,7 @@ public abstract class LeaderStrategy implements Strategy, SetParam {
 	}
 
 	protected void declineSolicitation( Agent leader, Solicitation s ) {
-		TransmissionPath.sendMessage( new ReplyToSolicitation( leader, s.getFrom(), DECLINE ) );
+		TransmissionPath.sendMessage( new ReplyToSolicitation( leader, s.getFrom(), DECLINE, ) );
 	}
 
 	public void checkDoneMessage( Agent leader, Done d ) {
