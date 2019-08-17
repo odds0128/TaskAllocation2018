@@ -2,17 +2,23 @@ package main.research;
 
 import main.research.agent.Agent;
 import main.research.agent.AgentManager;
+import main.research.agent.strategy.Strategy;
+import main.research.others.random.MyRandom;
 import main.research.communication.TransmissionPath;
 import main.research.grid.Grid;
-import main.research.random.MyRandom;
-import main.research.agent.strategy.Strategy;
 import main.research.task.Task;
 
-import static main.research.SetParam.Role.*;
-
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+
+import static main.research.SetParam.Role.*;
 
 public class Manager implements SetParam {
     //TODO: こんな風にするならsingletonにしたほうがいいよね
@@ -77,7 +83,6 @@ public class Manager implements SetParam {
             // num回実験
             while (true) {
                 initiate(num++);                         // シード，タスク，エージェントの初期化処理
-                System.out.println( Grid.getDelay( AgentManager.getAgentList().get(455), AgentManager.getAgentList().get(203) ) );
                 if (CHECK_INITIATION) {
                     if (num == EXECUTION_TIMES) break;
                     clearAll();
@@ -108,8 +113,6 @@ public class Manager implements SetParam {
                     }
 // */
                     TransmissionPath.transmit();                // 通信遅延あり
-                    checkMessage(AgentManager.getAgentList());          // 要請の確認, 無効なメッセージに対する返信
-
                     actLeadersAndMembers();
 
                     if (turn % writeResultsSpan == 0 && CHECK_RESULTS) {
@@ -161,7 +164,7 @@ public class Manager implements SetParam {
     // 環境の準備に使うメソッド
     private static void initiate(int times) {
         // シードの設定
-        MyRandom.newSfmt(times);
+        main.research.others.random.MyRandom.newSfmt(times);
         // タスクキューの初期化
         taskQueue = new LinkedList<>();
         for (int i = 0; i < INITIAL_TASK_NUM; i++) {
@@ -183,11 +186,10 @@ public class Manager implements SetParam {
         int random;
         Agent candidate;
 
-        assert exceptions.size() < 100: "too much";
     	do{
             random = MyRandom.getRandomInt(0, targets.size() - 1);
             candidate = targets.get(random);
-        } while ( candidate.equals(self) || self.inTheList(candidate, exceptions) >= 0 );
+        } while ( candidate.equals(self) || Agent.inTheList(candidate, exceptions) >= 0 );
 
         return candidate;
     }
@@ -274,17 +276,17 @@ public class Manager implements SetParam {
         List<Agent> temp = new ArrayList<>(agents);
         int rand;
         if (command == "select role") {
-            while (temp.size() != 0) {
+            while ( ! temp.isEmpty() ) {
                 rand = MyRandom.getRandomInt(0, temp.size() - 1);
                 temp.remove(rand).selectRole();
             }
         } else if (command == "act as member") {
-            while (temp.size() != 0) {
+            while ( ! temp.isEmpty() ) {
                 rand = MyRandom.getRandomInt(0, temp.size() - 1);
                 temp.remove(rand).actAsMember();
             }
         } else if (command == "act as leader") {
-            while (temp.size() != 0) {
+            while ( ! temp.isEmpty() ) {
                 rand = MyRandom.getRandomInt(0, temp.size() - 1);
                 temp.remove(rand).actAsLeader();
             }
@@ -314,17 +316,13 @@ public class Manager implements SetParam {
         return temp;
     }
 
-    private static void checkMessage(List<Agent> agents ){
-        for (Agent ag : agents) ag.checkMessages(ag);
-    }
-
     private static void clearAll() {
         taskQueue.clear();
         snapshot = null;
         disposedTasks = 0;
         finishedTasks = 0;
         overflowTasks = 0;
-        TransmissionPath.clearTP();
+        TransmissionPath.clear();
         Task.clearT();
         Agent.clear();
         Strategy.clear();

@@ -2,7 +2,7 @@ package main.research.task;
 
 import main.research.SetParam;
 import main.research.agent.Agent;
-import main.research.random.MyRandom;
+import main.research.others.random.MyRandom;
 
 import java.util.Comparator;
 

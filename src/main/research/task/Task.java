@@ -2,7 +2,7 @@ package main.research.task;
 
 import main.research.SetParam;
 import main.research.agent.Agent;
-import main.research.random.MyRandom;
+import main.research.others.random.MyRandom;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +38,10 @@ public class Task implements SetParam {
 
     private int setDeadline( int min, int max ) {
         return MyRandom.getRandomInt(min, max);
+    }
+
+    public boolean isPartOfThisTask( Subtask st ){
+    	return subtasks.contains( st );
     }
 
     public int getDeadline() {

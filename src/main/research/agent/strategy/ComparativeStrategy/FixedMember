@@ -3,8 +3,7 @@ package main.research.agent.strategy.ComparativeStrategy;
 import main.research.Manager;
 import main.research.SetParam;
 import main.research.agent.Agent;
-import main.research.communication.MessageDeprecated;
-import main.research.random.MyRandom;
+import main.research.others.random.MyRandom;
 import main.research.agent.strategy.MemberStrategy;
 import main.research.task.AllocatedSubtask;
 import main.research.task.Subtask;
@@ -44,7 +43,7 @@ public class FixedMember extends MemberStrategy implements SetParam {
         if ( member.messages.isEmpty() ) {
             return;
         }
-        member.phase = RECEPTION;
+        member.phase = WAIT_FOR_SUBTASK;
         member.validatedTicks = Manager.getCurrentTime();
     }
 
@@ -54,8 +53,8 @@ public class FixedMember extends MemberStrategy implements SetParam {
             Agent currentLeader = member.mySubtaskQueue.get(0);
             Subtask currentSubtask = member.mySubtaskQueue.keySet().iterator().next();
             member.allocated[currentLeader.id][currentSubtask.resType]++;
-            member.executionTime = member.calcExecutionTime(member, currentSubtask);
-            member.phase = EXECUTION;
+            member.executionTime = member.calculateExecutionTime(member, currentSubtask);
+            member.phase = EXECUTE_SUBTASK;
             member.validatedTicks = Manager.getCurrentTime();
         }
         // サブタスクが割り当てられなかったら信頼度を0で更新し, inactivate
@@ -224,7 +223,7 @@ public class FixedMember extends MemberStrategy implements SetParam {
 
     void inactivate(Agent ag, int success) {
         if (ag.role == LEADER) {
-            ag.phase = PROPOSITION;
+            ag.phase = SOLICIT;
             ag.teamMembers.clear();        // すでにサブタスクを送っていてメンバの選定から外すエージェントのリスト
             ag.myTask = null;
             ag.candidates.clear();
@@ -236,10 +235,10 @@ public class FixedMember extends MemberStrategy implements SetParam {
             if (ag.mySubtaskQueue.size() > 0) {
                 //FIXME: どうやらサブタスクがキューから除かれずにmySubtaskとしてしまうときがある
                 assert ag.mySubtaskQueue.get(0) != ag.mySubtaskQueue.get(0) : "Same subtask";
-                ag.executionTime = ag.calcExecutionTime(ag, ag.mySubtaskQueue.keySet().iterator().next() );
-                ag.phase = EXECUTION;
+                ag.executionTime = ag.calculateExecutionTime(ag, ag.mySubtaskQueue.keySet().iterator().next() );
+                ag.phase = EXECUTE_SUBTASK;
             } else {
-                ag.phase = WAITING;
+                ag.phase = WAIT_FOR_SOLICITATION;
             }
         }
         ag.validatedTicks = Manager.getCurrentTime();

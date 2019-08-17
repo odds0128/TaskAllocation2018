@@ -49,7 +49,7 @@ public interface SetParam {
     int MAX_X    = 51, MAX_Y = 51;
     int MAX_DELAY = 5;
 
-    double ADDITIONAL_TASK_NUM  = 1.5;        // タスクを追加するタイミングで, タスクキューに追加するタスクの個数(=λ)
+    double ADDITIONAL_TASK_NUM  = 7.5;        // タスクを追加するタイミングで, タスクキューに追加するタスクの個数(=λ)
     double  HOW_MANY            = 0.5 * ADDITIONAL_TASK_NUM;
     int RESOURCE_TYPES = 3;
     int MAX_AGENT_RESOURCE_SIZE   = 5;
@@ -114,14 +114,20 @@ public interface SetParam {
         REJECT_FOR_DOING_YOUR_ST
     }
 
+    // RESULTの種類
+    enum ResultType {
+        SUCCESS,
+        FAILURE
+    }
+
     // フェイズ
     enum Phase {
-        SELECT_ROLE , //全員
-        PROPOSITION , // リーダー
-        WAITING ,     // メンバ
-        REPORT ,      // リーダー
-        RECEPTION,    // メンバ
-        EXECUTION     // 全員
+        SELECT_ROLE ,              //全員
+        SOLICIT,                   // リーダー
+        WAIT_FOR_SOLICITATION,     // メンバ
+        FORM_TEAM,                 // リーダー
+        WAIT_FOR_SUBTASK,          // メンバ
+        EXECUTE_SUBTASK            // メンバ
     }
 
     enum DERenewalStrategy {

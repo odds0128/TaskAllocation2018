@@ -1,180 +1,121 @@
 package main.research.agent.strategy.ProposedStrategy;
 
-import main.research.Manager;
 import main.research.SetParam;
 import main.research.agent.Agent;
-import main.research.communication.MessageDeprecated;
-import main.research.random.MyRandom;
+import main.research.agent.strategy.Strategy;
+import main.research.communication.TransmissionPath;
+import main.research.communication.message.Done;
+import main.research.communication.message.ReplyToSolicitation;
+import main.research.communication.message.Solicitation;
+import main.research.others.Pair;
+import main.research.others.random.*;
 import main.research.agent.strategy.MemberStrategy;
-import main.research.task.AllocatedSubtask;
 import main.research.task.Subtask;
-import main.research.task.Task;
 
 import static main.research.Manager.getCurrentTime;
 import static main.research.SetParam.DERenewalStrategy.*;
 
-import static main.research.SetParam.MessageType.*;
 import static main.research.SetParam.ReplyType.*;
-import static main.research.SetParam.Phase.*;
+import static main.research.agent.strategy.Strategy.renewDE;
 
 import java.util.*;
 
 // TODO: 中身を表したクラス名にする
 public class ProposedStrategy_m extends MemberStrategy implements SetParam {
-	private List<MessageDeprecated> solicitations = new ArrayList<>();
+	private boolean joinFlag = false;
 
-	protected void replyAsM(Agent member) {
-		boolean flag = replyToSolicitations( member, SUBTASK_QUEUE_SIZE, solicitations );
-
-		if ( flag && getCurrentTime() - member.validatedTicks > THRESHOLD_FOR_ROLE_RENEWAL) member.inactivate(0);
-		else proceedToNextPhase(member);
+	@Override
+	public void actAsMember( Agent member ) {
+		// doneの処理
+		while( ! member.ls.doneList.isEmpty() ) {
+			Done d = member.ls.doneList.remove( 0 );
+			member.ls.checkDoneMessage( member, d );
+		}
+		super.actAsMember( member );
 	}
 
-	// TODO: リーダーとサブタスクの対応がバラバラ侍
+	protected void replyAsM( Agent member) {
+		if ( joinFlag && getCurrentTime() - member.validatedTicks > THRESHOLD_FOR_ROLE_RENEWAL) member.inactivate(0);
+		else Strategy.proceedToNextPhase(member); joinFlag = false;
+	}
+
 	protected void receiveAsM(Agent member) {
 		if ( member.mySubtaskQueue.isEmpty() ) {
 			member.inactivate(0);
 		} else {
 			// HACK
-			Subtask currentSubtask = member.mySubtaskQueue.keySet().iterator().next();
-			Agent currentLeader    = member.mySubtaskQueue.get(currentSubtask);
+			Subtask currentSubtask = member.mySubtaskQueue.get( 0 ).getValue();
+			Agent currentLeader    = member.mySubtaskQueue.get( 0 ).getKey();
 
 			member.allocated[currentLeader.id][currentSubtask.resType]++;
-			member.executionTime = member.calcExecutionTime(member, currentSubtask);
-			proceedToNextPhase(member);
+			member.executionTime = member.calculateExecutionTime(member, currentSubtask);
+			Strategy.proceedToNextPhase(member);
 		}
 	}
 
-	protected void execute(Agent agent_m) {
-		agent_m.validatedTicks = getCurrentTime();
+	protected void execute(Agent member) {
+		member.validatedTicks = getCurrentTime();
 
-		if ( --agent_m.executionTime == 0) {
+		if ( --member.executionTime == 0) {
 			// HACK
-			Subtask currentSubtask = agent_m.mySubtaskQueue.keySet().iterator().next();
-			Agent currentLeader = agent_m.mySubtaskQueue.get(currentSubtask);
+			Pair<Agent, Subtask> pair = member.mySubtaskQueue.remove( 0 );
+			Agent   currentLeader  = pair.getKey();
+			Subtask currentSubtask = pair.getValue();
 
-			agent_m.required[currentSubtask.resType]++;
-			agent_m.sendMessage(agent_m, currentLeader, DONE, 0);
-			renewDE( agent_m.reliabilityRankingAsM , currentLeader, 1, withBinary);
+			member.required[currentSubtask.resType]++;
+			TransmissionPath.sendMessage( new Done( member, currentLeader ) );
+			renewDE( member.reliabilityRankingAsM , currentLeader, 1, withBinary);
 
-			if (agent_m._coalition_check_end_time - getCurrentTime() < COALITION_CHECK_SPAN) {
-				agent_m.workWithAsM[currentLeader.id]++;
-				agent_m.didTasksAsMember++;
+			if (member._coalition_check_end_time - getCurrentTime() < COALITION_CHECK_SPAN) {
+				member.workWithAsM[currentLeader.id]++;
+				member.didTasksAsMember++;
 			}
-			// 自分のサブタスクが終わったら役割適応度を1で更新して非活性状態へ
-			agent_m.mySubtaskQueue.remove(currentSubtask);
+			member.mySubtaskQueue.remove(currentSubtask);
 			// consider: nextPhaseと一緒にできない？
-			agent_m.inactivate(1);
+			member.inactivate(1);
 		}
 	}
 
-	public void checkMessages(Agent ag_m) {
-		while ( ! ag_m.messages.isEmpty() ) {
-			MessageDeprecated m = ag_m.messages.remove(0);
-
-			switch ( ( MessageType ) m.getMessageType() ) {
-				case DONE:
-					reactToDoneMessage( ag_m, m.getFrom() );
-					break;
-				case SOLICITATION:
-					reactToSolicitingMessage(ag_m, m);
-					break;
-				case RESULT:
-					reactToResultMessage(ag_m, m);
-					break;
-				default:
-					System.out.println( ag_m.id + " , type : " + m.getMessageType() );
-			}
-		}
-	}
-
-	// TODO: leaderの側に移動してstatic化する
-	void reactToDoneMessage(Agent ag_m, Agent from ) {
-		renewDE( ag_m.reliabilityRankingAsL, from, 1, withBinary );
-		AllocatedSubtask as = teamHistory[ag_m.id].remove( from );
-
-		// タスク全体が終わったかどうかの判定と，それによる処理
-		Task task = ag_m.identifyTask(as.getTaskId());
-		task.subtasks.remove(as.getSt());
-		if ( task.subtasks.isEmpty() ) {
-			ag_m.pastTasks.remove(task);
-			Manager.finishTask(ag_m, task);
-			ag_m.didTasksAsLeader++;
-		}
-	}
-
-	private void reactToSolicitingMessage(Agent ag_m, MessageDeprecated m) {
+	private void reactToSolicitingMessage(Agent ag_m, Solicitation s) {
 		if( ! ( ag_m.mySubtaskQueue.size() < SUBTASK_QUEUE_SIZE ) ) {
-			Agent.sendMessage(ag_m, m.getFrom(), REPLY, DECLINE);
+			TransmissionPath.sendMessage( new ReplyToSolicitation( ag_m, s.getFrom(), DECLINE ) );
 		} else {
-			solicitations.add(m);
+			solicitationList.add( s );
 		}
 	}
 
-	private void reactToResultMessage(Agent ag_m, MessageDeprecated m) {
-		if( m.getSubtask() == null ) {
-			renewDE( ag_m.reliabilityRankingAsM, m.getFrom(), 0, withBinary);
-		} else {
-			ag_m.mySubtaskQueue.put( m.getSubtask(), m.getFrom() );
-		}
-	}
+	protected void replyToSolicitations( Agent member, List< Solicitation > solicitations ) {
+		if(  solicitations.isEmpty() ) return;
 
-	private static boolean replyToSolicitations(Agent member, int room, List<MessageDeprecated> solicitations) {
-		if(  solicitations.isEmpty() ) return false;
-
-		boolean joinFlag = false;
 		sortSolicitationByDEofLeader(  solicitations, member.reliabilityRankingAsM );
 
-		while (  solicitations.size() > 0 && room > 0 ) {
+		while (  solicitations.size() > 0 && SetParam.SUBTASK_QUEUE_SIZE > 0 ) {
 			// εグリーディーで選択する
 			if ( MyRandom.epsilonGreedy( Agent.ε ) ) {
 				Agent myRandomLeader = selectLeaderRandomly(  solicitations );
-				Agent.sendMessage( member, myRandomLeader, REPLY, ACCEPT);
+				TransmissionPath.sendMessage( new ReplyToSolicitation( member, myRandomLeader, ACCEPT ) );
 				joinFlag = true;
 				continue;
 			}
-			Agent.sendMessage( member, solicitations.remove(0).getFrom(), REPLY, ACCEPT);
+			TransmissionPath.sendMessage( new ReplyToSolicitation( member, solicitations.remove(0).getFrom(), ACCEPT ) );
 			member.numberOfExpectedMessages++;
 			joinFlag = true;
 		}
 		while ( ! solicitations.isEmpty() ) {
-			member.sendMessage(member,  solicitations.remove(0).getFrom(), REPLY, DECLINE);
+			TransmissionPath.sendMessage( new ReplyToSolicitation( member,  solicitations.remove(0).getFrom(), DECLINE ) );
 		}
-		return joinFlag;
 	}
 
 
-	private static void sortSolicitationByDEofLeader(List<MessageDeprecated> solicitations, Map<Agent, Double> DEs ) {
+	private static void sortSolicitationByDEofLeader( List< Solicitation > solicitations, Map<Agent, Double> DEs ) {
 		solicitations.sort( ( solicitation1, solicitation2 ) ->
 			(int) ( DEs.get( solicitation2.getFrom() ) - DEs.get( solicitation1.getFrom() ) ));
-		// remove
-		if( solicitations.get(0).getTo().id == 439 ) {
-			List<Double> values = new ArrayList<>( DEs.values() );
-			System.out.println( values.subList(0, 5));
-		}
 	}
 
-	static private Agent selectLeaderRandomly( List<MessageDeprecated> solicitations ) {
+	static private Agent selectLeaderRandomly( List< Solicitation > solicitations ) {
 		int index = MyRandom.getRandomInt(0, solicitations.size() - 1);
-		MessageDeprecated target = solicitations.remove(index);
+		Solicitation target = solicitations.remove(index);
 
 		return target.getFrom();
 	}
-
-	// TODO: Agentクラスのstaticにする
-	private void proceedToNextPhase(Agent m ) {
-		switch ( m.phase ) {
-			case WAITING:
-				m.phase = RECEPTION;
-				break;
-			case RECEPTION:
-				m.phase = EXECUTION;
-				break;
-			case EXECUTION:
-				m.phase = SELECT_ROLE;
-				break;
-		}
-		m.validatedTicks = getCurrentTime();
-	}
-
 }

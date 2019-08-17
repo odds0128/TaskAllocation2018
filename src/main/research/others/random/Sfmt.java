@@ -1,5 +1,5 @@
-package main.research.random;/*
-main.research.random.Sfmt.java 乱数ライブラリ(607)
+package main.research.others.random;/*
+main.research.others.random.Sfmt.java 乱数ライブラリ(607)
 coded by isaku@pb4.so-net.ne.jp
 */
 

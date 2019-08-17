@@ -89,8 +89,9 @@ public class OutPut implements SetParam {
 
     static void aggregateData(int ft, int dt, int ot, int rm, List<Agent> agentList) {
         finishedTasksArray[index] += ft;
-        messagesArray[index] += TransmissionPath.getMessageNum();
-        communicationDelayArray[index] += TransmissionPath.getCT();
+        int priorMessages = index > 0 ? messagesArray[index - 1] : 0;
+        messagesArray[index] += TransmissionPath.getMessageNum() - priorMessages;
+        communicationDelayArray[index] += TransmissionPath.getAverageCommunicationTime();
         disposedTasksArray[index] += dt;
         overflownTasksArray[index] += ot;
         reciprocalMembersArray[index] += rm;
@@ -342,7 +343,7 @@ public class OutPut implements SetParam {
         System.out.println("are good team!");
 
         if (leader.mySubtaskQueue.get(0) != null) {
-            System.out.println(" leader: " + leader + "→" + leader.mySubtaskQueue.get(0) + ": " + leader.calcExecutionTime(leader, leader.mySubtaskQueue.keySet().iterator().next() ) + "[tick(s)]");
+            System.out.println(" leader: " + leader + "→" + leader.mySubtaskQueue.get(0) + ": " + leader.calculateExecutionTime(leader, leader.mySubtaskQueue.get( 0 ).getValue()) + "[tick(s)]");
         } else {
             System.out.println(" leader: " + leader);
         }
@@ -380,7 +381,7 @@ public class OutPut implements SetParam {
                                 + (double) finishedTasksArray[i] / (finishedTasksArray[i] + disposedTasksArray[i]) + ", "
                                 + (double) finishedTasksArray[i] / (finishedTasksArray[i] + disposedTasksArray[i] + overflownTasksArray[i]) + ", "
                                 + (double)communicationDelayArray[i] / EXECUTION_TIMES + ", "
-                                + (double)messagesArray[i] / EXECUTION_TIMES + ", "
+                                + (double) messagesArray[i] / EXECUTION_TIMES + ", "
                                 + (double) taskExecutionTimeArray[i] / EXECUTION_TIMES + ", "
                                 + (double)leaderNumArray[i] / EXECUTION_TIMES + ", "
                                 + (double)neetMembersArray[i] / EXECUTION_TIMES + ", "

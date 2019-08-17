@@ -1,147 +1,93 @@
-package main.research.communication; /**
- *
- */
+package main.research.communication;
 
-import main.research.Manager;
+import main.research.communication.message.*;
+import main.research.others.Pair;
 import main.research.SetParam;
+import main.research.agent.Agent;
 import main.research.grid.Grid;
-
-import static main.research.SetParam.MessageType.*;
-import static main.research.SetParam.ReplyType.*;
+import main.research.task.Subtask;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
+import static main.research.SetParam.Role.LEADER;
+import static main.research.SetParam.Role.MEMBER;
+
 public class TransmissionPath implements SetParam {
-    static double[] meanCT = new double[WRITING_TIMES + 1];
+	private static int messageNum = 0;
+	private static int communicationTime = 0;
 
-    static int messageNum = 0;
-    static int communicationTime = 0;
-    static int proposals = 0;
-    static int replies = 0;
-    static int acceptances = 0;
-    static int rejects = 0;
-    static int results = 0;
-    static int finished = 0;
-    static int failed = 0;
+	private static List< Pair<Message, Integer> > messageQueue = new ArrayList<>(  );
 
-    private static TransmissionPath transmissionPath = new TransmissionPath();
-    private static List<MessageDeprecated> messageQueue = new ArrayList<>();
-    private static List<Integer> delays = new ArrayList<>();
+	public static void sendMessage( Message m ) {
+		assert ! ( m.getTo().role == LEADER && m instanceof ResultOfTeamFormation ) : "Wrong result message";
+		assert ! ( m.getTo().role == MEMBER && m instanceof ReplyToSolicitation )   : "Wrong reply message.";
 
-    private TransmissionPath() {
-    }
+		int untilArrival = Grid.getDelay( m.getFrom(), m.getTo() );
+		messageQueue.add( new Pair<>(m, untilArrival) );
+		messageNum++;
+		communicationTime += untilArrival;
+	}
+	
+	public static void transmit() {
+		Collections.sort( messageQueue, Comparator.comparing( Pair::getValue ) );
+		approaching( messageQueue );
 
-    public static TransmissionPath getInstance() {
-        return transmissionPath;
-    }
+		while( ! messageQueue.isEmpty() ) {
+			Pair<Message, Integer> pair = messageQueue.remove( 0 );
+			if( pair.getValue() == 0 ) {
+				reachPost( pair.getKey() );
+			} else {
+				messageQueue.add(0, pair);
+				break;
+			}
+		}
+	}
 
-    /**
-     * sendMessageメソッド
-     * 送りたいメッセージとその遅延時間をパラメータとし, 格納する
-     *
-     * @param message
-     */
-    public static void sendMessage(MessageDeprecated message) {
-        messageQueue.add(message);
+	static void approaching( List< Pair< Message, Integer > > sortedMessageQueue ) {
+		for ( Pair<Message, Integer> pair: sortedMessageQueue ) {
+			int former = pair.getValue();
+			pair.setValue( former - 1 );
+		}
+	}
 
-        int temp = Grid.getDelay( message.getFrom(), message.getTo() );
-        // remove
-        if( message.getTo().id == 203 && message.getFrom().id == 455 ){
-            System.out.println( " delay time " + temp + ", time: " + Manager.getCurrentTime() );
-        }
-        delays.add(temp);
-        calcCT(temp);
-        if (message.getMessageType() == SOLICITATION) proposals++;
-        else if (message.getMessageType() == REPLY) {
-            replies++;
-            if( message.getReply() == ACCEPT ) acceptances++;
-            else rejects++;
-        }
-        else if (message.getMessageType() == RESULT) results++;
-    }
+	static void reachPost( Message m ) {
+		switch ( m.getClass().getSimpleName() ) {
+			case "Solicitation":
+				m.getTo().ms.reachSolicitation( (Solicitation ) m );
+				break;
+			case "ReplyToSolicitation":
+				m.getTo().ls.reachReply( ( ReplyToSolicitation ) m );
+				break;
+			case "ResultOfTeamFormation":
+				m.getTo().ms.reachResult( ( ResultOfTeamFormation ) m );
+				break;
+			case "Done":
+				m.getTo().ls.reachDone( ( Done ) m );
+				break;
+		}
+	}
 
-    /**
-     * transmissionメソッド
-     * 通信時間を管理し, それが0になったメッセージを宛先のmessageリストに追加する
-     */
-    public static void transmit() {
-        int tempI;
-        MessageDeprecated tempM;
-        int size = messageQueue.size();
-        for (int i = 0; i < size; i++) {
-            tempI = delays.remove(0);
-            tempI--;
-            tempM = messageQueue.remove(0);
-            if (tempI == 0) {
-                tempM.getTo().messages.add(tempM);
-            } else {
-                delays.add(tempI);
-                messageQueue.add(tempM);
-            }
-        }
-    }
+	public static int getMessageNum() {
+		return messageNum;
+	}
 
-    /**
-     * calcCT(communication time) メソッド
-     * あるセクションでの平均通信所要時間を計算する.
-     * セクション = (総Tick数 ÷ 書き込み回数) とする.
-     * 例えば合計10000ticksの施行でexcelへの書き込み回数を1000とするなら, その幅10ticks内の平均を調べる
-     * @param ct
-     */
-    static private void calcCT(int ct){
-        communicationTime += ct;
-        messageNum++;
-    }
+	static public double getAverageCommunicationTime() {
+		return ( double ) communicationTime / messageNum;
+	}
 
-    public static int getMessageNum() {
-        return messageNum;
-    }
+	public static void clear() {
+		messageQueue.clear();
+		messageNum = 0;
+		communicationTime = 0;
+	}
 
-    static public double getCT(){
-        int ct = communicationTime, mn = messageNum;
-        assert (ct > 0 && mn > 0) || (ct == 0 && mn == 0) : "ghost message was sent";
-        if( ct == 0 && mn == 0 ) return 4.0;
-        double temp = (double)ct/(double) mn;
-        communicationTime = 0;
-        messageNum = 0;
-        return temp;
-    }
-
-    /**
-     * transmitWithNoDelayメソッド
-     * 通信所要時間を考慮しない場合のメッセージ伝送を行う
-     */
-    static public void transmitWithNoDelay() {
-        int size = messageQueue.size();
-        MessageDeprecated m;
-        for (int i = 0; i < size; i++) {
-            delays.remove(0);
-            m = messageQueue.remove(0);
-            m.getTo().messages.add(m);
-        }
-        assert delays.size() == 0 && messageQueue.size() == 0 : "transmitAlert";
-    }
-
-    public static void clearTP() {
-        messageQueue.clear();
-        delays.clear();
-        messageNum = 0;
-        communicationTime = 0;
-        proposals = 0;
-        replies = 0;
-        acceptances = 0;
-        rejects = 0;
-        results = 0;
-        finished = 0;
-        failed = 0;
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder str = new StringBuilder();
-        str.append(" Messages: " + messageNum + ", Proposals: " + proposals + ", Replies: " + replies + ", Results: " + results);
-        return str.toString();
-    }
+	@Override
+	public String toString() {
+		StringBuilder str = new StringBuilder();
+		return str.toString();
+	}
 
 }

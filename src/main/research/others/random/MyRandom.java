@@ -1,8 +1,6 @@
-package main.research.random;
+package main.research.others.random;
 
-import main.research.agent.Agent;
-
-public class MyRandom<T> {
+public class MyRandom {
 
     private static final int[] _seeds = new int[] {
             7, 11, 17, 19, 31, 57, 123, 203, 223, 331,

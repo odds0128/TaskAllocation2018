@@ -1,7 +1,7 @@
 package main.research.grid;
 
 import main.research.agent.Agent;
-import main.research.random.MyRandom;
+import main.research.others.random.MyRandom;
 
 import java.awt.*;
 import java.util.ArrayList;

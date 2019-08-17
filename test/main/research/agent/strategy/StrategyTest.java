@@ -3,9 +3,7 @@ package main.research.agent.strategy;
 import main.research.agent.Agent;
 import main.research.agent.AgentManager;
 import main.research.grid.Grid;
-import main.research.random.MyRandom;
-import main.research.agent.strategy.ProposedStrategy.ProposedStrategy_l;
-import main.research.agent.strategy.ProposedStrategy.ProposedStrategy_m;
+import main.research.others.random.MyRandom;
 import org.hamcrest.Matcher;
 import org.junit.jupiter.api.*;
 
@@ -20,8 +18,9 @@ import static org.hamcrest.Matchers.is;
 
 @Tag("strategy")
 class StrategyTest implements Strategy {
-    static LeaderStrategy ls = new ProposedStrategy_l();
-    static MemberStrategy ms = new ProposedStrategy_m();
+    // TODO: mock化する
+    private static String ls_name = "ProposedStrategy_l";      // ICA2018における提案手法役割更新あり    //    private static main.research.strategy.Strategy strategy = new ProposedMethodForSingapore();
+    private static String ms_name = "ProposedStrategy_m";
     static List<Agent> agentList;
 
     static {
@@ -31,7 +30,7 @@ class StrategyTest implements Strategy {
     @BeforeAll
     static void setUp() {
         MyRandom.newSfmt(0);
-        AgentManager.initiateAgents(ls, ms);
+        AgentManager.initiateAgents(ls_name, ms_name);
         agentList = AgentManager.getAgentList();
     }
 

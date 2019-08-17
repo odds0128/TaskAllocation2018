@@ -3,9 +3,11 @@ package main.research.agent.strategy.ComparativeStrategy;
 import main.research.*;
 import main.research.agent.Agent;
 import main.research.agent.AgentManager;
-import main.research.communication.MessageDeprecated;
 import main.research.agent.strategy.LeaderStrategy;
-import main.research.random.MyRandom;
+import main.research.communication.TransmissionPath;
+import main.research.communication.message.ReplyToSolicitation;
+import main.research.communication.message.Solicitation;
+import main.research.others.random.MyRandom;
 import main.research.task.AllocatedSubtask;
 import main.research.task.Subtask;
 import main.research.task.Task;
@@ -46,7 +48,7 @@ public class FixedLeader extends LeaderStrategy implements SetParam {
     }
 
 
-    protected void proposeAsL(Agent leader) {
+    protected void solicitAsL( Agent leader) {
         leader.myTask = Manager.getTask(leader);
         if (leader.myTask == null) {
             inactivate(leader, 0);
@@ -65,18 +67,18 @@ public class FixedLeader extends LeaderStrategy implements SetParam {
                 candidate = leader.candidates.get(i);
                 if (candidate != null) {
                     leader.proposalNum++;
-                    leader.sendMessage(leader, candidate, SOLICITATION, leader.myTask.subtasks.get(i % leader.myTask.subtasks.size()));
+                    TransmissionPath.sendMessage( new Solicitation( leader, candidate, leader.myTask.subtasks.get(i % leader.myTask.subtasks.size() ) ) );
                 }
             }
         }
-        leader.phase = REPORT;
+        leader.phase = FORM_TEAM;
         leader.validatedTicks = Manager.getCurrentTime();
     }
 
-    protected void reportAsL(Agent leader) {
-        if (leader.replies.size() != leader.proposalNum) return;
+    protected void formTeamAsL( Agent leader) {
+        if ( replyList.size() != leader.proposalNum) return;
         Agent from;
-        for (MessageDeprecated reply : leader.replies) {
+        for ( ReplyToSolicitation reply : replyList) {
             // 拒否ならそのエージェントを候補リストから外し, 信頼度を0で更新する
             if (reply.getReply() != ACCEPT) {
                 from = reply.getFrom();
@@ -143,7 +145,7 @@ public class FixedLeader extends LeaderStrategy implements SetParam {
                 inactivate(leader, 1);
                 return;
             } else {
-                leader.phase = EXECUTION;
+                leader.phase = EXECUTE_SUBTASK;
                 leader.validatedTicks = Manager.getCurrentTime();
                 return;
             }
@@ -193,7 +195,7 @@ public class FixedLeader extends LeaderStrategy implements SetParam {
                 if ( MyRandom.epsilonGreedy(Agent.ε) ) {
                     do {
                         candidate = Manager.getAgentRandomly(leader, exceptions, AgentManager.getAgentList());
-                    } while ( leader.calcExecutionTime(candidate, st) < 0);
+                    } while ( leader.calculateExecutionTime(candidate, st) < 0);
                 } else {
                     // 信頼度ランキングの上から割り当てを試みる．
                     // 1. 能力的にできない
@@ -203,7 +205,7 @@ public class FixedLeader extends LeaderStrategy implements SetParam {
                     int rankingSize = leader.reliabilityRankingAsL.size();
                     for( Agent ag : leader.reliabilityRankingAsL.keySet() ){
                         if( leader.inTheList( ag, exceptions ) < 0 &&
-                                leader.calcExecutionTime( ag, st ) > 0 ) {
+                                leader.calculateExecutionTime( ag, st ) > 0 ) {
                             candidate = ag;
                             break;
                         }
@@ -270,14 +272,14 @@ public class FixedLeader extends LeaderStrategy implements SetParam {
             size = ag.messages.size();
             if (size == 0) return;
             // リーダーでPROPOSITION or 誰でもEXECUTION → 誰からのメッセージも期待していない
-            if (ag.phase == PROPOSITION) {
+            if (ag.phase == SOLICIT ) {
                 for (int i = 0; i < size; i++) {
                     m = ag.messages.remove(0);
                     ag.sendMessage(ag, m.getFrom(), REPLY, DECLINE);
                 }
             }
             // リーダーでREPORT → REPLYを期待している
-            else if (ag.phase == REPORT) {
+            else if (ag.phase == FORM_TEAM ) {
                 for (int i = 0; i < size; i++) {
                     m = ag.messages.remove(0);
                     Agent from = m.getFrom();
@@ -290,7 +292,7 @@ public class FixedLeader extends LeaderStrategy implements SetParam {
 
     void inactivate(Agent ag, int success) {
         if (ag.role == LEADER) {
-            ag.phase = PROPOSITION;
+            ag.phase = SOLICIT;
             ag.teamMembers.clear();        // すでにサブタスクを送っていてメンバの選定から外すエージェントのリスト
             ag.myTask = null;
             ag.candidates.clear();
@@ -300,10 +302,10 @@ public class FixedLeader extends LeaderStrategy implements SetParam {
             ag.proposalNum = 0;
         } else if (ag.role == MEMBER) {
             if ( ag.mySubtaskQueue.isEmpty() ) {
-                ag.phase = WAITING;
+                ag.phase = WAIT_FOR_SOLICITATION;
             } else {
-                ag.executionTime = ag.calcExecutionTime(ag, ag.mySubtaskQueue.keySet().iterator().next());
-                ag.phase = EXECUTION;
+                ag.executionTime = ag.calculateExecutionTime(ag, ag.mySubtaskQueue.keySet().iterator().next());
+                ag.phase = EXECUTE_SUBTASK;
             }
         }
         ag.validatedTicks = Manager.getCurrentTime();

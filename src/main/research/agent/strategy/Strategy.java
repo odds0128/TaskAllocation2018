@@ -1,27 +1,49 @@
 package main.research.agent.strategy;
 
-import main.research.task.AllocatedSubtask;
 import main.research.agent.Agent;
 
 import java.util.*;
 import java.util.Map.Entry;
 
+import static main.research.Manager.getCurrentTime;
 import static main.research.SetParam.*;
+import static main.research.SetParam.Phase.*;
 import static main.research.SetParam.DERenewalStrategy.*;
+import static main.research.SetParam.Role.JONE_DOE;
+import static main.research.SetParam.Role.MEMBER;
 
 public interface Strategy {
-    // FIXME: なんじゃこりゃ．AllocatedSubtaskクラスとか絶対いらんやん
-    Map<Agent, AllocatedSubtask>[] teamHistory = new HashMap[AGENT_NUM];
 
-    void checkMessages(Agent self);
-
-    default double renewDEby0or1( double former, boolean isPositive ){
+    static double renewDEby0or1( double former, boolean isPositive ){
         double multiplier = isPositive ? 1 : 0;
         return former * ( 1.0 - α ) + multiplier * α;
     }
 
-    default double renewDEbyArbitraryReward( double former, double reward ){
+    static double renewDEbyArbitraryReward( double former, double reward ){
         return former * ( 1.0 - α ) + reward * α;
+    }
+
+    static void proceedToNextPhase( Agent ag ) {
+        switch ( ag.phase ) {
+            case WAIT_FOR_SOLICITATION:
+                ag.phase = WAIT_FOR_SUBTASK;
+                break;
+            case SOLICIT:
+                ag.phase = FORM_TEAM;
+                break;
+            case WAIT_FOR_SUBTASK:
+                ag.phase = EXECUTE_SUBTASK;
+                break;
+            case FORM_TEAM:
+                ag.phase = SELECT_ROLE;
+                ag.role  = JONE_DOE;
+                break;
+            case EXECUTE_SUBTASK:
+                ag.phase = ag.mySubtaskQueue.isEmpty() ? SELECT_ROLE : EXECUTE_SUBTASK;
+                ag.role  = ag.mySubtaskQueue.isEmpty() ? JONE_DOE : MEMBER;
+                break;
+        }
+        ag.validatedTicks = getCurrentTime();
     }
 
     default void evaporateDE( Map<Agent, Double> relMap ) {
@@ -80,7 +102,7 @@ public interface Strategy {
     }
 
     //CONSIDER: 効率悪そう．DEが変わったエージェントの前後と比較して入れ替えればいいだけ．
-    default Map<Agent, Double> sortReliabilityRanking(Map<Agent, Double> relMap) {
+    static Map<Agent, Double> sortReliabilityRanking( Map< Agent, Double > relMap ) {
         List<Entry<Agent, Double>> entries = new ArrayList(relMap.entrySet());
         entries.sort(Strategy::compare);
 
@@ -91,7 +113,7 @@ public interface Strategy {
         return sortedMap;
     }
 
-    default void renewDE(Map<Agent, Double> deMap, Agent target, double evaluation, DERenewalStrategy de_strategy ) {
+    static void renewDE( Map< Agent, Double > deMap, Agent target, double evaluation, DERenewalStrategy de_strategy ) {
         double formerDE = deMap.get(target);
 
         boolean b = evaluation > 0;
@@ -107,9 +129,6 @@ public interface Strategy {
     }
 
     static void clear(){
-        for (int i = 0; i < AGENT_NUM; i++) {
-            teamHistory[i].clear();
-        }
     }
 
     static int compare(Entry<Agent, Double> a, Entry<Agent, Double> b) {

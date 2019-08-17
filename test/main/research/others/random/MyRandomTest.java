@@ -1,4 +1,4 @@
-package main.research.random;
+package main.research.others.random;
 
 import org.junit.jupiter.api.*;
 

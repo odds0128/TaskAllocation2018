@@ -2,11 +2,7 @@ package main.research.grid;
 
 import main.research.agent.Agent;
 import main.research.agent.AgentManager;
-import main.research.random.MyRandom;
-import main.research.agent.strategy.LeaderStrategy;
-import main.research.agent.strategy.MemberStrategy;
-import main.research.agent.strategy.ProposedStrategy.ProposedStrategy_l;
-import main.research.agent.strategy.ProposedStrategy.ProposedStrategy_m;
+import main.research.others.random.MyRandom;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -17,13 +13,13 @@ import static main.research.SetParam.AGENT_NUM;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 class GridTest {
-    private LeaderStrategy ls;
-    private MemberStrategy ms;
+
+	// TODO: mock
+    private static String ls_name = "ProposedStrategy_l";      // ICA2018における提案手法役割更新あり    //    private static main.research.strategy.Strategy strategy = new ProposedMethodForSingapore();
+    private static String ms_name = "ProposedStrategy_m";
 
     @BeforeEach
     void setUp() {
-        ls = new ProposedStrategy_l();
-        ms = new ProposedStrategy_m();
         MyRandom.newSfmt(0);
     }
 
@@ -31,7 +27,7 @@ class GridTest {
     class setAgentOnEnvironmentのテスト {
         @BeforeEach
         void setUp() {
-            AgentManager.initiateAgents(ls, ms);
+            AgentManager.initiateAgents(ls_name, ms_name);
         }
 
         @Test

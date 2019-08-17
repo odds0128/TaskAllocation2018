@@ -1,6 +1,6 @@
 package main.research.agent;
 
-import main.research.random.MyRandom;
+import main.research.others.random.MyRandom;
 import main.research.agent.strategy.LeaderStrategy;
 import main.research.agent.strategy.MemberStrategy;
 import main.research.agent.strategy.ProposedStrategy.ProposedStrategy_l;
