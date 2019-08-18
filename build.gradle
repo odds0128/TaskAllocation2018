@@ -57,6 +57,7 @@ test {
     useJUnitPlatform {
         includeEngines 'junit-jupiter'
     }
+    executable = "/Library/Java/JavaVirtualMachines/openjdk-12.0.1.jdk/Library/Java/JavaVirtualMachines/openjdk-12.0.1.jdk"
     ext.msg = ''<<''
     ext.res = [testCount:0, successfulTestCount:0, failedTestCount:0, skippedTestCount:0]
     afterTest { d, r -> res.each { it.value += r."$it.key" } }
@@ -76,7 +77,8 @@ task commit(dependsOn: [clean, test, add], type: GitCommit) {
 }
 version '1.0-SNAPSHOT'
 
-sourceCompatibility = 1.8
+sourceCompatibility = 12
+targetCompatibility = 12
 
 repositories {
     mavenCentral()

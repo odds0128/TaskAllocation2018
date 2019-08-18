@@ -36,7 +36,7 @@ public class Agent implements SetParam, Cloneable {
 
 	// リーダーもメンバも持つパラメータ
 	public int id;
-	public Point p;
+	private Point p;
 	public Role role = JONE_DOE;
 	public Phase phase = SELECT_ROLE;
 	public int[] resources = new int[ RESOURCE_TYPES ];
@@ -51,18 +51,14 @@ public class Agent implements SetParam, Cloneable {
 
 	// リーダーエージェントのみが持つパラメータ
 	public int didTasksAsLeader = 0;
-	public Task myTask;                  // 持ってきた(割り振られた)タスク
 	public double threshold_for_reciprocity_as_leader;
 	public List< Task > pastTasks = new ArrayList<>();
-	public Map< Agent, Double > reliabilityRankingAsL = new LinkedHashMap<>( HASH_MAP_SIZE );
 
 	// メンバエージェントのみが持つパラメータ
 	public int didTasksAsMember = 0;
 	public int executionTime = 0;
 	public double threshold_for_reciprocity_as_member;
 	public List<Pair<Agent, Subtask>> mySubtaskQueue = new ArrayList<>(  );
-	public int numberOfExpectedMessages = 0;                                            // 返事待ちの数
-	public Map< Agent, Double > reliabilityRankingAsM = new LinkedHashMap<>( HASH_MAP_SIZE );
 
 	public Agent( String ls_name, String ms_name ) {
 		this.id = _id++;
@@ -73,6 +69,7 @@ public class Agent implements SetParam, Cloneable {
 			.count();
 		setResource();
 		setStrategies( ls_name, ms_name );
+		// TODO: 移動
 		threshold_for_reciprocity_as_leader = THRESHOLD_FOR_RECIPROCITY_FROM_LEADER;
 		threshold_for_reciprocity_as_member = ( double ) resSum / resCount * THRESHOLD_FOR_RECIPROCITY_RATE;
 		selectRole();
@@ -90,36 +87,8 @@ public class Agent implements SetParam, Cloneable {
 		} while ( resSum == 0 );
 	}
 
-	public void setPosition( int x, int y ) {
-		this.p = new Point( x, y );
-	}
-
-	void setReliabilityRankingRandomly( List< Agent > agentList ) {
-		List< Agent > rl = generateRandomAgentList( agentList );
-		for ( Agent ag: rl ) {
-			this.reliabilityRankingAsL.put( ag, INITIAL_VALUE_OF_DE );
-		}
-		List< Agent > rm = generateRandomAgentList( agentList );
-		for ( Agent ag: rm ) {
-			this.reliabilityRankingAsM.put( ag, INITIAL_VALUE_OF_DE );
-		}
-	}
-
-	private List< Agent > generateRandomAgentList( List< Agent > agentList ) {
-		List< Agent > originalList = new ArrayList<>( agentList );
-		List< Agent > randomAgentList = new ArrayList<>();
-
-		originalList.remove( this );
-		int size = originalList.size();
-		int index;
-		Agent ag;
-
-		for ( int i = 1; i <= size; i++ ) {
-			index = MyRandom.getRandomInt( 0, size - i );
-			ag = originalList.remove( index );
-			randomAgentList.add( ag );
-		}
-		return randomAgentList;
+	public void setPosition( Point p ) {
+		this.p = p;
 	}
 
 	public void actAsLeader() {
@@ -183,7 +152,6 @@ public class Agent implements SetParam, Cloneable {
 		if ( role == LEADER ) e_leader = e_leader * ( 1.0 - α ) + α * success;
 		else                  e_member = e_member * ( 1.0 - α ) + α * success;
 
-		if ( role == LEADER && myTask != null) Manager.disposeTask( this );
 		role = JONE_DOE;
 		phase = SELECT_ROLE;
 		this.validatedTicks = Manager.getCurrentTime();
@@ -289,8 +257,7 @@ public class Agent implements SetParam, Cloneable {
 	public String toString() {
 		String sep = System.getProperty( "line.separator" );
 		StringBuilder str = new StringBuilder( String.format( "%3d", id ) );
-		str.append( "]" );
-
+		str.append( sep );
 		return str.toString();
 	}
 
@@ -308,6 +275,18 @@ public class Agent implements SetParam, Cloneable {
 		} catch ( ClassNotFoundException | NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException e ) {
 			e.printStackTrace();
 		}
+	}
+
+	public Point getP() {
+		return p;
+	}
+
+	public int getX() {
+		return (int) p.getX();
+	}
+
+	public int getY() {
+		return (int) p.getY();
 	}
 
 	public static class AgentExcellenceComparator implements Comparator< Agent > {

@@ -3,7 +3,7 @@ package main.research;
 import main.research.agent.Agent;
 import main.research.agent.AgentManager;
 import main.research.agent.strategy.Strategy;
-import main.research.others.random.MyRandom;
+import static main.research.others.random.MyRandom.*;
 import main.research.communication.TransmissionPath;
 import main.research.grid.Grid;
 import main.research.task.Task;
@@ -99,7 +99,7 @@ public class Manager implements SetParam {
                     if (HOW_EPSILON == "linear") Agent.renewEpsilonLinear();
                     else if (HOW_EPSILON == "exponential") Agent.renewEpsilonExponential();
 
-//                    if( turn % 10 == 0 ) System.out.println(turn);
+                    if( turn % 100 == 0 ) System.out.println( "turn: " + turn );
                     addNewTasksToQueue();
                     actFreeLancer();
                     if (turn % writeResultsSpan == 0 && CHECK_RESULTS) {
@@ -149,7 +149,6 @@ public class Manager implements SetParam {
             }
             // ↑ 全実験の終了のカッコ．以下は後処理
             if (CHECK_RESULTS) OutPut.writeResults( strategy_name );
-            if (CHECK_AGENTS) OutPut.writeAgentsInformationX( strategy_name, AgentManager.getAgentList());
 //            main.research.OutPut.writeDelays(delays);
 //            main.research.OutPut.writeReliabilities(AgentManager.getAgentList(), strategy_name);
 //            main.research.OutPut.writeDelaysAndRels(delays, AgentManager.getAgentList(), strategy);
@@ -164,7 +163,8 @@ public class Manager implements SetParam {
     // 環境の準備に使うメソッド
     private static void initiate(int times) {
         // シードの設定
-        main.research.others.random.MyRandom.newSfmt(times);
+        setNewSfmt(times);
+        setNewRnd(times);
         // タスクキューの初期化
         taskQueue = new LinkedList<>();
         for (int i = 0; i < INITIAL_TASK_NUM; i++) {
@@ -187,7 +187,7 @@ public class Manager implements SetParam {
         Agent candidate;
 
     	do{
-            random = MyRandom.getRandomInt(0, targets.size() - 1);
+            random = getRandomInt(0, targets.size() - 1);
             candidate = targets.get(random);
         } while ( candidate.equals(self) || Agent.inTheList(candidate, exceptions) >= 0 );
 
@@ -216,7 +216,7 @@ public class Manager implements SetParam {
 //            System.out.println(additionalTasksNum + ", " + decimalPart);
 
         if (decimalPart != 0) {
-            double random = MyRandom.getRandomDouble();
+            double random = getRandomDouble();
             if (random < decimalPart) {
                 additionalTasksNum++;
             }
@@ -277,17 +277,17 @@ public class Manager implements SetParam {
         int rand;
         if (command == "select role") {
             while ( ! temp.isEmpty() ) {
-                rand = MyRandom.getRandomInt(0, temp.size() - 1);
+                rand = getRandomInt(0, temp.size() - 1);
                 temp.remove(rand).selectRole();
             }
         } else if (command == "act as member") {
             while ( ! temp.isEmpty() ) {
-                rand = MyRandom.getRandomInt(0, temp.size() - 1);
+                rand = getRandomInt(0, temp.size() - 1);
                 temp.remove(rand).actAsMember();
             }
         } else if (command == "act as leader") {
             while ( ! temp.isEmpty() ) {
-                rand = MyRandom.getRandomInt(0, temp.size() - 1);
+                rand = getRandomInt(0, temp.size() - 1);
                 temp.remove(rand).actAsLeader();
             }
         }
@@ -295,16 +295,11 @@ public class Manager implements SetParam {
         temp.clear();
     }
 
-    static public void disposeTask(Agent leader) {
+    static public void disposeTask( ) {
         disposedTasks++;
-        leader.myTask = null;
     }
 
-    public static void finishTask(Agent leader, Task task) {
-        if (CHECK_RESULTS) OutPut.aggregateTaskExecutionTime(leader);
-/*        if( leader.isLonely == 1 )      finishedTasksInDepopulatedArea++;
-        if( leader.isAccompanied == 1 ) finishedTasksInPopulatedArea++;
-// */
+    public static void finishTask(  ) {
         finishedTasks++;
     }
 

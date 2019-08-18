@@ -2,6 +2,7 @@ package main.research.agent.strategy;
 
 import main.research.SetParam;
 import main.research.agent.Agent;
+import main.research.agent.AgentManager;
 import main.research.communication.message.ResultOfTeamFormation;
 import main.research.communication.message.Solicitation;
 import main.research.others.Pair;
@@ -15,11 +16,13 @@ import static main.research.agent.strategy.Strategy.*;
 import java.util.*;
 
 public abstract class MemberStrategy implements Strategy, SetParam {
+    public Map< Agent, Double > reliableLeadersRanking = new LinkedHashMap<>( HASH_MAP_SIZE );
+
     protected List< Solicitation > solicitationList = new ArrayList<>();
     private List< ResultOfTeamFormation > resultList = new ArrayList<>();
 
     public void actAsMember(Agent member) {
-        sortReliabilityRanking(member.reliabilityRankingAsM);
+        sortReliabilityRanking( reliableLeadersRanking );
 
         member.ms.replyToSolicitations( member, solicitationList);
 
@@ -31,7 +34,18 @@ public abstract class MemberStrategy implements Strategy, SetParam {
         if      (member.phase == WAIT_FOR_SOLICITATION ) replyAsM(member);
         else if (member.phase == WAIT_FOR_SUBTASK )      receiveAsM(member);
         else if (member.phase == EXECUTE_SUBTASK )       execute(member);
-        evaporateDE(member.reliabilityRankingAsM);
+        evaporateDE( reliableLeadersRanking );
+    }
+
+    public void setLeaderRankingRandomly( List< Agent > agentList ) {
+        List< Agent > tempList = AgentManager.generateRandomAgentList( agentList );
+        for ( Agent temp: tempList ) {
+            reliableLeadersRanking.put( temp, INITIAL_VALUE_OF_DE );
+        }
+    }
+
+    public void removeMyselfFromRanking( Agent self ) {
+        reliableLeadersRanking.remove( self );
     }
 
     protected abstract void replyToSolicitations( Agent member, List< Solicitation > solicitationList );
@@ -41,7 +55,7 @@ public abstract class MemberStrategy implements Strategy, SetParam {
         	Pair<Agent, Subtask > pair =  new Pair<>( r.getFrom(), r.getAllocatedSubtask() );
             member.mySubtaskQueue.add( pair );
         } else {
-            renewDE( member.reliabilityRankingAsM, r.getFrom(), 0, withBinary);
+            renewDE( reliableLeadersRanking, r.getFrom(), 0, withBinary);
         }
     }
 

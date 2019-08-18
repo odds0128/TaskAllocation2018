@@ -18,18 +18,17 @@ import static org.hamcrest.Matchers.is;
 
 @Tag("strategy")
 class StrategyTest implements Strategy {
-    // TODO: mock化する
-    private static String ls_name = "ProposedStrategy_l";      // ICA2018における提案手法役割更新あり    //    private static main.research.strategy.Strategy strategy = new ProposedMethodForSingapore();
-    private static String ms_name = "ProposedStrategy_m";
-    static List<Agent> agentList;
-
     static {
         System.out.println("StrategyTest");
     }
 
+    private static String ls_name = "ProposedStrategy_l";      // ICA2018における提案手法役割更新あり    //    private static main.research.strategy.Strategy strategy = new ProposedMethodForSingapore();
+    private static String ms_name = "ProposedStrategy_m";
+    static List<Agent> agentList;
+
     @BeforeAll
     static void setUp() {
-        MyRandom.newSfmt(0);
+        MyRandom.setNewSfmt(0);
         AgentManager.initiateAgents(ls_name, ms_name);
         agentList = AgentManager.getAgentList();
     }
@@ -51,13 +50,13 @@ class StrategyTest implements Strategy {
             Double expected_l = INITIAL_VALUE_OF_DE - γ_r;
             Double expected_m = INITIAL_VALUE_OF_DE - γ_r;
 
-            evaporateDE(sample.reliabilityRankingAsL);
-            evaporateDE(sample.reliabilityRankingAsM);
+            evaporateDE(sample.ls.reliableMembersRanking);
+            evaporateDE(sample.ms.reliableLeadersRanking);
 
-            sample.reliabilityRankingAsL.forEach(
+            sample.ls.reliableMembersRanking.forEach(
                     (key, value) -> assertThat( value, is( expected_l ) )
             );
-            sample.reliabilityRankingAsM.forEach(
+            sample.ms.reliableLeadersRanking.forEach(
                     (key, value) -> assertThat( value, is( expected_m ) )
             );
         }
@@ -67,14 +66,14 @@ class StrategyTest implements Strategy {
             // 適当なやつのDEをいじってγ未満にする
             int index = rnd.nextInt(AGENT_NUM - 1 );
             Agent unreliable = null;
-            Iterator<Agent> iterator = sample.reliabilityRankingAsL.keySet().iterator();
+            Iterator<Agent> iterator = sample.ls.reliableMembersRanking.keySet().iterator();
             for( int i = 0; i <= index; i++ ) {
                 unreliable = iterator.next();
             }
-            sample.reliabilityRankingAsL.replace( unreliable, (γ_r / 2.0) );
-            evaporateDE(sample.reliabilityRankingAsL);
+            sample.ls.reliableMembersRanking.replace( unreliable, (γ_r / 2.0) );
+            evaporateDE(sample.ls.reliableMembersRanking);
 
-            sample.reliabilityRankingAsL.forEach(
+            sample.ls.reliableMembersRanking.forEach(
                     (key, value) -> {
                         double temp = value;
                         Matcher<Double> greaterThanOrEqualToZero = greaterThanOrEqualTo( 0.0);
@@ -101,21 +100,17 @@ class StrategyTest implements Strategy {
             // 適当なやつのDEを大きくする
             int index = rnd.nextInt(AGENT_NUM - 1 );
             Agent reliable = null;
-            Iterator<Agent> iterator = sample.reliabilityRankingAsL.keySet().iterator();
+            Iterator<Agent> iterator = sample.ls.reliableMembersRanking.keySet().iterator();
             for( int i = 0; i <= index; i++ ) {
                 reliable = iterator.next();
             }
-            sample.reliabilityRankingAsL.replace( reliable, INITIAL_VALUE_OF_DE * 10.0 );
-                sample.reliabilityRankingAsL = sortReliabilityRanking( sample.reliabilityRankingAsL);
-            Agent top = sample.reliabilityRankingAsL.keySet().iterator().next();
+            sample.ls.reliableMembersRanking.replace( reliable, INITIAL_VALUE_OF_DE * 10.0 );
+                sample.ls.reliableMembersRanking = Strategy.sortReliabilityRanking( sample.ls.reliableMembersRanking);
+            Agent top = sample.ls.reliableMembersRanking.keySet().iterator().next();
             assertThat( top, is(reliable) );
         }
     }
 
-
-    // Strategyインタフェースのテストのためにかりそめの実装をする {
-    @Override
-    public void checkMessages(Agent self) {}
 
     @AfterAll
     static void tearDown() {

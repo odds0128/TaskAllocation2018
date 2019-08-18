@@ -29,7 +29,7 @@ public class AgentTest {
 
     @BeforeAll
     static void setUp() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, NoSuchFieldException {
-        MyRandom.newSfmt(0);
+        MyRandom.setNewSfmt(0);
         AgentManager am = new AgentManager();
 
         Method ga = AgentManager.class.getDeclaredMethod("generateAgents", LeaderStrategy.class, MemberStrategy.class);
@@ -45,45 +45,6 @@ public class AgentTest {
         dl.invoke( am );
     }
 
-    @Nested
-    class setReliabilityRankingRandomlyのテスト {
-        @BeforeEach
-        void setUp() {
-            agentList.forEach(
-                    agent -> agent.setReliabilityRankingRandomly(agentList)
-            );
-        }
-
-        @Test
-        void setReliabilityRankingRandomlyでリーダーの場合とメンバの場合で異なるランキングが得られる() {
-            List<Agent> ranking_l;
-            List<Agent> ranking_m;
-            boolean isFullySame = true;
-            for( Agent ag: agentList ) {
-                ranking_l = new ArrayList<>( ag.reliabilityRankingAsL.keySet() );
-                ranking_m = new ArrayList<>( ag.reliabilityRankingAsM.keySet() );
-                for (int i = 0; i < agentList.size() - 1; i++) {
-                   if( ! ranking_l.get(i).equals(ranking_m.get(i)) ) {
-                       isFullySame = false;
-                       break;
-                   }
-                }
-                assertThat( isFullySame, is( false ) );
-                isFullySame = true;
-            }
-        }
-
-        @AfterEach
-        void tearDown() {
-            agentList.forEach(
-                    agent -> {
-                        agent.reliabilityRankingAsL.clear();
-                        agent.reliabilityRankingAsM.clear();
-                    }
-            );
-        }
-
-    }
 
     @AfterAll
     static void tearDown() {

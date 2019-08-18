@@ -103,12 +103,6 @@ public class OutPut implements SetParam {
 // */
     }/**/
 
-    static void aggregateTaskExecutionTime(Agent leader) {
-        for (Agent tm : leader.teamMembers) {
-            taskExecutionTimes++;
-        }
-    }
-
     static int[] leadersArray = new int[EXECUTION_TIMES];
     static int[] agentsLessThanAveArray = new int[EXECUTION_TIMES];
     static int[] leadersLessThanAveArray = new int[EXECUTION_TIMES];
@@ -119,7 +113,6 @@ public class OutPut implements SetParam {
     static double[] membersExcAveArray = new double[EXECUTION_TIMES];
     static double[]  mDependableAgentsFromAllLeaders = new double[EXECUTION_TIMES];    // 全リーダーの最終的な信頼エージェント数の平均
     static double[]  mDependableAgentsFromLeadersTrustsSomeone = new double[EXECUTION_TIMES];    // 全リーダーの最終的な信頼エージェント数の平均
-    static int[]  mMutualDependency   = new int[EXECUTION_TIMES];                  // 相互に協調関係にあるエージェント数
     static double[] mDependableMembersFromExcellentLeader = new double[EXECUTION_TIMES];
 
     static void aggregateDataOnce(List<Agent> agents, int times) {
@@ -143,8 +136,8 @@ public class OutPut implements SetParam {
 
                 leadersExcAveArray[times] += excellence;
                 int temp = 0;
-                for( Agent relAg:  ag.reliabilityRankingAsL.keySet() ){
-                    if( ag.reliabilityRankingAsL.get(relAg) > ag.threshold_for_reciprocity_as_leader ){
+                for( Agent relAg:  ag.ls.reliableMembersRanking.keySet() ){
+                    if( ag.ls.reliableMembersRanking.get(relAg) > ag.threshold_for_reciprocity_as_leader ){
                         mDependableAgentsFromAllLeaders[times]++;
                         mDependableAgentsFromLeadersTrustsSomeone[times] ++;
                         if( ag.didTasksAsLeader > 100 ){
@@ -228,12 +221,6 @@ public class OutPut implements SetParam {
         index = (index + 1) % WRITING_TIMES;
     }
 
-    /**
-     * checkTaskメソッド
-     * 現在タスクキューにあるタスクのサブタスク数とその必要リソースの表示.
-     *
-     * @param taskQueue
-     */
     static void checkTask(Queue<Task> taskQueue) {
         int num = taskQueue.size();
         System.out.println("Queuesize: " + num);
@@ -245,10 +232,6 @@ public class OutPut implements SetParam {
         System.out.println("  Remains: " + taskQueue.size());
     }
 
-    /**
-     * checkGridメソッド
-     * 二次元配列の場合
-     */
     static void checkGrid(Agent[][] grid) {
         System.out.println("Total Agents is " + Agent._id);
         for (int i = 0; i < MAX_X; i++) {
@@ -278,11 +261,6 @@ public class OutPut implements SetParam {
         }
     }
 
-    /**
-     * checkAgentメソッド
-     *
-     * @param agents
-     */
     static void checkAgent(List<Agent> agents) {
         List<Agent> temp = new ArrayList<>(agents);
         System.out.println("Total Agents is " + agents.size());
@@ -303,51 +281,6 @@ public class OutPut implements SetParam {
             }
         }
         System.out.println(recipro);
-// */
-
-/*
-        for (int i = 0; i < AGENT_NUM; i++) {
-            System.out.print("ID : " + i + ", ");
-            for( int j = 0; j < AGENT_NUM; j++ ){
-                System.out.print(String.format("%3d", main.research.Manager.delays[i][j]));
-            }
-            System.out.println();
-        }
-// */
-
-//        Collections.sort(temp, new main.research.agent.AgentIDcomparator());
-
-/*
-        for (int i = 0; i < AGENT_NUM; i++) {
-            System.out.print(temp.get(i).id +", s: " + ProposedMethod2.dlMean[i] + " ... ");
-            for( LearnedDistance ld: ProposedMethod2.dLearned[i] ){
-                if( ld.getDistance() > 2 ) break;
-                System.out.print(ld);
-            }
-            System.out.println();
-        }
-// */
-/*        for (Agent agent : agents) {
-            System.out.print("ID " + agent.id + ", e_l " + String.format("%.2f", agent.e_leader));
-            System.out.print(", e_m " + String.format("%.2f", agent.e_member));
-            System.out.println();
-        }
-// */
-    }
-
-    static void checkTeam(Agent leader) {
-        System.out.print("Time: " + Manager.getCurrentTime() + ", " + leader.id + " and ");
-        for (Agent mem : leader.teamMembers) {
-            System.out.print(mem.id + ", ");
-        }
-        System.out.println("are good team!");
-
-        if (leader.mySubtaskQueue.get(0) != null) {
-            System.out.println(" leader: " + leader + "→" + leader.mySubtaskQueue.get(0) + ": " + leader.calculateExecutionTime(leader, leader.mySubtaskQueue.get( 0 ).getValue()) + "[tick(s)]");
-        } else {
-            System.out.println(" leader: " + leader);
-        }
-        // */
     }
 
     static void writeResults(String st) {
@@ -552,204 +485,6 @@ public class OutPut implements SetParam {
         }
     }
 
-    static void writeAgentsInformationX(String st, List<Agent> agents) throws IOException {
-        String outputFilePath = _singleton.setPath("agentInfo", st, "xlsx");
-        try {
-            book = new SXSSFWorkbook();
-            Font font = book.createFont();
-            font.setFontName("Times New Roman");
-            font.setFontHeightInPoints((short) 9);
-
-            DataFormat format = book.createDataFormat();
-
-            //ヘッダ文字列用のスタイル
-            CellStyle style_header = book.createCellStyle();
-            style_header.setBorderBottom(BorderStyle.THIN);
-            OutPut.setBorder(style_header, BorderStyle.THIN);
-            style_header.setFillForegroundColor(HSSFColor.HSSFColorPredefined.LIGHT_CORNFLOWER_BLUE.getIndex());
-            style_header.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            style_header.setVerticalAlignment(VerticalAlignment.TOP);
-            style_header.setFont(font);
-
-            //文字列用のスタイル
-            CellStyle style_string = book.createCellStyle();
-            OutPut.setBorder(style_string, BorderStyle.THIN);
-            style_string.setVerticalAlignment(VerticalAlignment.TOP);
-            style_string.setFont(font);
-
-            //改行が入った文字列用のスタイル
-            CellStyle style_string_wrap = book.createCellStyle();
-            OutPut.setBorder(style_string_wrap, BorderStyle.THIN);
-            style_string_wrap.setVerticalAlignment(VerticalAlignment.TOP);
-            style_string_wrap.setWrapText(true);
-            style_string_wrap.setFont(font);
-
-            //整数用のスタイル
-            CellStyle style_int = book.createCellStyle();
-            OutPut.setBorder(style_int, BorderStyle.THIN);
-            style_int.setDataFormat(format.getFormat("###0;-###0"));
-            style_int.setVerticalAlignment(VerticalAlignment.TOP);
-            style_int.setFont(font);
-
-            //小数用のスタイル
-            CellStyle style_double = book.createCellStyle();
-            OutPut.setBorder(style_double, BorderStyle.THIN);
-            style_double.setDataFormat(format.getFormat("###0.0;-###0.0"));
-            style_double.setVerticalAlignment(VerticalAlignment.TOP);
-            style_double.setFont(font);
-
-            //円表示用のスタイル
-            CellStyle style_yen = book.createCellStyle();
-            OutPut.setBorder(style_yen, BorderStyle.THIN);
-            style_yen.setDataFormat(format.getFormat("\"\\\"###0;\"\\\"-###0"));
-            style_yen.setVerticalAlignment(VerticalAlignment.TOP);
-            style_yen.setFont(font);
-
-            //パーセント表示用のスタイル
-            CellStyle style_percent = book.createCellStyle();
-            OutPut.setBorder(style_percent, BorderStyle.THIN);
-            style_percent.setDataFormat(format.getFormat("0.0%"));
-            style_percent.setVerticalAlignment(VerticalAlignment.TOP);
-            style_percent.setFont(font);
-
-            //日時表示用のスタイル
-            CellStyle style_datetime = book.createCellStyle();
-            OutPut.setBorder(style_datetime, BorderStyle.THIN);
-            style_datetime.setDataFormat(format.getFormat("yyyy/mm/dd hh:mm:ss"));
-            style_datetime.setVerticalAlignment(VerticalAlignment.TOP);
-            style_datetime.setFont(font);
-
-            Row row;
-            int rowNumber = 0;
-            int colNumber = 0;
-
-            Sheet sheet;
-
-            sheet = book.createSheet();
-            if (sheet instanceof SXSSFSheet) {
-                ((SXSSFSheet) sheet).trackAllColumnsForAutoSizing();
-            }
-            //シート名称の設定
-            book.setSheetName(0, st );
-
-            row = sheet.createRow(rowNumber);
-            _singleton.writeCell(row, colNumber++, style_header, "Trials");
-            _singleton.writeCell(row, colNumber++, style_header, "Leader Num");
-            _singleton.writeCell(row, colNumber++, style_header, "Agents  less than ave");
-            _singleton.writeCell(row, colNumber++, style_header, "Leaders less than ave");
-            _singleton.writeCell(row, colNumber++, style_header, "Agents  less than quartile");
-            _singleton.writeCell(row, colNumber++, style_header, "Leaders less than quartile");
-            _singleton.writeCell(row, colNumber++, style_header, "Agents  excellence ave");
-            _singleton.writeCell(row, colNumber++, style_header, "Leaders excellence ave");
-            _singleton.writeCell(row, colNumber++, style_header, "Members excellence ave");
-            _singleton.writeCell(row, colNumber++, style_header, "Dependable members(from all leaders)");
-            _singleton.writeCell(row, colNumber++, style_header, "Dependable members(from leaders trust someone)");
-            _singleton.writeCell(row, colNumber++, style_header, "Dependable members(from excellent leaders)");
-            _singleton.writeCell(row, colNumber++, style_header, "Mutual dependency");
-
-
-            //ウィンドウ枠の固定
-            sheet.createFreezePane(1, 1);
-
-            //ヘッダ行にオートフィルタの設定
-            sheet.setAutoFilter(new CellRangeAddress(0, 0, 0, colNumber));
-
-            //列幅の自動調整
-            for (int j = 0; j <= colNumber; j++) {
-                sheet.autoSizeColumn(j, true);
-            }
-
-            // 結果を書き込んでいく
-            for (int wt = 0; wt < EXECUTION_TIMES; wt++) {
-                rowNumber++;
-                colNumber = 0;
-                row = sheet.createRow(rowNumber);
-
-                _singleton.writeCell(row, colNumber++, style_int, (wt + 1));
-                _singleton.writeCell(row, colNumber++, style_int, leadersArray[wt]);
-                _singleton.writeCell(row, colNumber++, style_int, agentsLessThanAveArray[wt]);
-                _singleton.writeCell(row, colNumber++, style_int, leadersLessThanAveArray[wt]);
-                _singleton.writeCell(row, colNumber++, style_int, agentsLessThanQuaArray[wt]);
-                _singleton.writeCell(row, colNumber++, style_int, leadersLessThanQuaArray[wt]);
-                _singleton.writeCell(row, colNumber++, style_double, agentsExcAveArray[wt]);
-                _singleton.writeCell(row, colNumber++, style_double, leadersExcAveArray[wt]);
-                _singleton.writeCell(row, colNumber++, style_double, membersExcAveArray[wt]);
-                _singleton.writeCell(row, colNumber++, style_double, mDependableAgentsFromAllLeaders[wt]);
-                _singleton.writeCell(row, colNumber++, style_double, mDependableAgentsFromLeadersTrustsSomeone[wt]);
-                _singleton.writeCell(row, colNumber++, style_double, mDependableMembersFromExcellentLeader[wt]);
-                _singleton.writeCell(row, colNumber++, style_int, mMutualDependency[wt]);
-
-                //列幅の自動調整
-                for (int k = 0; k <= colNumber; k++) {
-                    sheet.autoSizeColumn(k, true);
-                }
-            }
-
-            // 2ページ目
-            rowNumber = 0;
-            colNumber = 0;
-
-            sheet = book.createSheet();
-            if (sheet instanceof SXSSFSheet) {
-                ((SXSSFSheet) sheet).trackAllColumnsForAutoSizing();
-            }
-            //シート名称の設定
-            book.setSheetName(0, st );
-
-            row = sheet.createRow(rowNumber);
-            _singleton.writeCell(row, colNumber++, style_header, "ID");
-            _singleton.writeCell(row, colNumber++, style_header, "Tasks leaders still have");
-            _singleton.writeCell(row, colNumber++, style_header, "Subtasks to be done");
-
-            //ウィンドウ枠の固定
-            sheet.createFreezePane(1, 1);
-
-            //ヘッダ行にオートフィルタの設定
-            sheet.setAutoFilter(new CellRangeAddress(0, 0, 0, colNumber));
-
-            //列幅の自動調整
-            for (int j = 0; j <= colNumber; j++) {
-                sheet.autoSizeColumn(j, true);
-            }
-            Agent agent;
-            // 結果を書き込んでいく
-            for (int wt = 0; wt < AGENT_NUM; wt++) {
-                rowNumber++;
-                colNumber = 0;
-                row = sheet.createRow(rowNumber);
-                agent = agents.get(wt);
-                _singleton.writeCell(row, colNumber++, style_int, wt);
-                if( agent.myTask == null ) {
-                    _singleton.writeCell(row, colNumber++, style_int, 0);
-                }else{
-                    _singleton.writeCell(row, colNumber++, style_int, 1);
-                }
-                _singleton.writeCell(row, colNumber++, style_int, agent.mySubtaskQueue.size());
-            }
-
-            //ファイル出力
-            fout = new FileOutputStream(outputFilePath);
-            book.write(fout);
-        } finally {
-            if (fout != null) {
-                try {
-                    fout.close();
-                } catch (IOException e) {
-                }
-            }
-            if (book != null) {
-                try {
-                    /*
-                        SXSSFWorkbookはメモリ空間を節約する代わりにテンポラリファイルを大量に生成するため、
-                        不要になった段階でdisposeしてテンポラリファイルを削除する必要がある
-                     */
-                    ((SXSSFWorkbook) book).dispose();
-                } catch (Exception e) {
-                }
-            }
-        }
-    }
-
     static void writeGraphInformationX(List<Agent> agents, String st ) throws IOException {
         String outputFilePath = _singleton.setPath("relationships", st, "xlsx");
         Edge edge = new Edge();
@@ -905,14 +640,14 @@ public class OutPut implements SetParam {
                             _singleton.writeCell(row, colNumber++, style_string, "Triangle");
                         }
 
-                        _singleton.writeCell(row, colNumber++, style_int, agent.p.getX() * 10);
-                        _singleton.writeCell(row, colNumber++, style_int, agent.p.getY() * 10);
+                        _singleton.writeCell(row, colNumber++, style_int, agent.getX() * 10);
+                        _singleton.writeCell(row, colNumber++, style_int, agent.getY() * 10);
 
                         for (int j = 0; j < RESOURCE_TYPES; j++) {
                             _singleton.writeCell(row, colNumber++, style_int, agent.resources[j]);
                             _singleton.writeCell(row, colNumber++, style_int, agent.required[j]);
-                            if (agent.reliabilityRankingAsM.size() > 0)
-                                _singleton.writeCell(row, colNumber++, style_int, agent.allocated[agent.reliabilityRankingAsM.keySet().iterator().next().id][j]);
+                            if (agent.ls.reliableMembersRanking.size() > 0)
+                                _singleton.writeCell(row, colNumber++, style_int, agent.allocated[agent.ls.reliableMembersRanking.keySet().iterator().next().id][j]);
                             else _singleton.writeCell(row, colNumber++, style_int, -1);
                         }
                         int resCount = (int) Arrays.stream( agent.resources )
@@ -1192,8 +927,8 @@ public class OutPut implements SetParam {
                     if( target.equals(from) ){
                         pw.print(" , ,");
                     }else{
-                        pw.print(from.reliabilityRankingAsL.get(target) + ", ");
-                        pw.print(from.reliabilityRankingAsM.get(target) + ", ");
+                        pw.print(from.ls.reliableMembersRanking.get(target) + ", ");
+                        pw.print(from.ms.reliableLeadersRanking.get(target) + ", ");
                     }
                 }
                 pw.println();

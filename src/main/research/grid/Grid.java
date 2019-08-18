@@ -14,11 +14,10 @@ public class Grid {
     private static int[][] delays = new int[AGENT_NUM][AGENT_NUM];
 
     public static void setAgentOnEnvironment( Agent ag ) {
-        ag.p = newVacantSpot();
-        int tempX = (int) ag.p.getX();
-        int tempY = (int) ag.p.getY();
+        ag.setPosition( newVacantSpot() );
+        int tempX = ag.getX();
+        int tempY = ag.getY();
 
-        if( tempX >= AGENT_NUM || tempY >= AGENT_NUM ) System.out.println("午後ごごご");
         grid[tempY][tempX] = ag;
         setDelay(ag);
     }
@@ -42,7 +41,7 @@ public class Grid {
         int delay;
         for ( Agent to: agentList ) {
             if( to.id >= AGENT_NUM ) System.out.println("clear Agent._id to");
-            delay = calculateDelay( from.p, to.p );
+            delay = calculateDelay( from.getP(), to.getP() );
             delays[from.id][to.id] = delay;
             delays[to.id][from.id] = delay;
         }

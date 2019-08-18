@@ -1,5 +1,7 @@
 package main.research.others.random;
 
+import java.util.Random;
+
 public class MyRandom {
 
     private static final int[] _seeds = new int[] {
@@ -24,7 +26,9 @@ public class MyRandom {
             4007 };
 
 
-    static Sfmt sfmt;
+
+	private static Sfmt sfmt;
+    private static Random rnd;
 
     /**
      * 施行のたびに乱数のシードを変える必要がある．
@@ -32,10 +36,13 @@ public class MyRandom {
      * @param times ... 実験の施行回数．
      * @return 新しいSfmtオブジェクト
      */
-    public static Sfmt newSfmt( int times ) {
+    public static void setNewSfmt( int times ) {
         sfmt = new Sfmt( _seeds[times] );
-        return sfmt;
     }
+
+    public static void setNewRnd( int times ) {
+    	rnd = new Random( _seeds[times] );
+	}
 
     /**
      * min以上max以下の乱数を生成する．
@@ -49,6 +56,13 @@ public class MyRandom {
 
     public static double getRandomDouble() {
         return sfmt.NextUnif();
+    }
+
+	public static Sfmt getSfmt() {
+		return sfmt;
+	}
+    public static Random getRnd() {
+    	return rnd;
     }
 
 	public static boolean epsilonGreedy( double ε ) {

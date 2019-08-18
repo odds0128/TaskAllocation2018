@@ -19,8 +19,8 @@ class MyRandomTest {
         @Test
         void newSfmtで同じ引数からは同じSfmtオブジェクトが返ってくる() {
             for (int i = 0; i < 100; i++) {
-                Sfmt expected = MyRandom.newSfmt(i);
-                Sfmt actual = MyRandom.newSfmt(i);
+                MyRandom.setNewSfmt(i); Sfmt expected = MyRandom.getSfmt();
+                MyRandom.setNewSfmt(i); Sfmt actual = MyRandom.getSfmt();
 
                 /*
                  Sfmtオブジェクトの等価性がわからなかったので生成される
@@ -34,10 +34,11 @@ class MyRandomTest {
         }
 
         @Test
-        void newSfmtで違う引数からは違うSfmtオブジェクトが返ってくる() {
+        void setNewSfmtで違う引数からは違うSfmtオブジェクト返ってくる() {
+
             for (int i = 0; i < 100; i++) {
-                Sfmt expected = MyRandom.newSfmt(i);
-                Sfmt actual = MyRandom.newSfmt(i+1);
+                MyRandom.setNewSfmt(i);   Sfmt expected = MyRandom.getSfmt();
+                MyRandom.setNewSfmt(i+1); Sfmt actual   = MyRandom.getSfmt();
 
                 /*
                  Sfmtオブジェクトの等価性がわからなかったので生成される
@@ -66,7 +67,8 @@ class MyRandomTest {
 
         @BeforeEach
         void Setup(){
-            sfmt = MyRandom.newSfmt( 0 );
+            MyRandom.setNewSfmt( 0 );
+            sfmt = MyRandom.getSfmt();
             max = 9;
             min = 3;
         }

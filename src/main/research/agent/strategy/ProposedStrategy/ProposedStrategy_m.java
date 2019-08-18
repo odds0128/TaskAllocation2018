@@ -16,7 +16,6 @@ import static main.research.Manager.getCurrentTime;
 import static main.research.SetParam.DERenewalStrategy.*;
 
 import static main.research.SetParam.ReplyType.*;
-import static main.research.agent.strategy.Strategy.renewDE;
 
 import java.util.*;
 
@@ -64,7 +63,7 @@ public class ProposedStrategy_m extends MemberStrategy implements SetParam {
 
 			member.required[currentSubtask.resType]++;
 			TransmissionPath.sendMessage( new Done( member, currentLeader ) );
-			renewDE( member.reliabilityRankingAsM , currentLeader, 1, withBinary);
+			renewDE( reliableLeadersRanking , currentLeader, 1, withBinary);
 
 			if (member._coalition_check_end_time - getCurrentTime() < COALITION_CHECK_SPAN) {
 				member.workWithAsM[currentLeader.id]++;
@@ -79,7 +78,7 @@ public class ProposedStrategy_m extends MemberStrategy implements SetParam {
 	protected void replyToSolicitations( Agent member, List< Solicitation > solicitations ) {
 		if(  solicitations.isEmpty() ) return;
 
-		sortSolicitationByDEofLeader(  solicitations, member.reliabilityRankingAsM );
+		sortSolicitationByDEofLeader(  solicitations, reliableLeadersRanking );
 
 		int acceptationCount = 0;
 		while (  solicitations.size() > 0 && acceptationCount++ <= SUBTASK_QUEUE_SIZE ) {

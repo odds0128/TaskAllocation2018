@@ -57,7 +57,7 @@ public interface SetParam {
     int MAX_SUBTASK_RESOURCE_SIZE = 10;
     int MIN_SUBTASK_RESOURCE_SIZE = 5;
 
-    int RESEND_TIMES   = 2;              // あるサブタスクについて要請を出すエージェントの数
+    int REBUNDUNT_SOLICITATION_TIMES = 2;              // あるサブタスクについて要請を出すエージェントの数
     int MAX_RELIABLE_AGENTS = 1;         // メンバの信頼エージェントの上限
     int THRESHOLD_FOR_ROLE_RENEWAL  = 50;
 

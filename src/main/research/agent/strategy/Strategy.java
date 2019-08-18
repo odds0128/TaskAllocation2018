@@ -14,12 +14,12 @@ import static main.research.SetParam.Role.MEMBER;
 
 public interface Strategy {
 
-    static double renewDEby0or1( double former, boolean isPositive ){
+    private double renewDEby0or1( double former, boolean isPositive ){
         double multiplier = isPositive ? 1 : 0;
         return former * ( 1.0 - α ) + multiplier * α;
     }
 
-    static double renewDEbyArbitraryReward( double former, double reward ){
+    private double renewDEbyArbitraryReward( double former, double reward ){
         return former * ( 1.0 - α ) + reward * α;
     }
 
@@ -110,10 +110,13 @@ public interface Strategy {
         for (Map.Entry<Agent, Double> entry : entries) {
             sortedMap.put(entry.getKey(), entry.getValue());
         }
+        System.out.println( "Best 5 : " + entries.subList( 0, 5 ) );
+        System.out.println( "Worst 5: " + entries.subList( entries.size() - 5, entries.size() ) );
+        System.out.println();
         return sortedMap;
     }
 
-    static void renewDE( Map< Agent, Double > deMap, Agent target, double evaluation, DERenewalStrategy de_strategy ) {
+    default void renewDE( Map< Agent, Double > deMap, Agent target, double evaluation, DERenewalStrategy de_strategy ) {
         double formerDE = deMap.get(target);
 
         boolean b = evaluation > 0;

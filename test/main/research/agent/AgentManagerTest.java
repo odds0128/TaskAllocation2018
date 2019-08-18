@@ -12,24 +12,15 @@ import static org.hamcrest.CoreMatchers.*;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.Mockito.mock;
 
-@Tag("agent")
 public class AgentManagerTest {
-    private static LeaderStrategy ls;
-    private static MemberStrategy ms;
-
     static {
         System.out.println("AgentManagerTest");
-    }
-
-    @BeforeAll
-    static void setUp() {
-        ls = new ProposedStrategy_l();
-        ms = new ProposedStrategy_m();
-        MyRandom.newSfmt(0);
     }
 
     @Nested
@@ -61,6 +52,30 @@ public class AgentManagerTest {
                     Agent target = agents.get(j);
                     assertThat( from, is( not( target ) ) );
                 }
+            }
+        }
+    }
+
+    @Nested
+    static class generateRandomAgentListのテスト {
+        List <Agent> mockAgentList = new ArrayList<>(  );
+        int agents = 100;
+        Object obj;
+        Method gral;
+
+        @BeforeAll
+        void setUp() throws NoSuchMethodException {
+            for( int i = 0; i < agents; i++ ) mockAgentList.add( mock(Agent.class) );
+            obj = new AgentManager();
+            gral = AgentManager.class.getDeclaredMethod( "generateRandomAgentList" , List.class);
+            gral.setAccessible(true);
+        }
+
+        @Test
+        void 元のリストと同じものを返さない() throws InvocationTargetException, IllegalAccessException {
+            List<Agent> actual = ( List< Agent > ) gral.invoke( mockAgentList );
+            for( int i = 0; i < agents; i++ ) {
+                assertThat( actual.get( i ), is( not ( mockAgentList.get( i ) ) ) );
             }
         }
     }
