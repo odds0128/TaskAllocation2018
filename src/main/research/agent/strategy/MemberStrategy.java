@@ -1,5 +1,6 @@
 package main.research.agent.strategy;
 
+import main.research.Manager;
 import main.research.SetParam;
 import main.research.agent.Agent;
 import main.research.agent.AgentManager;
@@ -18,16 +19,18 @@ import java.util.*;
 public abstract class MemberStrategy implements Strategy, SetParam {
     public Map< Agent, Double > reliableLeadersRanking = new LinkedHashMap<>( HASH_MAP_SIZE );
 
-    protected List< Solicitation > solicitationList = new ArrayList<>();
+    protected int expectedResultMessage = 0;
+    List< Solicitation > solicitationList = new ArrayList<>();
     private List< ResultOfTeamFormation > resultList = new ArrayList<>();
+    public List<Pair<Agent, Subtask>> mySubtaskQueue = new ArrayList<>(  );  // consider Agentとsubtaskの順番逆のがよくね
 
     public void actAsMember(Agent member) {
-        sortReliabilityRanking( reliableLeadersRanking );
-
+        assert mySubtaskQueue.size() <= SUBTASK_QUEUE_SIZE : "Over weight " + mySubtaskQueue.size();
         member.ms.replyToSolicitations( member, solicitationList);
 
         while( ! resultList.isEmpty() ) {
             ResultOfTeamFormation r = resultList.remove( 0 );
+            expectedResultMessage--;
             reactToResultMessage( member, r );
         }
 
@@ -53,11 +56,12 @@ public abstract class MemberStrategy implements Strategy, SetParam {
     private void reactToResultMessage( Agent member, ResultOfTeamFormation r) {
         if( r.getResult() == SUCCESS ) {
         	Pair<Agent, Subtask > pair =  new Pair<>( r.getFrom(), r.getAllocatedSubtask() );
-            member.mySubtaskQueue.add( pair );
+            mySubtaskQueue.add( pair );
         } else {
             renewDE( reliableLeadersRanking, r.getFrom(), 0, withBinary);
         }
     }
+
 
     public void reachSolicitation( Solicitation s ) {
         this.solicitationList.add( s );

@@ -24,8 +24,9 @@ public class Solicitation extends Message {
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append( "From: " + from.id ).append( "(" + from.role + ") , " );
-		sb.append( "To: " + to.id ).append( "(" + to.role + ") , " );
+		sb.append( "Solicitation - " );
+		sb.append( "From: " + from );
+		sb.append( "To: " + to );
 		sb.append( "Subtask: " + expectedSubtask );
 		return sb.toString();
 	}

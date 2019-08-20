@@ -33,8 +33,9 @@ public class ResultOfTeamFormation extends Message{
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder( );
-		sb.append( "From: " + from.id ).append( "(" + from.role + ") , " );
-		sb.append( "To: " + to.id ).append( "(" + to.role + ") , " );
+		sb.append( "Result       - " );
+		sb.append( "From: " + from );
+		sb.append( "To: " + to );
 		sb.append( "Result: " + result + ", " );
 		sb.append( "AllocatedSubtask: " + allocatedSubtask );
 		return sb.toString();

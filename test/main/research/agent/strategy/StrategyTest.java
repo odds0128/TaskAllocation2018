@@ -30,7 +30,7 @@ class StrategyTest implements Strategy {
     static void setUp() {
         MyRandom.setNewSfmt(0);
         AgentManager.initiateAgents(ls_name, ms_name);
-        agentList = AgentManager.getAgentList();
+        agentList = AgentManager.getAllAgentList();
     }
 
     @Nested

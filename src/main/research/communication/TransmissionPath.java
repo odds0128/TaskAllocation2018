@@ -3,9 +3,7 @@ package main.research.communication;
 import main.research.communication.message.*;
 import main.research.others.Pair;
 import main.research.SetParam;
-import main.research.agent.Agent;
 import main.research.grid.Grid;
-import main.research.task.Subtask;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,18 +14,23 @@ import static main.research.SetParam.Role.LEADER;
 import static main.research.SetParam.Role.MEMBER;
 
 public class TransmissionPath implements SetParam {
-	private static int messageNum = 0;
+	private static int totalMessageNum = 0;
 	private static int communicationTime = 0;
 
 	private static List< Pair<Message, Integer> > messageQueue = new ArrayList<>(  );
 
 	public static void sendMessage( Message m ) {
+		assert m.getFrom() != m.getTo() : "he asks himself";
 		assert ! ( m.getTo().role == LEADER && m instanceof ResultOfTeamFormation ) : "Wrong result message";
 		assert ! ( m.getTo().role == MEMBER && m instanceof ReplyToSolicitation )   : "Wrong reply message.";
 
+//		if( m.getFrom().id == 4 || m.getTo().id == 4 ) {
+//			System.out.println( String.format( "%5d : ", Manager.getCurrentTime() ) + "delay:" + String.format( "%2d, ", Grid.getDelay( m.getFrom(), m.getTo() ) ) + m  );
+//		}
+
 		int untilArrival = Grid.getDelay( m.getFrom(), m.getTo() );
 		messageQueue.add( new Pair<>(m, untilArrival) );
-		messageNum++;
+		totalMessageNum++;
 		communicationTime += untilArrival;
 	}
 	
@@ -71,16 +74,17 @@ public class TransmissionPath implements SetParam {
 	}
 
 	public static int getMessageNum() {
-		return messageNum;
+		int temp = totalMessageNum;
+		return temp;
 	}
 
 	static public double getAverageCommunicationTime() {
-		return ( double ) communicationTime / messageNum;
+		return ( double ) communicationTime / totalMessageNum;
 	}
 
 	public static void clear() {
 		messageQueue.clear();
-		messageNum = 0;
+		totalMessageNum = 0;
 		communicationTime = 0;
 	}
 

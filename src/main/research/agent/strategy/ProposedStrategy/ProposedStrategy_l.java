@@ -10,7 +10,7 @@ import main.research.others.random.MyRandom;
 import main.research.task.Subtask;
 import main.research.task.Task;
 
-import static main.research.Manager.disposeTask;
+import static main.research.task.Task.disposeTask;
 import static main.research.Manager.getCurrentTime;
 import static main.research.SetParam.DERenewalStrategy.*;
 import static main.research.SetParam.ReplyType.*;
@@ -20,6 +20,7 @@ import static main.research.agent.strategy.Strategy.*;
 import static main.research.communication.TransmissionPath.*;
 
 import java.util.*;
+import java.util.Map.Entry;
 
 // TODO: 中身を表したクラス名にする
 public class ProposedStrategy_l extends LeaderStrategy implements SetParam {
@@ -28,44 +29,66 @@ public class ProposedStrategy_l extends LeaderStrategy implements SetParam {
 	Map< Agent, double[] > congestionDegreeMap = new HashMap<>();
 
 	protected void solicitAsL( Agent leader ) {
-		myTask = Manager.getTask( leader );
+		myTask = Task.getTask( leader );
 		if ( myTask == null ) {
 			leader.inactivate( 0 );
 			return;
 		}
+		Map<Agent, Subtask > allocationMap = selectMembers( myTask.subtasks );
+		repliesToCome = allocationMap.size();
 
-		List< Agent > candidates = selectMembers( leader, myTask.subtasks );
-		repliesToCome = candidates.size();
-
-		if ( candidates.isEmpty() ) {
+		if ( allocationMap.isEmpty() ) {
 			leader.inactivate( 0 );
 			return;
 		} else {
-			sendSolicitations( leader, candidates );
+			sendSolicitations( leader, allocationMap );
 		}
 		proceedToNextPhase( leader );  // 次のフェイズへ
 	}
 
-	private void sendSolicitations( Agent leader, List< Agent > targets ) {
-		for ( int i = 0; i < targets.size(); i++ ) {
-			Agent target = targets.get( i );
-			if ( target != null ) {
-				timeToStartCommunicatingMap.put( target, getCurrentTime() );
-				// TODO: 長すぎ
-				Message solicitation = new Solicitation( leader, target, myTask.subtasks.get( i % myTask.subtasks.size() ) );
-				sendMessage( solicitation );
+	private Map< Agent, Subtask > selectMembers( List< Subtask > subtasks ) {
+		Map< Agent, Subtask > memberCandidates = new HashMap<>();
+		Agent candidate;
+
+		for ( int i = 0; i < REBUNDUNT_SOLICITATION_TIMES; i++ ) {
+			for ( Subtask st: subtasks ) {
+				if ( MyRandom.epsilonGreedy( Agent.ε ) ) candidate = selectMemberForASubtaskRandomly( st );
+				else candidate = selectAMemberForASubtask( st );
+
+				if ( candidate == null ) return new HashMap< >() ;
+
+				exceptions.add( candidate );
+				memberCandidates.put( candidate, st );
 			}
+		}
+		return memberCandidates;
+	}
+
+	Agent selectMemberForASubtaskRandomly( Subtask st ) {
+		Agent candidate;
+		do {
+			candidate = AgentManager.getAgentRandomly( exceptions, AgentManager.getAllAgentList() );
+		} while ( ! candidate.canProcessTheSubtask( st ) );
+		return candidate;
+	}
+
+	Agent selectAMemberForASubtask( Subtask st ) {
+		for ( Agent ag: reliableMembersRanking.keySet() ) {
+			if ( ( ! exceptions.contains( ag ) ) && ag.canProcessTheSubtask( st ) ) return ag;
+		}
+		return null;
+	}
+
+	private void sendSolicitations( Agent leader, Map< Agent, Subtask > agentSubtaskMap ) {
+		for ( Entry<Agent, Subtask> ag_st : agentSubtaskMap.entrySet() ) {
+			timeToStartCommunicatingMap.put( ag_st.getKey(), getCurrentTime() );
+			sendMessage( new Solicitation( leader, ag_st.getKey(), ag_st.getValue() ) );
 		}
 	}
 
 	protected void formTeamAsL( Agent leader ) {
 		if ( replyList.size() < repliesToCome ) return;
 		else repliesToCome = 0;
-
-		// remove
-		if( myTask == null ){
-			System.out.println( leader );
-		}
 
 		Map< Subtask, Agent > mapOfSubtaskAndAgent = new HashMap<>();
 		while ( !replyList.isEmpty() ) {
@@ -74,7 +97,7 @@ public class ProposedStrategy_l extends LeaderStrategy implements SetParam {
 			Agent currentFrom = r.getFrom();
 			updateRoundTripTime( currentFrom );
 
-			if ( r.getReplyType() == DECLINE ) treatBetrayer( leader, r.getFrom() );
+			if ( r.getReplyType() == DECLINE ) treatBetrayer( currentFrom );
 			else if ( mapOfSubtaskAndAgent.containsKey( st ) ) {
 				Agent rival = mapOfSubtaskAndAgent.get( st );
 				Pair winnerAndLoser = compareDE( currentFrom, rival );
@@ -87,7 +110,7 @@ public class ProposedStrategy_l extends LeaderStrategy implements SetParam {
 			}
 		}
 		if ( canExecuteTheTask( myTask, mapOfSubtaskAndAgent.keySet() ) ) {
-			for ( Map.Entry entry: mapOfSubtaskAndAgent.entrySet() ) {
+			for ( Entry entry: mapOfSubtaskAndAgent.entrySet() ) {
 				Agent   friend = ( Agent ) entry.getValue();
 				Subtask st = (Subtask ) entry.getKey();
 
@@ -99,13 +122,14 @@ public class ProposedStrategy_l extends LeaderStrategy implements SetParam {
 			leader.inactivate( 1 );
 		} else {
 			apologizeToFriends( leader, new ArrayList<>( mapOfSubtaskAndAgent.values() ) );
+			exceptions.removeAll( new ArrayList<>( mapOfSubtaskAndAgent.values() ) );
 			disposeTask();
 			leader.inactivate( 0 );
 		}
 		myTask = null;
 	}
 
-	void treatBetrayer( Agent leader, Agent betrayer ) {
+	void treatBetrayer( Agent betrayer ) {
 		exceptions.remove( betrayer );
 		renewDE( reliableMembersRanking, betrayer, 0, withBinary );
 	}
@@ -120,16 +144,11 @@ public class ProposedStrategy_l extends LeaderStrategy implements SetParam {
 	}
 
 	Pair< Agent, Agent > compareDE( Agent first, Agent second ) {
-		if ( reliableMembersRanking.get( first ) >= reliableMembersRanking.get( second ) )
-			return new Pair<>( first, second );
+		if ( reliableMembersRanking.get( first ) >= reliableMembersRanking.get( second ) ) return new Pair<>( first, second );
 		return new Pair<>( second, first );
 	}
 
 	private boolean canExecuteTheTask( Task task, Set< Subtask > subtaskSet ) {
-		// remove
-		if( task == null ) {
-			System.out.println( "task is null" );
-		}
 		// TODO: あとでサイズだけ比較するようにする
 		int actual = 0;
 		for ( Subtask st: subtaskSet ) if ( task.isPartOfThisTask( st ) ) actual++;
@@ -142,60 +161,6 @@ public class ProposedStrategy_l extends LeaderStrategy implements SetParam {
 
 	private boolean withinTimeWindow(  ) {
 		return Agent._coalition_check_end_time - getCurrentTime() < COALITION_CHECK_SPAN;
-	}
-
-	// TODO: HACK: Map使って作り直す．
-	public List< Agent > selectMembers( Agent leader, List< Subtask > subtasks ) {
-		List< Agent > memberCandidates = new ArrayList<>();
-		Agent candidate = null;
-
-		for( int i = 0; i < subtasks.size() * REBUNDUNT_SOLICITATION_TIMES; i++ ) {
-			memberCandidates.add( null );
-		}
-
-		// 一つのタスクについてRESEND_TIMES周する
-		for ( int i = 0; i < REBUNDUNT_SOLICITATION_TIMES; i++ ) {
-			Subtask st;
-			for ( int stIndex = 0; stIndex < subtasks.size(); stIndex++ ) {
-				st = subtasks.get( stIndex );
-
-				// 一つ目のサブタスク(報酬が最も高い)から割り当てていく
-				// 信頼度の一番高いやつから割り当てる
-				// εの確率でランダムに割り振る
-				if ( MyRandom.epsilonGreedy( Agent.ε ) ) {
-					do {
-						candidate = Manager.getAgentRandomly( leader, exceptions, AgentManager.getAgentList() );
-					} while ( leader.calculateExecutionTime( candidate, st ) < 0 );
-				} else {
-					// 信頼度ランキングの上から割り当てを試みる．
-					// 1. 能力的にできない
-					// 2. すでにチームに参加してもらっていて，まだ終了連絡がこない
-					// 3. すでに別のサブタスクを割り当てる予定がある
-					// に当てはまらなければ割り当て候補とする．
-					for ( Agent ag: reliableMembersRanking.keySet() ) {
-						// TODO: inTheListもcalcExecutionTimeもインスタンスに紐づかないのでstaticにするかユーティリティクラスにする．
-						// もっというなら，inTheList相当のメソッドが普通にあるはず．
-						if ( Agent.inTheList( ag, exceptions ) < 0 &&
-							Agent.calculateExecutionTime( ag, st ) > 0 ) {
-							candidate = ag;
-							break;
-						}
-					}
-				}
-				// 候補が見つかれば，チーム参加要請対象者リストに入れ，参加要請を送る
-				if ( candidate == null ) {
-					System.out.println( "It can't be executed." );
-					return new ArrayList<>();
-				}
-				// 候補が見つからないサブタスクがあったら直ちにチーム編成を失敗とする
-				else {
-					exceptions.add( candidate );
-					memberCandidates.set( stIndex + i * subtasks.size(), candidate );
-				}
-				candidate = null;
-			}
-		}
-		return memberCandidates;
 	}
 
 	@Override
@@ -219,11 +184,12 @@ public class ProposedStrategy_l extends LeaderStrategy implements SetParam {
 		// タスク全体が終わったかどうかの判定と，それによる処理
 		// HACK: もうちょいどうにかならんか
 		Task task = leader.findTaskContainingThisSubtask( st );
+
 		task.subtasks.remove( st );
 
 		if ( task.subtasks.isEmpty() ) {
 			from.pastTasks.remove( task );
-			Manager.finishTask(  );
+			Task.finishTask(  );
 			from.didTasksAsLeader++;
 		}
 	}
@@ -246,6 +212,13 @@ public class ProposedStrategy_l extends LeaderStrategy implements SetParam {
 	private static double calculateCongestionDegree( int bindingTime, int roundTripTime, Subtask subtask ) {
 		int difficulty = subtask.reqRes[ subtask.resType ];
 		return difficulty / ( bindingTime - 2.0 * roundTripTime );
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder(  );
+		sb.append( ", exceptions: "  + exceptions.size() );
+		return sb.toString();
 	}
 
 	void clear() {

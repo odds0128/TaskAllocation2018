@@ -89,8 +89,7 @@ public class OutPut implements SetParam {
 
     static void aggregateData(int ft, int dt, int ot, int rm, List<Agent> agentList) {
         finishedTasksArray[index] += ft;
-        int priorMessages = index > 0 ? messagesArray[index - 1] : 0;
-        messagesArray[index] += TransmissionPath.getMessageNum() - priorMessages;
+        messagesArray[index] += TransmissionPath.getMessageNum() - Arrays.stream( messagesArray ).sum();
         communicationDelayArray[index] += TransmissionPath.getAverageCommunicationTime();
         disposedTasksArray[index] += dt;
         overflownTasksArray[index] += ot;
@@ -135,20 +134,6 @@ public class OutPut implements SetParam {
                 }
 
                 leadersExcAveArray[times] += excellence;
-                int temp = 0;
-                for( Agent relAg:  ag.ls.reliableMembersRanking.keySet() ){
-                    if( ag.ls.reliableMembersRanking.get(relAg) > ag.threshold_for_reciprocity_as_leader ){
-                        mDependableAgentsFromAllLeaders[times]++;
-                        mDependableAgentsFromLeadersTrustsSomeone[times] ++;
-                        if( ag.didTasksAsLeader > 100 ){
-                            mDependableMembersFromExcellentLeader[times]++;
-                        }
-                        temp++;
-                    }else{
-                        if( temp > 0 ) leadersTrustSomeone++;
-                        break;
-                    }
-                }
             } else {
                 membersExcAveArray[times] += excellence;
             }
@@ -262,25 +247,10 @@ public class OutPut implements SetParam {
     }
 
     static void checkAgent(List<Agent> agents) {
-        List<Agent> temp = new ArrayList<>(agents);
         System.out.println("Total Agents is " + agents.size());
         System.out.println("Leaders is " + countLeader(agents) + ", Members is " + countLeader(agents));
 
-        int recipro = 0;
-        for (Agent agent : agents) {
-            System.out.print("ID: " + agent.id + " Resources : ");
-            for (int i = 0; i < RESOURCE_TYPES; i++) System.out.print(agent.resources[i] + ", ");
-//            System.out.println(" Reliable Agents: " + agent.relAgents.size());
-            System.out.println("Threshold: " + agent.threshold_for_reciprocity_as_member);
-            System.out.println("Principle: " + agent.principle);
-            if( agent.principle == RECIPROCAL && agent.e_member > agent.e_leader) {
-                for( int wwam: agent.workWithAsM ){
-                    if(wwam != 0) System.out.println("wwam:" + wwam);
-                }
-                recipro++;
-            }
-        }
-        System.out.println(recipro);
+        for (Agent agent : agents) System.out.println( agent );
     }
 
     static void writeResults(String st) {

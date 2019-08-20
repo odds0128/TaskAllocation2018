@@ -39,8 +39,8 @@ public interface Strategy {
                 ag.role  = JONE_DOE;
                 break;
             case EXECUTE_SUBTASK:
-                ag.phase = ag.mySubtaskQueue.isEmpty() ? SELECT_ROLE : EXECUTE_SUBTASK;
-                ag.role  = ag.mySubtaskQueue.isEmpty() ? JONE_DOE : MEMBER;
+                ag.phase = ag.ms.mySubtaskQueue.isEmpty() ? SELECT_ROLE : EXECUTE_SUBTASK;
+                ag.role  = ag.ms.mySubtaskQueue.isEmpty() ? JONE_DOE : MEMBER;
                 break;
         }
         ag.validatedTicks = getCurrentTime();
@@ -101,7 +101,7 @@ public interface Strategy {
         }
     }
 
-    //CONSIDER: 効率悪そう．DEが変わったエージェントの前後と比較して入れ替えればいいだけ．
+    // todo: 効率悪そう．DEが変わったエージェントの前後と比較して入れ替えればいいだけ．
     static Map<Agent, Double> sortReliabilityRanking( Map< Agent, Double > relMap ) {
         List<Entry<Agent, Double>> entries = new ArrayList(relMap.entrySet());
         entries.sort(Strategy::compare);
@@ -110,9 +110,6 @@ public interface Strategy {
         for (Map.Entry<Agent, Double> entry : entries) {
             sortedMap.put(entry.getKey(), entry.getValue());
         }
-        System.out.println( "Best 5 : " + entries.subList( 0, 5 ) );
-        System.out.println( "Worst 5: " + entries.subList( entries.size() - 5, entries.size() ) );
-        System.out.println();
         return sortedMap;
     }
 
@@ -122,6 +119,7 @@ public interface Strategy {
         boolean b = evaluation > 0;
         double newDE = 0;
 
+        sortReliabilityRanking( deMap );
         if( de_strategy == withBinary ) {
             newDE = renewDEby0or1(formerDE, b);
         }else if( de_strategy == withReward ) {

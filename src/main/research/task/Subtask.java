@@ -32,11 +32,17 @@ public class Subtask implements SetParam {
         return from;
     }
 
+    public int getId() {
+        return id;
+    }
+
     @Override
     public String toString() {
         StringBuilder str = new StringBuilder( id + "[");
-        for (int i = 0; i < RESOURCE_TYPES; i++) str.append(String.format("%3d", reqRes[i])).append(", ");
-        str.append("]");
+        for (int i = 0; i < RESOURCE_TYPES - 1; i++) {
+            str.append(String.format("%2d", reqRes[i])).append(", ");
+        }
+        str.append( String.format( "%2d", reqRes[RESOURCE_TYPES - 1] ) ).append("]");
         return str.toString();
     }
 

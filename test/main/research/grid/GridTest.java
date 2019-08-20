@@ -30,7 +30,7 @@ class GridTest {
     void setUp() {
         MyRandom.setNewSfmt(0);
         AgentManager.initiateAgents(ls_name, ms_name);
-        agentList = AgentManager.getAgentList();
+        agentList = AgentManager.getAllAgentList();
     }
 
     @Nested

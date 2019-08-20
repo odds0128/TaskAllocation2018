@@ -25,7 +25,6 @@ public class ProposedStrategy_m extends MemberStrategy implements SetParam {
 
 	@Override
 	public void actAsMember( Agent member ) {
-		// doneの処理
 		while( ! member.ls.doneList.isEmpty() ) {
 			Done d = member.ls.doneList.remove( 0 );
 			member.ls.checkDoneMessage( member, d );
@@ -34,17 +33,41 @@ public class ProposedStrategy_m extends MemberStrategy implements SetParam {
 	}
 
 	protected void replyAsM( Agent member) {
-		if ( joinFlag && getCurrentTime() - member.validatedTicks > THRESHOLD_FOR_ROLE_RENEWAL) member.inactivate(0);
-		else Strategy.proceedToNextPhase(member); joinFlag = false;
+		if( joinFlag ) {
+			Strategy.proceedToNextPhase( member );
+			joinFlag = false;
+		} else if( getCurrentTime() - member.validatedTicks > THRESHOLD_FOR_ROLE_RENEWAL) {
+			member.inactivate(0);
+		}
 	}
 
+	protected void replyToSolicitations( Agent member, List< Solicitation > solicitations ) {
+		if(  solicitations.isEmpty() ) return;
+
+		sortSolicitationByDEofLeader(  solicitations, reliableLeadersRanking );
+
+		int capacity = SUBTASK_QUEUE_SIZE - mySubtaskQueue.size() - expectedResultMessage;
+		while (  solicitations.size() > 0 && capacity-- > 0 ) {
+			Solicitation s = MyRandom.epsilonGreedy( Agent.ε ) ? selectSolicitationRandomly( solicitations ) : solicitations.remove( 0 );
+			TransmissionPath.sendMessage( new ReplyToSolicitation( member, s.getFrom(), ACCEPT, s.getExpectedSubtask() ) );
+			expectedResultMessage++;
+			joinFlag = true;
+		}
+		while ( ! solicitations.isEmpty() ) {
+			Solicitation s = solicitations.remove( 0 );
+			TransmissionPath.sendMessage( new ReplyToSolicitation( member,  s.getFrom(), DECLINE, s.getExpectedSubtask() ) );
+		}
+	}
+
+
 	protected void receiveAsM(Agent member) {
-		if ( member.mySubtaskQueue.isEmpty() ) {
+		if( expectedResultMessage > 0 ) return;
+
+		if ( mySubtaskQueue.isEmpty() ) {
 			member.inactivate(0);
 		} else {
-			// HACK
-			Subtask currentSubtask = member.mySubtaskQueue.get( 0 ).getValue();
-			Agent currentLeader    = member.mySubtaskQueue.get( 0 ).getKey();
+			Subtask currentSubtask = mySubtaskQueue.get( 0 ).getValue();
+			Agent currentLeader    = mySubtaskQueue.get( 0 ).getKey();
 
 			member.allocated[currentLeader.id][currentSubtask.resType]++;
 			member.executionTime = member.calculateExecutionTime(member, currentSubtask);
@@ -57,7 +80,7 @@ public class ProposedStrategy_m extends MemberStrategy implements SetParam {
 
 		if ( --member.executionTime == 0) {
 			// HACK
-			Pair<Agent, Subtask> pair = member.mySubtaskQueue.remove( 0 );
+			Pair<Agent, Subtask> pair = mySubtaskQueue.remove( 0 );
 			Agent   currentLeader  = pair.getKey();
 			Subtask currentSubtask = pair.getValue();
 
@@ -69,26 +92,9 @@ public class ProposedStrategy_m extends MemberStrategy implements SetParam {
 				member.workWithAsM[currentLeader.id]++;
 				member.didTasksAsMember++;
 			}
-			member.mySubtaskQueue.remove(currentSubtask);
+			mySubtaskQueue.remove(currentSubtask);
 			// consider: nextPhaseと一緒にできない？
 			member.inactivate(1);
-		}
-	}
-
-	protected void replyToSolicitations( Agent member, List< Solicitation > solicitations ) {
-		if(  solicitations.isEmpty() ) return;
-
-		sortSolicitationByDEofLeader(  solicitations, reliableLeadersRanking );
-
-		int acceptationCount = 0;
-		while (  solicitations.size() > 0 && acceptationCount++ <= SUBTASK_QUEUE_SIZE ) {
-			Solicitation s = MyRandom.epsilonGreedy( Agent.ε ) ? selectSolicitationRandomly( solicitations ) : solicitations.remove( 0 );
-			TransmissionPath.sendMessage( new ReplyToSolicitation( member, s.getFrom(), ACCEPT, s.getExpectedSubtask() ) );
-			joinFlag = true;
-		}
-		while ( ! solicitations.isEmpty() ) {
-			Solicitation s = solicitations.remove( 0 );
-			TransmissionPath.sendMessage( new ReplyToSolicitation( member,  s.getFrom(), DECLINE, s.getExpectedSubtask() ) );
 		}
 	}
 

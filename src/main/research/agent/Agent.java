@@ -51,27 +51,16 @@ public class Agent implements SetParam, Cloneable {
 
 	// リーダーエージェントのみが持つパラメータ
 	public int didTasksAsLeader = 0;
-	public double threshold_for_reciprocity_as_leader;
 	public List< Task > pastTasks = new ArrayList<>();
 
 	// メンバエージェントのみが持つパラメータ
 	public int didTasksAsMember = 0;
 	public int executionTime = 0;
-	public double threshold_for_reciprocity_as_member;
-	public List<Pair<Agent, Subtask>> mySubtaskQueue = new ArrayList<>(  );
 
 	public Agent( String ls_name, String ms_name ) {
 		this.id = _id++;
-
-		int resSum = Arrays.stream( resources ).sum();
-		int resCount = ( int ) Arrays.stream( resources )
-			.filter( res -> res > 0 )
-			.count();
 		setResource();
 		setStrategies( ls_name, ms_name );
-		// TODO: 移動
-		threshold_for_reciprocity_as_leader = THRESHOLD_FOR_RECIPROCITY_FROM_LEADER;
-		threshold_for_reciprocity_as_member = ( double ) resSum / resCount * THRESHOLD_FOR_RECIPROCITY_RATE;
 		selectRole();
 	}
 
@@ -91,19 +80,20 @@ public class Agent implements SetParam, Cloneable {
 		this.p = p;
 	}
 
-	public void actAsLeader() {
+	void actAsLeader() {
 		ls.actAsLeader( this );
 	}
 
-	public void actAsMember() {
+	void actAsMember() {
 		ms.actAsMember( this );
 	}
 
-	public void selectRole() {
+	void selectRole() {
 		validatedTicks = Manager.getCurrentTime();
-		if ( mySubtaskQueue.size() > 0 ) {
+		if ( ms.mySubtaskQueue.size() > 0 ) {
 			role = MEMBER;
 			this.phase = EXECUTE_SUBTASK;
+			executionTime = calculateExecutionTime( this, ms.mySubtaskQueue.get( 0 ).getValue() );
 		}
 
 		if( e_leader == e_member ) { selectRandomRole(); return; }
@@ -112,34 +102,39 @@ public class Agent implements SetParam, Cloneable {
 		if ( e_member > e_leader ) { selectMemberRole(); return; }
 	}
 
-	void selectLeaderRole(  ) {
+	private void selectLeaderRole(  ) {
+		AgentManager.joinLeaderList( this );
 		this.role  = LEADER;
 		this.phase = SOLICIT;
 	}
 
-	void selectMemberRole(  ) {
+	private void selectMemberRole() {
+		AgentManager.joinMemberList( this );
 		this.role  = MEMBER;
 		this.phase = WAIT_FOR_SOLICITATION;
 	}
 
-	void selectRandomRole() {
+	private void selectRandomRole() {
 		int toBeLeader = MyRandom.getRandomInt( 0, 1 );
 		if( toBeLeader == 1 ) selectLeaderRole();
 		else selectMemberRole();
 	}
 
-	void selectReverseRole(  ) {
+	private void selectReverseRole() {
 		if( e_leader > e_member ) {
 			selectLeaderRole();
+		}else if( e_member > e_leader ){
+			selectMemberRole();
+		}else{
+			selectRandomRole();
 		}
-
 	}
 
 
 
 	void selectRoleWithoutLearning() {
 		int ran = MyRandom.getRandomInt( 0, 6 );
-		if ( mySubtaskQueue.size() > 0 ) {
+		if ( ms.mySubtaskQueue.size() > 0 ) {
 			role = MEMBER;
 			this.phase = EXECUTE_SUBTASK;
 		}
@@ -149,32 +144,25 @@ public class Agent implements SetParam, Cloneable {
 	}
 
 	public void inactivate( double success ) {
-		if ( role == LEADER ) e_leader = e_leader * ( 1.0 - α ) + α * success;
-		else                  e_member = e_member * ( 1.0 - α ) + α * success;
-
+		if ( role == LEADER ) {
+			e_leader = e_leader * ( 1.0 - α ) + α * success;
+			AgentManager.leaveLeaderList( this );
+		} else{
+			e_member = e_member * ( 1.0 - α ) + α * success;
+			AgentManager.leaveMemberList( this );
+		}
+		AgentManager.joinJoneDoeList( this );
 		role = JONE_DOE;
 		phase = SELECT_ROLE;
 		this.validatedTicks = Manager.getCurrentTime();
 	}
 
 	public static int calculateExecutionTime( Agent a, Subtask st ) {
-		if ( a == null ) System.out.println( "Ghost trying to do subtask" );
-		if ( st == null ) System.out.println( "Agent trying to do nothing" );
-
-		if ( a.resources[ st.resType ] == 0 ) return -1;
 		return ( int ) Math.ceil( ( double ) st.reqRes[ st.resType ] / ( double ) a.resources[ st.resType ] );
 	}
 
-
-	/**
-	 * inTheListメソッド
-	 * 引数のエージェントが引数のリスト内にあればその索引を, いなければ-1を返す
-	 */
-	public static int inTheList( Object a, List List ) {
-		for ( int i = 0; i < List.size(); i++ ) {
-			if ( a.equals( List.get( i ) ) ) return i;
-		}
-		return -1;
+	public boolean canProcessTheSubtask( Subtask subtask) {
+		return resources[ subtask.resType ] > 0;
 	}
 
 	public Task findTaskContainingThisSubtask( Subtask finishedSubtask ) {
@@ -255,9 +243,8 @@ public class Agent implements SetParam, Cloneable {
 
 	@Override
 	public String toString() {
-		String sep = System.getProperty( "line.separator" );
-		StringBuilder str = new StringBuilder( String.format( "%3d", id ) );
-		str.append( sep );
+		StringBuilder str = new StringBuilder( );
+		str.append( role + " No." + String.format( "%3d, ", id ) );
 		return str.toString();
 	}
 
@@ -272,6 +259,7 @@ public class Agent implements SetParam, Cloneable {
 			MemberStrategyClass = Class.forName( package_name.concat( ms_name ) );
 			this.ls = ( LeaderStrategy ) LeaderStrategyClass.getDeclaredConstructor().newInstance();
 			this.ms = ( MemberStrategy ) MemberStrategyClass.getDeclaredConstructor().newInstance();
+			this.ls.addMyselfToExceptions( this );
 		} catch ( ClassNotFoundException | NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException e ) {
 			e.printStackTrace();
 		}
@@ -323,12 +311,11 @@ public class Agent implements SetParam, Cloneable {
 		if ( this == o ) return true;
 		if ( o == null || getClass() != o.getClass() ) return false;
 		Agent agent = ( Agent ) o;
-		return id == agent.id &&
-			p.equals( agent.p );
+		return id == agent.id;
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( id, p );
+		return Objects.hash( id );
 	}
 }

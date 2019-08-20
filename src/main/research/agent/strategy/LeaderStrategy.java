@@ -1,6 +1,5 @@
 package main.research.agent.strategy;
 
-import main.research.Manager;
 import main.research.SetParam;
 import main.research.agent.Agent;
 import main.research.agent.AgentManager;
@@ -18,25 +17,22 @@ import static main.research.SetParam.ReplyType.DECLINE;
 import java.util.*;
 
 public abstract class LeaderStrategy implements Strategy, SetParam {
-	protected List< Agent > exceptions = new ArrayList<>();
+	// TODO: Hash~ のサイズ勘案
+	protected Set< Agent > exceptions = new HashSet<>();
 	protected int repliesToCome = 0;            // 送ったsolicitationの数を覚えておく
 	protected Task myTask;
 	private Map< Agent, List< Subtask > > allocationHistory = new HashMap<>();
 	public Map< Agent, Double > reliableMembersRanking = new LinkedHashMap<>( HASH_MAP_SIZE );
 
 	protected List< ReplyToSolicitation > replyList = new ArrayList<>();
-	// HACK: 可視性狭めたい
-	public List< Done > doneList = new ArrayList<>();
+	public List< Done > doneList = new ArrayList<>(); // HACK: 可視性狭めたい
 
 	// CONSIDER: Leader has a LeaderStrategy のはずなので本来引数に「自分」を渡さなくてもいいはずでは？
 	public void actAsLeader( Agent leader ) {
-		Strategy.sortReliabilityRanking( reliableMembersRanking );
-
 		while ( !leader.ms.solicitationList.isEmpty() ) {
 			Solicitation s = leader.ms.solicitationList.remove( 0 );
 			declineSolicitation( leader, s );
 		}
-
 		while ( !doneList.isEmpty() ) {
 			Done d = doneList.remove( 0 );
 			checkDoneMessage( leader, d );
@@ -67,8 +63,9 @@ public abstract class LeaderStrategy implements Strategy, SetParam {
 		Task task = leader.findTaskContainingThisSubtask( st );
 		task.subtasks.remove( st );
 		if ( task.subtasks.isEmpty() ) {
+			System.out.println( "finish" );
 			from.pastTasks.remove( task );
-			Manager.finishTask(  );
+			Task.finishTask(  );
 			from.didTasksAsLeader++;
 		}
 	}
@@ -94,6 +91,10 @@ public abstract class LeaderStrategy implements Strategy, SetParam {
 		}
 	}
 
+	public void addMyselfToExceptions( Agent self ) {
+		exceptions.add( self );
+	}
+
 	public void removeMyselfFromRanking( Agent self ) {
 		reliableMembersRanking.remove( self );
 	}
@@ -105,8 +106,6 @@ public abstract class LeaderStrategy implements Strategy, SetParam {
 	public void reachDone( Done d ) {
 		this.doneList.add( d );
 	}
-
-	abstract public List< Agent > selectMembers( Agent agent, List< Subtask > subtasks );
 
 	abstract protected void solicitAsL( Agent la );
 
