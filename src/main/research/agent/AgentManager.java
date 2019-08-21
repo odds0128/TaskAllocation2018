@@ -15,22 +15,19 @@ import static main.research.others.random.MyRandom.getRandomInt;
 
 public class AgentManager implements SetParam {
 	private static List< Agent > allAgentList;
-	private static List< Agent > joneDoeList = new ArrayList<>();
-	private static List< Agent > leaderList = new ArrayList<>();
-	private static List< Agent > memberList = new ArrayList<>();
 
 	// TODO: Agentインスタンスを生成する → 被らないように座標を設定する
-	public static void initiateAgents( String ls_name, String ms_name ) {
-		allAgentList = generateAgents( ls_name, ms_name );
+	public static void initiateAgents( String package_name, String ls_name, String ms_name ) {
+		allAgentList = generateAgents( package_name, ls_name, ms_name );
 		deployAgents();
 		setReliabilityRanking();
 	}
 
-	private static List< Agent > generateAgents( String ls_name, String ms_name ) {
+	private static List< Agent > generateAgents( String package_name, String ls_name, String ms_name ) {
 		List< Agent > agentList = new ArrayList();
 
 		for ( int i = 0; i < AGENT_NUM; i++ ) {
-			agentList.add( new Agent( ls_name, ms_name ) );
+			agentList.add( new Agent( package_name, ls_name, ms_name ) );
 		}
 		return agentList;
 	}
@@ -116,25 +113,5 @@ public class AgentManager implements SetParam {
 		assert leaders.size() + members.size() == AGENT_NUM : "Some agents sabotage" + ( leaders.size() + members.size() );
 		actRandom( leaders, LEADER );
 		actRandom( members, MEMBER );
-	}
-
-	public static void joinJoneDoeList( Agent newJoneDoe ) {
-		joneDoeList.add( newJoneDoe );
-	}
-
-	public static void joinLeaderList( Agent newLeader ) {
-		leaderList.add( newLeader );
-	}
-
-	public static void leaveLeaderList( Agent pastLeader ) {
-		leaderList.remove( pastLeader );
-	}
-
-	public static void joinMemberList( Agent newMember ) {
-		leaderList.add( newMember );
-	}
-
-	public static void leaveMemberList( Agent pastMember ) {
-		leaderList.add( pastMember );
 	}
 }

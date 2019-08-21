@@ -4,7 +4,7 @@ import main.research.Manager;
 import main.research.SetParam;
 import main.research.agent.Agent;
 import main.research.others.random.MyRandom;
-import main.research.agent.strategy.MemberStrategy;
+import main.research.agent.strategy.MemberStrategyWithRoleChange;
 import main.research.task.AllocatedSubtask;
 import main.research.task.Subtask;
 import main.research.task.Task;

@@ -5,17 +5,15 @@
 
 package main.research.agent;
 
-import static main.research.Manager.getCurrentTime;
 import static main.research.SetParam.Phase.*;
 import static main.research.SetParam.Role.*;
 import static main.research.SetParam.Principle.*;
 
 import main.research.Manager;
 import main.research.SetParam;
-import main.research.others.Pair;
+import main.research.agent.strategy.LeaderStrategyWithRoleChange;
+import main.research.agent.strategy.MemberStrategyWithRoleChange;
 import main.research.others.random.*;
-import main.research.agent.strategy.LeaderStrategy;
-import main.research.agent.strategy.MemberStrategy;
 import main.research.task.Subtask;
 import main.research.task.Task;
 
@@ -31,8 +29,8 @@ public class Agent implements SetParam, Cloneable {
 
 	public static int _coalition_check_end_time;
 	public static double ε = INITIAL_ε;
-	public LeaderStrategy ls;
-	public MemberStrategy ms;
+	public LeaderStrategyWithRoleChange ls;
+	public MemberStrategyWithRoleChange ms;
 
 	// リーダーもメンバも持つパラメータ
 	public int id;
@@ -57,10 +55,10 @@ public class Agent implements SetParam, Cloneable {
 	public int didTasksAsMember = 0;
 	public int executionTime = 0;
 
-	public Agent( String ls_name, String ms_name ) {
+	public Agent( String package_name, String ls_name, String ms_name ) {
 		this.id = _id++;
 		setResource();
-		setStrategies( ls_name, ms_name );
+		setStrategies( package_name, ls_name, ms_name );
 		selectRole();
 	}
 
@@ -103,13 +101,11 @@ public class Agent implements SetParam, Cloneable {
 	}
 
 	private void selectLeaderRole(  ) {
-		AgentManager.joinLeaderList( this );
 		this.role  = LEADER;
 		this.phase = SOLICIT;
 	}
 
 	private void selectMemberRole() {
-		AgentManager.joinMemberList( this );
 		this.role  = MEMBER;
 		this.phase = WAIT_FOR_SOLICITATION;
 	}
@@ -146,12 +142,9 @@ public class Agent implements SetParam, Cloneable {
 	public void inactivate( double success ) {
 		if ( role == LEADER ) {
 			e_leader = e_leader * ( 1.0 - α ) + α * success;
-			AgentManager.leaveLeaderList( this );
 		} else{
 			e_member = e_member * ( 1.0 - α ) + α * success;
-			AgentManager.leaveMemberList( this );
 		}
-		AgentManager.joinJoneDoeList( this );
 		role = JONE_DOE;
 		phase = SELECT_ROLE;
 		this.validatedTicks = Manager.getCurrentTime();
@@ -248,17 +241,15 @@ public class Agent implements SetParam, Cloneable {
 		return str.toString();
 	}
 
-	private void setStrategies( String ls_name, String ms_name ) {
-		String package_name = "main.research.agent.strategy.ProposedStrategy.";
-
+	private void setStrategies( String package_name, String ls_name, String ms_name ) {
 		Class LeaderStrategyClass;
 		Class MemberStrategyClass;
 
 		try {
 			LeaderStrategyClass = Class.forName( package_name.concat( ls_name ) );
 			MemberStrategyClass = Class.forName( package_name.concat( ms_name ) );
-			this.ls = ( LeaderStrategy ) LeaderStrategyClass.getDeclaredConstructor().newInstance();
-			this.ms = ( MemberStrategy ) MemberStrategyClass.getDeclaredConstructor().newInstance();
+			this.ls = ( LeaderStrategyWithRoleChange ) LeaderStrategyClass.getDeclaredConstructor().newInstance();
+			this.ms = ( MemberStrategyWithRoleChange ) MemberStrategyClass.getDeclaredConstructor().newInstance();
 			this.ls.addMyselfToExceptions( this );
 		} catch ( ClassNotFoundException | NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException e ) {
 			e.printStackTrace();

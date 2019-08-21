@@ -1,15 +1,12 @@
-package main.research.agent.strategy.ProposedStrategy;
+package main.research.agent.strategy.ComparativeStrategy1;
 
-import main.research.SetParam;
 import main.research.agent.Agent;
 import main.research.agent.strategy.MemberStrategyWithRoleChange;
 import main.research.agent.strategy.Strategy;
 
 import java.util.Map;
 
-// TODO: 中身を表したクラス名にする
-public class ProposedStrategy_m extends MemberStrategyWithRoleChange implements SetParam {
-
+public class ComparativeStrategy_m extends MemberStrategyWithRoleChange {
 
 	@Override
 	protected void renewDE( Map< Agent, Double > deMap, Agent target, double evaluation ) {
@@ -22,4 +19,3 @@ public class ProposedStrategy_m extends MemberStrategyWithRoleChange implements 
 		Strategy.sortReliabilityRanking( deMap );
 	}
 }
-

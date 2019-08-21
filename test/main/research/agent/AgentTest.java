@@ -1,10 +1,10 @@
 package main.research.agent;
 
+import main.research.agent.strategy.MemberStrategyWithRoleChange;
+import main.research.agent.strategy.ProposedStrategy.ProposedStrategy_l;
 import main.research.grid.Grid;
 import main.research.others.random.MyRandom;
-import main.research.agent.strategy.LeaderStrategy;
-import main.research.agent.strategy.MemberStrategy;
-import main.research.agent.strategy.ProposedStrategy.ProposedStrategy_l;
+import main.research.agent.strategy.LeaderStrategyWithRoleChange;
 import main.research.agent.strategy.ProposedStrategy.ProposedStrategy_m;
 import org.junit.jupiter.api.*;
 
@@ -20,8 +20,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @Tag("agent")
 public class AgentTest {
     static List<Agent> agentList = new ArrayList<>();
-    static LeaderStrategy ls = new ProposedStrategy_l();
-    static MemberStrategy ms = new ProposedStrategy_m();
+    static LeaderStrategyWithRoleChange ls = new ProposedStrategy_l();
+    static MemberStrategyWithRoleChange ms = new ProposedStrategy_m();
 
     static {
         System.out.println("AgentTest");
@@ -32,7 +32,7 @@ public class AgentTest {
         MyRandom.setNewSfmt(0);
         AgentManager am = new AgentManager();
 
-        Method ga = AgentManager.class.getDeclaredMethod("generateAgents", LeaderStrategy.class, MemberStrategy.class);
+        Method ga = AgentManager.class.getDeclaredMethod("generateAgents", LeaderStrategyWithRoleChange.class, MemberStrategyWithRoleChange.class);
         ga.setAccessible(true);
         agentList = (List<Agent>) ga.invoke( am, ls, ms );
 

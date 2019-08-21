@@ -20,10 +20,14 @@ import static main.research.SetParam.Role.*;
 public class Manager implements SetParam {
     //TODO: こんな風にするならsingletonにしたほうがいいよね
     // TODO: lsとmsで分けて指定しなきゃいけないの無駄じゃない?
-
 //        private static Strategy strategy = new PM2withRoleFixed();      // ICA2018における提案手法    //    private static main.research.strategy.Strategy strategy = new ProposedMethodForSingapore();
-    private static String ls_name = "ProposedStrategy_l";      // ICA2018における提案手法役割更新あり    //    private static main.research.strategy.Strategy strategy = new ProposedMethodForSingapore();
-    private static String ms_name = "ProposedStrategy_m";
+//    private static String package_name = "main.research.agent.strategy.ProposedStrategy";
+//    private static String ls_name = "ProposedStrategy_l";      // ICA2018における提案手法役割更新あり    //    private static main.research.strategy.Strategy strategy = new ProposedMethodForSingapore();
+//    private static String ms_name = "ProposedStrategy_m";
+
+    private static String package_name = "main.research.agent.strategy.ComparativeStrategy1.";
+    private static String ls_name = "ComparativeStrategy_l";
+    private static String ms_name = "ComparativeStrategy_m";
 
     private static int turn;
     private static List<Agent> snapshot = new ArrayList<>();
@@ -132,14 +136,6 @@ public class Manager implements SetParam {
                     System.out.println("leaders:" + leader_num + ", members:" + member_num);
                     OutPut.aggregateDataOnce(AgentManager.getAllAgentList(), num);
                 }
-                int index = 0;
-                for( Agent ag : AgentManager.getAllAgentList() ) {
-                    index++;
-                    System.out.print( String.format( "%2d", ag.ms.mySubtaskQueue.size() ) );
-                    if( index % 50 == 0 ) {
-                        System.out.println();
-                    }
-                }
                 if (num == EXECUTION_TIMES) break;
                 clearAll();
             }
@@ -162,7 +158,7 @@ public class Manager implements SetParam {
         setNewRnd(times);
 		Task.initiateTaskQueue();
 
-        AgentManager.initiateAgents(ls_name, ms_name);
+        AgentManager.initiateAgents( package_name, ls_name, ms_name);
         if (CHECK_INITIATION) {
             main.research.OutPut.checkAgent(AgentManager.getAllAgentList());
             main.research.OutPut.checkGrid(Grid.getGrid());

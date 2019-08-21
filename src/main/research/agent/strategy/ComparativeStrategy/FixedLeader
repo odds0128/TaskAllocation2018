@@ -3,7 +3,7 @@ package main.research.agent.strategy.ComparativeStrategy;
 import main.research.*;
 import main.research.agent.Agent;
 import main.research.agent.AgentManager;
-import main.research.agent.strategy.LeaderStrategy;
+import main.research.agent.strategy.LeaderStrategyWithRoleChange;
 import main.research.communication.TransmissionPath;
 import main.research.communication.message.ReplyToSolicitation;
 import main.research.communication.message.Solicitation;
