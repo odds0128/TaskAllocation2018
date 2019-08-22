@@ -3,7 +3,6 @@ package main.research.agent.strategy;
 import main.research.SetParam;
 import main.research.agent.Agent;
 import main.research.agent.AgentManager;
-import main.research.communication.TransmissionPath;
 import main.research.communication.message.Done;
 import main.research.communication.message.ReplyToSolicitation;
 import main.research.communication.message.ResultOfTeamFormation;
@@ -14,7 +13,6 @@ import main.research.task.Subtask;
 import main.research.task.Task;
 
 import static main.research.Manager.getCurrentTime;
-import static main.research.SetParam.DERenewalStrategy.withBinary;
 import static main.research.SetParam.Phase.*;
 import static main.research.SetParam.ReplyType.DECLINE;
 import static main.research.SetParam.ResultType.FAILURE;
@@ -95,7 +93,7 @@ public abstract class LeaderStrategyWithRoleChange implements Strategy, SetParam
 		Strategy.proceedToNextPhase( leader );  // 次のフェイズへ
 	}
 
-	private Map< Agent, Subtask > selectMembers( List< Subtask > subtasks ) {
+	protected Map< Agent, Subtask > selectMembers( List< Subtask > subtasks ) {
 		Map< Agent, Subtask > memberCandidates = new HashMap<>();
 		Agent candidate;
 
@@ -113,7 +111,7 @@ public abstract class LeaderStrategyWithRoleChange implements Strategy, SetParam
 		return memberCandidates;
 	}
 
-	private Agent selectMemberForASubtaskRandomly( Subtask st ) {
+	protected Agent selectMemberForASubtaskRandomly( Subtask st ) {
 		Agent candidate;
 		do {
 			candidate = AgentManager.getAgentRandomly( exceptions, AgentManager.getAllAgentList() );

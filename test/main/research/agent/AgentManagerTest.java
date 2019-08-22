@@ -1,5 +1,6 @@
 package main.research.agent;
 
+import main.research.util.Initiation;
 import org.junit.jupiter.api.*;
 
 import static main.research.SetParam.AGENT_NUM;
@@ -11,7 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.Mockito.mock;
 
 public class AgentManagerTest {
     static {
@@ -53,14 +53,14 @@ public class AgentManagerTest {
 
     @Nested
     static class generateRandomAgentListのテスト {
-        List <Agent> mockAgentList = new ArrayList<>(  );
+        List <Agent> agentList = new ArrayList<>(  );
         int agents = 100;
         Object obj;
         Method gral;
 
         @BeforeAll
         void setUp() throws NoSuchMethodException {
-            for( int i = 0; i < agents; i++ ) mockAgentList.add( mock(Agent.class) );
+        	agentList = Initiation.getNewAgentList();
             obj = new AgentManager();
             gral = AgentManager.class.getDeclaredMethod( "generateRandomAgentList" , List.class);
             gral.setAccessible(true);
@@ -68,9 +68,9 @@ public class AgentManagerTest {
 
         @Test
         void 元のリストと同じものを返さない() throws InvocationTargetException, IllegalAccessException {
-            List<Agent> actual = ( List< Agent > ) gral.invoke( mockAgentList );
+            List<Agent> actual = ( List< Agent > ) gral.invoke( agentList );
             for( int i = 0; i < agents; i++ ) {
-                assertThat( actual.get( i ), is( not ( mockAgentList.get( i ) ) ) );
+                assertThat( actual.get( i ), is( not ( agentList.get( i ) ) ) );
             }
         }
     }

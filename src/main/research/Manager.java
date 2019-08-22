@@ -21,13 +21,12 @@ public class Manager implements SetParam {
     //TODO: こんな風にするならsingletonにしたほうがいいよね
     // TODO: lsとmsで分けて指定しなきゃいけないの無駄じゃない?
 //        private static Strategy strategy = new PM2withRoleFixed();      // ICA2018における提案手法    //    private static main.research.strategy.Strategy strategy = new ProposedMethodForSingapore();
-//    private static String package_name = "main.research.agent.strategy.ProposedStrategy";
-//    private static String ls_name = "ProposedStrategy_l";      // ICA2018における提案手法役割更新あり    //    private static main.research.strategy.Strategy strategy = new ProposedMethodForSingapore();
-//    private static String ms_name = "ProposedStrategy_m";
-
-    private static String package_name = "main.research.agent.strategy.ComparativeStrategy1.";
-    private static String ls_name = "ComparativeStrategy_l";
-    private static String ms_name = "ComparativeStrategy_m";
+    private static String package_name = "main.research.agent.strategy.ProposedStrategy.";
+    private static String ls_name = "ProposedStrategy_l";      // ICA2018における提案手法役割更新あり    //    private static main.research.strategy.Strategy strategy = new ProposedMethodForSingapore();
+    private static String ms_name = "ProposedStrategy_m";
+//    private static String package_name = "main.research.agent.strategy.ComparativeStrategy1.";
+//    private static String ls_name = "ComparativeStrategy_l";
+//    private static String ms_name = "ComparativeStrategy_m";
 
     private static int turn;
     private static List<Agent> snapshot = new ArrayList<>();

@@ -1,7 +1,5 @@
 package main.research;
 
-import java.awt.*;
-
 /**
  * @author Funato
  * @version 2.0
@@ -9,9 +7,9 @@ import java.awt.*;
 
 public interface SetParam {
     // 環境の設定( 変更していく部分 )
-    int EXECUTION_TIMES = 1;             // 実験の回数
-    int MAX_TURN_NUM    = 10000;         // 一回の実験のターン数
-    int WRITING_TIMES   = 100;           // データのファイルへの出力回数
+    int EXECUTION_TIMES = 2;             // 実験の回数
+    int MAX_TURN_NUM    = 1000;         // 一回の実験のターン数
+    int WRITING_TIMES   = 10;           // データのファイルへの出力回数
     boolean CHECK_RELATIONSHIPS    = false;  // エージェント関係の協調関係を録るか
     boolean CHECK_INTERIM_RELATIONSHIPS    = false;  // エージェント関係の協調関係のスナップショットを録るか
     boolean CHECK_INITIATION       = false;  // エージェントやタスクの初期設定を確認するか
@@ -76,7 +74,7 @@ public interface SetParam {
     int MAX_SUBTASK_NUM = 6;
 
     // リソース推定にまつわる定数
-    int RESOURCE_CACHE_TIME = 100;
+    int CD_CACHE_TIME = 100;
     int SUBTASK_QUEUE_SIZE = 5;
 
     // エージェント

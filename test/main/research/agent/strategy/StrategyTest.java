@@ -3,7 +3,7 @@ package main.research.agent.strategy;
 import main.research.agent.Agent;
 import main.research.agent.AgentManager;
 import main.research.grid.Grid;
-import main.research.others.random.MyRandom;
+import main.research.util.Initiation;
 import org.hamcrest.Matcher;
 import org.junit.jupiter.api.*;
 
@@ -22,15 +22,11 @@ class StrategyTest implements Strategy {
         System.out.println("StrategyTest");
     }
 
-    private static String ls_name = "ProposedStrategy_l";      // ICA2018における提案手法役割更新あり    //    private static main.research.strategy.Strategy strategy = new ProposedMethodForSingapore();
-    private static String ms_name = "ProposedStrategy_m";
     static List<Agent> agentList;
 
     @BeforeAll
     static void setUp() {
-        MyRandom.setNewSfmt(0);
-        AgentManager.initiateAgents(ls_name, ms_name);
-        agentList = AgentManager.getAllAgentList();
+        agentList = Initiation.getNewAgentList();
     }
 
     @Nested

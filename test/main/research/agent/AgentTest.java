@@ -20,8 +20,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @Tag("agent")
 public class AgentTest {
     static List<Agent> agentList = new ArrayList<>();
-    static LeaderStrategyWithRoleChange ls = new ProposedStrategy_l();
-    static MemberStrategyWithRoleChange ms = new ProposedStrategy_m();
+    private static String package_name = "main.research.agent.strategy.ProposedStrategy.";
+    private static String ls_name = "ProposedStrategy_l";      // ICA2018における提案手法役割更新あり    //    private static main.research.strategy.Strategy strategy = new ProposedMethodForSingapore();
+    private static String ms_name = "ProposedStrategy_m";
 
     static {
         System.out.println("AgentTest");
@@ -34,7 +35,7 @@ public class AgentTest {
 
         Method ga = AgentManager.class.getDeclaredMethod("generateAgents", LeaderStrategyWithRoleChange.class, MemberStrategyWithRoleChange.class);
         ga.setAccessible(true);
-        agentList = (List<Agent>) ga.invoke( am, ls, ms );
+        agentList = (List<Agent>) ga.invoke( am, package_name, ls_name, ms_name );
 
         Field field = am.getClass().getDeclaredField("agents");
         field.setAccessible(true);

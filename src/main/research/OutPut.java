@@ -13,6 +13,7 @@ import main.research.task.Task;
 import static main.research.SetParam.Role.*;
 import static main.research.SetParam.Principle.*;
 
+import java.lang.reflect.Array;
 import java.text.SimpleDateFormat;
 
 import java.io.*;
@@ -87,9 +88,12 @@ public class OutPut implements SetParam {
 	}
 
 
+	static int[] tempMessagesArray = new int[WRITING_TIMES];
     static void aggregateData(int ft, int dt, int ot, int rm, List<Agent> agentList) {
         finishedTasksArray[index] += ft;
-        messagesArray[index] += TransmissionPath.getMessageNum() - Arrays.stream( messagesArray ).sum();
+        tempMessagesArray[index] = TransmissionPath.getMessageNum();
+        int gap = index > 0 ? tempMessagesArray[index - 1] : 0;
+        messagesArray[index] += TransmissionPath.getMessageNum() - gap;
         communicationDelayArray[index] += TransmissionPath.getAverageCommunicationTime();
         disposedTasksArray[index] += dt;
         overflownTasksArray[index] += ot;
@@ -100,7 +104,10 @@ public class OutPut implements SetParam {
         finishedTasksInDepopulatedAreaArray[index] += ftida ;
         finishedTasksInPopulatedAreaArray[index]   += ftipa ;
 // */
-    }/**/
+        if(index == WRITING_TIMES - 1 ) {
+            tempMessagesArray = new int[WRITING_TIMES];
+        }
+    }
 
     static int[] leadersArray = new int[EXECUTION_TIMES];
     static int[] agentsLessThanAveArray = new int[EXECUTION_TIMES];

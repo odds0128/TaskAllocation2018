@@ -11,7 +11,6 @@ import main.research.task.Task;
 
 import static main.research.task.Task.disposeTask;
 import static main.research.Manager.getCurrentTime;
-import static main.research.SetParam.DERenewalStrategy.*;
 import static main.research.SetParam.ReplyType.*;
 import static main.research.SetParam.ResultType.FAILURE;
 import static main.research.SetParam.ResultType.SUCCESS;
@@ -23,7 +22,7 @@ import java.util.*;
 public class ProposedStrategy_l extends LeaderStrategyWithRoleChange implements SetParam {
 	Map< Agent, Integer > timeToStartCommunicatingMap = new HashMap<>();
 	Map< Agent, Integer > roundTripTimeMap = new HashMap<>();
-	Map< Agent, double[] > congestionDegreeMap = new HashMap<>();
+	List< CDSet > CDList = new ArrayList<>();
 
 	@Override
 	public void sendSolicitations( Agent leader, Map< Agent, Subtask > agentSubtaskMap ) {
@@ -31,6 +30,36 @@ public class ProposedStrategy_l extends LeaderStrategyWithRoleChange implements 
 			timeToStartCommunicatingMap.put( ag_st.getKey(), getCurrentTime() );
 			sendMessage( new Solicitation( leader, ag_st.getKey(), ag_st.getValue() ) );
 		}
+	}
+
+	// todo: 混雑度を元にしたメンバー選定のロジックの実装
+	//
+//	@Override
+//	protected Map< Agent, Subtask > selectMembers( List< Subtask > subtasks ) {
+//		Map< Agent, Subtask > memberCandidates = new HashMap<>();
+//		Agent candidate;
+//		AgentCongestionDegreeAndLastUpdatedTime.refreshMap( congestionDegreeMap );
+//
+//		for ( int i = 0; i < REBUNDUNT_SOLICITATION_TIMES; i++ ) {
+//			for ( Subtask st: subtasks ) {
+//				if ( MyRandom.epsilonGreedy( Agent.ε ) ) candidate = selectMemberForASubtaskRandomly( st );
+//				else candidate = selectAMemberForASubtask( st );
+//
+//				if ( candidate == null ) return new HashMap< >() ;
+//
+//				exceptions.add( candidate );
+//				memberCandidates.put( candidate, st );
+//			}
+//		}
+//		return memberCandidates;
+//	}
+
+	// Todo: DE優先の場合も試す
+	private Agent selectAMemberForASubtask( Subtask st ) {
+		// 取り急ぎ混雑度を最初の指標として選定する
+
+
+		return null;
 	}
 
 	@Override
@@ -79,7 +108,7 @@ public class ProposedStrategy_l extends LeaderStrategyWithRoleChange implements 
 
 	// hack: 現状リーダーは全員からの返信をもらってから割り当てを開始するため，早くに返信が到着したエージェントとの総通信時間が見かけ上長くなってしまう．
 	// だからここではそれを訂正するために，その差分をroundTripTimeの一部として足し合わせることで混雑度の計算が狂わないようにしている
-	void updateRoundTripTime( Agent target ) {
+	private void updateRoundTripTime( Agent target ) {
 		int gap = getCurrentTime() - timeToStartCommunicatingMap.get( target ) - roundTripTimeMap.get( target );
 		assert gap % 2 == 0 : "gap is odd.";
 		int modifiedRoundTripTime = roundTripTimeMap.get( target ) + gap / 2;
@@ -98,7 +127,7 @@ public class ProposedStrategy_l extends LeaderStrategyWithRoleChange implements 
 		Subtask st = getAllocatedSubtask( d.getFrom() );
 
 		int bindingTime = getCurrentTime() - timeToStartCommunicatingMap.get( from );
-		renewCongestionDegreeMap( congestionDegreeMap, roundTripTimeMap, from, st, bindingTime );
+		renewCongestionDegreeMap( from, st, bindingTime );
 
 		renewDE( reliableMembersRanking, from, 1 );
 		exceptions.remove( from );
@@ -127,20 +156,23 @@ public class ProposedStrategy_l extends LeaderStrategyWithRoleChange implements 
 		Strategy.sortReliabilityRanking( deMap );
 	}
 
-	// CONSIDER: 以下２つのメソッドが果たしてstaticがいいのか?
-	private static void renewCongestionDegreeMap( Map< Agent, double[] > cdm, Map< Agent, Integer > rtm, Agent target, Subtask st, int bindingTime ) {
+	// HACK
+	private void renewCongestionDegreeMap( Agent target, Subtask st, int bindingTime ) {
 		double[] tempArray;
-		if ( cdm.containsKey( target ) ) {
-			tempArray = cdm.get( target );
+		if ( CDSet.alreadyExists( target, CDList ) ) {
+			tempArray = CDSet.getCD( target, CDList );
+			int resType = st.resType;
+			tempArray[ resType ] = calculateCD( bindingTime, roundTripTimeMap.get( target ), st );
+			CDSet.replace( target, tempArray, CDList );
 		} else {
 			tempArray = new double[ RESOURCE_TYPES ];
+			int resType = st.resType;
+			tempArray[ resType ] = calculateCD( bindingTime, roundTripTimeMap.get( target ), st );
+			CDList.add( new CDSet( target, tempArray, getCurrentTime() ) );
 		}
-		int requiredResourceType = st.resType;
-		tempArray[ requiredResourceType ] = calculateCongestionDegree( bindingTime, rtm.get( target ), st );
-		cdm.put( target, tempArray );
 	}
 
-	private static double calculateCongestionDegree( int bindingTime, int roundTripTime, Subtask subtask ) {
+	private double calculateCD( int bindingTime, int roundTripTime, Subtask subtask ) {
 		int difficulty = subtask.reqRes[ subtask.resType ];
 		return difficulty / ( bindingTime - 2.0 * roundTripTime );
 	}
