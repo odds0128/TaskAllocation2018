@@ -24,7 +24,7 @@ public class CDSet {
 		return false;
 	}
 
-	public static void replace( Agent target, double[] tempArray, List< CDSet > list ) {
+	static void replace( Agent target, double[] tempArray, List< CDSet > list ) {
 		for( CDSet entry : list ) {
 			if( entry.getTarget().equals( target ) ) {
 				entry.setCongestionDegree( tempArray );
@@ -55,7 +55,7 @@ public class CDSet {
 		return target;
 	}
 
-	protected double[] getCD() {
+	private double[] getCD() {
 		return congestionDegree;
 	}
 

@@ -32,7 +32,7 @@ class CDSetTest {
 	void setUp() throws NoSuchFieldException, IllegalAccessException {
 		List< Agent > agentList = Initiation.getNewAgentList();
 		for( Agent ag : agentList ) {
-			cdSetList.add( new CDSet( ag, new double[RESOURCE_TYPES], MyRandom.getRandomInt( 0, currentTime - 1 ) ) );
+			cdSetList.add( new CDSet( ag, new double[RESOURCE_TYPES], MyRandom.getRandomInt( 0, currentTime ) ) );
 		}
 		Collections.sort( cdSetList, Comparator.comparingInt( CDSet::getLastUpdatedTime ) );
 

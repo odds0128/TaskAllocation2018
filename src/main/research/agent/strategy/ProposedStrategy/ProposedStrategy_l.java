@@ -20,9 +20,9 @@ import java.util.*;
 
 // TODO: 中身を表したクラス名にする
 public class ProposedStrategy_l extends LeaderStrategyWithRoleChange implements SetParam {
-	Map< Agent, Integer > timeToStartCommunicatingMap = new HashMap<>();
-	Map< Agent, Integer > roundTripTimeMap = new HashMap<>();
-	List< CDSet > CDList = new ArrayList<>();
+	private Map< Agent, Integer > timeToStartCommunicatingMap = new HashMap<>();
+	private Map< Agent, Integer > roundTripTimeMap = new HashMap<>();
+	private List< CDSet > CDList = new ArrayList<>();
 
 	@Override
 	public void sendSolicitations( Agent leader, Map< Agent, Subtask > agentSubtaskMap ) {
