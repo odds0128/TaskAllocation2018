@@ -3,6 +3,7 @@ package main.research.others.random;
 import org.junit.jupiter.api.*;
 
 import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.Matchers.both;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;

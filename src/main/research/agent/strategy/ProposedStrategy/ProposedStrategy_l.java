@@ -6,6 +6,7 @@ import main.research.agent.strategy.LeaderStrategyWithRoleChange;
 import main.research.agent.strategy.Strategy;
 import main.research.communication.message.*;
 import main.research.others.Pair;
+import main.research.others.random.MyRandom;
 import main.research.task.Subtask;
 import main.research.task.Task;
 
@@ -20,9 +21,12 @@ import java.util.*;
 
 // TODO: 中身を表したクラス名にする
 public class ProposedStrategy_l extends LeaderStrategyWithRoleChange implements SetParam {
+	static double CD_THRESHOLD = 5.0;
+	static double DE_THRESHOLD = INITIAL_VALUE_OF_DE;
+
 	private Map< Agent, Integer > timeToStartCommunicatingMap = new HashMap<>();
 	private Map< Agent, Integer > roundTripTimeMap = new HashMap<>();
-	private List< CDSet > CDList = new ArrayList<>();
+	private List< CDSet > cdSetList = new ArrayList<>();
 
 	@Override
 	public void sendSolicitations( Agent leader, Map< Agent, Subtask > agentSubtaskMap ) {
@@ -34,32 +38,56 @@ public class ProposedStrategy_l extends LeaderStrategyWithRoleChange implements 
 
 	// todo: 混雑度を元にしたメンバー選定のロジックの実装
 	//
-//	@Override
-//	protected Map< Agent, Subtask > selectMembers( List< Subtask > subtasks ) {
-//		Map< Agent, Subtask > memberCandidates = new HashMap<>();
-//		Agent candidate;
-//		AgentCongestionDegreeAndLastUpdatedTime.refreshMap( congestionDegreeMap );
-//
-//		for ( int i = 0; i < REBUNDUNT_SOLICITATION_TIMES; i++ ) {
-//			for ( Subtask st: subtasks ) {
-//				if ( MyRandom.epsilonGreedy( Agent.ε ) ) candidate = selectMemberForASubtaskRandomly( st );
-//				else candidate = selectAMemberForASubtask( st );
-//
-//				if ( candidate == null ) return new HashMap< >() ;
-//
-//				exceptions.add( candidate );
-//				memberCandidates.put( candidate, st );
-//			}
-//		}
-//		return memberCandidates;
-//	}
+	@Override
+	protected Map< Agent, Subtask > selectMembers( List< Subtask > subtasks ) {
+		Map< Agent, Subtask > memberCandidates = new HashMap<>();
+		Agent candidate;
+		CDSet.refreshMap( cdSetList );
+
+		for ( int i = 0; i < REBUNDUNT_SOLICITATION_TIMES; i++ ) {
+			for ( Subtask st: subtasks ) {
+				if ( MyRandom.epsilonGreedy( Agent.ε ) ) candidate = selectMemberForASubtaskRandomly( st );
+				else candidate = this.selectMember( st );
+
+				if( candidate == null ) {
+					return new HashMap< >() ;
+				}
+
+				exceptions.add( candidate );
+				memberCandidates.put( candidate, st );
+			}
+		}
+		return memberCandidates;
+	}
+
+	private Agent selectMember( Subtask st ) {
+		Agent temp = selectMemberAccordingToCD( st );
+		return temp == null ? selectMemberAccordingToDE( st ) : temp;
+	}
+
+	private Agent selectMemberAccordingToDE( Subtask st ) {
+		for ( Agent ag: reliableMembersRanking.keySet() ) {
+			if ( ( ! exceptions.contains( ag ) ) && ag.canProcessTheSubtask( st ) ) return ag;
+		}
+		return null;
+	}
 
 	// Todo: DE優先の場合も試す
-	private Agent selectAMemberForASubtask( Subtask st ) {
-		// 取り急ぎ混雑度を最初の指標として選定する
+	// TODO: 複数渡せるようにしなきゃ
+	private Agent selectMemberAccordingToCD( Subtask st ) {
+		Agent candidate = null;
+		double maxCD = CD_THRESHOLD, maxDE = 0;
+		int resType = st.resType;
 
-
-		return null;
+		for( CDSet set : cdSetList ) {
+			Agent temp = set.getTarget();
+			double cdValue = CDSet.getCD( temp, cdSetList )[resType]; // consider: 回りくどくない?
+			double deValue = reliableMembersRanking.get( temp );
+			if( cdValue > maxCD || cdValue == maxCD && maxDE < deValue ) {
+				candidate = temp; maxCD = cdValue; maxDE = deValue;
+			}
+		}
+		return candidate;
 	}
 
 	@Override
@@ -153,22 +181,21 @@ public class ProposedStrategy_l extends LeaderStrategyWithRoleChange implements 
 
 		newDE = renewDEby0or1( formerDE, b );
 		deMap.put( target, newDE );
-		Strategy.sortReliabilityRanking( deMap );
 	}
 
 	// HACK
 	private void renewCongestionDegreeMap( Agent target, Subtask st, int bindingTime ) {
 		double[] tempArray;
-		if ( CDSet.alreadyExists( target, CDList ) ) {
-			tempArray = CDSet.getCD( target, CDList );
+		if ( CDSet.alreadyExists( target, cdSetList ) ) {
+			tempArray = CDSet.getCD( target, cdSetList );
 			int resType = st.resType;
 			tempArray[ resType ] = calculateCD( bindingTime, roundTripTimeMap.get( target ), st );
-			CDSet.replace( target, tempArray, CDList );
+			CDSet.replace( target, tempArray, cdSetList );
 		} else {
 			tempArray = new double[ RESOURCE_TYPES ];
 			int resType = st.resType;
 			tempArray[ resType ] = calculateCD( bindingTime, roundTripTimeMap.get( target ), st );
-			CDList.add( new CDSet( target, tempArray, getCurrentTime() ) );
+			cdSetList.add( new CDSet( target, tempArray, getCurrentTime() ) );
 		}
 	}
 
@@ -181,6 +208,7 @@ public class ProposedStrategy_l extends LeaderStrategyWithRoleChange implements 
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append( ", exceptions: " + exceptions.size() );
+		sb.append( ", cdList: " + cdSetList );
 		return sb.toString();
 	}
 

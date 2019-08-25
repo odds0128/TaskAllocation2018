@@ -12,7 +12,6 @@ public class Subtask implements SetParam {
     private int id;
     public int[] reqRes = new int[RESOURCE_TYPES];
     public int resType;
-    public Agent from;
 
     Subtask() {
         this.id = _id++;
@@ -22,14 +21,6 @@ public class Subtask implements SetParam {
     private void setResources() {
         resType = MyRandom.getRandomInt(0, RESOURCE_TYPES - 1);
         reqRes[resType] = MyRandom.getRandomInt( MIN_SUBTASK_RESOURCE_SIZE, MAX_SUBTASK_RESOURCE_SIZE );
-    }
-
-    void setFrom(Agent agent){
-        this.from = agent;
-    }
-
-    Agent getFrom(){
-        return from;
     }
 
     public int getId() {

@@ -103,12 +103,8 @@ public class Task implements SetParam {
     }
 
     // taskQueueにあるタスクをリーダーに渡すメソッド
-    public static Task getTask(Agent agent) {
-        Task temp;
-        temp = taskQueue.poll();
-        if (temp != null) {
-            temp.setFrom(agent);
-        }
+    public static Task getTask() {
+        Task temp = taskQueue.poll();
         return temp;
     }
 
@@ -125,12 +121,6 @@ public class Task implements SetParam {
             subtasks.add( new Subtask() );
         }
         subtasks.sort(new Subtask.SubtaskRewardComparator());
-    }
-
-    public void setFrom(Agent agent){
-        for(Subtask st: subtasks){
-            st.setFrom(agent);
-        }
     }
 
     private int setDeadline( int min, int max ) {

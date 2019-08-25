@@ -16,6 +16,5 @@ public class ComparativeStrategy_m extends MemberStrategyWithRoleChange {
 
 		newDE = renewDEby0or1( formerDE, b );
 		deMap.put( target, newDE );
-		Strategy.sortReliabilityRanking( deMap );
 	}
 }

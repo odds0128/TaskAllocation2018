@@ -78,7 +78,7 @@ public class CDSet {
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder(  );
-		sb.append( String.format("%5d: ", Manager.getCurrentTime() ) );
+		sb.append( String.format("now:%5d", Manager.getCurrentTime() ) );
 		sb.append( " -> " + target + ", " + Arrays.toString( congestionDegree ) + ", " + ", Last update: " + lastUpdatedTime );
 
 		return sb.toString();

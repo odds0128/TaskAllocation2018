@@ -21,12 +21,15 @@ public class Manager implements SetParam {
     //TODO: こんな風にするならsingletonにしたほうがいいよね
     // TODO: lsとmsで分けて指定しなきゃいけないの無駄じゃない?
 //        private static Strategy strategy = new PM2withRoleFixed();      // ICA2018における提案手法    //    private static main.research.strategy.Strategy strategy = new ProposedMethodForSingapore();
-    private static String package_name = "main.research.agent.strategy.ProposedStrategy.";
-    private static String ls_name = "ProposedStrategy_l";      // ICA2018における提案手法役割更新あり    //    private static main.research.strategy.Strategy strategy = new ProposedMethodForSingapore();
-    private static String ms_name = "ProposedStrategy_m";
+//    private static String package_name = "main.research.agent.strategy.ProposedStrategy.";
+//    private static String ls_name = "ProposedStrategy_l";      // ICA2018における提案手法役割更新あり    //    private static main.research.strategy.Strategy strategy = new ProposedMethodForSingapore();
+//    private static String ms_name = "ProposedStrategy_m";
 //    private static String package_name = "main.research.agent.strategy.ComparativeStrategy1.";
 //    private static String ls_name = "ComparativeStrategy_l";
 //    private static String ms_name = "ComparativeStrategy_m";
+    private static String package_name = "main.research.agent.strategy.ComparativeStrategy2.";
+    private static String ls_name = "ComparativeStrategy_l";
+    private static String ms_name = "ComparativeStrategy_m";
 
     private static int turn;
     private static List<Agent> snapshot = new ArrayList<>();
@@ -138,12 +141,18 @@ public class Manager implements SetParam {
                 if (num == EXECUTION_TIMES) break;
                 clearAll();
             }
+            OutPut.writeRelationsBetweenDelayAndDE( Grid.getDelays(), AgentManager.getAllAgentList(), strategy_name );
             // ↑ 全実験の終了のカッコ．以下は後処理
             if (CHECK_RESULTS) OutPut.writeResults( strategy_name );
 //            main.research.OutPut.writeDelays(delays);
 //            main.research.OutPut.writeReliabilities(AgentManager.getAgentList(), strategy_name);
 //            main.research.OutPut.writeDelaysAndRels(delays, AgentManager.getAgentList(), strategy);
-            if (CHECK_RELATIONSHIPS) OutPut.writeGraphInformationX(AgentManager.getAllAgentList(), strategy_name);
+            if (CHECK_RELATIONSHIPS){
+                OutPut.writeReliabilities( AgentManager.getAllAgentList(), strategy_name );
+            }
+            if( WRITE_GRAPH ) {
+                OutPut.writeGraphInformationX(AgentManager.getAllAgentList(), strategy_name);
+            }
 // */
             if (CHECK_Eleader_Emember) pw.close();
         } catch (IOException e) {

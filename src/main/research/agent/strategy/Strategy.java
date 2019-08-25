@@ -1,7 +1,6 @@
 package main.research.agent.strategy;
 
 import main.research.agent.Agent;
-import main.research.agent.strategy.ProposedStrategy.ProposedStrategy_l;
 
 import java.util.*;
 import java.util.Map.Entry;
@@ -9,7 +8,6 @@ import java.util.Map.Entry;
 import static main.research.Manager.getCurrentTime;
 import static main.research.SetParam.*;
 import static main.research.SetParam.Phase.*;
-import static main.research.SetParam.DERenewalStrategy.*;
 import static main.research.SetParam.Role.JONE_DOE;
 import static main.research.SetParam.Role.MEMBER;
 
@@ -100,18 +98,6 @@ public interface Strategy {
             key   = (Agent) keyIterator.next();
             relMap.replace( key, temp );
         }
-    }
-
-    // todo: 効率悪そう．DEが変わったエージェントの前後と比較して入れ替えればいいだけ．
-    static Map<Agent, Double> sortReliabilityRanking( Map< Agent, Double > relMap ) {
-        List<Entry<Agent, Double>> entries = new ArrayList(relMap.entrySet());
-        entries.sort(Strategy::compare);
-
-        Map<Agent, Double> sortedMap = new LinkedHashMap<>(HASH_MAP_SIZE);
-        for (Map.Entry<Agent, Double> entry : entries) {
-            sortedMap.put(entry.getKey(), entry.getValue());
-        }
-        return sortedMap;
     }
 
     static void clear(){

@@ -13,19 +13,19 @@ import main.research.others.random.MyRandom;
 import main.research.task.Subtask;
 
 import static main.research.Manager.getCurrentTime;
-import static main.research.SetParam.DERenewalStrategy.withBinary;
 import static main.research.SetParam.Phase.*;
 import static main.research.SetParam.ReplyType.ACCEPT;
 import static main.research.SetParam.ReplyType.DECLINE;
 import static main.research.SetParam.ResultType.*;
 
 import java.util.*;
+import java.util.Map.Entry;
 
 public abstract class MemberStrategyWithRoleChange implements Strategy, SetParam {
-    private boolean joinFlag = false;
+    protected boolean joinFlag = false;
     public Map< Agent, Double > reliableLeadersRanking = new LinkedHashMap<>( HASH_MAP_SIZE );
 
-    private int expectedResultMessage = 0;
+    protected int expectedResultMessage = 0;
     List< Solicitation > solicitationList = new ArrayList<>();
     private List< ResultOfTeamFormation > resultList = new ArrayList<>();
     public List<Pair<Agent, Subtask>> mySubtaskQueue = new ArrayList<>(  );  // consider Agentとsubtaskの順番逆のがよくね
@@ -37,13 +37,21 @@ public abstract class MemberStrategyWithRoleChange implements Strategy, SetParam
         while( ! resultList.isEmpty() ) {
             ResultOfTeamFormation r = resultList.remove( 0 );
             expectedResultMessage--;
-            reactToResultMessage( r );
+            member.ms.reactToResultMessage( r );
         }
 
         while( ! member.ls.doneList.isEmpty() ) {
             Done d = member.ls.doneList.remove( 0 );
             member.ls.checkDoneMessage( member, d );
         }
+
+        List< Entry<Agent, Double> > tempList = new ArrayList<>( reliableLeadersRanking.entrySet() );
+        tempList.sort( Strategy::compare );
+        Map<Agent, Double> tempMap = new LinkedHashMap<>(  );
+        for( Entry<Agent, Double> e: tempList ) {
+            tempMap.put( e.getKey(), e.getValue() );
+        }
+        reliableLeadersRanking = tempMap;
 
         if      (member.phase == WAIT_FOR_SOLICITATION ) replyAsM(member);
         else if (member.phase == WAIT_FOR_SUBTASK )      receiveAsM(member);
@@ -62,12 +70,13 @@ public abstract class MemberStrategyWithRoleChange implements Strategy, SetParam
         reliableLeadersRanking.remove( self );
     }
 
-    private void reactToResultMessage( ResultOfTeamFormation r ) {
+    public void reactToResultMessage( ResultOfTeamFormation r ) {
         if( r.getResult() == SUCCESS ) {
         	Pair<Agent, Subtask > pair =  new Pair<>( r.getFrom(), r.getAllocatedSubtask() );
             mySubtaskQueue.add( pair );
+            r.getTo().ms.renewDE( reliableLeadersRanking , r.getFrom(), 1 );
         } else {
-            r.getTo().ms.renewDE( reliableLeadersRanking, r.getFrom(), 0);
+            r.getTo().ms.renewDE( reliableLeadersRanking, r.getFrom(), 0) ;
         }
     }
 
@@ -80,10 +89,11 @@ public abstract class MemberStrategyWithRoleChange implements Strategy, SetParam
         }
     }
 
-    private void replyToSolicitations( Agent member, List< Solicitation > solicitations ) {
+    public void replyToSolicitations( Agent member, List< Solicitation > solicitations ) {
         if(  solicitations.isEmpty() ) return;
 
-        sortSolicitationByDEofLeader(  solicitations, reliableLeadersRanking );
+        solicitations.sort( ( solicitation1, solicitation2 ) ->
+            (int) ( reliableLeadersRanking.get( solicitation1.getFrom() ) - reliableLeadersRanking.get( solicitation2.getFrom() ) ));
 
         int capacity = SUBTASK_QUEUE_SIZE - mySubtaskQueue.size() - expectedResultMessage;
         while (  solicitations.size() > 0 && capacity-- > 0 ) {
@@ -97,7 +107,6 @@ public abstract class MemberStrategyWithRoleChange implements Strategy, SetParam
             TransmissionPath.sendMessage( new ReplyToSolicitation( member,  s.getFrom(), DECLINE, s.getExpectedSubtask() ) );
         }
     }
-
 
     private void receiveAsM( Agent member ) {
         if( expectedResultMessage > 0 ) return;
@@ -125,7 +134,6 @@ public abstract class MemberStrategyWithRoleChange implements Strategy, SetParam
 
             member.required[currentSubtask.resType]++;
             TransmissionPath.sendMessage( new Done( member, currentLeader ) );
-            member.ms.renewDE( reliableLeadersRanking , currentLeader, 1 );
 
             if ( Agent._coalition_check_end_time - getCurrentTime() < COALITION_CHECK_SPAN) {
                 member.workWithAsM[currentLeader.id]++;
@@ -138,12 +146,9 @@ public abstract class MemberStrategyWithRoleChange implements Strategy, SetParam
     }
 
 
-    private static void sortSolicitationByDEofLeader( List< Solicitation > solicitations, Map<Agent, Double> DEs ) {
-        solicitations.sort( ( solicitation1, solicitation2 ) ->
-            (int) ( DEs.get( solicitation2.getFrom() ) - DEs.get( solicitation1.getFrom() ) ));
-    }
 
-    static private Solicitation selectSolicitationRandomly( List< Solicitation > solicitations ) {
+
+    protected static Solicitation selectSolicitationRandomly( List< Solicitation > solicitations ) {
         int index = MyRandom.getRandomInt(0, solicitations.size() - 1);
         return solicitations.remove(index);
     }

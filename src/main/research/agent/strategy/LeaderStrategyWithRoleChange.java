@@ -21,6 +21,7 @@ import static main.research.communication.TransmissionPath.sendMessage;
 import static main.research.task.Task.disposeTask;
 
 import java.util.*;
+import java.util.Map.Entry;
 
 public abstract class LeaderStrategyWithRoleChange implements Strategy, SetParam {
 	// TODO: Hash~ のサイズ勘案
@@ -43,6 +44,17 @@ public abstract class LeaderStrategyWithRoleChange implements Strategy, SetParam
 			Done d = doneList.remove( 0 );
 			leader.ls.checkDoneMessage( leader, d );
 		}
+
+		// TODO: このソートの部分なんとかする
+		List< Entry<Agent, Double> > tempList = new ArrayList<>( reliableMembersRanking.entrySet() );
+		tempList.sort( Strategy::compare );
+		Map<Agent, Double> tempMap = new LinkedHashMap<>(  );
+		for( Entry<Agent, Double> e: tempList ) {
+			tempMap.put( e.getKey(), e.getValue() );
+		}
+		reliableMembersRanking = tempMap;
+		List< Map.Entry<Agent, Double> > entries = new ArrayList(reliableMembersRanking.entrySet());
+        entries.sort(Strategy::compare);
 
 		if ( leader.phase == SOLICIT ) solicitAsL( leader );
 		else if ( leader.phase == FORM_TEAM ) leader.ls.formTeamAsL( leader );
@@ -76,7 +88,7 @@ public abstract class LeaderStrategyWithRoleChange implements Strategy, SetParam
 	}
 
 	private void solicitAsL( Agent leader ) {
-		myTask = Task.getTask( leader );
+		myTask = Task.getTask( );
 		if ( myTask == null ) {
 			leader.inactivate( 0 );
 			return;

@@ -101,7 +101,7 @@ class StrategyTest implements Strategy {
                 reliable = iterator.next();
             }
             sample.ls.reliableMembersRanking.replace( reliable, INITIAL_VALUE_OF_DE * 10.0 );
-                sample.ls.reliableMembersRanking = Strategy.sortReliabilityRanking( sample.ls.reliableMembersRanking);
+                sample.ls.reliableMembersRanking = Strategy.getSortReliabilityRanking( sample.ls.reliableMembersRanking);
             Agent top = sample.ls.reliableMembersRanking.keySet().iterator().next();
             assertThat( top, is(reliable) );
         }
