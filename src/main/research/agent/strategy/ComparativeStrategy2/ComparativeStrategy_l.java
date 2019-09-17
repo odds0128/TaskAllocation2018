@@ -75,7 +75,8 @@ public class ComparativeStrategy_l extends LeaderStrategyWithRoleChange {
 		Subtask st = getAllocatedSubtask( d.getFrom() );
 
 		int roundTripTime = Manager.getCurrentTime() - this.agentStartTimeMap.remove( from );
-		double reward = ( double ) st.reqRes[ st.resType ] / ( double ) roundTripTime;
+		// consider: 謎の5
+		double reward = 5 * ( double ) st.reqRes[ st.resType ] / ( double ) roundTripTime;
 
 		this.renewDE( reliableMembersRanking, from, reward );
 		exceptions.remove( from );

@@ -93,6 +93,11 @@ public class Manager implements SetParam {
                     if (HOW_EPSILON == "linear") Agent.renewEpsilonLinear();
                     else if (HOW_EPSILON == "exponential") Agent.renewEpsilonExponential();
 
+                    if( getCurrentTime() == 500 || getCurrentTime() == MAX_TURN_NUM ) {
+                        System.out.println( getCurrentTime() + String.format( ": %.2f", (double) TransmissionPath.sum / TransmissionPath.times ) );
+                        TransmissionPath.sum   = 0;
+                        TransmissionPath.times = 0;
+                    }
 //                    if( turn % 100 == 0 ) System.out.println( "turn: " + turn );
                     Task.addNewTasksToQueue();
                     AgentManager.JoneDoesSelectRole();

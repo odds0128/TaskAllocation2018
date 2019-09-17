@@ -1,5 +1,6 @@
 package main.research.communication;
 
+import main.research.Manager;
 import main.research.communication.message.*;
 import main.research.others.Pair;
 import main.research.SetParam;
@@ -19,14 +20,23 @@ public class TransmissionPath implements SetParam {
 
 	private static List< Pair<Message, Integer> > messageQueue = new ArrayList<>(  );
 
+	// remove
+	public static int sum = 0;
+	public static int times = 0;
 	public static void sendMessage( Message m ) {
 		assert m.getFrom() != m.getTo() : "he asks himself";
 		assert ! ( m.getTo().role == LEADER && m instanceof ResultOfTeamFormation ) : "Wrong result message";
 		assert ! ( m.getTo().role == MEMBER && m instanceof ReplyToSolicitation )   : "Wrong reply message.";
 
-//		if( m.getFrom().id == 4 || m.getTo().id == 4 ) {
-//			System.out.println( String.format( "%5d : ", Manager.getCurrentTime() ) + "delay:" + String.format( "%2d, ", Grid.getDelay( m.getFrom(), m.getTo() ) ) + m  );
-//		}
+		// remove
+		// 最初の500ticksにおける通信遅延の平均
+		if( Manager.getCurrentTime() < 500 && m.getClass().getSimpleName().equals( "Solicitation" )  ) {
+			sum += Grid.getDelay( m.getFrom(), m.getTo() );
+			times++;
+		}
+		// 100,000ticks付近
+		if( Manager.getCurrentTime() > 99500 && m.getClass().getSimpleName().equals( "Solicitation" ) ) {
+		}
 
 		int untilArrival = Grid.getDelay( m.getFrom(), m.getTo() );
 		messageQueue.add( new Pair<>(m, untilArrival) );

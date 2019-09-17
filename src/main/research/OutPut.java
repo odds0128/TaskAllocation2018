@@ -841,7 +841,7 @@ public class OutPut implements SetParam {
             }else{
                 meanMemberCor += cor; members ++;
             }
-            System.out.println( ag + String.format( "%.3f", cor) );
+            System.out.println( ag + "correlation: " + String.format( "%.3f", cor) );
         }
 
         System.out.println("Average Leader: " + meanLeaderCor/leaders );
