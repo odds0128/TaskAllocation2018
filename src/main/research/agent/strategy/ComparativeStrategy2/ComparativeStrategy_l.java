@@ -2,17 +2,18 @@ package main.research.agent.strategy.ComparativeStrategy2;
 
 import main.research.Manager;
 import main.research.agent.Agent;
+import main.research.agent.AgentDePair;
 import main.research.agent.strategy.LeaderStrategyWithRoleChange;
 import main.research.communication.message.Done;
 import main.research.communication.message.ReplyToSolicitation;
 import main.research.communication.message.ResultOfTeamFormation;
-import main.research.grid.Grid;
 import main.research.others.Pair;
 import main.research.task.Subtask;
 import main.research.task.Task;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static main.research.SetParam.ReplyType.DECLINE;
@@ -96,16 +97,8 @@ public class ComparativeStrategy_l extends LeaderStrategyWithRoleChange {
 	}
 
 	@Override
-	protected void renewDE( Map< Agent, Double > deMap, Agent target, double evaluation ) {
-		double formerDE = deMap.get( target );
-		double newDE;
-
-		newDE = renewDEbyArbitraryReward( formerDE, evaluation );
-
-		// 0or1でやってみて結果が変わるか確認する
-//		boolean flag = evaluation > 0 ? true : false;
-//		newDE = renewDEby0or1( formerDE, flag );
-
-		deMap.put( target, newDE );
+	protected void renewDE( List< AgentDePair > pairList, Agent target, double evaluation ) {
+		AgentDePair pair = getPairByAgent( target, pairList );
+		pair.renewDEbyArbitraryReward( evaluation );
 	}
 }

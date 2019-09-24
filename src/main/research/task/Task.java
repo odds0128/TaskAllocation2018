@@ -1,8 +1,6 @@
 package main.research.task;
 
-import main.research.Manager;
 import main.research.SetParam;
-import main.research.agent.Agent;
 import main.research.others.random.MyRandom;
 
 import java.util.ArrayList;
@@ -20,7 +18,7 @@ public class Task implements SetParam {
     private static int overflowTasks = 0;
     private static int finishedTasks = 0;
 
-    private int task_id;
+    private int id;
     public List<Subtask> subtasks = new ArrayList<>();
     private int deadline;
 
@@ -33,7 +31,7 @@ public class Task implements SetParam {
     }
 
     public Task( int minSubtask, int maxSubtask , int minDeadline, int maxDeadline ){
-        task_id = _task_id++;
+        id = _task_id++;
 
         int subtaskNum = MyRandom.getRandomInt(minSubtask, maxSubtask);
         generateSubtasks( subtaskNum );
@@ -118,7 +116,7 @@ public class Task implements SetParam {
 
     private void generateSubtasks( int subtaskNum ){
         for(int i = 0; i < subtaskNum; i++) {
-            subtasks.add( new Subtask() );
+            subtasks.add( new Subtask( this.id ) );
         }
         subtasks.sort(new Subtask.SubtaskRewardComparator());
     }
@@ -127,12 +125,21 @@ public class Task implements SetParam {
         return MyRandom.getRandomInt(min, max);
     }
 
-    public boolean isPartOfThisTask( Subtask st ){
-    	return subtasks.contains( st );
+    public boolean contains( Subtask st ){
+    	for( Subtask s : subtasks ) {
+    	    if( st.equals( s ) ) {
+    	        return true;
+            }
+        }
+    	return false;
     }
 
     public int getDeadline() {
         return deadline;
+    }
+
+    public int getId () {
+        return id;
     }
 
     public static void clear(){
@@ -146,7 +153,7 @@ public class Task implements SetParam {
     @Override
     public String toString(){
         StringBuilder str = new StringBuilder();
-        str.append("Task ").append(task_id).append(" ( ");
+        str.append("Task ").append( id ).append(" ( ");
         for (Subtask subtask : subtasks) str.append(subtask).append( " " );
         str.append("), ");
         return str.toString();

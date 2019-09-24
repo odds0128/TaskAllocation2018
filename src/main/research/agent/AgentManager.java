@@ -40,9 +40,9 @@ public class AgentManager implements SetParam {
 
 	private static void setReliabilityRanking() {
 		for ( Agent ag: allAgentList ) {
-			ag.ls.setMemberRankingRandomly( allAgentList );
+			ag.ls.setMemberRankingRandomly( ag, allAgentList );
 			ag.ls.removeMyselfFromRanking( ag );
-			ag.ms.setLeaderRankingRandomly( allAgentList );
+			ag.ms.setLeaderRankingRandomly( ag, allAgentList );
 			ag.ms.removeMyselfFromRanking( ag );
 		}
 	}

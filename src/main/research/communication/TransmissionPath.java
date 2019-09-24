@@ -34,8 +34,7 @@ public class TransmissionPath implements SetParam {
 			sum += Grid.getDelay( m.getFrom(), m.getTo() );
 			times++;
 		}
-		// 100,000ticks付近
-		if( Manager.getCurrentTime() > 99500 && m.getClass().getSimpleName().equals( "Solicitation" ) ) {
+		if( Manager.getCurrentTime() > MAX_TURN_NUM - 500 && m.getClass().getSimpleName().equals( "Solicitation" ) ) {
 			sum += Grid.getDelay( m.getFrom(), m.getTo() );
 			times++;
 		}

@@ -1,6 +1,6 @@
 package main.research;
 
-import org.apache.commons.math3.stat.*;
+import main.research.agent.AgentDePair;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.*;
@@ -14,7 +14,6 @@ import main.research.task.Task;
 
 import static main.research.SetParam.Role.*;
 import static main.research.SetParam.Principle.*;
-import java.lang.reflect.Array;
 import java.text.SimpleDateFormat;
 
 import java.io.*;
@@ -623,9 +622,6 @@ public class OutPut implements SetParam {
                         for ( int j = 0; j < RESOURCE_TYPES; j++ ) {
                             _singleton.writeCell( row, colNumber++, style_int, agent.resources[ j ] );
                             _singleton.writeCell( row, colNumber++, style_int, agent.required[ j ] );
-                            if ( agent.ls.reliableMembersRanking.size() > 0 )
-                                _singleton.writeCell( row, colNumber++, style_int, agent.allocated[ agent.ls.reliableMembersRanking.keySet().iterator().next().id ][ j ] );
-                            else _singleton.writeCell( row, colNumber++, style_int, -1 );
                         }
                         int resCount = ( int ) Arrays.stream( agent.resources )
                             .filter( resource -> resource > 0 )
@@ -827,15 +823,20 @@ public class OutPut implements SetParam {
         int leaders = 0, members = 0;
 
         for( Agent ag : agents ) {
-            Map<Agent, Double> map = ag.e_leader > ag.e_member ? ag.ls.reliableMembersRanking : ag.ms.reliableLeadersRanking;
-            double[] DEs = map.values().stream().mapToDouble( Double::doubleValue ).toArray();
-            double[] delay = new double[AGENT_NUM - 1];
-            int index = 0;
-            for( Agent target: map.keySet()  ){
-                delay[index++] = delays[ag.id][target.id];
+            List< AgentDePair> pairList = ag.e_leader > ag.e_member ? ag.ls.reliableMembersRanking : ag.ms.reliableLeadersRanking;
+            int size = pairList.size();
+
+            double[] DEs   = new double[size];
+            double[] delay = new double[size];
+            for( int i = 0; i < size; i++ ) {
+            	AgentDePair pair = pairList.get( i );
+                Agent target = pair.getTarget();
+
+                DEs[i]   = pair.getDe();
+                delay[i] = delays[ag.id][target.id];
             }
             PearsonsCorrelation p = new PearsonsCorrelation();
-            double cor = p.correlation( delay, DEs );
+            double cor = p.correlation( DEs, delay );
             if( ag.e_leader > ag.e_member ){
                 meanLeaderCor += cor; leaders ++;
             }else{
@@ -898,9 +899,6 @@ public class OutPut implements SetParam {
                     // 自分は飛ばす
                     if ( target.equals( from ) ) {
                         pw.print( " , ," );
-                    } else {
-                        pw.print( from.ls.reliableMembersRanking.get( target ) + ", " );
-                        pw.print( from.ms.reliableLeadersRanking.get( target ) + ", " );
                     }
                 }
                 pw.println();

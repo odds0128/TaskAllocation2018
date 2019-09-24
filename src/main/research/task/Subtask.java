@@ -1,7 +1,6 @@
 package main.research.task;
 
 import main.research.SetParam;
-import main.research.agent.Agent;
 import main.research.others.random.MyRandom;
 
 import java.util.Comparator;
@@ -12,9 +11,11 @@ public class Subtask implements SetParam {
     private int id;
     public int[] reqRes = new int[RESOURCE_TYPES];
     public int resType;
+    public int parentId;
 
-    Subtask() {
+    Subtask( int parent_id ) {
         this.id = _id++;
+        this.parentId = parent_id;
         setResources();
     }
 

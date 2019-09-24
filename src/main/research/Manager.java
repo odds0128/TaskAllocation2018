@@ -146,15 +146,11 @@ public class Manager implements SetParam {
                 if (num == EXECUTION_TIMES) break;
                 clearAll();
             }
-            OutPut.writeRelationsBetweenDelayAndDE( Grid.getDelays(), AgentManager.getAllAgentList(), strategy_name );
             // ↑ 全実験の終了のカッコ．以下は後処理
             if (CHECK_RESULTS) OutPut.writeResults( strategy_name );
 //            main.research.OutPut.writeDelays(delays);
 //            main.research.OutPut.writeReliabilities(AgentManager.getAgentList(), strategy_name);
 //            main.research.OutPut.writeDelaysAndRels(delays, AgentManager.getAgentList(), strategy);
-            if (CHECK_RELATIONSHIPS){
-                OutPut.writeReliabilities( AgentManager.getAllAgentList(), strategy_name );
-            }
             if( WRITE_GRAPH ) {
                 OutPut.writeGraphInformationX(AgentManager.getAllAgentList(), strategy_name);
             }

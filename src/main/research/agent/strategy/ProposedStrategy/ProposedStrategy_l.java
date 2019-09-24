@@ -2,6 +2,7 @@ package main.research.agent.strategy.ProposedStrategy;
 
 import main.research.*;
 import main.research.agent.Agent;
+import main.research.agent.AgentDePair;
 import main.research.agent.strategy.LeaderStrategyWithRoleChange;
 import main.research.agent.strategy.Strategy;
 import main.research.communication.message.*;
@@ -66,7 +67,8 @@ public class ProposedStrategy_l extends LeaderStrategyWithRoleChange implements 
 	}
 
 	private Agent selectMemberAccordingToDE( Subtask st ) {
-		for ( Agent ag: reliableMembersRanking.keySet() ) {
+		for ( AgentDePair pair : reliableMembersRanking ) {
+			Agent ag = pair.getTarget();
 			if ( ( ! exceptions.contains( ag ) ) && ag.canProcessTheSubtask( st ) ) return ag;
 		}
 		return null;
@@ -82,7 +84,7 @@ public class ProposedStrategy_l extends LeaderStrategyWithRoleChange implements 
 		for( CDSet set : cdSetList ) {
 			Agent temp = set.getTarget();
 			double cdValue = CDSet.getCD( temp, cdSetList )[resType]; // consider: 回りくどくない?
-			double deValue = reliableMembersRanking.get( temp );
+			double deValue = getPairByAgent( temp, reliableMembersRanking ).getDe();
 			if( cdValue > maxCD || cdValue == maxCD && maxDE < deValue ) {
 				candidate = temp; maxCD = cdValue; maxDE = deValue;
 			}
@@ -174,14 +176,12 @@ public class ProposedStrategy_l extends LeaderStrategyWithRoleChange implements 
 	}
 
 	@Override
-	protected void renewDE( Map< Agent, Double > deMap, Agent target, double evaluation ) {
-		double formerDE = deMap.get( target );
-		boolean b = evaluation > 0;
-		double newDE;
-
-		newDE = renewDEby0or1( formerDE, b );
-		deMap.put( target, newDE );
+	protected void renewDE( List< AgentDePair > pairList, Agent target, double evaluation ) {
+		AgentDePair pair = getPairByAgent( target, pairList );
+		pair.renewDEbyArbitraryReward( evaluation );
 	}
+
+
 
 	// HACK
 	private void renewCongestionDegreeMap( Agent target, Subtask st, int bindingTime ) {

@@ -1,6 +1,7 @@
 package main.research.agent.strategy;
 
 import main.research.agent.Agent;
+import main.research.agent.AgentDePair;
 
 import java.util.*;
 import java.util.Map.Entry;
@@ -47,9 +48,14 @@ public interface Strategy {
 
     default void evaporateDE( Map<Agent, Double> relMap ) {
         // CONSIDER: そもそも特定のエージェントのDEのみ保持するようにすればいいのでは？
-        arrayEvaporate(relMap);
+//        arrayEvaporate(relMap);
 //         mapEvaporate(relMap);
     }
+
+    default void evaporateDE( List< AgentDePair > pairList ) {
+    	for( AgentDePair pair : pairList ) pair.evaporate();
+    }
+
 
     // CONSIDER: Mapがでかいとどちゃくそ遅い．Mapのせいというよりラッパークラスのせいか．こっちの方が記述は簡潔なんだけどなぁ．
     default void mapEvaporate( Map<Agent, Double> relMap ) {
@@ -98,6 +104,14 @@ public interface Strategy {
             key   = (Agent) keyIterator.next();
             relMap.replace( key, temp );
         }
+    }
+
+    default AgentDePair getPairByAgent( Agent target, List<AgentDePair> pairList ) {
+        for( AgentDePair pair : pairList ) {
+            if( pair.getTarget().equals( target ) ) return pair;
+        }
+        assert false: "not to come";
+        return null;
     }
 
     static void clear(){

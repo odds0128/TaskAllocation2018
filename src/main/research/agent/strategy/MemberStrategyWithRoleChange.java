@@ -2,6 +2,7 @@ package main.research.agent.strategy;
 
 import main.research.SetParam;
 import main.research.agent.Agent;
+import main.research.agent.AgentDePair;
 import main.research.agent.AgentManager;
 import main.research.communication.TransmissionPath;
 import main.research.communication.message.Done;
@@ -23,7 +24,7 @@ import java.util.Map.Entry;
 
 public abstract class MemberStrategyWithRoleChange implements Strategy, SetParam {
     protected boolean joinFlag = false;
-    public Map< Agent, Double > reliableLeadersRanking = new LinkedHashMap<>( HASH_MAP_SIZE );
+    public List< AgentDePair > reliableLeadersRanking = new ArrayList<>(  );
 
     protected int expectedResultMessage = 0;
     List< Solicitation > solicitationList = new ArrayList<>();
@@ -45,13 +46,8 @@ public abstract class MemberStrategyWithRoleChange implements Strategy, SetParam
             member.ls.checkDoneMessage( member, d );
         }
 
-        List< Entry<Agent, Double> > tempList = new ArrayList<>( reliableLeadersRanking.entrySet() );
-        tempList.sort( Strategy::compare );
-        Map<Agent, Double> tempMap = new LinkedHashMap<>(  );
-        for( Entry<Agent, Double> e: tempList ) {
-            tempMap.put( e.getKey(), e.getValue() );
-        }
-        reliableLeadersRanking = tempMap;
+        // CONSIDER: CPU使用量馬鹿高い
+        Collections.sort( reliableLeadersRanking, Comparator.comparingDouble( AgentDePair::getDe ).reversed() );
 
         if      (member.phase == WAIT_FOR_SOLICITATION ) replyAsM(member);
         else if (member.phase == WAIT_FOR_SUBTASK )      receiveAsM(member);
@@ -59,10 +55,11 @@ public abstract class MemberStrategyWithRoleChange implements Strategy, SetParam
         evaporateDE( reliableLeadersRanking );
     }
 
-    public void setLeaderRankingRandomly( List< Agent > agentList ) {
+    public void setLeaderRankingRandomly( Agent self, List< Agent > agentList ) {
         List< Agent > tempList = AgentManager.generateRandomAgentList( agentList );
         for ( Agent temp: tempList ) {
-            reliableLeadersRanking.put( temp, INITIAL_VALUE_OF_DE );
+            if( temp.equals( self ) ) continue;
+            reliableLeadersRanking.add( new AgentDePair( temp, INITIAL_VALUE_OF_DE ) );
         }
     }
 
@@ -93,7 +90,7 @@ public abstract class MemberStrategyWithRoleChange implements Strategy, SetParam
         if(  solicitations.isEmpty() ) return;
 
         solicitations.sort( ( solicitation1, solicitation2 ) ->
-            (int) ( reliableLeadersRanking.get( solicitation1.getFrom() ) - reliableLeadersRanking.get( solicitation2.getFrom() ) ));
+            compareSolicitations( solicitation1, solicitation2, reliableLeadersRanking ) );
 
         int capacity = SUBTASK_QUEUE_SIZE - mySubtaskQueue.size() - expectedResultMessage;
         while (  solicitations.size() > 0 && capacity-- > 0 ) {
@@ -106,6 +103,11 @@ public abstract class MemberStrategyWithRoleChange implements Strategy, SetParam
             Solicitation s = solicitations.remove( 0 );
             TransmissionPath.sendMessage( new ReplyToSolicitation( member,  s.getFrom(), DECLINE, s.getExpectedSubtask() ) );
         }
+    }
+
+    protected int compareSolicitations( Solicitation a, Solicitation b, List< AgentDePair > pairList ) {
+        if( getPairByAgent( a.getFrom(), pairList ).getDe() < getPairByAgent( b.getFrom(), pairList ).getDe() ) return -1;
+        else return 1;
     }
 
     private void receiveAsM( Agent member ) {
@@ -161,5 +163,5 @@ public abstract class MemberStrategyWithRoleChange implements Strategy, SetParam
         this.resultList.add(r);
     }
 
-    protected abstract void renewDE( Map< Agent, Double > deMap, Agent target, double evaluation );
+    protected abstract void renewDE( List<AgentDePair> pairList, Agent target, double evaluation );
 }

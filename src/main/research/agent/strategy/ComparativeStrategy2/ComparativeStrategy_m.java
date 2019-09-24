@@ -2,6 +2,7 @@ package main.research.agent.strategy.ComparativeStrategy2;
 
 import main.research.Manager;
 import main.research.agent.Agent;
+import main.research.agent.AgentDePair;
 import main.research.agent.strategy.MemberStrategyWithRoleChange;
 import main.research.communication.TransmissionPath;
 import main.research.communication.message.ReplyToSolicitation;
@@ -12,6 +13,7 @@ import main.research.others.Pair;
 import main.research.others.random.MyRandom;
 import main.research.task.Subtask;
 
+import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,8 +31,7 @@ public class ComparativeStrategy_m extends MemberStrategyWithRoleChange {
 		if ( solicitations.isEmpty() ) return;
 
 		if( solicitations.size() > 1 ) {
-			solicitations.sort( ( solicitation1, solicitation2 ) ->
-				(int) ( reliableLeadersRanking.get( solicitation1.getFrom() ) - reliableLeadersRanking.get( solicitation2.getFrom() ) ));
+			solicitations.sort( ( solicitation1, solicitation2 ) -> compareSolicitations( solicitation1, solicitation2, reliableLeadersRanking ) );
 		}
 
 		int capacity = SUBTASK_QUEUE_SIZE - mySubtaskQueue.size() - expectedResultMessage;
@@ -65,14 +66,9 @@ public class ComparativeStrategy_m extends MemberStrategyWithRoleChange {
 	}
 
 	@Override
-	protected void renewDE( Map< Agent, Double > deMap, Agent target, double evaluation ) {
-		double formerDE = deMap.get( target );
-		double newDE;
+	protected void renewDE( List< AgentDePair > pairList, Agent target, double evaluation ) {
+		AgentDePair pair = getPairByAgent( target, pairList );
+		pair.renewDEbyArbitraryReward( evaluation );
 
-		newDE = renewDEbyArbitraryReward( formerDE, evaluation );
-		// 0or1でやってみて結果が変わるか確認する
-//		boolean flag = evaluation > 0 ? true : false;
-//		newDE = renewDEby0or1( formerDE, flag );
-		deMap.put( target, newDE );
 	}
 }

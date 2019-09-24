@@ -160,7 +160,7 @@ public class Agent implements SetParam, Cloneable {
 
 	public Task findTaskContainingThisSubtask( Subtask finishedSubtask ) {
 		for ( Task t: pastTasks ) {
-			if ( t.isPartOfThisTask( finishedSubtask ) ) return t;
+			if ( t.getId() == finishedSubtask.parentId ) return t;
 		}
 		return null;
 	}

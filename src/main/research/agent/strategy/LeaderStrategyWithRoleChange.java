@@ -2,6 +2,7 @@ package main.research.agent.strategy;
 
 import main.research.SetParam;
 import main.research.agent.Agent;
+import main.research.agent.AgentDePair;
 import main.research.agent.AgentManager;
 import main.research.communication.message.Done;
 import main.research.communication.message.ReplyToSolicitation;
@@ -21,7 +22,6 @@ import static main.research.communication.TransmissionPath.sendMessage;
 import static main.research.task.Task.disposeTask;
 
 import java.util.*;
-import java.util.Map.Entry;
 
 public abstract class LeaderStrategyWithRoleChange implements Strategy, SetParam {
 	// TODO: Hash~ のサイズ勘案
@@ -29,7 +29,7 @@ public abstract class LeaderStrategyWithRoleChange implements Strategy, SetParam
 	protected int repliesToCome = 0;            // 送ったsolicitationの数を覚えておく
 	protected Task myTask;
 	private Map< Agent, List< Subtask > > allocationHistory = new HashMap<>();
-	public Map< Agent, Double > reliableMembersRanking = new LinkedHashMap<>( HASH_MAP_SIZE );
+	public List< AgentDePair > reliableMembersRanking = new ArrayList<>(  );
 
 	protected List< ReplyToSolicitation > replyList = new ArrayList<>();
 	List< Done > doneList = new ArrayList<>(); // HACK: 可視性狭めたい
@@ -45,16 +45,7 @@ public abstract class LeaderStrategyWithRoleChange implements Strategy, SetParam
 			leader.ls.checkDoneMessage( leader, d );
 		}
 
-		// TODO: このソートの部分なんとかする
-		List< Entry<Agent, Double> > tempList = new ArrayList<>( reliableMembersRanking.entrySet() );
-		tempList.sort( Strategy::compare );
-		Map<Agent, Double> tempMap = new LinkedHashMap<>(  );
-		for( Entry<Agent, Double> e: tempList ) {
-			tempMap.put( e.getKey(), e.getValue() );
-		}
-		reliableMembersRanking = tempMap;
-		List< Map.Entry<Agent, Double> > entries = new ArrayList(reliableMembersRanking.entrySet());
-        entries.sort(Strategy::compare);
+		Collections.sort( reliableMembersRanking, Comparator.comparingDouble( AgentDePair::getDe ).reversed() );
 
 		if ( leader.phase == SOLICIT ) solicitAsL( leader );
 		else if ( leader.phase == FORM_TEAM ) leader.ls.formTeamAsL( leader );
@@ -132,7 +123,8 @@ public abstract class LeaderStrategyWithRoleChange implements Strategy, SetParam
 	}
 
 	private Agent selectAMemberForASubtask( Subtask st ) {
-		for ( Agent ag: reliableMembersRanking.keySet() ) {
+		for ( AgentDePair pair : reliableMembersRanking ) {
+			Agent ag = pair.getTarget();
 			if ( ( ! exceptions.contains( ag ) ) && ag.canProcessTheSubtask( st ) ) return ag;
 		}
 		return null;
@@ -148,26 +140,26 @@ public abstract class LeaderStrategyWithRoleChange implements Strategy, SetParam
 		if ( replyList.size() < repliesToCome ) return;
 		else repliesToCome = 0;
 
-		Map< Subtask, Agent > mapOfSubtaskAndAgent = new HashMap<>();
+		Map< Subtask, Agent > SubtaskAgentMap = new HashMap<>();
 		while ( !replyList.isEmpty() ) {
 			ReplyToSolicitation r = replyList.remove( 0 );
 			Subtask st = r.getSubtask();
 			Agent currentFrom = r.getFrom();
 
 			if ( r.getReplyType() == DECLINE ) treatBetrayer( currentFrom );
-			else if ( mapOfSubtaskAndAgent.containsKey( st ) ) {
-				Agent rival = mapOfSubtaskAndAgent.get( st );
+			else if ( SubtaskAgentMap.containsKey( st ) ) {
+				Agent rival = SubtaskAgentMap.get( st );
 				Pair winnerAndLoser = compareDE( currentFrom, rival );
 
 				exceptions.remove( winnerAndLoser.getValue() );
 				sendMessage( new ResultOfTeamFormation( leader, ( Agent ) winnerAndLoser.getValue(), FAILURE, null ) );
-				mapOfSubtaskAndAgent.put( st, ( Agent ) winnerAndLoser.getKey() );
+				SubtaskAgentMap.put( st, ( Agent ) winnerAndLoser.getKey() );
 			} else {
-				mapOfSubtaskAndAgent.put( st, currentFrom );
+				SubtaskAgentMap.put( st, currentFrom );
 			}
 		}
-		if ( canExecuteTheTask( myTask, mapOfSubtaskAndAgent.keySet() ) ) {
-			for ( Map.Entry entry: mapOfSubtaskAndAgent.entrySet() ) {
+		if ( canExecuteTheTask( myTask, SubtaskAgentMap.keySet() ) ) {
+			for ( Map.Entry entry: SubtaskAgentMap.entrySet() ) {
 				Agent   friend = ( Agent ) entry.getValue();
 				Subtask st = (Subtask ) entry.getKey();
 
@@ -178,12 +170,17 @@ public abstract class LeaderStrategyWithRoleChange implements Strategy, SetParam
 			}
 			leader.inactivate( 1 );
 		} else {
-			apologizeToFriends( leader, new ArrayList<>( mapOfSubtaskAndAgent.values() ) );
-			exceptions.removeAll( new ArrayList<>( mapOfSubtaskAndAgent.values() ) );
+			apologizeToFriends( leader, new ArrayList<>( SubtaskAgentMap.values() ) );
+			exceptions.removeAll( new ArrayList<>( SubtaskAgentMap.values() ) );
 			disposeTask();
 			leader.inactivate( 0 );
 		}
 		myTask = null;
+	}
+
+	protected Pair compareDE( Agent a, Agent b ) {
+		if( getPairByAgent( a, reliableMembersRanking ).getDe() < getPairByAgent( b, reliableMembersRanking ).getDe() ) return new Pair(b, a);
+		return new Pair(a, b);
 	}
 
 	protected void treatBetrayer( Agent betrayer ) {
@@ -191,15 +188,10 @@ public abstract class LeaderStrategyWithRoleChange implements Strategy, SetParam
 		renewDE( reliableMembersRanking, betrayer, 0 );
 	}
 
-	protected Pair< Agent, Agent > compareDE( Agent first, Agent second ) {
-		if ( reliableMembersRanking.get( first ) >= reliableMembersRanking.get( second ) ) return new Pair<>( first, second );
-		return new Pair<>( second, first );
-	}
-
 	protected boolean canExecuteTheTask( Task task, Set< Subtask > subtaskSet ) {
 		// TODO: あとでサイズだけ比較するようにする
 		int actual = 0;
-		for ( Subtask st: subtaskSet ) if ( task.isPartOfThisTask( st ) ) actual++;
+		for ( Subtask st: subtaskSet ) if ( task.contains( st ) ) actual++;
 		return task.subtasks.size() == actual;
 	}
 
@@ -226,10 +218,11 @@ public abstract class LeaderStrategyWithRoleChange implements Strategy, SetParam
 		return temp;
 	}
 
-	public void setMemberRankingRandomly( List< Agent > agentList ) {
+	public void setMemberRankingRandomly( Agent self, List< Agent > agentList ) {
 		List< Agent > tempList = AgentManager.generateRandomAgentList( agentList );
 		for ( Agent temp: tempList ) {
-			reliableMembersRanking.put( temp, INITIAL_VALUE_OF_DE );
+			if( temp.equals( self ) ) continue;
+			reliableMembersRanking.add( new AgentDePair( temp, INITIAL_VALUE_OF_DE ) );
 		}
 	}
 
@@ -249,7 +242,7 @@ public abstract class LeaderStrategyWithRoleChange implements Strategy, SetParam
 		this.doneList.add( d );
 	}
 
-	protected abstract void renewDE( Map< Agent, Double > deMap, Agent target, double evaluation );
+	protected abstract void renewDE( List<AgentDePair> pairList, Agent target, double evaluation );
 
 
 }
