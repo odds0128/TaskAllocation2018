@@ -151,7 +151,7 @@ public class Manager implements SetParam {
 //            main.research.OutPut.writeDelays(delays);
 //            main.research.OutPut.writeReliabilities(AgentManager.getAgentList(), strategy_name);
 //            main.research.OutPut.writeDelaysAndRels(delays, AgentManager.getAgentList(), strategy);
-            if( WRITE_GRAPH ) {
+            if( CHECK_RELATIONSHIPS ) {
                 OutPut.writeGraphInformationX(AgentManager.getAllAgentList(), strategy_name);
             }
 // */

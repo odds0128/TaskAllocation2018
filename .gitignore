@@ -6,4 +6,3 @@ out/
 libs/
 *.iml
 .gradle
-src/main/research/SetParam.java
