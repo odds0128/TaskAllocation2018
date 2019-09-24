@@ -53,7 +53,7 @@ public class Manager implements SetParam {
             int start, end;
 
             int num = 0;
-            String strategy_name = ls_name.substring( 0, ( ls_name.length() - 2 ) );
+            String strategy_name = package_name.split( "\\." )[4];
             System.out.println(strategy_name);
             System.out.println( strategy_name + ", λ=" + ADDITIONAL_TASK_NUM +
                     ", ε:" + INITIAL_ε + ": " + HOW_EPSILON +
