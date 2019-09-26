@@ -2,7 +2,10 @@ package main.research;
 
 import main.research.agent.Agent;
 import main.research.agent.AgentManager;
+import main.research.agent.strategy.ComparativeStrategy3.ComparativeStrategy_l;
 import main.research.agent.strategy.Strategy;
+
+import static main.research.OutPut.*;
 import static main.research.others.random.MyRandom.*;
 import main.research.communication.TransmissionPath;
 import main.research.grid.Grid;
@@ -28,6 +31,9 @@ public class Manager implements SetParam {
 //    private static String ls_name = "ComparativeStrategy_l";
 //    private static String ms_name = "ComparativeStrategy_m";
 //    private static String package_name = "main.research.agent.strategy.ComparativeStrategy2.";
+//    private static String ls_name = "ComparativeStrategy_l";
+//    private static String ms_name = "ComparativeStrategy_m";
+//private static String package_name = "main.research.agent.strategy.ComparativeStrategy3.";
 //    private static String ls_name = "ComparativeStrategy_l";
 //    private static String ms_name = "ComparativeStrategy_m";
 
@@ -103,10 +109,10 @@ public class Manager implements SetParam {
                     AgentManager.JoneDoesSelectRole();
 
                     if (turn % writeResultsSpan == 0 && CHECK_RESULTS) {
-                        OutPut.aggregateAgentData(AgentManager.getAllAgentList());
+                        aggregateAgentData(AgentManager.getAllAgentList());
                     }
                     if (turn == SNAPSHOT_TIME && CHECK_INTERIM_RELATIONSHIPS) {
-                        OutPut.writeGraphInformationX(AgentManager.getAllAgentList(), strategy_name );
+                        writeGraphInformationX(AgentManager.getAllAgentList(), strategy_name );
 //                        snapshot = takeAgentsSnapshot(AgentManager.getAgentList());
                         Agent.resetWorkHistory(AgentManager.getAllAgentList());
                     }
@@ -116,8 +122,8 @@ public class Manager implements SetParam {
 
                     if (turn % writeResultsSpan == 0 && CHECK_RESULTS) {
                         int rmNum = Agent.countReciprocalMember(AgentManager.getAllAgentList());
-                        OutPut.aggregateData( Task.getFinishedTasks(), Task.getDisposedTasks(), Task.getOverflowTasks(), rmNum, AgentManager.getAllAgentList());
-                        OutPut.indexIncrement();
+                        aggregateData( Task.getFinishedTasks(), Task.getDisposedTasks(), Task.getOverflowTasks(), rmNum, AgentManager.getAllAgentList());
+                        indexIncrement();
                         Task.setFinishedTasks( 0 );
                         Task.setDisposedTasks( 0 );
                         Task.setOverflowTasks( 0 );
@@ -132,6 +138,7 @@ public class Manager implements SetParam {
                     }
                     // ここが1tickの最後の部分．次のtickまでにやることあったらここで．
                 }
+                System.out.println( "nulls: " + ComparativeStrategy_l.nulls + ", not nulls: " + ComparativeStrategy_l.notNulls);
                 // ↑ 一回の実験のカッコ．以下は実験の合間で作業する部分
                 if (CHECK_AGENTS) {
                   int leader_num = (int) AgentManager.getAllAgentList().stream()
@@ -141,18 +148,19 @@ public class Manager implements SetParam {
                           .filter( agent -> agent.role == MEMBER )
                           .count();
                     System.out.println("leaders:" + leader_num + ", members:" + member_num);
-                    OutPut.aggregateDataOnce(AgentManager.getAllAgentList(), num);
+                    aggregateDataOnce(AgentManager.getAllAgentList(), num);
                 }
                 if (num == EXECUTION_TIMES) break;
                 clearAll();
             }
             // ↑ 全実験の終了のカッコ．以下は後処理
-            if (CHECK_RESULTS) OutPut.writeResults( strategy_name );
+            if (CHECK_RESULTS) writeResults( strategy_name );
+// writeRelationsBetweenCDandDE(AgentManager.getAllAgentList()); ProposedMethod以外で使うとエラー
 //            main.research.OutPut.writeDelays(delays);
 //            main.research.OutPut.writeReliabilities(AgentManager.getAgentList(), strategy_name);
 //            main.research.OutPut.writeDelaysAndRels(delays, AgentManager.getAgentList(), strategy);
             if( CHECK_RELATIONSHIPS ) {
-                OutPut.writeGraphInformationX(AgentManager.getAllAgentList(), strategy_name);
+                writeGraphInformationX(AgentManager.getAllAgentList(), strategy_name);
             }
 // */
             if (CHECK_Eleader_Emember) pw.close();
@@ -169,8 +177,8 @@ public class Manager implements SetParam {
 
         AgentManager.initiateAgents( package_name, ls_name, ms_name);
         if (CHECK_INITIATION) {
-            main.research.OutPut.checkAgent(AgentManager.getAllAgentList());
-            main.research.OutPut.checkGrid(Grid.getGrid());
+            checkAgent(AgentManager.getAllAgentList());
+            checkGrid(Grid.getGrid());
 //            main.research.OutPut.checkDelay(Grid.getDelays());
 //            main.research.OutPut.countDelays(Grid.getDelays());
         }

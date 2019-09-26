@@ -41,13 +41,12 @@ public interface SetParam {
 	int INITIAL_TASK_NUM = 0;       // 最初のタスク数
 	int TASK_QUEUE_SIZE  = 500;     // タスクキューのサイズ
 	int AGENT_NUM = 500;            // エージェントの数
-	int HASH_MAP_SIZE = (int) Math.ceil(AGENT_NUM * 1.3);
 
 	// トーラスを考えた時に，中心が自分であるほうが考えやすいので，一片の長さは奇数にする
 	int MAX_X    = 51, MAX_Y = 51;
 	int MAX_DELAY = 5;
 
-	double ADDITIONAL_TASK_NUM  = 7.5;        // タスクを追加するタイミングで, タスクキューに追加するタスクの個数(=λ)
+	double ADDITIONAL_TASK_NUM  = 3.5;        // タスクを追加するタイミングで, タスクキューに追加するタスクの個数(=λ)
 	double  HOW_MANY            = 0.5 * ADDITIONAL_TASK_NUM;
 	int RESOURCE_TYPES = 3;
 	int MAX_AGENT_RESOURCE_SIZE   = 5;
@@ -87,22 +86,6 @@ public interface SetParam {
 	enum Principle {
 		RATIONAL,
 		RECIPROCAL
-	}
-
-
-	interface MessageTypeInterface { }
-	// メッセージの種類
-	enum MessageType implements MessageTypeInterface {
-		SOLICITATION,
-		REPLY,
-		RESULT,
-		DONE
-	}
-	// CNP用のメッセージの種類
-	enum MessageTypeForCNP implements MessageTypeInterface {
-		PUBLICITY,
-		BIDDINGorNOT,
-		BID_RESULT
 	}
 
 	// REPLYの種類

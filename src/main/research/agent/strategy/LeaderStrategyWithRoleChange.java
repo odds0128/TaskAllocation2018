@@ -24,7 +24,6 @@ import static main.research.task.Task.disposeTask;
 import java.util.*;
 
 public abstract class LeaderStrategyWithRoleChange implements Strategy, SetParam {
-	// TODO: Hash~ のサイズ勘案
 	protected Set< Agent > exceptions = new HashSet<>();
 	protected int repliesToCome = 0;            // 送ったsolicitationの数を覚えておく
 	protected Task myTask;
@@ -34,7 +33,8 @@ public abstract class LeaderStrategyWithRoleChange implements Strategy, SetParam
 	protected List< ReplyToSolicitation > replyList = new ArrayList<>();
 	List< Done > doneList = new ArrayList<>(); // HACK: 可視性狭めたい
 
-	// CONSIDER: Leader has a LeaderStrategy のはずなので本来引数に「自分」を渡さなくてもいいはずでは？
+	// question: Leader has a LeaderStrategy のはずなので本来引数に「自分」を渡さなくてもいいはずでは？
+	// TODO: Leaderクラスのインスタンスメソッドにする
 	public void actAsLeader( Agent leader ) {
 		while ( !leader.ms.solicitationList.isEmpty() ) {
 			Solicitation s = leader.ms.solicitationList.remove( 0 );

@@ -1,6 +1,8 @@
 package main.research;
 
 import main.research.agent.AgentDePair;
+import main.research.agent.strategy.CDSet;
+import main.research.agent.strategy.ComparativeStrategy3.ComparativeStrategy_l;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.*;
@@ -14,6 +16,7 @@ import main.research.task.Task;
 
 import static main.research.SetParam.Role.*;
 import static main.research.SetParam.Principle.*;
+
 import java.text.SimpleDateFormat;
 
 import java.io.*;
@@ -816,51 +819,83 @@ public class OutPut implements SetParam {
         }
     }
 
-    //todo: delayとdeの関係を出力する
-    static void writeRelationsBetweenDelayAndDE( int[][] delays, List< Agent > agents, String st ) {
-        FileWriter fw; BufferedWriter bw; PrintWriter pw; String fileName = st;
+    static void writeRelationsBetweenCDandDE( List< Agent > agents ) {
+        double average = 0;
+        int num = 0;
         double meanLeaderCor = 0, meanMemberCor = 0;
         int leaders = 0, members = 0;
 
         for( Agent ag : agents ) {
-            List< AgentDePair> pairList = ag.e_leader > ag.e_member ? ag.ls.reliableMembersRanking : ag.ms.reliableLeadersRanking;
+            List< CDSet> cdSetList = ComparativeStrategy_l.getCdSetList( ( ComparativeStrategy_l ) ag.ls );
+            int size = cdSetList.size();
+            if( size == 0 || size == 1 ) continue;
+
+            double[] CDs = new double[size];
+            double[] DEs = new double[size];
+
+            for( int i = 0; i < size; i++ ) {
+                CDSet temp = cdSetList.remove( 0 );
+                Agent target = temp.getTarget();
+
+                double[] tempCD = temp.getCD();
+                CDs[i] = Arrays.stream( tempCD ).max().getAsDouble();
+
+            	for( AgentDePair pair : ag.ls.reliableMembersRanking ) {
+            	    if( target.equals( pair.getTarget() ) ) {
+            	        DEs[i] = pair.getDe();
+                    }
+                }
+            }
+            PearsonsCorrelation p = new PearsonsCorrelation();
+            double cor = p.correlation( CDs, DEs );
+            if( Double.isNaN( cor ) ) continue;
+            if ( ag.e_leader > ag.e_member ) {
+                meanLeaderCor += cor;
+                leaders++;
+            } else {
+                meanMemberCor += cor;
+                members++;
+            }
+            average += cor;
+            num++;
+        }
+
+        System.out.println("Average : " + average/num );
+        System.out.println( "Average Leader: " + meanLeaderCor / leaders );
+        System.out.println( "Average Member: " + meanMemberCor / members );
+    }
+
+    static void writeRelationsBetweenDelayAndDE( int[][] delays, List< Agent > agents, String st ) {
+        double meanLeaderCor = 0, meanMemberCor = 0;
+        int leaders = 0, members = 0;
+
+        for ( Agent ag: agents ) {
+            List< AgentDePair > pairList = ag.e_leader > ag.e_member ? ag.ls.reliableMembersRanking : ag.ms.reliableLeadersRanking;
             int size = pairList.size();
 
-            double[] DEs   = new double[size];
-            double[] delay = new double[size];
-            for( int i = 0; i < size; i++ ) {
-            	AgentDePair pair = pairList.get( i );
+            double[] DEs = new double[ size ];
+            double[] delay = new double[ size ];
+            for ( int i = 0; i < size; i++ ) {
+                AgentDePair pair = pairList.get( i );
                 Agent target = pair.getTarget();
 
-                DEs[i]   = pair.getDe();
-                delay[i] = delays[ag.id][target.id];
+                DEs[ i ] = pair.getDe();
+                delay[ i ] = delays[ ag.id ][ target.id ];
             }
             PearsonsCorrelation p = new PearsonsCorrelation();
             double cor = p.correlation( DEs, delay );
-            if( ag.e_leader > ag.e_member ){
-                meanLeaderCor += cor; leaders ++;
-            }else{
-                meanMemberCor += cor; members ++;
+            if ( ag.e_leader > ag.e_member ) {
+                meanLeaderCor += cor;
+                leaders++;
+            } else {
+                meanMemberCor += cor;
+                members++;
             }
-            System.out.println( ag + "correlation: " + String.format( "%.3f", cor) );
+            System.out.println( ag + "correlation: " + String.format( "%.3f", cor ) );
         }
 
-        System.out.println("Average Leader: " + meanLeaderCor/leaders );
-        System.out.println("Average Member: " + meanMemberCor/members );
-
-
-//        try {
-//            String currentPath = System.getProperty( "user.dir" );
-//            Date date = new Date();
-//            SimpleDateFormat sdf1 = new SimpleDateFormat( ",yyyy:MM:dd,HH:mm:ss" );
-//            fw = new FileWriter( currentPath + "/out/results/d&r " + fileName + sdf1.format( date ) + ".csv", false );
-//            bw = new BufferedWriter( fw );
-//            pw = new PrintWriter( bw );
-//
-//            pw.close();
-//        } catch ( IOException e ) {
-//            e.printStackTrace();
-//        }
+        System.out.println( "Average Leader: " + meanLeaderCor / leaders );
+        System.out.println( "Average Member: " + meanMemberCor / members );
     }
 
     static void writeReliabilities( List< Agent > agents, String st ) {

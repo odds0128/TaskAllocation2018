@@ -1,33 +1,27 @@
-package main.research.agent.strategy.ProposedStrategy;
+package main.research.agent.strategy.ComparativeStrategy3;
 
-import main.research.SetParam;
+import main.research.*;
 import main.research.agent.Agent;
 import main.research.agent.AgentDePair;
 import main.research.agent.strategy.CDSet;
 import main.research.agent.strategy.LeaderStrategyWithRoleChange;
-import main.research.communication.message.Done;
-import main.research.communication.message.ReplyToSolicitation;
-import main.research.communication.message.ResultOfTeamFormation;
-import main.research.communication.message.Solicitation;
+import main.research.communication.message.*;
 import main.research.others.Pair;
 import main.research.others.random.MyRandom;
 import main.research.task.Subtask;
 import main.research.task.Task;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import static main.research.task.Task.disposeTask;
 import static main.research.Manager.getCurrentTime;
-import static main.research.SetParam.ReplyType.DECLINE;
+import static main.research.SetParam.ReplyType.*;
 import static main.research.SetParam.ResultType.FAILURE;
 import static main.research.SetParam.ResultType.SUCCESS;
-import static main.research.communication.TransmissionPath.sendMessage;
-import static main.research.task.Task.disposeTask;
+import static main.research.communication.TransmissionPath.*;
+
+import java.util.*;
 
 // TODO: 中身を表したクラス名にする
-public class ProposedStrategy_l extends LeaderStrategyWithRoleChange implements SetParam {
+public class ComparativeStrategy_l extends LeaderStrategyWithRoleChange implements SetParam {
 	static double CD_THRESHOLD = 5.0;
 	static double DE_THRESHOLD = INITIAL_VALUE_OF_DE;
 
@@ -220,7 +214,7 @@ public class ProposedStrategy_l extends LeaderStrategyWithRoleChange implements 
 		return sb.toString();
 	}
 
-	public static List< CDSet > getCdSetList( ProposedStrategy_l psl ) {
+	public static List<CDSet> getCdSetList( ComparativeStrategy_l psl ) {
 		return psl.cdSetList;
 	}
 

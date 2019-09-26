@@ -1,4 +1,4 @@
-package main.research.agent.strategy.ProposedStrategy;
+package main.research.agent.strategy;
 
 import main.research.Manager;
 import main.research.agent.Agent;
@@ -11,20 +11,20 @@ public class CDSet {
 	private double[] congestionDegree;
 	private int lastUpdatedTime;
 
-	CDSet( Agent target, double[] congestionDegree, int lastUpdatedTime ) {
+	public CDSet( Agent target, double[] congestionDegree, int lastUpdatedTime ) {
 		this.target = target;
 		this.congestionDegree = congestionDegree;
 		this.lastUpdatedTime = lastUpdatedTime;
 	}
 
-	static boolean alreadyExists( Agent target, List< CDSet > list ) {
+	public static boolean alreadyExists( Agent target, List< CDSet > list ) {
 		for( CDSet entry: list ) {
 			if ( entry.getTarget().equals( target ) ) return true;
 		}
 		return false;
 	}
 
-	static void replace( Agent target, double[] tempArray, List< CDSet > list ) {
+	public static void replace( Agent target, double[] tempArray, List< CDSet > list ) {
 		for( CDSet entry : list ) {
 			if( entry.getTarget().equals( target ) ) {
 				entry.setCongestionDegree( tempArray );
@@ -33,7 +33,7 @@ public class CDSet {
 		}
 	}
 
-	static double[] getCD( Agent target, List< CDSet > list ) {
+	public static double[] getCD( Agent target, List< CDSet > list ) {
 		for( CDSet entry : list ) {
 			if( entry.getTarget().equals( target ) ) return entry.getCD();
 		}
@@ -41,7 +41,7 @@ public class CDSet {
 		return new double[RESOURCE_TYPES];
 	}
 
-	static void refreshMap( List< CDSet > list ) {
+	public static void forgetOldCdInformation( List< CDSet > list ) {
 		int size = list.size();
 		for( int i = 0; i < size; i++ ) {
 			CDSet entry = list.remove( 0 );
@@ -55,11 +55,11 @@ public class CDSet {
 		return target;
 	}
 
-	private double[] getCD() {
+	public double[] getCD() {
 		return congestionDegree;
 	}
 
-	protected int getLastUpdatedTime() {
+	public int getLastUpdatedTime() {
 		return lastUpdatedTime;
 	}
 

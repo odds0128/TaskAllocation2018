@@ -1,11 +1,9 @@
 package main.research.agent;
 
 import main.research.agent.strategy.MemberStrategyWithRoleChange;
-import main.research.agent.strategy.ProposedStrategy.ProposedStrategy_l;
 import main.research.grid.Grid;
 import main.research.others.random.MyRandom;
 import main.research.agent.strategy.LeaderStrategyWithRoleChange;
-import main.research.agent.strategy.ProposedStrategy.ProposedStrategy_m;
 import org.junit.jupiter.api.*;
 
 import java.lang.reflect.Field;

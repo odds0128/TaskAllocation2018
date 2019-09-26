@@ -2,6 +2,7 @@ package main.research.agent.strategy.ProposedStrategy;
 
 import main.research.Manager;
 import main.research.agent.Agent;
+import main.research.agent.strategy.CDSet;
 import main.research.others.random.MyRandom;
 import main.research.util.Initiation;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,7 +22,7 @@ import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.lessThan;
 
 class CDSetTest {
-	List<CDSet> cdSetList = new ArrayList<>(  );
+	List< CDSet > cdSetList = new ArrayList<>(  );
 	int currentTime = 500;
 
 	static {
@@ -44,7 +45,7 @@ class CDSetTest {
 	@Test
 	void refreshMapで期限切れのものが残らない() {
 		int before = cdSetList.size();
-		CDSet.refreshMap( cdSetList );
+		CDSet.forgetOldCdInformation( cdSetList );
 
 		assertThat( before, is( greaterThan( cdSetList.size() ) ) );
 		for( CDSet set: cdSetList ) {
