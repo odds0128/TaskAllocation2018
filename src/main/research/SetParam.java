@@ -8,8 +8,8 @@ package main.research;
 public interface SetParam {
 	// 環境の設定( 変更していく部分 )
 	int EXECUTION_TIMES = 1;             // 実験の回数
-	int MAX_TURN_NUM    = 100000;         // 一回の実験のターン数
-	int WRITING_TIMES   = 1000;           // データのファイルへの出力回数
+	int MAX_TURN_NUM    = 10000;         // 一回の実験のターン数
+	int WRITING_TIMES   = 100;           // データのファイルへの出力回数
 	boolean CHECK_RELATIONSHIPS    = false;  // エージェント関係の協調関係を録るか
 	boolean CHECK_INTERIM_RELATIONSHIPS    = false;  // エージェント関係の協調関係のスナップショットを録るか
 	boolean CHECK_INITIATION       = false;  // エージェントやタスクの初期設定を確認するか
@@ -46,7 +46,7 @@ public interface SetParam {
 	int MAX_X    = 51, MAX_Y = 51;
 	int MAX_DELAY = 5;
 
-	double ADDITIONAL_TASK_NUM  = 3.5;        // タスクを追加するタイミングで, タスクキューに追加するタスクの個数(=λ)
+	double ADDITIONAL_TASK_NUM  = 7.5;        // タスクを追加するタイミングで, タスクキューに追加するタスクの個数(=λ)
 	double  HOW_MANY            = 0.5 * ADDITIONAL_TASK_NUM;
 	int RESOURCE_TYPES = 3;
 	int MAX_AGENT_RESOURCE_SIZE   = 5;
@@ -59,7 +59,7 @@ public interface SetParam {
 	int THRESHOLD_FOR_ROLE_RENEWAL  = 50;
 
 	// パラメータ
-	double INITIAL_VALUE_OF_DE =  0.5;
+	double INITIAL_VALUE_OF_DE =  0.0;
 	double INITIAL_VALUE_OF_DSL =  0.5;
 	double INITIAL_VALUE_OF_DSM =  0.5;
 	double α = 0.05;

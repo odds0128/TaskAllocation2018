@@ -3,6 +3,8 @@ package main.research;
 import main.research.agent.Agent;
 import main.research.agent.AgentManager;
 import main.research.agent.strategy.ComparativeStrategy3.ComparativeStrategy_l;
+import main.research.agent.strategy.ProposedStrategy.ProposedStrategy_l;
+import main.research.agent.strategy.ProposedStrategy.ProposedStrategy_m;
 import main.research.agent.strategy.Strategy;
 
 import static main.research.OutPut.*;
@@ -33,7 +35,7 @@ public class Manager implements SetParam {
 //    private static String package_name = "main.research.agent.strategy.ComparativeStrategy2.";
 //    private static String ls_name = "ComparativeStrategy_l";
 //    private static String ms_name = "ComparativeStrategy_m";
-//private static String package_name = "main.research.agent.strategy.ComparativeStrategy3.";
+//	private static String package_name = "main.research.agent.strategy.ComparativeStrategy3.";
 //    private static String ls_name = "ComparativeStrategy_l";
 //    private static String ms_name = "ComparativeStrategy_m";
 
@@ -139,6 +141,7 @@ public class Manager implements SetParam {
                     // ここが1tickの最後の部分．次のtickまでにやることあったらここで．
                 }
                 System.out.println( "nulls: " + ComparativeStrategy_l.nulls + ", not nulls: " + ComparativeStrategy_l.notNulls);
+                System.out.println( "nulls: " + ProposedStrategy_l.nulls + ", not nulls: " + ProposedStrategy_l.notNulls );
                 // ↑ 一回の実験のカッコ．以下は実験の合間で作業する部分
                 if (CHECK_AGENTS) {
                   int leader_num = (int) AgentManager.getAllAgentList().stream()
@@ -155,7 +158,6 @@ public class Manager implements SetParam {
             }
             // ↑ 全実験の終了のカッコ．以下は後処理
             if (CHECK_RESULTS) writeResults( strategy_name );
-// writeRelationsBetweenCDandDE(AgentManager.getAllAgentList()); ProposedMethod以外で使うとエラー
 //            main.research.OutPut.writeDelays(delays);
 //            main.research.OutPut.writeReliabilities(AgentManager.getAgentList(), strategy_name);
 //            main.research.OutPut.writeDelaysAndRels(delays, AgentManager.getAgentList(), strategy);
@@ -163,6 +165,7 @@ public class Manager implements SetParam {
                 writeGraphInformationX(AgentManager.getAllAgentList(), strategy_name);
             }
 // */
+			writeRelationsBetweenCDandDE(AgentManager.getAllAgentList());
             if (CHECK_Eleader_Emember) pw.close();
         } catch (IOException e) {
             e.printStackTrace();

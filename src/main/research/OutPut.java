@@ -1,8 +1,9 @@
 package main.research;
 
 import main.research.agent.AgentDePair;
-import main.research.agent.strategy.CDSet;
+import main.research.agent.strategy.CDTuple;
 import main.research.agent.strategy.ComparativeStrategy3.ComparativeStrategy_l;
+import main.research.agent.strategy.ProposedStrategy.ProposedStrategy_l;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.*;
@@ -826,18 +827,23 @@ public class OutPut implements SetParam {
         int leaders = 0, members = 0;
 
         for( Agent ag : agents ) {
-            List< CDSet> cdSetList = ComparativeStrategy_l.getCdSetList( ( ComparativeStrategy_l ) ag.ls );
-            int size = cdSetList.size();
+            List<CDTuple> cdTupleList = null;
+        	if( ag.ls.getClass().getSimpleName().equals( "ComparativeStrategy_l") ) {
+                cdTupleList = ComparativeStrategy_l.getCdSetList( ( ComparativeStrategy_l ) ag.ls );
+            }else if( ag.ls.getClass().getSimpleName().equals( "ProposedStrategy_l" ) ) {
+                cdTupleList = ProposedStrategy_l.getCdSetList( ( ProposedStrategy_l ) ag.ls );
+            }
+            int size = cdTupleList.size();
             if( size == 0 || size == 1 ) continue;
 
             double[] CDs = new double[size];
             double[] DEs = new double[size];
 
             for( int i = 0; i < size; i++ ) {
-                CDSet temp = cdSetList.remove( 0 );
+                CDTuple temp = cdTupleList.remove( 0 );
                 Agent target = temp.getTarget();
 
-                double[] tempCD = temp.getCD();
+                double[] tempCD = temp.getCDArray();
                 CDs[i] = Arrays.stream( tempCD ).max().getAsDouble();
 
             	for( AgentDePair pair : ag.ls.reliableMembersRanking ) {

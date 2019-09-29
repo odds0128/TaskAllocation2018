@@ -3,7 +3,7 @@ package main.research.agent.strategy.ComparativeStrategy3;
 import main.research.*;
 import main.research.agent.Agent;
 import main.research.agent.AgentDePair;
-import main.research.agent.strategy.CDSet;
+import main.research.agent.strategy.CDTuple;
 import main.research.agent.strategy.LeaderStrategyWithRoleChange;
 import main.research.communication.message.*;
 import main.research.others.Pair;
@@ -22,12 +22,11 @@ import java.util.*;
 
 // TODO: 中身を表したクラス名にする
 public class ComparativeStrategy_l extends LeaderStrategyWithRoleChange implements SetParam {
-	static double CD_THRESHOLD = 5.0;
-	static double DE_THRESHOLD = INITIAL_VALUE_OF_DE;
+	static double CD_THRESHOLD = 4.0;
 
 	private Map< Agent, Integer > timeToStartCommunicatingMap = new HashMap<>();
 	private Map< Agent, Integer > roundTripTimeMap = new HashMap<>();
-	private List< CDSet > cdSetList = new ArrayList<>();
+	private List< CDTuple > cdTupleList = new ArrayList<>();
 
 	@Override
 	public void sendSolicitations( Agent leader, Map< Agent, Subtask > agentSubtaskMap ) {
@@ -43,7 +42,7 @@ public class ComparativeStrategy_l extends LeaderStrategyWithRoleChange implemen
 	protected Map< Agent, Subtask > selectMembers( List< Subtask > subtasks ) {
 		Map< Agent, Subtask > memberCandidates = new HashMap<>();
 		Agent candidate;
-		CDSet.forgetOldCdInformation( cdSetList );
+		CDTuple.forgetOldCdInformation( cdTupleList );
 
 		for ( int i = 0; i < REBUNDUNT_SOLICITATION_TIMES; i++ ) {
 			for ( Subtask st: subtasks ) {
@@ -75,9 +74,10 @@ public class ComparativeStrategy_l extends LeaderStrategyWithRoleChange implemen
 		double maxCD = CD_THRESHOLD, maxDE = 0;
 		int resType = st.resType;
 
-		for( CDSet set : cdSetList ) {
+		for( CDTuple set : cdTupleList ) {
 			Agent temp = set.getTarget();
-			double cdValue = CDSet.getCD( temp, cdSetList )[resType]; // consider: 回りくどくない?
+			if( exceptions.contains( temp ) ) continue;
+			double cdValue = CDTuple.getCD( resType, temp, cdTupleList );
 			double deValue = getPairByAgent( temp, reliableMembersRanking ).getDe();
 			if( cdValue > maxCD || cdValue == maxCD && maxDE < deValue ) {
 				candidate = temp; maxCD = cdValue; maxDE = deValue;
@@ -187,17 +187,15 @@ public class ComparativeStrategy_l extends LeaderStrategyWithRoleChange implemen
 
 	// HACK
 	private void renewCongestionDegreeMap( Agent target, Subtask st, int bindingTime ) {
-		double[] tempArray;
-		if ( CDSet.alreadyExists( target, cdSetList ) ) {
-			tempArray = CDSet.getCD( target, cdSetList );
-			int resType = st.resType;
-			tempArray[ resType ] = calculateCD( bindingTime, roundTripTimeMap.get( target ), st );
-			CDSet.replace( target, tempArray, cdSetList );
+		double[] tempArray = new double[RESOURCE_TYPES];
+		int resourceType = st.resType;
+
+		if ( CDTuple.alreadyExists( target, cdTupleList ) ) {
+			double newCD = calculateCD( bindingTime, roundTripTimeMap.get( target ), st );
+			CDTuple.updateCD( target, cdTupleList, resourceType, newCD );
 		} else {
-			tempArray = new double[ RESOURCE_TYPES ];
-			int resType = st.resType;
-			tempArray[ resType ] = calculateCD( bindingTime, roundTripTimeMap.get( target ), st );
-			cdSetList.add( new CDSet( target, tempArray, getCurrentTime() ) );
+			tempArray[ resourceType ] = calculateCD( bindingTime, roundTripTimeMap.get( target ), st );
+			cdTupleList.add( new CDTuple( target, tempArray, getCurrentTime() ) );
 		}
 	}
 
@@ -210,12 +208,12 @@ public class ComparativeStrategy_l extends LeaderStrategyWithRoleChange implemen
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append( ", exceptions: " + exceptions.size() );
-		sb.append( ", cdList: " + cdSetList );
+		sb.append( ", cdList: " + cdTupleList );
 		return sb.toString();
 	}
 
-	public static List<CDSet> getCdSetList( ComparativeStrategy_l psl ) {
-		return psl.cdSetList;
+	public static List< CDTuple > getCdSetList( ComparativeStrategy_l psl ) {
+		return psl.cdTupleList;
 	}
 
 	void clear() {

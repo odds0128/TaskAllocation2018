@@ -2,7 +2,7 @@ package main.research.agent.strategy.ProposedStrategy;
 
 import main.research.Manager;
 import main.research.agent.Agent;
-import main.research.agent.strategy.CDSet;
+import main.research.agent.strategy.CDTuple;
 import main.research.others.random.MyRandom;
 import main.research.util.Initiation;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,8 +21,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.lessThan;
 
-class CDSetTest {
-	List< CDSet > cdSetList = new ArrayList<>(  );
+class CDTupleTest {
+	List< CDTuple > cdTupleList = new ArrayList<>(  );
 	int currentTime = 500;
 
 	static {
@@ -33,9 +33,9 @@ class CDSetTest {
 	void setUp() throws NoSuchFieldException, IllegalAccessException {
 		List< Agent > agentList = Initiation.getNewAgentList();
 		for( Agent ag : agentList ) {
-			cdSetList.add( new CDSet( ag, new double[RESOURCE_TYPES], MyRandom.getRandomInt( 0, currentTime ) ) );
+			cdTupleList.add( new CDTuple( ag, new double[RESOURCE_TYPES], MyRandom.getRandomInt( 0, currentTime ) ) );
 		}
-		Collections.sort( cdSetList, Comparator.comparingInt( CDSet::getLastUpdatedTime ) );
+		Collections.sort( cdTupleList, Comparator.comparingInt( CDTuple::getLastUpdatedTime ) );
 
 		Field field = Manager.class.getDeclaredField( "turn" );
         field.setAccessible(true);
@@ -44,11 +44,11 @@ class CDSetTest {
 
 	@Test
 	void refreshMapで期限切れのものが残らない() {
-		int before = cdSetList.size();
-		CDSet.forgetOldCdInformation( cdSetList );
+		int before = cdTupleList.size();
+		CDTuple.forgetOldCdInformation( cdTupleList );
 
-		assertThat( before, is( greaterThan( cdSetList.size() ) ) );
-		for( CDSet set: cdSetList ) {
+		assertThat( before, is( greaterThan( cdTupleList.size() ) ) );
+		for( CDTuple set: cdTupleList ) {
 			int timeElapsed = Manager.getCurrentTime() - set.getLastUpdatedTime();
 			assertThat( timeElapsed, is( lessThan( CD_CACHE_TIME ) ) );
 		}
