@@ -2,6 +2,8 @@ package main.research.agent.strategy;
 
 import main.research.Manager;
 import main.research.agent.Agent;
+import org.apache.commons.math3.stat.descriptive.SynchronizedSummaryStatistics;
+import org.apache.commons.math3.util.Precision;
 
 import java.util.*;
 import static main.research.SetParam.*;

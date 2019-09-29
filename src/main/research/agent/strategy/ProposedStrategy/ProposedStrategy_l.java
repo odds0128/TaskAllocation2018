@@ -16,6 +16,8 @@ import main.research.others.Pair;
 import main.research.others.random.MyRandom;
 import main.research.task.Subtask;
 import main.research.task.Task;
+import org.apache.commons.math3.stat.descriptive.SynchronizedSummaryStatistics;
+import org.apache.commons.math3.util.Precision;
 
 import java.util.*;
 
@@ -30,13 +32,17 @@ import static main.research.task.Task.disposeTask;
 public class ProposedStrategy_l extends LeaderStrategyWithRoleChange implements SetParam {
 	// 評価指標 = αDE + βCD + γDelay
 	static final double α = 1;
-	static final double β = 1.0 / MAX_AGENT_RESOURCE_SIZE;
-	static final double γ = 2.0 / MAX_DELAY ;
+	static final double β = 0.3;
+	static final double γ = 0.3 ;
 	private static final double EVALUATION_THRESHOLD = 0.5;
 
 	private Map< Agent, Integer > timeToStartCommunicatingMap = new HashMap<>();
 	private Map< Agent, Integer > roundTripTimeMap = new HashMap<>();
 	private Map< Agent, Integer > extraWaitingTimeMap = new HashMap<>();
+
+	public List< CDTuple > getCdTupleList() {
+		return cdTupleList;
+	}
 
 	private List< CDTuple > cdTupleList = new ArrayList<>();
 
@@ -115,33 +121,28 @@ public class ProposedStrategy_l extends LeaderStrategyWithRoleChange implements 
 		if ( !CDTuple.alreadyExists( target, cdTupleList ) ) {
 			return α * AgentDePair.searchDEofAgent( target, reliableMembersRanking );
 		}
-		// remove
-		if ( getCurrentTime() > MAX_TURN_NUM - 5 ) {
-			System.out.println(
-				"de: " + AgentDePair.searchDEofAgent( target, reliableMembersRanking ) + ", "
-					+ "cd: " + CDTuple.getCD( st.resType, target, cdTupleList ) + ", "
-					+ "average cd: " + CDTuple.calculateAverageCD( st.resType, cdTupleList ) + ", "
-					+ "round trip time: " + roundTripTimeMap.get( target ) + ", "
-					+ "average round trip time: " + calculateAverageRoundTripTime()
-			);
-			System.out.println(
-				"cd gap: " + ( CDTuple.getCD( st.resType, target, cdTupleList ) - CDTuple.calculateAverageCD( st.resType, cdTupleList ) ) + ", "
-					+ "round trip time gap: " + ( calculateAverageRoundTripTime() - roundTripTimeMap.get( target ) ) + ", "
-					+ "evaluation: "
-					+ ( α * AgentDePair.searchDEofAgent( target, reliableMembersRanking )
-					+ β * ( CDTuple.getCD( st.resType, target, cdTupleList ) - CDTuple.calculateAverageCD( st.resType, cdTupleList ) )
-					+ γ * ( calculateAverageRoundTripTime() - roundTripTimeMap.get( target ) ) / 2.0
-				)
-			);
-			System.out.println();
-		}
+
+		double[] cds = cdTupleList.stream()
+			.mapToDouble( tuple -> tuple.getCDArray()[st.resType] )
+			.toArray();
+		double[] rtts = roundTripTimeMap.values().stream()
+			.mapToDouble( value -> value )
+			.toArray();
+
+		double cd_standard_deviation = calculateStandardDeviation( st.resType, cds );
+		double rtt_standard_deviation = calculateStandardDeviation( st.resType, rtts );
+
 		return α * AgentDePair.searchDEofAgent( target, reliableMembersRanking )
-			// TODO: 以下２つはマイナスにもなりうるようにする．
-			// さもないと取引実績のない奴がただただ不利になり意味がなくなる
-			// 平均からの差を取る
-//			+ β * ( CDTuple.getCD( st.resType, target, cdTupleList ) - CDTuple.calculateAverageCD( st.resType, cdTupleList ) )
-			+ γ * ( calculateAverageRoundTripTime() - roundTripTimeMap.get( target ) ) / 2.0 ;
+			+ β * ( CDTuple.calculateAverageCD( st.resType, cdTupleList ) - CDTuple.getCD( st.resType, target, cdTupleList ) ) / cd_standard_deviation
+			+ γ * ( calculateAverageRoundTripTime() - roundTripTimeMap.get( target ) ) / rtt_standard_deviation ;
 	}
+
+	public static Double calculateStandardDeviation( int resourceType, double[] values ){
+		SynchronizedSummaryStatistics stats = new SynchronizedSummaryStatistics();
+		for( double value: values ) stats.addValue( value );
+		return Precision.round( stats.getStandardDeviation(), 2);
+	}
+
 
 	private double calculateAverageRoundTripTime() {
 		return roundTripTimeMap.values().stream()
