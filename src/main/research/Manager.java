@@ -12,6 +12,7 @@ import static main.research.others.random.MyRandom.*;
 import main.research.communication.TransmissionPath;
 import main.research.grid.Grid;
 import main.research.task.Task;
+import main.research.task.TaskManager;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -107,7 +108,7 @@ public class Manager implements SetParam {
 						TransmissionPath.times = 0;
 					}
 //                    if( turn % 100 == 0 ) System.out.println( "turn: " + turn );
-					Task.addNewTasksToQueue();
+					TaskManager.addNewTasksToQueue();
 					AgentManager.JoneDoesSelectRole();
 
 					if (turn % writeResultsSpan == 0 && CHECK_RESULTS) {
@@ -124,11 +125,9 @@ public class Manager implements SetParam {
 
 					if (turn % writeResultsSpan == 0 && CHECK_RESULTS) {
 						int rmNum = Agent.countReciprocalMember(AgentManager.getAllAgentList());
-						aggregateData( Task.getFinishedTasks(), Task.getDisposedTasks(), Task.getOverflowTasks(), rmNum, AgentManager.getAllAgentList());
+						aggregateData( TaskManager.getFinishedTasks(), TaskManager.getDisposedTasks(), TaskManager.getOverflowTasks(), rmNum, AgentManager.getAllAgentList());
 						indexIncrement();
-						Task.setFinishedTasks( 0 );
-						Task.setDisposedTasks( 0 );
-						Task.setOverflowTasks( 0 );
+						TaskManager.reset();
 
 						if (CHECK_Eleader_Emember && turn % writeResultsSpan == 0) {
 							pw.print(turn + ", ");
@@ -176,7 +175,7 @@ public class Manager implements SetParam {
 	private static void initiate(int times) {
 		setNewSfmt(times);
 		setNewRnd(times);
-		Task.initiateTaskQueue();
+		TaskManager.addNewTasksToQueue( INITIAL_TASK_NUM );
 
 		AgentManager.initiateAgents( package_name, ls_name, ms_name);
 		if (CHECK_INITIATION) {
@@ -195,6 +194,7 @@ public class Manager implements SetParam {
 	private static void clearAll() {
 		snapshot = null;
 		TransmissionPath.clear();
+		TaskManager.clear();
 		Task.clear();
 		Agent.clear();
 		Strategy.clear();

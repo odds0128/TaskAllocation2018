@@ -16,6 +16,7 @@ import main.research.agent.strategy.MemberStrategyWithRoleChange;
 import main.research.others.random.*;
 import main.research.task.Subtask;
 import main.research.task.Task;
+import main.research.task.TaskManager;
 
 import java.awt.*;
 import java.lang.reflect.InvocationTargetException;

@@ -10,6 +10,7 @@ import main.research.communication.message.ResultOfTeamFormation;
 import main.research.others.Pair;
 import main.research.task.Subtask;
 import main.research.task.Task;
+import main.research.task.TaskManager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,7 +21,7 @@ import static main.research.SetParam.ReplyType.DECLINE;
 import static main.research.SetParam.ResultType.FAILURE;
 import static main.research.SetParam.ResultType.SUCCESS;
 import static main.research.communication.TransmissionPath.sendMessage;
-import static main.research.task.Task.disposeTask;
+import static main.research.task.TaskManager.disposeTask;
 
 public class ComparativeStrategy_l extends LeaderStrategyWithRoleChange {
 	Map< Agent, Integer > agentStartTimeMap = new HashMap<>();
@@ -91,7 +92,7 @@ public class ComparativeStrategy_l extends LeaderStrategyWithRoleChange {
 		task.subtasks.remove( st );
 		if ( task.subtasks.isEmpty() ) {
 			from.pastTasks.remove( task );
-			Task.finishTask();
+			TaskManager.finishTask();
 			from.didTasksAsLeader++;
 		}
 	}

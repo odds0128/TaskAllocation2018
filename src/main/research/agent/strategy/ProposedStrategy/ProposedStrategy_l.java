@@ -16,6 +16,7 @@ import main.research.others.Pair;
 import main.research.others.random.MyRandom;
 import main.research.task.Subtask;
 import main.research.task.Task;
+import main.research.task.TaskManager;
 import org.apache.commons.math3.stat.descriptive.SynchronizedSummaryStatistics;
 import org.apache.commons.math3.util.Precision;
 
@@ -24,9 +25,10 @@ import java.util.*;
 import static main.research.Manager.getCurrentTime;
 import static main.research.SetParam.ReplyType.DECLINE;
 import static main.research.SetParam.ResultType.FAILURE;
+import static main.research.SetParam.ResultType;
 import static main.research.SetParam.ResultType.SUCCESS;
 import static main.research.communication.TransmissionPath.sendMessage;
-import static main.research.task.Task.disposeTask;
+import static main.research.task.TaskManager.disposeTask;
 
 // TODO: 中身を表したクラス名にする
 public class ProposedStrategy_l extends LeaderStrategyWithRoleChange implements SetParam {
@@ -105,13 +107,6 @@ public class ProposedStrategy_l extends LeaderStrategyWithRoleChange implements 
 				maxEvaluation = tempEvaluation;
 				returnAgent = tempAgent;
 			}
-		}
-		// remove
-		if( getCurrentTime() > MAX_TURN_NUM - 5 ) {
-			System.out.println(maxEvaluation);
-			System.out.println("------------------------------------------------------------------------------------------------------------");
-			System.out.println();
-			System.out.println();
 		}
 		if( maxEvaluation < EVALUATION_THRESHOLD ) return null;
 		return returnAgent;
@@ -234,7 +229,7 @@ public class ProposedStrategy_l extends LeaderStrategyWithRoleChange implements 
 
 		if ( task.subtasks.isEmpty() ) {
 			from.pastTasks.remove( task );
-			Task.finishTask();
+			TaskManager.finishTask();
 			from.didTasksAsLeader++;
 		}
 	}

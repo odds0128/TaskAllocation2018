@@ -5,6 +5,7 @@ import main.research.agent.AgentManager;
 import main.research.agent.strategy.CDTuple;
 import main.research.agent.strategy.ComparativeStrategy3.ComparativeStrategy_l;
 import main.research.agent.strategy.ProposedStrategy.ProposedStrategy_l;
+import main.research.task.Task;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.*;
@@ -14,7 +15,7 @@ import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import main.research.agent.Agent;
 import main.research.communication.TransmissionPath;
 import main.research.graph.Edge;
-import main.research.task.Task;
+import main.research.task.TaskManager;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
@@ -225,11 +226,11 @@ public class OutPut implements SetParam {
 		index = ( index + 1 ) % WRITING_TIMES;
 	}
 
-	static void checkTask( Queue< Task > taskQueue ) {
+	static void checkTask( List< Task > taskQueue ) {
 		int num = taskQueue.size();
 		System.out.println( "Queuesize: " + num );
 		for ( int i = 0; i < num; i++ ) {
-			Task temp = taskQueue.poll();
+			Task temp = taskQueue.remove(0);
 			System.out.println( temp );
 			taskQueue.add( temp );
 		}

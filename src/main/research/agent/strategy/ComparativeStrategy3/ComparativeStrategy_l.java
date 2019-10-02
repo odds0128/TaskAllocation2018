@@ -10,8 +10,9 @@ import main.research.others.Pair;
 import main.research.others.random.MyRandom;
 import main.research.task.Subtask;
 import main.research.task.Task;
+import main.research.task.TaskManager;
 
-import static main.research.task.Task.disposeTask;
+import static main.research.task.TaskManager.disposeTask;
 import static main.research.Manager.getCurrentTime;
 import static main.research.SetParam.ReplyType.*;
 import static main.research.SetParam.ResultType.FAILURE;
@@ -22,7 +23,7 @@ import java.util.*;
 
 // TODO: 中身を表したクラス名にする
 public class ComparativeStrategy_l extends LeaderStrategyWithRoleChange implements SetParam {
-	static double CD_THRESHOLD = 4.0;
+	static double CD_THRESHOLD = 3.0;
 
 	private Map< Agent, Integer > timeToStartCommunicatingMap = new HashMap<>();
 	private Map< Agent, Integer > roundTripTimeMap = new HashMap<>();
@@ -71,7 +72,7 @@ public class ComparativeStrategy_l extends LeaderStrategyWithRoleChange implemen
 	// TODO: 複数渡せるようにしなきゃ
 	private Agent selectMemberAccordingToCD( Subtask st ) {
 		Agent candidate = null;
-		double maxCD = CD_THRESHOLD, maxDE = 0;
+		double maxCD = CD_THRESHOLD, maxDE = 0.5;
 		int resType = st.resType;
 
 		for( CDTuple set : cdTupleList ) {
@@ -79,7 +80,7 @@ public class ComparativeStrategy_l extends LeaderStrategyWithRoleChange implemen
 			if( exceptions.contains( temp ) ) continue;
 			double cdValue = CDTuple.getCD( resType, temp, cdTupleList );
 			double deValue = getPairByAgent( temp, reliableMembersRanking ).getDe();
-			if( cdValue > maxCD || cdValue == maxCD && maxDE < deValue ) {
+			if( cdValue > maxCD && maxDE > 0.5 || cdValue == maxCD && maxDE < deValue ) {
 				candidate = temp; maxCD = cdValue; maxDE = deValue;
 			}
 		}
@@ -172,7 +173,7 @@ public class ComparativeStrategy_l extends LeaderStrategyWithRoleChange implemen
 
 		if ( task.subtasks.isEmpty() ) {
 			from.pastTasks.remove( task );
-			Task.finishTask();
+			TaskManager.finishTask();
 			from.didTasksAsLeader++;
 		}
 	}
