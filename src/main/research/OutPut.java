@@ -323,9 +323,11 @@ public class OutPut implements SetParam {
 	static void writeAgentsSubtaskQueueSize( PrintWriter pw ) {
 		pw.print( Manager.getCurrentTime() );
 		List< Agent > agList = AgentManager.getAllAgentList();
-		Agent ag = agList.get( 7 );
-		pw.print( ", " + ag.role + ", " + ag.ms.mySubtaskQueue.size() );
+		for( int i = 0; i < 10; i++ ) {
+			Agent ag = agList.get( i );
+			pw.print( ", " + ag.role + ", " + ag.ms.mySubtaskQueue.size() );
 //		writeLeadersCD( pw, ag );
+		}
 		pw.println();
 	}
 

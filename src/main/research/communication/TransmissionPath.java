@@ -20,24 +20,10 @@ public class TransmissionPath implements SetParam {
 
 	private static List< Pair<Message, Integer> > messageQueue = new ArrayList<>(  );
 
-	// remove
-	public static int sum = 0;
-	public static int times = 0;
 	public static void sendMessage( Message m ) {
 		assert m.getFrom() != m.getTo() : "he asks himself";
 		assert ! ( m.getTo().role == LEADER && m instanceof ResultOfTeamFormation ) : "Wrong result message";
 		assert ! ( m.getTo().role == MEMBER && m instanceof ReplyToSolicitation )   : "Wrong reply message.";
-
-		// remove
-		// 最初の500ticksにおける通信遅延の平均
-		if( Manager.getCurrentTime() < 500 && m.getClass().getSimpleName().equals( "Solicitation" )  ) {
-			sum += Grid.getDelay( m.getFrom(), m.getTo() );
-			times++;
-		}
-		if( Manager.getCurrentTime() > MAX_TURN_NUM - 500 && m.getClass().getSimpleName().equals( "Solicitation" ) ) {
-			sum += Grid.getDelay( m.getFrom(), m.getTo() );
-			times++;
-		}
 
 		int untilArrival = Grid.getDelay( m.getFrom(), m.getTo() );
 		messageQueue.add( new Pair<>(m, untilArrival) );

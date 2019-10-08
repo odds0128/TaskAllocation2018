@@ -238,7 +238,13 @@ public class Agent implements SetParam, Cloneable {
 	@Override
 	public String toString() {
 		StringBuilder str = new StringBuilder( );
-		str.append( role + " No." + String.format( "%3d, ", id ) ).append( "subtasks: " + ms.mySubtaskQueue.size() + ", ");
+		str.append( role + " No." + String.format( "%3d, ", id ) );
+		if( role == LEADER ) {
+
+		}else if( role == MEMBER ){
+			str.append( "resources: " + Arrays.toString( resources ) + ", ");
+			str.append( "subtasks: " + ms.mySubtaskQueue.size() + ", ");
+		}
 		return str.toString();
 	}
 

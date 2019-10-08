@@ -57,7 +57,6 @@ public class ProposedStrategy_l extends LeaderStrategyWithRoleChange implements 
 	}
 
 	// todo: 混雑度を元にしたメンバー選定のロジックの実装
-	//
 	@Override
 	protected Map< Agent, Subtask > selectMembers( List< Subtask > subtasks ) {
 		Map< Agent, Subtask > memberCandidates = new HashMap<>();
@@ -101,6 +100,7 @@ public class ProposedStrategy_l extends LeaderStrategyWithRoleChange implements 
 
 		for ( AgentDePair pair: reliableMembersRanking ) {
 			Agent tempAgent = pair.getTarget();
+			if( !tempAgent.canProcessTheSubtask( st ) ) break;
 			if ( exceptions.contains( tempAgent ) ) continue;
 			double tempEvaluation = calculateMemberEvaluation( tempAgent, st );
 			if ( tempEvaluation > maxEvaluation ) {
@@ -124,15 +124,15 @@ public class ProposedStrategy_l extends LeaderStrategyWithRoleChange implements 
 			.mapToDouble( value -> value )
 			.toArray();
 
-		double cd_standard_deviation = calculateStandardDeviation( st.resType, cds );
-		double rtt_standard_deviation = calculateStandardDeviation( st.resType, rtts );
+		double cd_standard_deviation = calculateStandardDeviation( cds );
+		double rtt_standard_deviation = calculateStandardDeviation( rtts );
 
 		return α * AgentDePair.searchDEofAgent( target, reliableMembersRanking )
 			+ β * ( CDTuple.calculateAverageCD( st.resType, cdTupleList ) - CDTuple.getCD( st.resType, target, cdTupleList ) ) / cd_standard_deviation
 			+ γ * ( calculateAverageRoundTripTime() - roundTripTimeMap.get( target ) ) / rtt_standard_deviation ;
 	}
 
-	public static Double calculateStandardDeviation( int resourceType, double[] values ){
+	public static Double calculateStandardDeviation( double[] values ){
 		SynchronizedSummaryStatistics stats = new SynchronizedSummaryStatistics();
 		for( double value: values ) stats.addValue( value );
 		return Precision.round( stats.getStandardDeviation(), 2);

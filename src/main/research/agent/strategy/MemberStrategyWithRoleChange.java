@@ -147,9 +147,6 @@ public abstract class MemberStrategyWithRoleChange implements Strategy, SetParam
         }
     }
 
-
-
-
     protected static Solicitation selectSolicitationRandomly( List< Solicitation > solicitations ) {
         int index = MyRandom.getRandomInt(0, solicitations.size() - 1);
         return solicitations.remove(index);
