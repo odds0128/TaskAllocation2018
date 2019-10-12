@@ -2,9 +2,9 @@ package main.research.graph;
 
 import main.research.SetParam;
 import main.research.agent.Agent;
+import main.research.agent.AgentManager;
 import main.research.grid.Grid;
 
-import static main.research.SetParam.Role.*;
 import static main.research.SetParam.Principle.*;
 
 import java.util.ArrayList;
@@ -16,6 +16,7 @@ import java.util.List;
  * 辺の情報を格納するクラス
  */
 public class Edge implements SetParam {
+    private static final int agent_num_ = AgentManager.agent_num_;
     public List<Integer> from_id;      // エッジの根元
     public List<Integer> to_id;        // エッジの先端
     public List<Integer> delays;
@@ -40,7 +41,7 @@ public class Edge implements SetParam {
             // agがメンバの場合
             if (ag.e_member > ag.e_leader) {
                 // iは相手のid
-                for (int id = 0; id < AGENT_NUM; id++) {
+                for ( int id = 0; id < agent_num_; id++) {
                     temp = ag.workWithAsM[id] ;
                     if ( temp >= THRESHOLD_FOR_COALITION) {
                         from_id.add(ag.id);
@@ -71,7 +72,7 @@ public class Edge implements SetParam {
             // agがリーダーの場合
             if (ag.e_member < ag.e_leader) {
                 // idは相手のid
-                for (int id = 0; id < AGENT_NUM; id++) {
+                for ( int id = 0; id < agent_num_; id++) {
                     temp = ag.workWithAsL[id] ;
                     if ( temp >= THRESHOLD_FOR_COALITION) {
                         from_id.add(ag.id);

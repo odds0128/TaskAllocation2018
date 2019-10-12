@@ -3,7 +3,7 @@ package main.research.agent;
 import main.research.util.Initiation;
 import org.junit.jupiter.api.*;
 
-import static main.research.SetParam.AGENT_NUM;
+import static main.research.SetParam.agent_num_;
 import static org.hamcrest.CoreMatchers.*;
 
 import java.lang.reflect.InvocationTargetException;
@@ -33,17 +33,17 @@ public class AgentManagerTest {
         @Test
         void generateAgentsでAgentインスタンスをAGENT_NUM体生成できる() throws InvocationTargetException, IllegalAccessException {
             List<Agent> actual = (List<Agent>) ga.invoke(obj);
-            int expected = AGENT_NUM;
+            int expected = agent_num_;
             assertThat( actual.size(), is(expected) );
         }
 
         @Test
         void generateAgentsで生成したAgentがすべて異なるidと座標を持つ() throws InvocationTargetException, IllegalAccessException {
             List<Agent> agents = (List<Agent>) ga.invoke(obj);
-            for (int i = 0; i < AGENT_NUM - 1; i++) {
+            for ( int i = 0; i < agent_num_ - 1; i++) {
                 Agent from = agents.get(0);
 
-                for (int j = i + 1; j < AGENT_NUM; j++) {
+                for ( int j = i + 1; j < agent_num_; j++) {
                     Agent target = agents.get(j);
                     assertThat( from, is( not( target ) ) );
                 }

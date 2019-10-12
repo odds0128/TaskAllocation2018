@@ -1,6 +1,7 @@
 package main.research.grid;
 
 import main.research.agent.Agent;
+import main.research.agent.AgentManager;
 import main.research.others.random.MyRandom;
 
 import java.awt.*;
@@ -10,8 +11,9 @@ import java.util.List;
 import static main.research.SetParam.*;
 
 public class Grid {
+    private static final int agent_num_ = AgentManager.agent_num_;
     private static Agent[][] grid = new Agent[MAX_X][MAX_Y];
-    private static int[][] delays = new int[AGENT_NUM][AGENT_NUM];
+    private static int[][] delays = new int[ agent_num_ ][ agent_num_ ];
 
     public static void setAgentOnEnvironment( Agent ag ) {
         ag.setPosition( newVacantSpot() );
@@ -37,16 +39,16 @@ public class Grid {
 
     private static List<Agent> agentList = new ArrayList<>();
     private static void setDelay( Agent from) {
-        if( from.id >= AGENT_NUM ) System.out.println("clear Agent._id from");
+        if( from.id >= agent_num_ ) System.out.println("clear Agent._id from");
         int delay;
         for ( Agent to: agentList ) {
-            if( to.id >= AGENT_NUM ) System.out.println("clear Agent._id to");
+            if( to.id >= agent_num_ ) System.out.println("clear Agent._id to");
             delay = calculateDelay( from.getP(), to.getP() );
             delays[from.id][to.id] = delay;
             delays[to.id][from.id] = delay;
         }
         agentList.add(from);
-        if( agentList.size() == AGENT_NUM ) {
+        if( agentList.size() == agent_num_ ) {
             agentList.clear();
         }
     }
@@ -100,6 +102,6 @@ public class Grid {
      */
     public static void clear() {
         grid = new Agent[MAX_X][MAX_Y];
-        delays = new int[AGENT_NUM][AGENT_NUM];
+        delays = new int[ agent_num_ ][ agent_num_ ];
     }
 }

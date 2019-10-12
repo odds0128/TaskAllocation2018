@@ -9,7 +9,7 @@ import java.util.*;
 
 import static org.hamcrest.CoreMatchers.*;
 
-import static main.research.SetParam.AGENT_NUM;
+import static main.research.SetParam.agent_num_;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 class GridTest {
@@ -30,7 +30,7 @@ class GridTest {
         void AGENT_NUM体のエージェントがみんな別の場所に配置される(){
             Agent[][] grid = Initiation.getGrid();
             int actual = 0;
-            int expected = AGENT_NUM;
+            int expected = agent_num_;
 
             for( Agent[] row : grid ) {
                 for( Agent item : row ) {

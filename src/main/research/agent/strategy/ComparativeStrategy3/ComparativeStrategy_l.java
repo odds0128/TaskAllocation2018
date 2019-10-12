@@ -7,7 +7,6 @@ import main.research.agent.strategy.CDTuple;
 import main.research.agent.strategy.LeaderStrategyWithRoleChange;
 import main.research.communication.message.*;
 import main.research.others.Pair;
-import main.research.others.random.MyRandom;
 import main.research.task.Subtask;
 import main.research.task.Task;
 import main.research.task.TaskManager;
@@ -47,7 +46,7 @@ public class ComparativeStrategy_l extends LeaderStrategyWithRoleChange implemen
 
 		for ( int i = 0; i < REBUNDUNT_SOLICITATION_TIMES; i++ ) {
 			for ( Subtask st: subtasks ) {
-				if ( MyRandom.epsilonGreedy( Agent.ε ) ) candidate = selectMemberForASubtaskRandomly( st );
+				if ( Agent.epsilonGreedy( ) ) candidate = selectMemberForASubtaskRandomly( st );
 				else candidate = this.selectMemberArbitrary( st );
 
 				if( candidate == null ) {

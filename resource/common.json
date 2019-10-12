@@ -1,0 +1,28 @@
+{
+  "environment" : {
+    "execution_times" : 2,
+    "max_turn" : 1000,
+    "writing_times" : 10
+  },
+  "result_type" : {
+    "check_data" : true,
+    "check_relationships" : false,
+    "check_interim_relationships" : false,
+    "check_initiation" : false,
+    "check_agents" : false
+  },
+  "agent" : {
+    "agent_num" : 500,
+    "parameter" : {
+      "ε": 0.05,
+      "α": 0.05,
+      "γ": 0.00005,
+      "initial_de": 0.0,
+      "initial_el": 0.5,
+      "initial_em": 0.5
+    }
+  },
+  "task" : {
+
+  }
+}

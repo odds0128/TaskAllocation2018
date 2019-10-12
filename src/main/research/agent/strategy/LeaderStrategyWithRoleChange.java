@@ -1,5 +1,6 @@
 package main.research.agent.strategy;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import main.research.SetParam;
 import main.research.agent.Agent;
 import main.research.agent.AgentDePair;
@@ -9,10 +10,8 @@ import main.research.communication.message.ReplyToSolicitation;
 import main.research.communication.message.ResultOfTeamFormation;
 import main.research.communication.message.Solicitation;
 import main.research.others.Pair;
-import main.research.others.random.MyRandom;
 import main.research.task.Subtask;
 import main.research.task.Task;
-import main.research.task.TaskManager;
 import main.research.task.TaskManager;
 
 import static main.research.Manager.getCurrentTime;
@@ -26,6 +25,9 @@ import static main.research.task.TaskManager.disposeTask;
 import java.util.*;
 
 public abstract class LeaderStrategyWithRoleChange implements Strategy, SetParam {
+	public static double γ_;
+	public static double initial_de_, initial_el_, initial_em_;
+
 	protected Set< Agent > exceptions = new HashSet<>();
 	protected int repliesToCome = 0;            // 送ったsolicitationの数を覚えておく
 	protected Task myTask;
@@ -34,6 +36,13 @@ public abstract class LeaderStrategyWithRoleChange implements Strategy, SetParam
 
 	protected List< ReplyToSolicitation > replyList = new ArrayList<>();
 	List< Done > doneList = new ArrayList<>(); // HACK: 可視性狭めたい
+
+	public static void setConstants( JsonNode parameterNode ) {
+		γ_ = parameterNode.get( "γ" ).asDouble();
+		initial_de_ = parameterNode.get( "initial_de" ).asDouble();
+		initial_el_ = parameterNode.get( "initial_el" ).asDouble();
+		initial_em_ = parameterNode.get( "initial_em" ).asDouble();
+	}
 
 	// question: Leader has a LeaderStrategy のはずなので本来引数に「自分」を渡さなくてもいいはずでは？
 	// TODO: Leaderクラスのインスタンスメソッドにする
@@ -104,7 +113,7 @@ public abstract class LeaderStrategyWithRoleChange implements Strategy, SetParam
 
 		for ( int i = 0; i < REBUNDUNT_SOLICITATION_TIMES; i++ ) {
 			for ( Subtask st: subtasks ) {
-				if ( MyRandom.epsilonGreedy( Agent.ε ) ) candidate = selectMemberForASubtaskRandomly( st );
+				if ( Agent.epsilonGreedy( ) ) candidate = selectMemberForASubtaskRandomly( st );
 				else candidate = selectAMemberForASubtask( st );
 
 				if ( candidate == null ) return new HashMap< >() ;
@@ -224,7 +233,7 @@ public abstract class LeaderStrategyWithRoleChange implements Strategy, SetParam
 		List< Agent > tempList = AgentManager.generateRandomAgentList( agentList );
 		for ( Agent temp: tempList ) {
 			if( temp.equals( self ) ) continue;
-			reliableMembersRanking.add( new AgentDePair( temp, INITIAL_VALUE_OF_DE ) );
+			reliableMembersRanking.add( new AgentDePair( temp, initial_de_ ) );
 		}
 	}
 

@@ -15,7 +15,6 @@ import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import main.research.agent.Agent;
 import main.research.communication.TransmissionPath;
 import main.research.graph.Edge;
-import main.research.task.TaskManager;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
@@ -24,7 +23,6 @@ import java.util.*;
 import static main.research.SetParam.Principle.RATIONAL;
 import static main.research.SetParam.Principle.RECIPROCAL;
 import static main.research.SetParam.Role.LEADER;
-import static main.research.SetParam.Role.MEMBER;
 
 /**
  * OutPutクラス
@@ -32,54 +30,36 @@ import static main.research.SetParam.Role.MEMBER;
  * 結果の画面出力とファイル出力を管理
  */
 public class OutPut implements SetParam {
+	private static int executionTimes_ = Manager.executionTimes_;
+	private static int writing_times_ = Manager.writing_times_;
+	private static int max_turn_ = Manager.max_turn_;
+	private static int agent_num_ = AgentManager.agent_num_;
+
 	private static OutPut _singleton = new OutPut();
     static Workbook book = null;
     static FileOutputStream fout = null;
 
-	private OutPut() {
-	}
-
-	static public OutPut getInstance() {
-		return _singleton;
-	}
-
 	static int index = 0;
 
-	static int[] finishedTasksArray = new int[ WRITING_TIMES ];
-	static int[] disposedTasksArray = new int[ WRITING_TIMES ];
-	static int[] overflownTasksArray = new int[ WRITING_TIMES ];
-	static int[] messagesArray = new int[ WRITING_TIMES ];
-	static double[] communicationDelayArray = new double[ WRITING_TIMES ];
-	static int[] leaderNumArray = new int[ WRITING_TIMES ];
-	static int[] memberNumArray = new int[ WRITING_TIMES ];
-	static int[] leaderNumInDepopulatedAreaArray = new int[ WRITING_TIMES ];
-	static int[] memberNumInDepopulatedAreaArray = new int[ WRITING_TIMES ];
-	static int[] leaderNumInPopulatedAreaArray = new int[ WRITING_TIMES ];
-	static int[] memberNumInPopulatedAreaArray = new int[ WRITING_TIMES ];
-	static int[] neetMembersArray = new int[ WRITING_TIMES ];
-	static int[] reciprocalistsArray = new int[ WRITING_TIMES ];
-	static int[] rationalistsArray = new int[ WRITING_TIMES ];
-	static int[] reciprocalMembersArray = new int[ WRITING_TIMES ];
-	static int[] finishedTasksInDepopulatedAreaArray = new int[ WRITING_TIMES ];
-	static int[] finishedTasksInPopulatedAreaArray = new int[ WRITING_TIMES ];
-	static int[] tempTaskExecutionTimeArray = new int[ WRITING_TIMES ];
-	static double[] taskExecutionTimeArray = new double[ WRITING_TIMES ];
+	static int[] finishedTasksArray = new int[ writing_times_ ];
+	static int[] disposedTasksArray = new int[ writing_times_ ];
+	static int[] overflownTasksArray = new int[ writing_times_ ];
+	static int[] messagesArray = new int[ writing_times_ ];
+	static double[] communicationDelayArray = new double[ writing_times_ ];
+	static int[] leaderNumArray = new int[ writing_times_ ];
+	static int[] neetMembersArray = new int[ writing_times_ ];
+	static int[] reciprocalistsArray = new int[ writing_times_ ];
+	static int[] rationalistsArray = new int[ writing_times_ ];
+	static int[] reciprocalMembersArray = new int[ writing_times_ ];
+	static int[] finishedTasksInDepopulatedAreaArray = new int[ writing_times_ ];
+	static int[] finishedTasksInPopulatedAreaArray = new int[ writing_times_ ];
+	static int[] tempTaskExecutionTimeArray = new int[ writing_times_ ];
+	static double[] taskExecutionTimeArray = new double[ writing_times_ ];
 	static int taskExecutionTimes = 0;
 
 	static void aggregateAgentData( List< Agent > agents ) {
-		neetMembersArray[ index ] += Agent.countNEETmembers( agents, MAX_TURN_NUM / WRITING_TIMES );
+		neetMembersArray[ index ] += Agent.countNEETmembers( agents, max_turn_ / writing_times_ );
 		leaderNumArray[ index ] += countLeader( agents );
-/*
-        memberNumArray[index] += Agent._member_num;
-
-        int a = Agent.countLeadersInDepopulatedArea(agents);
-        int b = Agent.countLeadersInPopulatedArea(agents);
-
-        leaderNumInDepopulatedAreaArray[index] += a;
-        memberNumInDepopulatedAreaArray[index] += (Agent._lonelyAgents.size() - a);
-        leaderNumInPopulatedAreaArray[index]   += b;
-        memberNumInPopulatedAreaArray[index]   += (Agent._lonelyAgents.size() - b);
-// */
 	}
 
 	private static int countLeader( List< Agent > agentList ) {
@@ -88,21 +68,7 @@ public class OutPut implements SetParam {
 			.count();
 	}
 
-	private static int countMember( List< Agent > agentList ) {
-		return ( int ) agentList.stream()
-			.filter( agent -> agent.role == MEMBER )
-			.count();
-	}
-
-
-	private static int countReciprocalMember( List< Agent > agentList ) {
-		return ( int ) agentList.stream()
-			.filter( agent -> agent.principle == RECIPROCAL )
-			.count();
-	}
-
-
-	static int[] tempMessagesArray = new int[ WRITING_TIMES ];
+	static int[] tempMessagesArray = new int[ writing_times_ ];
 
 	static void aggregateData( int ft, int dt, int ot, int rm, List< Agent > agentList ) {
 		finishedTasksArray[ index ] += ft;
@@ -113,122 +79,24 @@ public class OutPut implements SetParam {
 		disposedTasksArray[ index ] += dt;
 		overflownTasksArray[ index ] += ot;
 		reciprocalMembersArray[ index ] += rm;
-/*        rationalistsArray[index] += Agent._rational_num;
-        reciprocalMembersArray[index] += rm;
-        finishedTasksInDepopulatedAreaArray[index] += ftida ;
-        finishedTasksInPopulatedAreaArray[index]   += ftipa ;
-// */
-		if ( index == WRITING_TIMES - 1 ) {
-			tempMessagesArray = new int[ WRITING_TIMES ];
+		if ( index == writing_times_ - 1 ) {
+			tempMessagesArray = new int[ writing_times_ ];
 		}
+		indexIncrement();
 	}
 
-	static int[] leadersArray = new int[ EXECUTION_TIMES ];
-	static int[] agentsLessThanAveArray = new int[ EXECUTION_TIMES ];
-	static int[] leadersLessThanAveArray = new int[ EXECUTION_TIMES ];
-	static int[] agentsLessThanQuaArray = new int[ EXECUTION_TIMES ];
-	static int[] leadersLessThanQuaArray = new int[ EXECUTION_TIMES ];
-	static double[] agentsExcAveArray = new double[ EXECUTION_TIMES ];
-	static double[] leadersExcAveArray = new double[ EXECUTION_TIMES ];
-	static double[] membersExcAveArray = new double[ EXECUTION_TIMES ];
-	static double[] mDependableAgentsFromAllLeaders = new double[ EXECUTION_TIMES ];    // 全リーダーの最終的な信頼エージェント数の平均
-	static double[] mDependableAgentsFromLeadersTrustsSomeone = new double[ EXECUTION_TIMES ];    // 全リーダーの最終的な信頼エージェント数の平均
-	static double[] mDependableMembersFromExcellentLeader = new double[ EXECUTION_TIMES ];
-
-	static void aggregateDataOnce( List< Agent > agents, int times ) {
-		times--;
-		int leadersTrustSomeone = 0;
-		int excellentLeaders = 0;
-		int resCount;
-		double excellence;
-		for ( Agent ag: agents ) {
-			resCount = ( int ) Arrays.stream( ag.resources )
-				.filter( res -> res > 0 )
-				.count();
-			excellence = ( double ) Arrays.stream( ag.resources ).sum() / resCount;
-
-			agentsExcAveArray[ times ] += excellence;
-			if ( ag.e_leader > ag.e_member ) {
-				leadersArray[ times ]++;
-				if ( ag.didTasksAsLeader > 100 ) {
-					excellentLeaders++;
-				}
-
-				leadersExcAveArray[ times ] += excellence;
-			} else {
-				membersExcAveArray[ times ] += excellence;
-			}
-		}
-		mDependableAgentsFromAllLeaders[ times ] /= ( double ) countLeader( agents );
-
-		if ( leadersTrustSomeone == 0 ) {
-			mDependableAgentsFromLeadersTrustsSomeone[ times ] = 0;
-		} else {
-			mDependableAgentsFromLeadersTrustsSomeone[ times ] /= ( double ) leadersTrustSomeone;
-		}
-
-		if ( excellentLeaders == 0 ) {
-			mDependableMembersFromExcellentLeader[ times ] = 0;
-		} else {
-			mDependableMembersFromExcellentLeader[ times ] /= ( double ) excellentLeaders;
-		}
-		agentsExcAveArray[ times ] /= ( double ) AGENT_NUM;
-		leadersExcAveArray[ times ] /= ( double ) leadersArray[ times ];
-		membersExcAveArray[ times ] /= ( double ) ( AGENT_NUM - leadersArray[ times ] );
-
-
-		// agentをexcellenceごとにソート
-		List< Agent > temp = new ArrayList<>();
-		for ( Agent a: agents ) {
-			temp.add( a.clone() );
-		}
-		System.out.println();
-		Collections.sort( temp, new Agent.AgentExcellenceComparator() );
-
-		// 平均及び四分位点以下のexcellenceのエージェントを集計する
-		int temp2 = 0;
-		double quartile = Integer.MAX_VALUE, ave = Integer.MAX_VALUE;
-		for ( Agent ag: temp ) {
-			resCount = ( int ) Arrays.stream( ag.resources )
-				.filter( res -> res > 0 )
-				.count();
-			excellence = ( double ) Arrays.stream( ag.resources ).sum() / resCount;
-
-			temp2++;
-			// 下から数えて4分の1に達したらその時のexcellenceが四分位点
-			if ( temp2 == AGENT_NUM / 4 ) quartile = excellence;
-			if ( temp2 == AGENT_NUM / 2 ) ave = excellence;
-			if ( excellence <= quartile ) {
-				agentsLessThanQuaArray[ times ]++;
-				if ( ag.e_leader > ag.e_member ) {
-					leadersLessThanQuaArray[ times ]++;
-				}
-			}
-			if ( excellence <= ave ) {
-				agentsLessThanAveArray[ times ]++;
-				if ( ag.e_leader > ag.e_member ) {
-					leadersLessThanAveArray[ times ]++;
-				}
-			} else {
-				break;
-			}
-		}
-		temp.clear();
-	}
-
-	static void indexIncrement() {
+	private static void indexIncrement() {
 		if ( taskExecutionTimes != 0 ) {
 			taskExecutionTimeArray[ index ] += ( double ) tempTaskExecutionTimeArray[ index ] / taskExecutionTimes;
-//            System.out.println(taskExecutionTimeArray[index]);
 		}
 		tempTaskExecutionTimeArray[ index ] = 0;
 		taskExecutionTimes = 0;
-		index = ( index + 1 ) % WRITING_TIMES;
+		index = ( index + 1 ) % writing_times_;
 	}
 
 	static void checkTask( List< Task > taskQueue ) {
 		int num = taskQueue.size();
-		System.out.println( "Queuesize: " + num );
+		System.out.println( "QueueSize: " + num );
 		for ( int i = 0; i < num; i++ ) {
 			Task temp = taskQueue.remove(0);
 			System.out.println( temp );
@@ -250,9 +118,9 @@ public class OutPut implements SetParam {
 
 	static void checkDelay( int[][] delays ) {
 		int[] countDelay = new int[ MAX_DELAY ];
-		for ( int i = 0; i < AGENT_NUM; i++ ) {
+		for ( int i = 0; i < agent_num_; i++ ) {
 			System.out.print( "ID: " + i + "..." );
-			for ( int j = 0; j < AGENT_NUM; j++ ) {
+			for ( int j = 0; j < agent_num_; j++ ) {
 				System.out.print( delays[ i ][ j ] + ", " );
 				if ( i != j ) {
 					System.out.println( i + ", " + j + ", " + delays[ i ][ j ] );
@@ -262,18 +130,12 @@ public class OutPut implements SetParam {
 			System.out.println();
 		}
 		for ( int i = 0; i < MAX_DELAY; i++ ) {
-			System.out.println( ( i + 1 ) + ", " + countDelay[ i ] / AGENT_NUM );
+			System.out.println( ( i + 1 ) + ", " + countDelay[ i ] / agent_num_ );
 		}
 	}
 
-	static void checkAgent( List< Agent > agents ) {
-		System.out.println( "Total Agents is " + agents.size() );
-		System.out.println( "Leaders is " + countLeader( agents ) + ", Members is " + countLeader( agents ) );
-
-		for ( Agent agent: agents ) System.out.println( agent );
-	}
-
 	static void writeResults( String st ) {
+		System.out.println("called");
 		String outputFilePath = _singleton.setPath( "results", st, "csv" );
 		System.out.println( "writing now" );
 		FileWriter fw;
@@ -296,27 +158,25 @@ public class OutPut implements SetParam {
 				// + "Rational"                          + ", " + "ReciprocalMembers" + ","
 				// + "FinishedTasks in depopulated area" + ", " + "FinishedTasks in populated area"   + ", "
 			);
-			for ( int i = 0; i < WRITING_TIMES; i++ ) {
-				pw.println( ( i + 1 ) * ( MAX_TURN_NUM / WRITING_TIMES ) + ", "
-					+ finishedTasksArray[ i ] / EXECUTION_TIMES + ", "
-					+ disposedTasksArray[ i ] / EXECUTION_TIMES + ", "
-					+ overflownTasksArray[ i ] / EXECUTION_TIMES + ", "
+			for ( int i = 0; i < writing_times_; i++ ) {
+				pw.println( ( i + 1 ) * ( max_turn_ / writing_times_ ) + ", "
+					+ finishedTasksArray[ i ] / executionTimes_ + ", "
+					+ disposedTasksArray[ i ] / executionTimes_ + ", "
+					+ overflownTasksArray[ i ] / executionTimes_ + ", "
 					+ ( double ) finishedTasksArray[ i ] / ( finishedTasksArray[ i ] + disposedTasksArray[ i ] ) + ", "
 					+ ( double ) finishedTasksArray[ i ] / ( finishedTasksArray[ i ] + disposedTasksArray[ i ] + overflownTasksArray[ i ] ) + ", "
-					+ ( double ) communicationDelayArray[ i ] / EXECUTION_TIMES + ", "
-					+ ( double ) messagesArray[ i ] / EXECUTION_TIMES + ", "
-					+ ( double ) taskExecutionTimeArray[ i ] / EXECUTION_TIMES + ", "
-					+ ( double ) leaderNumArray[ i ] / EXECUTION_TIMES + ", "
-					+ ( double ) neetMembersArray[ i ] / EXECUTION_TIMES + ", "
-					+ ( double ) ( reciprocalistsArray[ i ] - reciprocalMembersArray[ i ] ) / EXECUTION_TIMES + ", "
-					+ ( double ) reciprocalMembersArray[ i ] / EXECUTION_TIMES + ", "
+					+ ( double ) communicationDelayArray[ i ] / executionTimes_ + ", "
+					+ ( double ) messagesArray[ i ] / executionTimes_ + ", "
+					+ ( double ) taskExecutionTimeArray[ i ] / executionTimes_ + ", "
+					+ ( double ) leaderNumArray[ i ] / executionTimes_ + ", "
+					+ ( double ) neetMembersArray[ i ] / executionTimes_ + ", "
+					+ ( double ) ( reciprocalistsArray[ i ] - reciprocalMembersArray[ i ] ) / executionTimes_ + ", "
+					+ ( double ) reciprocalMembersArray[ i ] / executionTimes_ + ", "
 				);
 			}
 			pw.close();
-		} catch ( FileNotFoundException e ) {
+		} catch ( IOException e ) {
 			e.printStackTrace();
-		} catch ( IOException e2 ) {
-			e2.printStackTrace();
 		}
 	}
 
@@ -355,27 +215,19 @@ public class OutPut implements SetParam {
 			bw = new BufferedWriter( fw );
 			pw = new PrintWriter( bw );
 
-/*            pw.println("delay" + ", " + " count ");
-            for (int i = 1; i < MAX_DELAY + 1; i++) {
-                pw.println(i + ", " + dCounts[i] / 2);
-            }
-            pw.println();
-// */
 			pw.print( "id" );
-			for ( int i = 0; i < AGENT_NUM; i++ ) pw.print( ", " + i );
+			for ( int i = 0; i < agent_num_; i++ ) pw.print( ", " + i );
 			pw.println();
-			for ( int i = 0; i < AGENT_NUM; i++ ) {
+			for ( int i = 0; i < agent_num_; i++ ) {
 				pw.print( i + ", " );
-				for ( int j = 0; j < AGENT_NUM; j++ ) {
+				for ( int j = 0; j < agent_num_; j++ ) {
 					pw.print( delays[ i ][ j ] + ", " );
 				}
 				pw.println();
 			}
 			pw.close();
-		} catch ( FileNotFoundException e ) {
+		} catch ( IOException e ) {
 			e.printStackTrace();
-		} catch ( IOException e2 ) {
-			e2.printStackTrace();
 		}
 	}
 
@@ -478,11 +330,11 @@ public class OutPut implements SetParam {
 
 			// 列番号入れる部分
 			pw.print( " , targets" );
-			for ( int i = 0; i < AGENT_NUM; i++ ) pw.print( ", " + i + ", " );
+			for ( int i = 0; i < agent_num_; i++ ) pw.print( ", " + i + ", " );
 			pw.println();
 
 			pw.print( ", Role, " );
-			for ( int i = 0; i < AGENT_NUM; i++ ) pw.print( "             DE_l ,             DE_m, " );
+			for ( int i = 0; i < agent_num_; i++ ) pw.print( "             DE_l ,             DE_m, " );
 			pw.println();
 
 			for ( Agent from: agents ) {
@@ -510,7 +362,7 @@ public class OutPut implements SetParam {
 			e2.printStackTrace();
 		}
 	}
-	static void writeGraphInformationX( List< Agent > agents, String st ) throws IOException {
+	static void writeGraphInformationX( List< Agent > agents, String st ) {
 		String outputFilePath = _singleton.setPath( "relationships", st, "xlsx" );
 		Edge edge = new Edge();
 		edge.makeEdge( agents );
@@ -808,11 +660,13 @@ public class OutPut implements SetParam {
 			//ファイル出力
 			fout = new FileOutputStream( outputFilePath );
 			book.write( fout );
+		} catch ( IOException e ) {
+			e.printStackTrace();
 		} finally {
 			if ( fout != null ) {
 				try {
 					fout.close();
-				} catch ( IOException e ) {
+				} catch ( IOException ignored ) {
 				}
 			}
 			if ( book != null ) {
@@ -822,7 +676,7 @@ public class OutPut implements SetParam {
                         不要になった段階でdisposeしてテンポラリファイルを削除する必要がある
                      */
 					( ( SXSSFWorkbook ) book ).dispose();
-				} catch ( Exception e ) {
+				} catch ( Exception ignored ) {
 				}
 			}
 		}

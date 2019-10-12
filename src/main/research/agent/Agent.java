@@ -9,6 +9,7 @@ import static main.research.SetParam.Phase.*;
 import static main.research.SetParam.Role.*;
 import static main.research.SetParam.Principle.*;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import main.research.Manager;
 import main.research.SetParam;
 import main.research.agent.strategy.LeaderStrategyWithRoleChange;
@@ -16,7 +17,6 @@ import main.research.agent.strategy.MemberStrategyWithRoleChange;
 import main.research.others.random.*;
 import main.research.task.Subtask;
 import main.research.task.Task;
-import main.research.task.TaskManager;
 
 import java.awt.*;
 import java.lang.reflect.InvocationTargetException;
@@ -28,8 +28,9 @@ public class Agent implements SetParam, Cloneable {
 	public static int _id = 0;
 	private static int[] resSizeArray = new int[ RESOURCE_TYPES + 1 ];
 
-	public static int _coalition_check_end_time;
-	public static double ε = INITIAL_ε;
+	public static double ε_, α_;
+	public static int _coalition_check_end_time = Manager.max_turn_;
+	public static int agent_num_ = AgentManager.agent_num_;
 	public LeaderStrategyWithRoleChange ls;
 	public MemberStrategyWithRoleChange ms;
 
@@ -39,14 +40,14 @@ public class Agent implements SetParam, Cloneable {
 	public Role role = JONE_DOE;
 	public Phase phase = SELECT_ROLE;
 	public int[] resources = new int[ RESOURCE_TYPES ];
-	public int[] workWithAsL = new int[ AGENT_NUM ];
-	public int[] workWithAsM = new int[ AGENT_NUM ];
+	public int[] workWithAsL = new int[ agent_num_ ];
+	public int[] workWithAsM = new int[ agent_num_ ];
 	public int validatedTicks = 0;
-	public double e_leader = INITIAL_VALUE_OF_DSL;
-	public double e_member = INITIAL_VALUE_OF_DSM;
+	public double e_leader ;
+	public double e_member ;
 	public Principle principle = RATIONAL;
 	public int[] required = new int[ RESOURCE_TYPES ];            // そのリソースを要求するサブタスクが割り当てられた回数
-	public int[][] allocated = new int[ AGENT_NUM ][ RESOURCE_TYPES ]; // そのエージェントからそのリソースを要求するサブタスクが割り当てられた回数
+	public int[][] allocated = new int[ agent_num_ ][ RESOURCE_TYPES ]; // そのエージェントからそのリソースを要求するサブタスクが割り当てられた回数
 
 	// リーダーエージェントのみが持つパラメータ
 	public int didTasksAsLeader = 0;
@@ -56,11 +57,21 @@ public class Agent implements SetParam, Cloneable {
 	public int didTasksAsMember = 0;
 	public int executionTime = 0;
 
+	public static void setConstants( JsonNode parameterNode ) {
+		ε_ = parameterNode.get( "ε" ).asDouble();
+		α_ = parameterNode.get( "α" ).asDouble();
+	}
+
 	public Agent( String package_name, String ls_name, String ms_name ) {
 		this.id = _id++;
 		setResource();
 		setStrategies( package_name, ls_name, ms_name );
 		selectRole();
+	}
+
+	public static boolean epsilonGreedy( ) {
+		double random = MyRandom.getRandomDouble();
+		return random < ε_;
 	}
 
 	private void setResource() {
@@ -96,7 +107,7 @@ public class Agent implements SetParam, Cloneable {
 		}
 
 		if( e_leader == e_member ) { selectRandomRole(); return; }
-		if( MyRandom.epsilonGreedy( Agent.ε ) ) { selectReverseRole(); return; }
+		if( epsilonGreedy( )     ) { selectReverseRole(); return; }
 		if ( e_leader > e_member ) { selectLeaderRole(); return; }
 		if ( e_member > e_leader ) { selectMemberRole(); return; }
 	}
@@ -142,9 +153,9 @@ public class Agent implements SetParam, Cloneable {
 
 	public void inactivate( double success ) {
 		if ( role == LEADER ) {
-			e_leader = e_leader * ( 1.0 - α ) + α * success;
+			e_leader = e_leader * ( 1.0 - α_ ) + α_ * success;
 		} else{
-			e_member = e_member * ( 1.0 - α ) + α * success;
+			e_member = e_member * ( 1.0 - α_ ) + α_ * success;
 		}
 		role = JONE_DOE;
 		phase = SELECT_ROLE;
@@ -166,32 +177,10 @@ public class Agent implements SetParam, Cloneable {
 		return null;
 	}
 
-	public static void renewEpsilonLinear() {
-		ε -= DIFFERENCE;
-		if ( ε < FLOOR ) ε = FLOOR;
-	}
-
-	public static void renewEpsilonExponential() {
-		ε = ( ε - FLOOR ) * RATE;
-		ε += FLOOR;
-	}
-
 	public static void clear() {
 		_id = 0;
 		_coalition_check_end_time = SNAPSHOT_TIME;
-		ε = INITIAL_ε;
 		for ( int i = 0; i < RESOURCE_TYPES; i++ ) resSizeArray[ i ] = 0;
-	}
-
-	// 結果集計用のstaticメソッド
-	public static void resetWorkHistory( List< Agent > agents ) {
-		for ( Agent ag: agents ) {
-			for ( int i = 0; i < AGENT_NUM; i++ ) {
-				ag.workWithAsM[ i ] = 0;
-				ag.workWithAsL[ i ] = 0;
-			}
-		}
-		_coalition_check_end_time = MAX_TURN_NUM;
 	}
 
 	public static int countReciprocalMember( List< Agent > agents ) {

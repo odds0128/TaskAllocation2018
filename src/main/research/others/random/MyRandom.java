@@ -65,8 +65,4 @@ public class MyRandom {
     	return rnd;
     }
 
-	public static boolean epsilonGreedy( double ε ) {
-		double random = getRandomDouble();
-		return random < ε;
-	}
 }

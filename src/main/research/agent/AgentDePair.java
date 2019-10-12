@@ -1,12 +1,12 @@
 package main.research.agent;
 
-import static main.research.SetParam.α;
-import static main.research.SetParam.γ_r;
+import main.research.agent.strategy.LeaderStrategyWithRoleChange;
 
 import java.util.*;
 
 public class AgentDePair {
-	static double γ = γ_r;
+	private static final double γ  = LeaderStrategyWithRoleChange.γ_;
+	private static final double α_ = Agent.α_;
 
 	private Agent target;
 	private double de;
@@ -31,11 +31,11 @@ public class AgentDePair {
 
 	public void renewDEby0or1( boolean isPositive ){
 		double multiplier = isPositive ? 1 : 0;
-		de = de * ( 1.0 - α ) + multiplier * α;
+		de = de * ( 1.0 - α_ ) + multiplier * α_;
 	}
 
 	public void renewDEbyArbitraryReward( double reward ){
-		de = de * ( 1.0 - α ) + reward * α;
+		de = de * ( 1.0 - α_ ) + reward * α_;
 	}
 
 	public static double searchDEofAgent( Agent stray, List<AgentDePair> list ) {

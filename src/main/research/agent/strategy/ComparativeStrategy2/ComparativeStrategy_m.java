@@ -8,9 +8,7 @@ import main.research.communication.TransmissionPath;
 import main.research.communication.message.ReplyToSolicitation;
 import main.research.communication.message.ResultOfTeamFormation;
 import main.research.communication.message.Solicitation;
-import main.research.grid.Grid;
 import main.research.others.Pair;
-import main.research.others.random.MyRandom;
 import main.research.task.Subtask;
 
 import java.util.List;
@@ -20,8 +18,6 @@ import java.util.Map;
 import static main.research.SetParam.ReplyType.ACCEPT;
 import static main.research.SetParam.ReplyType.DECLINE;
 import static main.research.SetParam.ResultType.SUCCESS;
-
-import java.util.*;
 
 public class ComparativeStrategy_m extends MemberStrategyWithRoleChange {
 	Map< Agent, Integer > agentStartTimeMap = new HashMap<>();
@@ -36,7 +32,7 @@ public class ComparativeStrategy_m extends MemberStrategyWithRoleChange {
 
 		int capacity = SUBTASK_QUEUE_SIZE - mySubtaskQueue.size() - expectedResultMessage;
 		while ( solicitations.size() > 0 && capacity-- > 0 ) {
-			Solicitation s = MyRandom.epsilonGreedy( Agent.ε ) ? selectSolicitationRandomly( solicitations ) : solicitations.remove( 0 );
+			Solicitation s = Agent.epsilonGreedy( ) ? selectSolicitationRandomly( solicitations ) : solicitations.remove( 0 );
 			TransmissionPath.sendMessage( new ReplyToSolicitation( member, s.getFrom(), ACCEPT, s.getExpectedSubtask() ) );
 			this.agentStartTimeMap.put( s.getFrom(), Manager.getCurrentTime() );
 			expectedResultMessage++;

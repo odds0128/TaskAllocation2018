@@ -2,6 +2,7 @@ package main.research.agent.strategy;
 
 import main.research.agent.Agent;
 import main.research.agent.AgentDePair;
+import main.research.agent.AgentManager;
 
 import java.util.*;
 import java.util.Map.Entry;
@@ -13,14 +14,17 @@ import static main.research.SetParam.Role.JONE_DOE;
 import static main.research.SetParam.Role.MEMBER;
 
 public interface Strategy {
+    double α_ = Agent.α_;
+    double γ_ = LeaderStrategyWithRoleChange.γ_;
+    int    agent_num_ = AgentManager.agent_num_;
 
     default double renewDEby0or1( double former, boolean isPositive ){
         double multiplier = isPositive ? 1 : 0;
-        return former * ( 1.0 - α ) + multiplier * α;
+        return former * ( 1.0 - α_ ) + multiplier * α_;
     }
 
     default double renewDEbyArbitraryReward( double former, double reward ){
-        return former * ( 1.0 - α ) + reward * α;
+        return former * ( 1.0 - α_ ) + reward * α_;
     }
 
     static void proceedToNextPhase( Agent ag ) {
@@ -61,7 +65,7 @@ public interface Strategy {
     default void mapEvaporate( Map<Agent, Double> relMap ) {
         relMap.forEach(
                 (key, value) -> {
-                    double temp  = value > γ_r ? value - γ_r : 0;
+                    double temp  = value > γ_ ? value - γ_ : 0;
                     relMap.replace(key, temp);
                 }
         );
@@ -74,7 +78,7 @@ public interface Strategy {
     }
 
     default double[] mapToArray( Map<Agent, Double> relMap ) {
-        double[] array = new double[AGENT_NUM - 1];
+        double[] array = new double[ agent_num_ - 1];
         int index = 0;
         for( Entry<Agent, Double> e : relMap.entrySet() ) {
            array[index++] = e.getValue().doubleValue();
@@ -83,7 +87,7 @@ public interface Strategy {
     }
 
     default int zeroDEfromHere( double[] DEs ) {
-        int size = AGENT_NUM - 1;
+        int size = agent_num_ - 1;
         for( int i = 0; i < size; i++ ) {
             if( DEs[i] == 0 ) return i;
         }
@@ -100,7 +104,7 @@ public interface Strategy {
 
         while ( keyIterator.hasNext() && i++ < end_index ){
             value = (double) valueIterator.next();
-            temp  = value > γ_r ? value - γ_r : 0;
+            temp  = value > γ_ ? value - γ_ : 0;
             key   = (Agent) keyIterator.next();
             relMap.replace( key, temp );
         }

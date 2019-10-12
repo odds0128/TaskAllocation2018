@@ -1,5 +1,6 @@
 package main.research.agent;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import main.research.SetParam;
 import main.research.grid.Grid;
 import main.research.others.random.MyRandom;
@@ -14,7 +15,13 @@ import static main.research.others.random.MyRandom.getRandomInt;
 
 
 public class AgentManager implements SetParam {
+	public  static int agent_num_;
 	private static List< Agent > allAgentList;
+
+	public static void setConstants( JsonNode agentNode ) {
+		agent_num_ = agentNode.get( "agent_num" ).asInt();
+		Agent.setConstants( agentNode.get( "parameter" ) );
+	}
 
 	// TODO: Agentインスタンスを生成する → 被らないように座標を設定する
 	public static void initiateAgents( String package_name, String ls_name, String ms_name ) {
@@ -26,7 +33,7 @@ public class AgentManager implements SetParam {
 	private static List< Agent > generateAgents( String package_name, String ls_name, String ms_name ) {
 		List< Agent > agentList = new ArrayList();
 
-		for ( int i = 0; i < AGENT_NUM; i++ ) {
+		for ( int i = 0; i < agent_num_; i++ ) {
 			agentList.add( new Agent( package_name, ls_name, ms_name ) );
 		}
 		return agentList;
@@ -57,7 +64,7 @@ public class AgentManager implements SetParam {
 		int random;
 		Agent candidate;
 
-		assert exceptions.size() < AGENT_NUM : "Too many exceptions";
+		assert exceptions.size() < agent_num_ : "Too many exceptions";
 
 		do {
 			random = getRandomInt( 0, targets.size() - 1 );
@@ -110,7 +117,7 @@ public class AgentManager implements SetParam {
 			if ( ag.role == MEMBER ) members.add( ag );
 			else if ( ag.role == LEADER ) leaders.add( ag );
 		}
-		assert leaders.size() + members.size() == AGENT_NUM : "Some agents sabotage" + ( leaders.size() + members.size() );
+		assert leaders.size() + members.size() == agent_num_ : "Some agents sabotage" + ( leaders.size() + members.size() );
 		actRandom( leaders, LEADER );
 		actRandom( members, MEMBER );
 	}

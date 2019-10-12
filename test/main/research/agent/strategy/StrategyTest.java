@@ -9,7 +9,6 @@ import org.hamcrest.Matcher;
 import org.junit.jupiter.api.*;
 
 import java.lang.reflect.Field;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
@@ -39,7 +38,7 @@ class StrategyTest implements Strategy {
         @BeforeEach
         void setUp() {
             rnd = new Random();
-            int index = rnd.nextInt(AGENT_NUM);
+            int index = rnd.nextInt( agent_num_ );
             sample = agentList.get(index);
         }
 
@@ -63,7 +62,7 @@ class StrategyTest implements Strategy {
         @Test
         void DEが0未満のエージェントがいない() throws IllegalAccessException, NoSuchFieldException {
             // 適当なやつのDEをいじってγ未満にする
-            int index = rnd.nextInt(AGENT_NUM - 1 );
+            int index = rnd.nextInt( agent_num_ - 1 );
             AgentDePair targetPair = sample.ls.reliableMembersRanking.get( index );
 
             Class xClass    = AgentDePair.class;

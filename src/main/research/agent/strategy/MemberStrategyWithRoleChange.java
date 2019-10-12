@@ -20,7 +20,6 @@ import static main.research.SetParam.ReplyType.DECLINE;
 import static main.research.SetParam.ResultType.*;
 
 import java.util.*;
-import java.util.Map.Entry;
 
 public abstract class MemberStrategyWithRoleChange implements Strategy, SetParam {
     protected boolean joinFlag = false;
@@ -59,7 +58,7 @@ public abstract class MemberStrategyWithRoleChange implements Strategy, SetParam
         List< Agent > tempList = AgentManager.generateRandomAgentList( agentList );
         for ( Agent temp: tempList ) {
             if( temp.equals( self ) ) continue;
-            reliableLeadersRanking.add( new AgentDePair( temp, INITIAL_VALUE_OF_DE ) );
+            reliableLeadersRanking.add( new AgentDePair( temp, LeaderStrategyWithRoleChange.initial_de_ ) );
         }
     }
 
@@ -94,7 +93,7 @@ public abstract class MemberStrategyWithRoleChange implements Strategy, SetParam
 
         int capacity = SUBTASK_QUEUE_SIZE - mySubtaskQueue.size() - expectedResultMessage;
         while (  solicitations.size() > 0 && capacity-- > 0 ) {
-            Solicitation s = MyRandom.epsilonGreedy( Agent.ε ) ? selectSolicitationRandomly( solicitations ) : solicitations.remove( 0 );
+            Solicitation s = Agent.epsilonGreedy( ) ? selectSolicitationRandomly( solicitations ) : solicitations.remove( 0 );
             TransmissionPath.sendMessage( new ReplyToSolicitation( member, s.getFrom(), ACCEPT, s.getExpectedSubtask() ) );
             expectedResultMessage++;
             joinFlag = true;

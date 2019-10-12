@@ -1,19 +1,15 @@
 package main.research.agent.strategy.ProposedStrategy;
 
-import main.research.Manager;
 import main.research.SetParam;
 import main.research.agent.Agent;
 import main.research.agent.AgentDePair;
-import main.research.agent.AgentManager;
 import main.research.agent.strategy.CDTuple;
 import main.research.agent.strategy.LeaderStrategyWithRoleChange;
 import main.research.communication.message.Done;
 import main.research.communication.message.ReplyToSolicitation;
 import main.research.communication.message.ResultOfTeamFormation;
 import main.research.communication.message.Solicitation;
-import main.research.grid.Grid;
 import main.research.others.Pair;
-import main.research.others.random.MyRandom;
 import main.research.task.Subtask;
 import main.research.task.Task;
 import main.research.task.TaskManager;
@@ -25,7 +21,6 @@ import java.util.*;
 import static main.research.Manager.getCurrentTime;
 import static main.research.SetParam.ReplyType.DECLINE;
 import static main.research.SetParam.ResultType.FAILURE;
-import static main.research.SetParam.ResultType;
 import static main.research.SetParam.ResultType.SUCCESS;
 import static main.research.communication.TransmissionPath.sendMessage;
 import static main.research.task.TaskManager.disposeTask;
@@ -66,7 +61,7 @@ public class ProposedStrategy_l extends LeaderStrategyWithRoleChange implements 
 
 		for ( int i = 0; i < REBUNDUNT_SOLICITATION_TIMES; i++ ) {
 			for ( Subtask st: subtasks ) {
-				if ( MyRandom.epsilonGreedy( Agent.ε ) ) candidate = selectMemberForASubtaskRandomly( st );
+				if ( Agent.epsilonGreedy( ) ) candidate = selectMemberForASubtaskRandomly( st );
 				else candidate = this.selectMemberArbitrary( st );
 
 				if ( candidate == null ) {
