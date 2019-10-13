@@ -3,6 +3,7 @@ package main.research.task;
 import java.util.List;
 import java.util.ArrayList;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import main.research.others.random.MyRandom;
 import org.apache.commons.math3.distribution.AbstractIntegerDistribution;
 import org.apache.commons.math3.distribution.PoissonDistribution;
@@ -10,22 +11,35 @@ import org.apache.commons.math3.distribution.PoissonDistribution;
 import static main.research.SetParam.*;
 
 public class TaskManager {
+	private static int initial_tasks_num_;
+	private static int task_queue_size_;
+	private static int min_subtasks_num_;
+	private static int max_subtasks_num_;
+
 	private static List< Task > tasks = new ArrayList<>();
 	private static int disposedTasks = 0;
 	private static int overflowTasks = 0;
 	private static int finishedTasks = 0;
 
-	public static void addNewTasksToQueue( int num ) {
-		for ( int i = 0; i < num; i++ ) tasks.add( new Task( MIN_SUBTASK_NUM, MAX_SUBTASK_NUM ) );
+	public static void setConstants( JsonNode parameterNode ) {
+		initial_tasks_num_ = parameterNode.get( "initial_tasks_num" ).asInt();
+		task_queue_size_   = parameterNode.get( "task_queue_size" ).asInt();
+		min_subtasks_num_  = parameterNode.get( "min_subtasks_num" ).asInt();
+		max_subtasks_num_  = parameterNode.get( "max_subtasks_num" ).asInt();
+		Subtask.setConstants( parameterNode.get( "subtask" ) );
+	}
+
+	public static void addInitialTasksToQueue() {
+		for ( int i = 0; i < initial_tasks_num_; i++ ) tasks.add( new Task( min_subtasks_num_, max_subtasks_num_ ) );
 	}
 
 	public static void addNewTasksToQueue() {
-		int room = TASK_QUEUE_SIZE - tasks.size();    // タスクキューの空き
+		int room = task_queue_size_ - tasks.size();    // タスクキューの空き
 		int poisson = poissonDistribution();
 		int overflow = poisson > room ? poisson - room : 0;
-		int additionalTasksNum = poisson > room ? room : poisson;
+		int additionalTasksNum = Math.min( poisson, room );
 
-		addNewTasksToQueue( additionalTasksNum );
+		for ( int i = 0; i < additionalTasksNum; i++ ) tasks.add( new Task( min_subtasks_num_, max_subtasks_num_ ) );
 		overflowTasks += overflow;
 	}
 

@@ -9,10 +9,6 @@ public interface SetParam {
 	// 結果表示のためのパラメータ
 	int  COALITION_CHECK_SPAN = 50;          // 協調関係ができているか確認するための最後の方のターム
 	double THRESHOLD_FOR_COALITION = 10;
-	int SNAPSHOT_TIME = 200000;
-
-	int INITIAL_TASK_NUM = 0;       // 最初のタスク数
-	int TASK_QUEUE_SIZE  = 500;     // タスクキューのサイズ
 
 	// トーラスを考えた時に，中心が自分であるほうが考えやすいので，一片の長さは奇数にする
 	int MAX_X    = 51, MAX_Y = 51;
@@ -20,18 +16,9 @@ public interface SetParam {
 
 	double ADDITIONAL_TASK_NUM  = 7.5;        // タスクを追加するタイミングで, タスクキューに追加するタスクの個数(=λ)
 	int RESOURCE_TYPES = 3;
-	int MAX_AGENT_RESOURCE_SIZE   = 5;
-	int MIN_AGENT_RESOURCE_SIZE   = 0;
-	int MAX_SUBTASK_RESOURCE_SIZE = 10;
-	int MIN_SUBTASK_RESOURCE_SIZE = 5;
 
-	int REBUNDUNT_SOLICITATION_TIMES = 2;              // あるサブタスクについて要請を出すエージェントの数
-	int MAX_RELIABLE_AGENTS = 1;         // メンバの信頼エージェントの上限
+	int REDUNDANT_SOLICITATION_TIMES = 2;              // あるサブタスクについて要請を出すエージェントの数
 	int THRESHOLD_FOR_ROLE_RENEWAL  = 50;
-
-
-	int MIN_SUBTASK_NUM = 3;
-	int MAX_SUBTASK_NUM = 6;
 
 	// リソース推定にまつわる定数
 	int CD_CACHE_TIME = 100;

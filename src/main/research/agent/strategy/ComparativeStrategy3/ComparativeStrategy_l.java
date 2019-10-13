@@ -44,7 +44,7 @@ public class ComparativeStrategy_l extends LeaderStrategyWithRoleChange implemen
 		Agent candidate;
 		CDTuple.forgetOldCdInformation( cdTupleList );
 
-		for ( int i = 0; i < REBUNDUNT_SOLICITATION_TIMES; i++ ) {
+		for ( int i = 0; i < REDUNDANT_SOLICITATION_TIMES; i++ ) {
 			for ( Subtask st: subtasks ) {
 				if ( Agent.epsilonGreedy( ) ) candidate = selectMemberForASubtaskRandomly( st );
 				else candidate = this.selectMemberArbitrary( st );

@@ -1,17 +1,26 @@
 package main.research.task;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import main.research.SetParam;
 import main.research.others.random.MyRandom;
 
 import java.util.Comparator;
 
 public class Subtask implements SetParam {
+    private static int min_request_value_;
+    private static int max_request_value_;
+
     private static int _id = 0;
 
     private int id;
     public int[] reqRes = new int[RESOURCE_TYPES];
     public int resType;
     public int parentId;
+
+    public static void setConstants( JsonNode parameterNode ) {
+        min_request_value_ = parameterNode.get( "min_request_value" ).asInt();
+        max_request_value_ = parameterNode.get( "max_request_value" ).asInt();
+    }
 
     Subtask( int parent_id ) {
         this.id = _id++;
@@ -21,7 +30,7 @@ public class Subtask implements SetParam {
 
     private void setResources() {
         resType = MyRandom.getRandomInt(0, RESOURCE_TYPES - 1);
-        reqRes[resType] = MyRandom.getRandomInt( MIN_SUBTASK_RESOURCE_SIZE, MAX_SUBTASK_RESOURCE_SIZE );
+        reqRes[resType] = MyRandom.getRandomInt( min_request_value_, max_request_value_ );
     }
 
     public int getId() {

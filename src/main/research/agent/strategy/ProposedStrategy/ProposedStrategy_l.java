@@ -59,7 +59,7 @@ public class ProposedStrategy_l extends LeaderStrategyWithRoleChange implements 
 		CDTuple.forgetOldCdInformation( cdTupleList );
 		forgetOldRoundTripTimeInformation();
 
-		for ( int i = 0; i < REBUNDUNT_SOLICITATION_TIMES; i++ ) {
+		for ( int i = 0; i < REDUNDANT_SOLICITATION_TIMES; i++ ) {
 			for ( Subtask st: subtasks ) {
 				if ( Agent.epsilonGreedy( ) ) candidate = selectMemberForASubtaskRandomly( st );
 				else candidate = this.selectMemberArbitrary( st );

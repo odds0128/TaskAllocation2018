@@ -20,7 +20,7 @@ public class AgentManager implements SetParam {
 
 	public static void setConstants( JsonNode agentNode ) {
 		agent_num_ = agentNode.get( "agent_num" ).asInt();
-		Agent.setConstants( agentNode.get( "parameter" ) );
+		Agent.setConstants( agentNode );
 	}
 
 	// TODO: Agentインスタンスを生成する → 被らないように座標を設定する

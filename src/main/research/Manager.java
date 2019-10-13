@@ -58,7 +58,8 @@ public class Manager implements SetParam {
 		}
 		environmentalNode = jsonNode.get( "environment" );
 		resultTypeNode    = jsonNode.get( "result_type" );
-		AgentManager.setConstants( jsonNode.get( "agent" ) );
+		AgentManager.setConstants( jsonNode.get( "agents" ) );
+		TaskManager.setConstants( jsonNode.get( "tasks" ) );
 
 		executionTimes_ = environmentalNode.get( "execution_times" ).asInt();
 		max_turn_ = environmentalNode.get( "max_turn" ).asInt();
@@ -72,8 +73,6 @@ public class Manager implements SetParam {
 		String strategy_name = package_name.split( "\\." )[ 4 ];
 		System.out.println( strategy_name );
 		System.out.println( strategy_name + ", λ=" + ADDITIONAL_TASK_NUM +
-			", XF: " + MAX_RELIABLE_AGENTS +
-			", Role_renewal: " + THRESHOLD_FOR_ROLE_RENEWAL +
 			", From " + LocalDateTime.now()
 		);
 
@@ -115,8 +114,8 @@ public class Manager implements SetParam {
 			clearAll();
 		}
 		// ↑ 全実験の終了のカッコ．以下は後処理
-		if (  ( boolean ) resultTypeNode.get( "check_data" ).asBoolean() )       writeResults( strategy_name );
-		if (  ( boolean ) resultTypeNode.get( "check_relationships" ).asBoolean() ) writeGraphInformationX( AgentManager.getAllAgentList(), strategy_name );
+		if ( resultTypeNode.get( "check_data" ).asBoolean() )       writeResults( strategy_name );
+		if ( resultTypeNode.get( "check_relationships" ).asBoolean() ) writeGraphInformationX( AgentManager.getAllAgentList(), strategy_name );
 		writeRelationsBetweenCDandDE( AgentManager.getAllAgentList() );
 	}
 
@@ -124,7 +123,7 @@ public class Manager implements SetParam {
 	private static void initiate( int times ) {
 		setNewSfmt( times );
 		setNewRnd( times );
-		TaskManager.addNewTasksToQueue( INITIAL_TASK_NUM );
+		TaskManager.addInitialTasksToQueue( );
 		AgentManager.initiateAgents( package_name, ls_name, ms_name );
 	}
 

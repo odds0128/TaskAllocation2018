@@ -25,14 +25,16 @@ import java.util.List;
 
 
 public class Agent implements SetParam, Cloneable {
-	public static int _id = 0;
-	private static int[] resSizeArray = new int[ RESOURCE_TYPES + 1 ];
-
 	public static double ε_, α_;
 	public static int _coalition_check_end_time = Manager.max_turn_;
 	public static int agent_num_ = AgentManager.agent_num_;
 	public LeaderStrategyWithRoleChange ls;
 	public MemberStrategyWithRoleChange ms;
+	public static int min_capacity_value_;
+	public static int max_capacity_value_;
+
+	public static int _id = 0;
+	private static int[] resSizeArray = new int[ RESOURCE_TYPES + 1 ];
 
 	// リーダーもメンバも持つパラメータ
 	public int id;
@@ -57,11 +59,13 @@ public class Agent implements SetParam, Cloneable {
 	public int didTasksAsMember = 0;
 	public int executionTime = 0;
 
-	public static void setConstants( JsonNode parameterNode ) {
-		ε_ = parameterNode.get( "ε" ).asDouble();
-		α_ = parameterNode.get( "α" ).asDouble();
-	}
 
+	public static void setConstants( JsonNode parameterNode ) {
+		ε_ = parameterNode.get( "parameters" ).get( "ε" ).asDouble();
+		α_ = parameterNode.get( "parameters" ).get( "α" ).asDouble();
+		min_capacity_value_ = parameterNode.get( "agent" ).get( "min_capacity_value" ).asInt();
+		max_capacity_value_ = parameterNode.get( "agent" ).get( "max_capacity_value" ).asInt();
+	}
 	public Agent( String package_name, String ls_name, String ms_name ) {
 		this.id = _id++;
 		setResource();
@@ -79,7 +83,7 @@ public class Agent implements SetParam, Cloneable {
 		do {
 			resSum = 0;
 			for ( int i = 0; i < RESOURCE_TYPES; i++ ) {
-				int rand = MyRandom.getRandomInt( MIN_AGENT_RESOURCE_SIZE, MAX_AGENT_RESOURCE_SIZE );
+				int rand = MyRandom.getRandomInt( min_capacity_value_, max_capacity_value_ );
 				resources[ i ] = rand;
 				resSum += rand;
 			}
@@ -179,7 +183,6 @@ public class Agent implements SetParam, Cloneable {
 
 	public static void clear() {
 		_id = 0;
-		_coalition_check_end_time = SNAPSHOT_TIME;
 		for ( int i = 0; i < RESOURCE_TYPES; i++ ) resSizeArray[ i ] = 0;
 	}
 

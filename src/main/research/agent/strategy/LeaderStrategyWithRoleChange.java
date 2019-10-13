@@ -111,7 +111,7 @@ public abstract class LeaderStrategyWithRoleChange implements Strategy, SetParam
 		Map< Agent, Subtask > memberCandidates = new HashMap<>();
 		Agent candidate;
 
-		for ( int i = 0; i < REBUNDUNT_SOLICITATION_TIMES; i++ ) {
+		for ( int i = 0; i < REDUNDANT_SOLICITATION_TIMES; i++ ) {
 			for ( Subtask st: subtasks ) {
 				if ( Agent.epsilonGreedy( ) ) candidate = selectMemberForASubtaskRandomly( st );
 				else candidate = selectAMemberForASubtask( st );

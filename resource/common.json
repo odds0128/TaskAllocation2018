@@ -11,18 +11,36 @@
     "check_initiation" : false,
     "check_agents" : false
   },
-  "agent" : {
+  "agents" : {
     "agent_num" : 500,
-    "parameter" : {
+    "agent" : {
+      "resource_type": 3,
+      "min_capacity_value" : 0,
+      "max_capacity_value" : 5,
+      "subtask_queue_size" : 5
+    },
+    "parameters" : {
       "ε": 0.05,
       "α": 0.05,
       "γ": 0.00005,
       "initial_de": 0.0,
       "initial_el": 0.5,
       "initial_em": 0.5
+    },
+    "strategy" : {
+      "cd_cache_time" : 100,
+      "redundant_solicitation_times" : 2
     }
   },
-  "task" : {
-
+  "tasks" : {
+    "initial_tasks_num" : 0,
+    "task_queue_size" : 500,
+    "min_subtasks_num" : 3,
+    "max_subtasks_num" : 6,
+    "subtask" : {
+      "resource_type" : 3,
+      "min_request_value" : 5,
+      "max_request_value" : 10
+    }
   }
 }
