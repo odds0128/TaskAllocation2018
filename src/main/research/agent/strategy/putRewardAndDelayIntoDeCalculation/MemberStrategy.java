@@ -1,4 +1,4 @@
-package main.research.agent.strategy.ComparativeStrategy2;
+package main.research.agent.strategy.putRewardAndDelayIntoDeCalculation;
 
 import main.research.Manager;
 import main.research.agent.Agent;
@@ -19,7 +19,7 @@ import static main.research.SetParam.ReplyType.ACCEPT;
 import static main.research.SetParam.ReplyType.DECLINE;
 import static main.research.SetParam.ResultType.SUCCESS;
 
-public class ComparativeStrategy_m extends MemberStrategyWithRoleChange {
+public class MemberStrategy extends MemberStrategyWithRoleChange {
 	Map< Agent, Integer > agentStartTimeMap = new HashMap<>();
 
 	@Override

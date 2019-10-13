@@ -1,4 +1,4 @@
-package main.research.agent.strategy.ProposedStrategy;
+package main.research.agent.strategy.reliableAgents;
 
 import main.research.Manager;
 import main.research.agent.Agent;

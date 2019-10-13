@@ -3,8 +3,7 @@ package main.research;
 import main.research.agent.AgentDePair;
 import main.research.agent.AgentManager;
 import main.research.agent.strategy.CDTuple;
-import main.research.agent.strategy.ComparativeStrategy3.ComparativeStrategy_l;
-import main.research.agent.strategy.ProposedStrategy.ProposedStrategy_l;
+import main.research.agent.strategy.reliableAgents.LeaderStrategy;
 import main.research.task.Task;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.apache.poi.hssf.util.HSSFColor;
@@ -194,7 +193,7 @@ public class OutPut implements SetParam {
 	static void writeLeadersCD( PrintWriter pw, Agent target ) {
 		for ( Agent leader: AgentManager.getAllAgentList() ) {
 			if ( leader.role == LEADER ) {
-				ProposedStrategy_l pl = ( ProposedStrategy_l ) leader.ls;
+				LeaderStrategy pl = ( LeaderStrategy ) leader.ls;
 				boolean exists = CDTuple.alreadyExists( target, pl.getCdTupleList() );
 				double temp = exists ? CDTuple.getCD( 1, target, pl.getCdTupleList() ) : -1 ;
 
@@ -239,10 +238,10 @@ public class OutPut implements SetParam {
 
 		for ( Agent ag: agents ) {
 			List< CDTuple > cdTupleList = null;
-			if ( ag.ls.getClass().getSimpleName().equals( "ComparativeStrategy_l" ) ) {
-				cdTupleList = ComparativeStrategy_l.getCdSetList( ( ComparativeStrategy_l ) ag.ls );
+			if ( ag.ls.getClass().getSimpleName().equals( "LeaderStrategy" ) ) {
+				cdTupleList = LeaderStrategy.getCdSetList( ( LeaderStrategy ) ag.ls );
 			} else if ( ag.ls.getClass().getSimpleName().equals( "ProposedStrategy_l" ) ) {
-				cdTupleList = ProposedStrategy_l.getCdSetList( ( ProposedStrategy_l ) ag.ls );
+				cdTupleList = LeaderStrategy.getCdSetList( ( LeaderStrategy ) ag.ls );
 			}
 			int size = cdTupleList.size();
 			if ( size == 0 || size == 1 ) continue;

@@ -1,31 +1,46 @@
-package main.research.agent.strategy.ComparativeStrategy3;
+package main.research.agent.strategy.reliableAgents;
 
-import main.research.*;
+import main.research.SetParam;
 import main.research.agent.Agent;
 import main.research.agent.AgentDePair;
 import main.research.agent.strategy.CDTuple;
 import main.research.agent.strategy.LeaderStrategyWithRoleChange;
-import main.research.communication.message.*;
+import main.research.communication.message.Done;
+import main.research.communication.message.ReplyToSolicitation;
+import main.research.communication.message.ResultOfTeamFormation;
+import main.research.communication.message.Solicitation;
 import main.research.others.Pair;
 import main.research.task.Subtask;
 import main.research.task.Task;
 import main.research.task.TaskManager;
-
-import static main.research.task.TaskManager.disposeTask;
-import static main.research.Manager.getCurrentTime;
-import static main.research.SetParam.ReplyType.*;
-import static main.research.SetParam.ResultType.FAILURE;
-import static main.research.SetParam.ResultType.SUCCESS;
-import static main.research.communication.TransmissionPath.*;
+import org.apache.commons.math3.stat.descriptive.SynchronizedSummaryStatistics;
+import org.apache.commons.math3.util.Precision;
 
 import java.util.*;
 
+import static main.research.Manager.getCurrentTime;
+import static main.research.SetParam.ReplyType.DECLINE;
+import static main.research.SetParam.ResultType.FAILURE;
+import static main.research.SetParam.ResultType.SUCCESS;
+import static main.research.communication.TransmissionPath.sendMessage;
+import static main.research.task.TaskManager.disposeTask;
+
 // TODO: 中身を表したクラス名にする
-public class ComparativeStrategy_l extends LeaderStrategyWithRoleChange implements SetParam {
-	static double CD_THRESHOLD = 3.0;
+public class LeaderStrategy extends LeaderStrategyWithRoleChange implements SetParam {
+	// 評価指標 = αDE + βCD + γDelay
+	static final double α = 1;
+	static final double β = 0.3;
+	static final double γ = 0.3 ;
+	private static final double EVALUATION_THRESHOLD = 0.5;
 
 	private Map< Agent, Integer > timeToStartCommunicatingMap = new HashMap<>();
 	private Map< Agent, Integer > roundTripTimeMap = new HashMap<>();
+	private Map< Agent, Integer > extraWaitingTimeMap = new HashMap<>();
+
+	public List< CDTuple > getCdTupleList() {
+		return cdTupleList;
+	}
+
 	private List< CDTuple > cdTupleList = new ArrayList<>();
 
 	@Override
@@ -37,20 +52,20 @@ public class ComparativeStrategy_l extends LeaderStrategyWithRoleChange implemen
 	}
 
 	// todo: 混雑度を元にしたメンバー選定のロジックの実装
-	//
 	@Override
 	protected Map< Agent, Subtask > selectMembers( List< Subtask > subtasks ) {
 		Map< Agent, Subtask > memberCandidates = new HashMap<>();
 		Agent candidate;
 		CDTuple.forgetOldCdInformation( cdTupleList );
+		forgetOldRoundTripTimeInformation();
 
 		for ( int i = 0; i < REDUNDANT_SOLICITATION_TIMES; i++ ) {
 			for ( Subtask st: subtasks ) {
 				if ( Agent.epsilonGreedy( ) ) candidate = selectMemberForASubtaskRandomly( st );
 				else candidate = this.selectMemberArbitrary( st );
 
-				if( candidate == null ) {
-					return new HashMap< >() ;
+				if ( candidate == null ) {
+					return new HashMap<>();
 				}
 
 				exceptions.add( candidate );
@@ -60,36 +75,76 @@ public class ComparativeStrategy_l extends LeaderStrategyWithRoleChange implemen
 		return memberCandidates;
 	}
 
-	public static int nulls = 0, notNulls = 0;
+	public static int nulls = 0;
+	public static int notNulls = 0;
+
 	private Agent selectMemberArbitrary( Subtask st ) {
-		Agent temp = selectMemberAccordingToCD( st );
-		if( temp == null ) nulls++; else notNulls++;
-		return temp == null ? selectMemberAccordingToDE( st ) : temp;
-	}
-
-	// Todo: DE優先の場合も試す
-	// TODO: 複数渡せるようにしなきゃ
-	private Agent selectMemberAccordingToCD( Subtask st ) {
-		Agent candidate = null;
-		double maxCD = CD_THRESHOLD, maxDE = 0.5;
-		int resType = st.resType;
-
-		for( CDTuple set : cdTupleList ) {
-			Agent temp = set.getTarget();
-			if( exceptions.contains( temp ) ) continue;
-			double cdValue = CDTuple.getCD( resType, temp, cdTupleList );
-			double deValue = getPairByAgent( temp, reliableMembersRanking ).getDe();
-			if( cdValue > maxCD && maxDE > 0.5 || cdValue == maxCD && maxDE < deValue ) {
-				candidate = temp; maxCD = cdValue; maxDE = deValue;
-			}
+		Agent candidate = selectMemberAccordingToEvaluation( st );
+		if ( candidate == null ) {
+			nulls++;
+			candidate = selectMemberAccordingToDE( st );
+		} else {
+			notNulls++;
 		}
 		return candidate;
 	}
 
+	private Agent selectMemberAccordingToEvaluation( Subtask st ) {
+		double maxEvaluation = 0;
+		Agent returnAgent = null;
+
+		for ( AgentDePair pair: reliableMembersRanking ) {
+			Agent tempAgent = pair.getTarget();
+			if( !tempAgent.canProcessTheSubtask( st ) ) break;
+			if ( exceptions.contains( tempAgent ) ) continue;
+			double tempEvaluation = calculateMemberEvaluation( tempAgent, st );
+			if ( tempEvaluation > maxEvaluation ) {
+				maxEvaluation = tempEvaluation;
+				returnAgent = tempAgent;
+			}
+		}
+		if( maxEvaluation < EVALUATION_THRESHOLD ) return null;
+		return returnAgent;
+	}
+
+	private double calculateMemberEvaluation( Agent target, Subtask st ) {
+		if ( !CDTuple.alreadyExists( target, cdTupleList ) ) {
+			return α * AgentDePair.searchDEofAgent( target, reliableMembersRanking );
+		}
+
+		double[] cds = cdTupleList.stream()
+			.mapToDouble( tuple -> tuple.getCDArray()[st.resType] )
+			.toArray();
+		double[] rtts = roundTripTimeMap.values().stream()
+			.mapToDouble( value -> value )
+			.toArray();
+
+		double cd_standard_deviation = calculateStandardDeviation( cds );
+		double rtt_standard_deviation = calculateStandardDeviation( rtts );
+
+		return α * AgentDePair.searchDEofAgent( target, reliableMembersRanking )
+			+ β * ( CDTuple.calculateAverageCD( st.resType, cdTupleList ) - CDTuple.getCD( st.resType, target, cdTupleList ) ) / cd_standard_deviation
+			+ γ * ( calculateAverageRoundTripTime() - roundTripTimeMap.get( target ) ) / rtt_standard_deviation ;
+	}
+
+	public static Double calculateStandardDeviation( double[] values ){
+		SynchronizedSummaryStatistics stats = new SynchronizedSummaryStatistics();
+		for( double value: values ) stats.addValue( value );
+		return Precision.round( stats.getStandardDeviation(), 2);
+	}
+
+
+	private double calculateAverageRoundTripTime() {
+		return roundTripTimeMap.values().stream()
+			.mapToDouble( v -> v )
+			.average()
+			.getAsDouble();
+	}
+
 	private Agent selectMemberAccordingToDE( Subtask st ) {
-		for ( AgentDePair pair : reliableMembersRanking ) {
+		for ( AgentDePair pair: reliableMembersRanking ) {
 			Agent ag = pair.getTarget();
-			if ( ( ! exceptions.contains( ag ) ) && ag.canProcessTheSubtask( st ) ) return ag;
+			if ( ( !exceptions.contains( ag ) ) && ag.canProcessTheSubtask( st ) ) return ag;
 		}
 		return null;
 	}
@@ -104,7 +159,9 @@ public class ComparativeStrategy_l extends LeaderStrategyWithRoleChange implemen
 			ReplyToSolicitation r = replyList.remove( 0 );
 			Subtask st = r.getSubtask();
 			Agent currentFrom = r.getFrom();
-			updateRoundTripTime( currentFrom );
+			// TODO: 待たせた時間は別で保持する
+			int extraWaitingTime = calculateExtraWaitingTime( currentFrom );
+			extraWaitingTimeMap.put( currentFrom, extraWaitingTime );
 
 			if ( r.getReplyType() == DECLINE ) treatBetrayer( currentFrom );
 			else if ( mapOfSubtaskAndAgent.containsKey( st ) ) {
@@ -138,13 +195,8 @@ public class ComparativeStrategy_l extends LeaderStrategyWithRoleChange implemen
 		myTask = null;
 	}
 
-	// hack: 現状リーダーは全員からの返信をもらってから割り当てを開始するため，早くに返信が到着したエージェントとの総通信時間が見かけ上長くなってしまう．
-	// だからここではそれを訂正するために，その差分をroundTripTimeの一部として足し合わせることで混雑度の計算が狂わないようにしている
-	private void updateRoundTripTime( Agent target ) {
-		int gap = getCurrentTime() - timeToStartCommunicatingMap.get( target ) - roundTripTimeMap.get( target );
-		assert gap % 2 == 0 : "gap is odd.";
-		int modifiedRoundTripTime = roundTripTimeMap.get( target ) + gap / 2;
-		roundTripTimeMap.put( target, modifiedRoundTripTime );
+	private int calculateExtraWaitingTime( Agent ag ) {
+		return ( getCurrentTime() - timeToStartCommunicatingMap.get( ag ) ) - roundTripTimeMap.get( ag );
 	}
 
 	@Override
@@ -183,25 +235,34 @@ public class ComparativeStrategy_l extends LeaderStrategyWithRoleChange implemen
 		pair.renewDEbyArbitraryReward( evaluation );
 	}
 
-
-
-	// HACK
 	private void renewCongestionDegreeMap( Agent target, Subtask st, int bindingTime ) {
-		double[] tempArray = new double[RESOURCE_TYPES];
+		double[] tempArray = new double[ RESOURCE_TYPES ];
 		int resourceType = st.resType;
 
 		if ( CDTuple.alreadyExists( target, cdTupleList ) ) {
-			double newCD = calculateCD( bindingTime, roundTripTimeMap.get( target ), st );
+			double newCD = calculateCD( bindingTime, target, st );
+			assert newCD > 0 : "illegal congestion degree";
 			CDTuple.updateCD( target, cdTupleList, resourceType, newCD );
 		} else {
-			tempArray[ resourceType ] = calculateCD( bindingTime, roundTripTimeMap.get( target ), st );
+			tempArray[ resourceType ] = calculateCD( bindingTime, target, st );
 			cdTupleList.add( new CDTuple( target, tempArray, getCurrentTime() ) );
 		}
 	}
 
-	private double calculateCD( int bindingTime, int roundTripTime, Subtask subtask ) {
+	private double calculateCD( int bindingTime, Agent ag, Subtask subtask ) {
 		int difficulty = subtask.reqRes[ subtask.resType ];
-		return difficulty / ( bindingTime - 2.0 * roundTripTime );
+		return difficulty / ( bindingTime - ( 2.0 * roundTripTimeMap.get( ag ) + extraWaitingTimeMap.get( ag ) ) );
+	}
+
+	public void forgetOldRoundTripTimeInformation() {
+		int size = roundTripTimeMap.size();
+		for ( int i = 0; i < size; i++ ) {
+			// CDの蒸発と同じタイミングで蒸発させる
+			Map.Entry< Agent, Integer > entry = roundTripTimeMap.entrySet().iterator().next();
+			if ( !CDTuple.alreadyExists( entry.getKey(), cdTupleList ) ) {
+				roundTripTimeMap.remove( entry );
+			}
+		}
 	}
 
 	@Override
@@ -212,7 +273,7 @@ public class ComparativeStrategy_l extends LeaderStrategyWithRoleChange implemen
 		return sb.toString();
 	}
 
-	public static List< CDTuple > getCdSetList( ComparativeStrategy_l psl ) {
+	public static List< CDTuple > getCdSetList( LeaderStrategy psl ) {
 		return psl.cdTupleList;
 	}
 

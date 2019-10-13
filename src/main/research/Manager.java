@@ -1,10 +1,8 @@
 package main.research;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import main.research.agent.Agent;
 import main.research.agent.AgentManager;
-import main.research.agent.strategy.ComparativeStrategy3.ComparativeStrategy_l;
-import main.research.agent.strategy.ProposedStrategy.ProposedStrategy_l;
+import main.research.agent.strategy.reliableAgents.LeaderStrategy;
 import main.research.agent.strategy.Strategy;
 
 import static main.research.OutPut.*;
@@ -37,18 +35,18 @@ public class Manager implements SetParam {
 
 	//TODO: こんな風にするならsingletonにしたほうがいいよね
 	// TODO: lsとmsで分けて指定しなきゃいけないの無駄じゃない?
-	private static String package_name = "main.research.agent.strategy.ProposedStrategy.";
-	private static String ls_name = "ProposedStrategy_l";      // ICA2018における提案手法役割更新あり    //    private static main.research.strategy.Strategy strategy = new ProposedMethodForSingapore();
-	private static String ms_name = "ProposedStrategy_m";
+	private static String package_name = "main.research.agent.strategy.reliableAgents.";
+	private static String ls_name = "LeaderStrategy";      // ICA2018における提案手法役割更新あり    //    private static main.research.strategy.Strategy strategy = new ProposedMethodForSingapore();
+	private static String ms_name = "MemberStrategy";
 //    private static String package_name = "main.research.agent.strategy.ComparativeStrategy1.";
-//    private static String ls_name = "ComparativeStrategy_l";
-//    private static String ms_name = "ComparativeStrategy_m";
+//    private static String ls_name = "LeaderStrategy";
+//    private static String ms_name = "MemberStrategy";
 //    private static String package_name = "main.research.agent.strategy.ComparativeStrategy2.";
-//    private static String ls_name = "ComparativeStrategy_l";
-//    private static String ms_name = "ComparativeStrategy_m";
+//    private static String ls_name = "LeaderStrategy";
+//    private static String ms_name = "MemberStrategy";
 //	private static String package_name = "main.research.agent.strategy.ComparativeStrategy3.";
-//	private static String ls_name = "ComparativeStrategy_l";
-//	private static String ms_name = "ComparativeStrategy_m";
+//	private static String ls_name = "LeaderStrategy";
+//	private static String ms_name = "MemberStrategy";
 
 	static {
 		try {
@@ -97,10 +95,6 @@ public class Manager implements SetParam {
 				// ここが1tickの最後の部分．次のtickまでにやることあったらここで．
 			}
 			// ↑ 一施行のカッコ．以下は次の施行までの合間で作業する部分
-
-			System.out.println( "nulls: " + ComparativeStrategy_l.nulls + ", not nulls: " + ComparativeStrategy_l.notNulls );
-			System.out.println( "nulls: " + ProposedStrategy_l.nulls + ", not nulls: " + ProposedStrategy_l.notNulls );
-
 			int leader_num = ( int ) AgentManager.getAllAgentList().stream()
 				.filter( agent -> agent.role == LEADER )
 				.count();

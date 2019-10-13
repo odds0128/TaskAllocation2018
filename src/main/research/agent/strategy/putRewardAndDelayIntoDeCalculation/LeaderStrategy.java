@@ -1,4 +1,4 @@
-package main.research.agent.strategy.ComparativeStrategy2;
+package main.research.agent.strategy.putRewardAndDelayIntoDeCalculation;
 
 import main.research.Manager;
 import main.research.agent.Agent;
@@ -23,7 +23,7 @@ import static main.research.SetParam.ResultType.SUCCESS;
 import static main.research.communication.TransmissionPath.sendMessage;
 import static main.research.task.TaskManager.disposeTask;
 
-public class ComparativeStrategy_l extends LeaderStrategyWithRoleChange {
+public class LeaderStrategy extends LeaderStrategyWithRoleChange {
 	Map< Agent, Integer > agentStartTimeMap = new HashMap<>();
 
 	@Override

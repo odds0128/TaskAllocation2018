@@ -1,13 +1,12 @@
-package main.research.agent.strategy.ComparativeStrategy1;
+package main.research.agent.strategy.learningOnlyTeamingSuccessRate;
 
 import main.research.agent.Agent;
 import main.research.agent.AgentDePair;
-import main.research.agent.strategy.LeaderStrategyWithRoleChange;
-import main.research.agent.strategy.Strategy;
-import java.util.List;
-import java.util.Map;
+import main.research.agent.strategy.MemberStrategyWithRoleChange;
 
-public class ComparativeStrategy_l extends LeaderStrategyWithRoleChange {
+import java.util.List;
+
+public class MemberStrategy extends MemberStrategyWithRoleChange {
 
 	@Override
 	protected void renewDE( List< AgentDePair > pairList, Agent target, double evaluation ) {

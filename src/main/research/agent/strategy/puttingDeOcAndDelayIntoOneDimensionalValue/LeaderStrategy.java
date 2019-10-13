@@ -1,4 +1,4 @@
-package main.research.agent.strategy.ProposedStrategy;
+package main.research.agent.strategy.puttingDeOcAndDelayIntoOneDimensionalValue;
 
 import main.research.SetParam;
 import main.research.agent.Agent;
@@ -16,7 +16,10 @@ import main.research.task.TaskManager;
 import org.apache.commons.math3.stat.descriptive.SynchronizedSummaryStatistics;
 import org.apache.commons.math3.util.Precision;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static main.research.Manager.getCurrentTime;
 import static main.research.SetParam.ReplyType.DECLINE;
@@ -26,7 +29,7 @@ import static main.research.communication.TransmissionPath.sendMessage;
 import static main.research.task.TaskManager.disposeTask;
 
 // TODO: 中身を表したクラス名にする
-public class ProposedStrategy_l extends LeaderStrategyWithRoleChange implements SetParam {
+public class LeaderStrategy extends LeaderStrategyWithRoleChange implements SetParam {
 	// 評価指標 = αDE + βCD + γDelay
 	static final double α = 1;
 	static final double β = 0.3;
@@ -273,7 +276,7 @@ public class ProposedStrategy_l extends LeaderStrategyWithRoleChange implements 
 		return sb.toString();
 	}
 
-	public static List< CDTuple > getCdSetList( ProposedStrategy_l psl ) {
+	public static List< CDTuple > getCdSetList( LeaderStrategy psl ) {
 		return psl.cdTupleList;
 	}
 

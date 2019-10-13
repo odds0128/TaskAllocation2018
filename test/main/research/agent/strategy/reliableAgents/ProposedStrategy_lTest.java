@@ -1,9 +1,8 @@
-package main.research.agent.strategy.ProposedStrategy;
+package main.research.agent.strategy.reliableAgents;
 
 import main.research.agent.Agent;
 import main.research.util.Initiation;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
