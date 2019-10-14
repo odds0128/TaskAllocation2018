@@ -3,7 +3,7 @@ package main.research.agent.strategy.puttingDeOcAndDelayIntoOneDimensionalValue;
 import main.research.SetParam;
 import main.research.agent.Agent;
 import main.research.agent.AgentDePair;
-import main.research.agent.strategy.CDTuple;
+import main.research.agent.strategy.OCTuple;
 import main.research.agent.strategy.LeaderStrategyWithRoleChange;
 import main.research.communication.message.Done;
 import main.research.communication.message.ReplyToSolicitation;
@@ -30,7 +30,7 @@ import static main.research.task.TaskManager.disposeTask;
 
 // TODO: 中身を表したクラス名にする
 public class LeaderStrategy extends LeaderStrategyWithRoleChange implements SetParam {
-	// 評価指標 = αDE + βCD + γDelay
+	// 評価指標 = αDE + βOC + γDelay
 	static final double α = 1;
 	static final double β = 0.3;
 	static final double γ = 0.3 ;
@@ -40,11 +40,11 @@ public class LeaderStrategy extends LeaderStrategyWithRoleChange implements SetP
 	private Map< Agent, Integer > roundTripTimeMap = new HashMap<>();
 	private Map< Agent, Integer > extraWaitingTimeMap = new HashMap<>();
 
-	public List< CDTuple > getCdTupleList() {
-		return cdTupleList;
+	public List< OCTuple > getCdTupleList() {
+		return ocTupleList;
 	}
 
-	private List< CDTuple > cdTupleList = new ArrayList<>();
+	private List< OCTuple > ocTupleList = new ArrayList<>();
 
 	@Override
 	public void sendSolicitations( Agent leader, Map< Agent, Subtask > agentSubtaskMap ) {
@@ -59,7 +59,7 @@ public class LeaderStrategy extends LeaderStrategyWithRoleChange implements SetP
 	protected Map< Agent, Subtask > selectMembers( List< Subtask > subtasks ) {
 		Map< Agent, Subtask > memberCandidates = new HashMap<>();
 		Agent candidate;
-		CDTuple.forgetOldCdInformation( cdTupleList );
+		OCTuple.forgetOldOcInformation( ocTupleList );
 		forgetOldRoundTripTimeInformation();
 
 		for ( int i = 0; i < REDUNDANT_SOLICITATION_TIMES; i++ ) {
@@ -97,7 +97,7 @@ public class LeaderStrategy extends LeaderStrategyWithRoleChange implements SetP
 		Agent returnAgent = null;
 
 		for ( AgentDePair pair: reliableMembersRanking ) {
-			Agent tempAgent = pair.getTarget();
+			Agent tempAgent = pair.getAgent();
 			if( !tempAgent.canProcessTheSubtask( st ) ) break;
 			if ( exceptions.contains( tempAgent ) ) continue;
 			double tempEvaluation = calculateMemberEvaluation( tempAgent, st );
@@ -111,22 +111,22 @@ public class LeaderStrategy extends LeaderStrategyWithRoleChange implements SetP
 	}
 
 	private double calculateMemberEvaluation( Agent target, Subtask st ) {
-		if ( !CDTuple.alreadyExists( target, cdTupleList ) ) {
+		if ( !OCTuple.alreadyExists( target, ocTupleList ) ) {
 			return α * AgentDePair.searchDEofAgent( target, reliableMembersRanking );
 		}
 
-		double[] cds = cdTupleList.stream()
-			.mapToDouble( tuple -> tuple.getCDArray()[st.resType] )
+		double[] ocs = ocTupleList.stream()
+			.mapToDouble( tuple -> tuple.getOCArray()[st.resType] )
 			.toArray();
 		double[] rtts = roundTripTimeMap.values().stream()
 			.mapToDouble( value -> value )
 			.toArray();
 
-		double cd_standard_deviation = calculateStandardDeviation( cds );
+		double oc_standard_deviation = calculateStandardDeviation( ocs );
 		double rtt_standard_deviation = calculateStandardDeviation( rtts );
 
 		return α * AgentDePair.searchDEofAgent( target, reliableMembersRanking )
-			+ β * ( CDTuple.calculateAverageCD( st.resType, cdTupleList ) - CDTuple.getCD( st.resType, target, cdTupleList ) ) / cd_standard_deviation
+			+ β * ( OCTuple.calculateAverageOC( st.resType, ocTupleList ) - OCTuple.getOC( st.resType, target, ocTupleList ) ) / oc_standard_deviation
 			+ γ * ( calculateAverageRoundTripTime() - roundTripTimeMap.get( target ) ) / rtt_standard_deviation ;
 	}
 
@@ -146,7 +146,7 @@ public class LeaderStrategy extends LeaderStrategyWithRoleChange implements SetP
 
 	private Agent selectMemberAccordingToDE( Subtask st ) {
 		for ( AgentDePair pair: reliableMembersRanking ) {
-			Agent ag = pair.getTarget();
+			Agent ag = pair.getAgent();
 			if ( ( !exceptions.contains( ag ) ) && ag.canProcessTheSubtask( st ) ) return ag;
 		}
 		return null;
@@ -242,17 +242,17 @@ public class LeaderStrategy extends LeaderStrategyWithRoleChange implements SetP
 		double[] tempArray = new double[ RESOURCE_TYPES ];
 		int resourceType = st.resType;
 
-		if ( CDTuple.alreadyExists( target, cdTupleList ) ) {
-			double newCD = calculateCD( bindingTime, target, st );
-			assert newCD > 0 : "illegal congestion degree";
-			CDTuple.updateCD( target, cdTupleList, resourceType, newCD );
+		if ( OCTuple.alreadyExists( target, ocTupleList ) ) {
+			double newOC = calculateOC( bindingTime, target, st );
+			assert newOC > 0 : "illegal congestion degree";
+			OCTuple.updateOC( target, ocTupleList, resourceType, newOC );
 		} else {
-			tempArray[ resourceType ] = calculateCD( bindingTime, target, st );
-			cdTupleList.add( new CDTuple( target, tempArray, getCurrentTime() ) );
+			tempArray[ resourceType ] = calculateOC( bindingTime, target, st );
+			ocTupleList.add( new OCTuple( target, tempArray, getCurrentTime() ) );
 		}
 	}
 
-	private double calculateCD( int bindingTime, Agent ag, Subtask subtask ) {
+	private double calculateOC( int bindingTime, Agent ag, Subtask subtask ) {
 		int difficulty = subtask.reqRes[ subtask.resType ];
 		return difficulty / ( bindingTime - ( 2.0 * roundTripTimeMap.get( ag ) + extraWaitingTimeMap.get( ag ) ) );
 	}
@@ -260,9 +260,9 @@ public class LeaderStrategy extends LeaderStrategyWithRoleChange implements SetP
 	public void forgetOldRoundTripTimeInformation() {
 		int size = roundTripTimeMap.size();
 		for ( int i = 0; i < size; i++ ) {
-			// CDの蒸発と同じタイミングで蒸発させる
+			// OCの蒸発と同じタイミングで蒸発させる
 			Map.Entry< Agent, Integer > entry = roundTripTimeMap.entrySet().iterator().next();
-			if ( !CDTuple.alreadyExists( entry.getKey(), cdTupleList ) ) {
+			if ( !OCTuple.alreadyExists( entry.getKey(), ocTupleList ) ) {
 				roundTripTimeMap.remove( entry );
 			}
 		}
@@ -272,12 +272,12 @@ public class LeaderStrategy extends LeaderStrategyWithRoleChange implements SetP
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append( ", exceptions: " + exceptions.size() );
-		sb.append( ", cdList: " + cdTupleList );
+		sb.append( ", ocList: " + ocTupleList );
 		return sb.toString();
 	}
 
-	public static List< CDTuple > getCdSetList( LeaderStrategy psl ) {
-		return psl.cdTupleList;
+	public static List< OCTuple > getCdSetList( LeaderStrategy psl ) {
+		return psl.ocTupleList;
 	}
 
 	void clear() {

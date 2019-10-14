@@ -8,11 +8,11 @@ public class AgentDePair {
 	private static final double γ  = LeaderStrategyWithRoleChange.γ_;
 	private static final double α_ = Agent.α_;
 
-	private Agent target;
+	private Agent agent;
 	private double de;
 
-	public AgentDePair( Agent target, double de ) {
-		this.target = target;
+	public AgentDePair( Agent agent, double de ) {
+		this.agent = agent;
 		this.de = de;
 	}
 
@@ -21,8 +21,8 @@ public class AgentDePair {
 		de = temp > 0 ? temp : 0;
 	}
 
-	public Agent getTarget() {
-		return target;
+	public Agent getAgent() {
+		return agent;
 	}
 
 	public double getDe() {
@@ -40,7 +40,7 @@ public class AgentDePair {
 
 	public static double searchDEofAgent( Agent stray, List<AgentDePair> list ) {
 		for( AgentDePair pair : list ) {
-			if( pair.target == stray ) return pair.de;
+			if( pair.agent == stray ) return pair.de;
 		}
 		System.out.println(" something went wrong. ");
 		return 0;
@@ -48,6 +48,6 @@ public class AgentDePair {
 
 	@Override
 	public String toString() {
-		return target.toString();
+		return agent.toString();
 	}
 }

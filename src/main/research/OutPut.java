@@ -2,7 +2,7 @@ package main.research;
 
 import main.research.agent.AgentDePair;
 import main.research.agent.AgentManager;
-import main.research.agent.strategy.CDTuple;
+import main.research.agent.strategy.OCTuple;
 import main.research.agent.strategy.reliableAgents.LeaderStrategy;
 import main.research.task.Task;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
@@ -185,17 +185,17 @@ public class OutPut implements SetParam {
 		for( int i = 0; i < 10; i++ ) {
 			Agent ag = agList.get( i );
 			pw.print( ", " + ag.role + ", " + ag.ms.mySubtaskQueue.size() );
-//		writeLeadersCD( pw, ag );
+//		writeLeadersOC( pw, ag );
 		}
 		pw.println();
 	}
 
-	static void writeLeadersCD( PrintWriter pw, Agent target ) {
+	static void writeLeadersOC( PrintWriter pw, Agent target ) {
 		for ( Agent leader: AgentManager.getAllAgentList() ) {
 			if ( leader.role == LEADER ) {
 				LeaderStrategy pl = ( LeaderStrategy ) leader.ls;
-				boolean exists = CDTuple.alreadyExists( target, pl.getCdTupleList() );
-				double temp = exists ? CDTuple.getCD( 1, target, pl.getCdTupleList() ) : -1 ;
+				boolean exists = OCTuple.alreadyExists( target, pl.getCdTupleList() );
+				double temp = exists ? OCTuple.getOC( 1, target, pl.getCdTupleList() ) : -1 ;
 
 				pw.print( ", " + temp );
 			}
@@ -230,40 +230,35 @@ public class OutPut implements SetParam {
 		}
 	}
 
-	static void writeRelationsBetweenCDandDE( List< Agent > agents ) {
+	static void writeRelationsBetweenOCandDE( List< Agent > agents ) {
 		double average = 0;
 		int num = 0;
 		double meanLeaderCor = 0, meanMemberCor = 0;
 		int leaders = 0, members = 0;
 
 		for ( Agent ag: agents ) {
-			List< CDTuple > cdTupleList = null;
-			if ( ag.ls.getClass().getSimpleName().equals( "LeaderStrategy" ) ) {
-				cdTupleList = LeaderStrategy.getCdSetList( ( LeaderStrategy ) ag.ls );
-			} else if ( ag.ls.getClass().getSimpleName().equals( "ProposedStrategy_l" ) ) {
-				cdTupleList = LeaderStrategy.getCdSetList( ( LeaderStrategy ) ag.ls );
-			}
-			int size = cdTupleList.size();
+			List< OCTuple > ocTupleList = LeaderStrategy.getOcSetList( ( LeaderStrategy ) ag.ls );
+			int size = ocTupleList.size();
 			if ( size == 0 || size == 1 ) continue;
 
-			double[] CDs = new double[ size ];
+			double[] OCs = new double[ size ];
 			double[] DEs = new double[ size ];
 
 			for ( int i = 0; i < size; i++ ) {
-				CDTuple temp = cdTupleList.remove( 0 );
+				OCTuple temp = ocTupleList.remove( 0 );
 				Agent target = temp.getTarget();
 
-				double[] tempCD = temp.getCDArray();
-				CDs[ i ] = Arrays.stream( tempCD ).max().getAsDouble();
+				double[] tempOC = temp.getOCArray();
+				OCs[ i ] = Arrays.stream( tempOC ).max().getAsDouble();
 
 				for ( AgentDePair pair: ag.ls.reliableMembersRanking ) {
-					if ( target.equals( pair.getTarget() ) ) {
+					if ( target.equals( pair.getAgent() ) ) {
 						DEs[ i ] = pair.getDe();
 					}
 				}
 			}
 			PearsonsCorrelation p = new PearsonsCorrelation();
-			double cor = p.correlation( CDs, DEs );
+			double cor = p.correlation( OCs, DEs );
 			if ( Double.isNaN( cor ) ) continue;
 			if ( ag.e_leader > ag.e_member ) {
 				meanLeaderCor += cor;
@@ -279,6 +274,12 @@ public class OutPut implements SetParam {
 		System.out.println( "Average : " + average / num );
 		System.out.println( "Average Leader: " + meanLeaderCor / leaders );
 		System.out.println( "Average Member: " + meanMemberCor / members );
+		System.out.println( agents.stream()
+			.filter( agent -> agent.e_leader > agent.e_member )
+			.count() );
+		System.out.println( agents.stream()
+			.filter( agent -> agent.e_leader < agent.e_member )
+			.count() );
 	}
 
 	static void writeRelationsBetweenDelayAndDE( int[][] delays, List< Agent > agents, String st ) {
@@ -293,7 +294,7 @@ public class OutPut implements SetParam {
 			double[] delay = new double[ size ];
 			for ( int i = 0; i < size; i++ ) {
 				AgentDePair pair = pairList.get( i );
-				Agent target = pair.getTarget();
+				Agent target = pair.getAgent();
 
 				DEs[ i ] = pair.getDe();
 				delay[ i ] = delays[ ag.id ][ target.id ];

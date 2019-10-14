@@ -3,7 +3,7 @@ package main.research.agent.strategy.ostensibleCapacity;
 import main.research.*;
 import main.research.agent.Agent;
 import main.research.agent.AgentDePair;
-import main.research.agent.strategy.CDTuple;
+import main.research.agent.strategy.OCTuple;
 import main.research.agent.strategy.LeaderStrategyWithRoleChange;
 import main.research.communication.message.*;
 import main.research.others.Pair;
@@ -22,11 +22,11 @@ import java.util.*;
 
 // TODO: 中身を表したクラス名にする
 public class LeaderStrategy extends LeaderStrategyWithRoleChange implements SetParam {
-	static double CD_THRESHOLD = 3.0;
+	static double OC_THRESHOLD = 3.0;
 
 	private Map< Agent, Integer > timeToStartCommunicatingMap = new HashMap<>();
 	private Map< Agent, Integer > roundTripTimeMap = new HashMap<>();
-	private List< CDTuple > cdTupleList = new ArrayList<>();
+	private List< OCTuple > ocTupleList = new ArrayList<>();
 
 	@Override
 	public void sendSolicitations( Agent leader, Map< Agent, Subtask > agentSubtaskMap ) {
@@ -42,7 +42,7 @@ public class LeaderStrategy extends LeaderStrategyWithRoleChange implements SetP
 	protected Map< Agent, Subtask > selectMembers( List< Subtask > subtasks ) {
 		Map< Agent, Subtask > memberCandidates = new HashMap<>();
 		Agent candidate;
-		CDTuple.forgetOldCdInformation( cdTupleList );
+		OCTuple.forgetOldOcInformation( ocTupleList );
 
 		for ( int i = 0; i < REDUNDANT_SOLICITATION_TIMES; i++ ) {
 			for ( Subtask st: subtasks ) {
@@ -62,25 +62,25 @@ public class LeaderStrategy extends LeaderStrategyWithRoleChange implements SetP
 
 	public static int nulls = 0, notNulls = 0;
 	private Agent selectMemberArbitrary( Subtask st ) {
-		Agent temp = selectMemberAccordingToCD( st );
+		Agent temp = selectMemberAccordingToOC( st );
 		if( temp == null ) nulls++; else notNulls++;
 		return temp == null ? selectMemberAccordingToDE( st ) : temp;
 	}
 
 	// Todo: DE優先の場合も試す
 	// TODO: 複数渡せるようにしなきゃ
-	private Agent selectMemberAccordingToCD( Subtask st ) {
+	private Agent selectMemberAccordingToOC( Subtask st ) {
 		Agent candidate = null;
-		double maxCD = CD_THRESHOLD, maxDE = 0.5;
+		double maxOC = OC_THRESHOLD, maxDE = 0.5;
 		int resType = st.resType;
 
-		for( CDTuple set : cdTupleList ) {
+		for( OCTuple set : ocTupleList ) {
 			Agent temp = set.getTarget();
 			if( exceptions.contains( temp ) ) continue;
-			double cdValue = CDTuple.getCD( resType, temp, cdTupleList );
+			double ocValue = OCTuple.getOC( resType, temp, ocTupleList );
 			double deValue = getPairByAgent( temp, reliableMembersRanking ).getDe();
-			if( cdValue > maxCD && maxDE > 0.5 || cdValue == maxCD && maxDE < deValue ) {
-				candidate = temp; maxCD = cdValue; maxDE = deValue;
+			if( ocValue > maxOC && maxDE > 0.5 || ocValue == maxOC && maxDE < deValue ) {
+				candidate = temp; maxOC = ocValue; maxDE = deValue;
 			}
 		}
 		return candidate;
@@ -88,7 +88,7 @@ public class LeaderStrategy extends LeaderStrategyWithRoleChange implements SetP
 
 	private Agent selectMemberAccordingToDE( Subtask st ) {
 		for ( AgentDePair pair : reliableMembersRanking ) {
-			Agent ag = pair.getTarget();
+			Agent ag = pair.getAgent();
 			if ( ( ! exceptions.contains( ag ) ) && ag.canProcessTheSubtask( st ) ) return ag;
 		}
 		return null;
@@ -190,16 +190,16 @@ public class LeaderStrategy extends LeaderStrategyWithRoleChange implements SetP
 		double[] tempArray = new double[RESOURCE_TYPES];
 		int resourceType = st.resType;
 
-		if ( CDTuple.alreadyExists( target, cdTupleList ) ) {
-			double newCD = calculateCD( bindingTime, roundTripTimeMap.get( target ), st );
-			CDTuple.updateCD( target, cdTupleList, resourceType, newCD );
+		if ( OCTuple.alreadyExists( target, ocTupleList ) ) {
+			double newOC = calculateOC( bindingTime, roundTripTimeMap.get( target ), st );
+			OCTuple.updateOC( target, ocTupleList, resourceType, newOC );
 		} else {
-			tempArray[ resourceType ] = calculateCD( bindingTime, roundTripTimeMap.get( target ), st );
-			cdTupleList.add( new CDTuple( target, tempArray, getCurrentTime() ) );
+			tempArray[ resourceType ] = calculateOC( bindingTime, roundTripTimeMap.get( target ), st );
+			ocTupleList.add( new OCTuple( target, tempArray, getCurrentTime() ) );
 		}
 	}
 
-	private double calculateCD( int bindingTime, int roundTripTime, Subtask subtask ) {
+	private double calculateOC( int bindingTime, int roundTripTime, Subtask subtask ) {
 		int difficulty = subtask.reqRes[ subtask.resType ];
 		return difficulty / ( bindingTime - 2.0 * roundTripTime );
 	}
@@ -208,12 +208,12 @@ public class LeaderStrategy extends LeaderStrategyWithRoleChange implements SetP
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append( ", exceptions: " + exceptions.size() );
-		sb.append( ", cdList: " + cdTupleList );
+		sb.append( ", ocList: " + ocTupleList );
 		return sb.toString();
 	}
 
-	public static List< CDTuple > getCdSetList( LeaderStrategy psl ) {
-		return psl.cdTupleList;
+	public static List< OCTuple > getCdSetList( LeaderStrategy psl ) {
+		return psl.ocTupleList;
 	}
 
 	void clear() {

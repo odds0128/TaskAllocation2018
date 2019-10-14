@@ -102,6 +102,8 @@ public class Manager implements SetParam {
 				.filter( agent -> agent.role == MEMBER )
 				.count();
 			System.out.println( "leaders:" + leader_num + ", members:" + member_num );
+			System.out.println( "waiting: " + main.research.agent.strategy.reliableAgents.MemberStrategy.waiting );
+			System.out.println( "tired of waiting: " + main.research.agent.strategy.MemberStrategyWithRoleChange.tired_of_waiting );
 
 			System.out.println( "---------------------------------------------------------------------------------" );
 			if ( num == executionTimes_ ) break;
@@ -110,7 +112,7 @@ public class Manager implements SetParam {
 		// ↑ 全実験の終了のカッコ．以下は後処理
 		if ( resultTypeNode.get( "check_data" ).asBoolean() )       writeResults( strategy_name );
 		if ( resultTypeNode.get( "check_relationships" ).asBoolean() ) writeGraphInformationX( AgentManager.getAllAgentList(), strategy_name );
-		writeRelationsBetweenCDandDE( AgentManager.getAllAgentList() );
+		writeRelationsBetweenOCandDE( AgentManager.getAllAgentList() );
 	}
 
 	// 環境の準備に使うメソッド

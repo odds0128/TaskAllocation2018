@@ -76,11 +76,15 @@ public abstract class MemberStrategyWithRoleChange implements Strategy, SetParam
         }
     }
 
+    // remove
+    public static int tired_of_waiting = 0;
     private void replyAsM( Agent member ) {
         if( joinFlag ) {
             Strategy.proceedToNextPhase( member );
             joinFlag = false;
         } else if( getCurrentTime() - member.validatedTicks > THRESHOLD_FOR_ROLE_RENEWAL) {
+            // remove
+            tired_of_waiting++;
             member.inactivate(0);
         }
     }

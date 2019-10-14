@@ -8,7 +8,6 @@ import java.util.*;
 import java.util.Map.Entry;
 
 import static main.research.Manager.getCurrentTime;
-import static main.research.SetParam.*;
 import static main.research.SetParam.Phase.*;
 import static main.research.SetParam.Role.JONE_DOE;
 import static main.research.SetParam.Role.MEMBER;
@@ -112,7 +111,7 @@ public interface Strategy {
 
     default AgentDePair getPairByAgent( Agent target, List<AgentDePair> pairList ) {
         for( AgentDePair pair : pairList ) {
-            if( pair.getTarget().equals( target ) ) return pair;
+            if( pair.getAgent().equals( target ) ) return pair;
         }
         assert false: "not to come";
         return null;

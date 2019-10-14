@@ -135,7 +135,7 @@ public abstract class LeaderStrategyWithRoleChange implements Strategy, SetParam
 
 	private Agent selectAMemberForASubtask( Subtask st ) {
 		for ( AgentDePair pair : reliableMembersRanking ) {
-			Agent ag = pair.getTarget();
+			Agent ag = pair.getAgent();
 			if ( ( ! exceptions.contains( ag ) ) && ag.canProcessTheSubtask( st ) ) return ag;
 		}
 		return null;

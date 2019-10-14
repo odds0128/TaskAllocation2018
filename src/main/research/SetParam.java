@@ -21,7 +21,7 @@ public interface SetParam {
 	int THRESHOLD_FOR_ROLE_RENEWAL  = 50;
 
 	// リソース推定にまつわる定数
-	int CD_CACHE_TIME = 100;
+	int OC_CACHE_TIME = 100;
 	int SUBTASK_QUEUE_SIZE = 5;
 
 	// エージェント
