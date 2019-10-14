@@ -187,7 +187,7 @@ public class ComparativeStrategy_l extends LeaderStrategyWithRoleChange implemen
 
 	// HACK
 	private void renewCongestionDegreeMap( Agent target, Subtask st, int bindingTime ) {
-		double[] tempArray = new double[RESOURCE_TYPES];
+		double[] tempArray = new double[ Agent.resource_types_ ];
 		int resourceType = st.resType;
 
 		if ( CDTuple.alreadyExists( target, cdTupleList ) ) {

@@ -12,6 +12,7 @@ import static main.research.SetParam.*;
 
 public class TaskManager {
 	private static int initial_tasks_num_;
+	private static double additional_tasks_num_;
 	private static int task_queue_size_;
 	private static int min_subtasks_num_;
 	private static int max_subtasks_num_;
@@ -22,10 +23,11 @@ public class TaskManager {
 	private static int finishedTasks = 0;
 
 	public static void setConstants( JsonNode parameterNode ) {
-		initial_tasks_num_ = parameterNode.get( "initial_tasks_num" ).asInt();
-		task_queue_size_   = parameterNode.get( "task_queue_size" ).asInt();
-		min_subtasks_num_  = parameterNode.get( "min_subtasks_num" ).asInt();
-		max_subtasks_num_  = parameterNode.get( "max_subtasks_num" ).asInt();
+		initial_tasks_num_   = parameterNode.get( "initial_tasks_num" ).asInt();
+		additional_tasks_num_ = parameterNode.get( "additional_tasks_num" ).asDouble();
+		task_queue_size_     = parameterNode.get( "task_queue_size" ).asInt();
+		min_subtasks_num_    = parameterNode.get( "min_subtasks_num" ).asInt();
+		max_subtasks_num_    = parameterNode.get( "max_subtasks_num" ).asInt();
 		Subtask.setConstants( parameterNode.get( "subtask" ) );
 	}
 
@@ -47,7 +49,7 @@ public class TaskManager {
 		double xp;
 		int k = 0;
 		xp = Math.random();
-		while ( xp >= Math.exp( -1 * ADDITIONAL_TASK_NUM ) ){
+		while ( xp >= Math.exp( -1 * additional_tasks_num_ ) ){
 			xp = xp * MyRandom.getRandomDouble();
 			k = k + 1;
 		}
@@ -84,6 +86,10 @@ public class TaskManager {
 
 	public static void finishTask() {
 		finishedTasks++;
+	}
+
+	public static double getAdditional_tasks_num_() {
+		return additional_tasks_num_;
 	}
 
 	public static void clear() {

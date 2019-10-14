@@ -1,5 +1,6 @@
 package main.research.agent.strategy;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import main.research.agent.Agent;
 import main.research.agent.AgentDePair;
 import main.research.agent.AgentManager;
@@ -17,6 +18,7 @@ public interface Strategy {
     double α_ = Agent.α_;
     double γ_ = LeaderStrategyWithRoleChange.γ_;
     int    agent_num_ = AgentManager.agent_num_;
+    int    time_observing_team_formation_ = AgentManager.time_observing_team_formation_;
 
     default double renewDEby0or1( double former, boolean isPositive ){
         double multiplier = isPositive ? 1 : 0;
@@ -54,6 +56,10 @@ public interface Strategy {
         // CONSIDER: そもそも特定のエージェントのDEのみ保持するようにすればいいのでは？
 //        arrayEvaporate(relMap);
 //         mapEvaporate(relMap);
+    }
+
+    default boolean withinTimeWindow() {
+        return Agent._coalition_check_end_time - getCurrentTime() < time_observing_team_formation_;
     }
 
     default void evaporateDE( List< AgentDePair > pairList ) {

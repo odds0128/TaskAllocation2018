@@ -1,5 +1,6 @@
 package main.research.graph;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import main.research.SetParam;
 import main.research.agent.Agent;
 import main.research.agent.AgentManager;
@@ -17,18 +18,21 @@ import java.util.List;
  */
 public class Edge implements SetParam {
     private static final int agent_num_ = AgentManager.agent_num_;
+    private static int threshold_of_frequency_of_working_together_;
+
     public List<Integer> from_id;      // エッジの根元
     public List<Integer> to_id;        // エッジの先端
     public List<Integer> delays;
     public List<Boolean> isRecipro;    // 互恵主義かどうか
     public List<Integer> times;        // そのリーダーと何度仕事をしたか
 
-    public Edge() {
+    public Edge( JsonNode graphNode ) {
         from_id = new ArrayList<>();
         to_id = new ArrayList<>();
         delays = new ArrayList<>();
         isRecipro = new ArrayList<>();
         times     = new ArrayList<>();
+        threshold_of_frequency_of_working_together_ = graphNode.get( "threshold_of_frequency_of_working_together" ).asInt();
     }
 
     public void makeEdge(List<Agent> agents) {
@@ -43,7 +47,7 @@ public class Edge implements SetParam {
                 // iは相手のid
                 for ( int id = 0; id < agent_num_; id++) {
                     temp = ag.workWithAsM[id] ;
-                    if ( temp >= THRESHOLD_FOR_COALITION) {
+                    if ( temp >= threshold_of_frequency_of_working_together_ ) {
                         from_id.add(ag.id);
                         to_id.add(id);
                         delays.add(Grid.getDelay(ag, agents.get(id) ) );
@@ -74,7 +78,7 @@ public class Edge implements SetParam {
                 // idは相手のid
                 for ( int id = 0; id < agent_num_; id++) {
                     temp = ag.workWithAsL[id] ;
-                    if ( temp >= THRESHOLD_FOR_COALITION) {
+                    if ( temp >= threshold_of_frequency_of_working_together_ ) {
                         from_id.add(ag.id);
                         to_id.add(id);
                         delays.add(Grid.getDelay(ag, agents.get(id) ) );

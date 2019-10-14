@@ -76,11 +76,15 @@ public abstract class MemberStrategyWithRoleChange implements Strategy, SetParam
         }
     }
 
+    // remove
+    public static int tired_of_waiting = 0;
     private void replyAsM( Agent member ) {
         if( joinFlag ) {
             Strategy.proceedToNextPhase( member );
             joinFlag = false;
         } else if( getCurrentTime() - member.validatedTicks > THRESHOLD_FOR_ROLE_RENEWAL) {
+            // remove
+            tired_of_waiting++;
             member.inactivate(0);
         }
     }
@@ -136,7 +140,7 @@ public abstract class MemberStrategyWithRoleChange implements Strategy, SetParam
             member.required[currentSubtask.resType]++;
             TransmissionPath.sendMessage( new Done( member, currentLeader ) );
 
-            if ( Agent._coalition_check_end_time - getCurrentTime() < COALITION_CHECK_SPAN) {
+            if ( withinTimeWindow() ) {
                 member.workWithAsM[currentLeader.id]++;
                 member.didTasksAsMember++;
             }

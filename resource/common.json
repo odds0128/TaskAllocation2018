@@ -13,8 +13,9 @@
   },
   "agents" : {
     "agent_num" : 500,
+    "time_observing_team_formation" : 50,
     "agent" : {
-      "resource_type": 3,
+      "resource_types": 3,
       "min_capacity_value" : 0,
       "max_capacity_value" : 5,
       "subtask_queue_size" : 5
@@ -34,13 +35,18 @@
   },
   "tasks" : {
     "initial_tasks_num" : 0,
+    "additional_tasks_num" : 7.5,
+    "distribution" : "poisson",
     "task_queue_size" : 500,
     "min_subtasks_num" : 3,
     "max_subtasks_num" : 6,
     "subtask" : {
-      "resource_type" : 3,
+      "resource_types" : 3,
       "min_request_value" : 5,
       "max_request_value" : 10
     }
+  },
+  "others" : {
+    "threshold_of_frequency_of_working_together" : 10
   }
 }

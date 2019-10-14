@@ -33,7 +33,7 @@ class CDTupleTest {
 	void setUp() throws NoSuchFieldException, IllegalAccessException {
 		List< Agent > agentList = Initiation.getNewAgentList();
 		for( Agent ag : agentList ) {
-			cdTupleList.add( new CDTuple( ag, new double[RESOURCE_TYPES], MyRandom.getRandomInt( 0, currentTime ) ) );
+			cdTupleList.add( new CDTuple( ag, new double[ resource_types_ ], MyRandom.getRandomInt( 0, currentTime ) ) );
 		}
 		Collections.sort( cdTupleList, Comparator.comparingInt( CDTuple::getLastUpdatedTime ) );
 

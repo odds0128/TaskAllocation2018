@@ -72,7 +72,7 @@ public class Manager implements SetParam {
 		int num = 0;
 		String strategy_name = package_name.split( "\\." )[ 4 ];
 		System.out.println( strategy_name );
-		System.out.println( strategy_name + ", λ=" + ADDITIONAL_TASK_NUM +
+		System.out.println( strategy_name + ", λ=" + TaskManager.getAdditional_tasks_num_() +
 			", From " + LocalDateTime.now()
 		);
 
@@ -115,7 +115,7 @@ public class Manager implements SetParam {
 		}
 		// ↑ 全実験の終了のカッコ．以下は後処理
 		if ( resultTypeNode.get( "check_data" ).asBoolean() )       writeResults( strategy_name );
-		if ( resultTypeNode.get( "check_relationships" ).asBoolean() ) writeGraphInformationX( AgentManager.getAllAgentList(), strategy_name );
+		if ( resultTypeNode.get( "check_relationships" ).asBoolean() ) writeGraphInformationX( AgentManager.getAllAgentList(), strategy_name, jsonNode.get( "others" ) );
 		writeRelationsBetweenCDandDE( AgentManager.getAllAgentList() );
 	}
 

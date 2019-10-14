@@ -1,11 +1,13 @@
 package main.research;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import main.research.agent.AgentDePair;
 import main.research.agent.AgentManager;
 import main.research.agent.strategy.CDTuple;
 import main.research.agent.strategy.ComparativeStrategy3.ComparativeStrategy_l;
 import main.research.agent.strategy.ProposedStrategy.ProposedStrategy_l;
 import main.research.task.Task;
+import main.research.task.TaskManager;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.*;
@@ -23,6 +25,7 @@ import java.util.*;
 import static main.research.SetParam.Principle.RATIONAL;
 import static main.research.SetParam.Principle.RECIPROCAL;
 import static main.research.SetParam.Role.LEADER;
+import static main.research.agent.Agent.resource_types_;
 
 /**
  * OutPutクラス
@@ -324,7 +327,7 @@ public class OutPut implements SetParam {
 			String currentPath = System.getProperty( "user.dir" );
 			Date date = new Date();
 			SimpleDateFormat sdf1 = new SimpleDateFormat( ",yyyy:MM:dd,HH:mm:ss" );
-			fw = new FileWriter( currentPath + "/out/results/rel" + fileName + ", λ=" + String.format( "%.2f", ADDITIONAL_TASK_NUM ) + sdf1.format( date ) + ".csv", false );
+			fw = new FileWriter( currentPath + "/out/results/rel" + fileName + ", λ=" + String.format( "%.2f", TaskManager.getAdditional_tasks_num_() ) + sdf1.format( date ) + ".csv", false );
 			bw = new BufferedWriter( fw );
 			pw = new PrintWriter( bw );
 
@@ -362,9 +365,9 @@ public class OutPut implements SetParam {
 			e2.printStackTrace();
 		}
 	}
-	static void writeGraphInformationX( List< Agent > agents, String st ) {
+	static void writeGraphInformationX( List< Agent > agents, String st, JsonNode graphNode ) {
 		String outputFilePath = _singleton.setPath( "relationships", st, "xlsx" );
-		Edge edge = new Edge();
+		Edge edge = new Edge( graphNode );
 		edge.makeEdge( agents );
 		try {
 			book = new SXSSFWorkbook();
@@ -470,7 +473,7 @@ public class OutPut implements SetParam {
 					_singleton.writeCell( row, colNumber++, style_header, " delay to leader " );
 //                    _singleton.writeCell(row, colNumber++, style_header, " is lonely or not");
 //                    _singleton.writeCell(row, colNumber++, style_header, " is accompanied or not");
-					for ( int j = 0; j < RESOURCE_TYPES; j++ ) {
+					for ( int j = 0; j < resource_types_; j++ ) {
 						_singleton.writeCell( row, colNumber++, style_header, " Resources " + j );
 						_singleton.writeCell( row, colNumber++, style_header, " Required " + j );
 						_singleton.writeCell( row, colNumber++, style_header, " Allocated " + j );
@@ -520,7 +523,7 @@ public class OutPut implements SetParam {
 						_singleton.writeCell( row, colNumber++, style_int, agent.getX() * 10 );
 						_singleton.writeCell( row, colNumber++, style_int, agent.getY() * 10 );
 
-						for ( int j = 0; j < RESOURCE_TYPES; j++ ) {
+						for ( int j = 0; j < resource_types_; j++ ) {
 							_singleton.writeCell( row, colNumber++, style_int, agent.resources[ j ] );
 							_singleton.writeCell( row, colNumber++, style_int, agent.required[ j ] );
 						}
@@ -698,8 +701,8 @@ public class OutPut implements SetParam {
 		String currentPath = System.getProperty( "user.dir" );
 		Date date = new Date();
 		SimpleDateFormat sdf1 = new SimpleDateFormat( ",yyyy_MM_dd,HH_mm_ss" );
-		System.out.println( "Address: " + dir_name + "/" + file_name + ",λ=" + String.format( "%.2f", ADDITIONAL_TASK_NUM ) + sdf1.format( date ) + "." + extension );
-		return currentPath + "/out/" + dir_name + "/" + file_name + ",λ=" + String.format( "%.2f", ADDITIONAL_TASK_NUM ) + sdf1.format( date ) + "." + extension;
+		System.out.println( "Address: " + dir_name + "/" + file_name + ",λ=" + String.format( "%.2f", TaskManager.getAdditional_tasks_num_() ) + sdf1.format( date ) + "." + extension );
+		return currentPath + "/out/" + dir_name + "/" + file_name + ",λ=" + String.format( "%.2f", TaskManager.getAdditional_tasks_num_() ) + sdf1.format( date ) + "." + extension;
 	}
 
 	// あるrowのcolumn列にoを書き込むメソッド
