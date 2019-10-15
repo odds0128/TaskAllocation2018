@@ -2,7 +2,6 @@ package main.research;
 
 import main.research.agent.Agent;
 import main.research.agent.AgentManager;
-import main.research.agent.strategy.reliableAgents.LeaderStrategy;
 import main.research.agent.strategy.Strategy;
 
 import static main.research.OutPut.*;
@@ -35,18 +34,12 @@ public class Manager implements SetParam {
 
 	//TODO: こんな風にするならsingletonにしたほうがいいよね
 	// TODO: lsとmsで分けて指定しなきゃいけないの無駄じゃない?
-	private static String package_name = "main.research.agent.strategy.reliableAgents.";
+//	private static String package_name = "main.research.agent.strategy.reliableAgents.";
+	//    private static String package_name = "main.research.agent.strategy.ComparativeStrategy1.";
+//    private static String package_name = "main.research.agent.strategy.ComparativeStrategy2.";
+	private static String package_name = "main.research.agent.strategy.puttingDeOcAndDelayIntoOneDimensionalValue.";
 	private static String ls_name = "LeaderStrategy";      // ICA2018における提案手法役割更新あり    //    private static main.research.strategy.Strategy strategy = new ProposedMethodForSingapore();
 	private static String ms_name = "MemberStrategy";
-//    private static String package_name = "main.research.agent.strategy.ComparativeStrategy1.";
-//    private static String ls_name = "LeaderStrategy";
-//    private static String ms_name = "MemberStrategy";
-//    private static String package_name = "main.research.agent.strategy.ComparativeStrategy2.";
-//    private static String ls_name = "LeaderStrategy";
-//    private static String ms_name = "MemberStrategy";
-//	private static String package_name = "main.research.agent.strategy.ComparativeStrategy3.";
-//	private static String ls_name = "LeaderStrategy";
-//	private static String ms_name = "MemberStrategy";
 
 	static {
 		try {
@@ -70,7 +63,7 @@ public class Manager implements SetParam {
 		int num = 0;
 		String strategy_name = package_name.split( "\\." )[ 4 ];
 		System.out.println( strategy_name );
-		System.out.println( strategy_name + ", λ=" + ADDITIONAL_TASK_NUM +
+		System.out.println( strategy_name + ", λ=" + TaskManager.getAdditional_tasks_num_() +
 			", From " + LocalDateTime.now()
 		);
 
@@ -102,8 +95,14 @@ public class Manager implements SetParam {
 				.filter( agent -> agent.role == MEMBER )
 				.count();
 			System.out.println( "leaders:" + leader_num + ", members:" + member_num );
+
+			// remove
+			// 信頼エージェントについて
 			System.out.println( "waiting: " + main.research.agent.strategy.reliableAgents.MemberStrategy.waiting );
 			System.out.println( "tired of waiting: " + main.research.agent.strategy.MemberStrategyWithRoleChange.tired_of_waiting );
+			System.out.println( "average de from member to leader: " + main.research.agent.strategy.reliableAgents.MemberStrategy.calculateMeanDE() );
+			System.out.println( "reciprocal members: " + main.research.agent.strategy.reliableAgents.MemberStrategy.countReciprocalMembers() );
+			showGrowApartDegree();
 
 			System.out.println( "---------------------------------------------------------------------------------" );
 			if ( num == executionTimes_ ) break;
@@ -111,8 +110,11 @@ public class Manager implements SetParam {
 		}
 		// ↑ 全実験の終了のカッコ．以下は後処理
 		if ( resultTypeNode.get( "check_data" ).asBoolean() )       writeResults( strategy_name );
-		if ( resultTypeNode.get( "check_relationships" ).asBoolean() ) writeGraphInformationX( AgentManager.getAllAgentList(), strategy_name );
-		writeRelationsBetweenOCandDE( AgentManager.getAllAgentList() );
+		if ( resultTypeNode.get( "check_relationships" ).asBoolean() ) writeGraphInformationX( AgentManager.getAllAgentList(), strategy_name, jsonNode.get( "others" ) );
+		AgentManager.getAllAgentList().stream()
+			.filter( ag -> ag.id < 10 )
+			.forEach( ag -> System.out.println("id: " + ag.id + ", role: " + ag.role) );
+//		showRelationsBetweenOCandDE( AgentManager.getAllAgentList() );
 	}
 
 	// 環境の準備に使うメソッド

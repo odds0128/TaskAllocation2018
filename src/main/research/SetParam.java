@@ -6,16 +6,9 @@ package main.research;
  */
 
 public interface SetParam {
-	// 結果表示のためのパラメータ
-	int  COALITION_CHECK_SPAN = 50;          // 協調関係ができているか確認するための最後の方のターム
-	double THRESHOLD_FOR_COALITION = 10;
-
 	// トーラスを考えた時に，中心が自分であるほうが考えやすいので，一片の長さは奇数にする
 	int MAX_X    = 51, MAX_Y = 51;
 	int MAX_DELAY = 5;
-
-	double ADDITIONAL_TASK_NUM  = 7.5;        // タスクを追加するタイミングで, タスクキューに追加するタスクの個数(=λ)
-	int RESOURCE_TYPES = 3;
 
 	int REDUNDANT_SOLICITATION_TIMES = 2;              // あるサブタスクについて要請を出すエージェントの数
 	int THRESHOLD_FOR_ROLE_RENEWAL  = 50;

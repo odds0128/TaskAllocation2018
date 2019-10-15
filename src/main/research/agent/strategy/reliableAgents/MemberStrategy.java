@@ -3,22 +3,55 @@ package main.research.agent.strategy.reliableAgents;
 import main.research.SetParam;
 import main.research.agent.Agent;
 import main.research.agent.AgentDePair;
+import main.research.agent.AgentManager;
 import main.research.agent.strategy.MemberStrategyWithRoleChange;
 import main.research.communication.TransmissionPath;
 import main.research.communication.message.ReplyToSolicitation;
 import main.research.communication.message.Solicitation;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static main.research.SetParam.ReplyType.ACCEPT;
 import static main.research.SetParam.ReplyType.DECLINE;
 
 
 public class MemberStrategy extends MemberStrategyWithRoleChange implements SetParam {
-	private final double threshold_of_reliable_leader = 0.5;
+	public static final double threshold_of_reliable_leader = 0.7;
 
 	// remove
 	public static int waiting = 0;
+	public static double calculateMeanDE() {
+		List<Agent> agentList = AgentManager.getAllAgentList();
+		List<Agent> members = new ArrayList<>(  );
+		for( Agent ag : agentList ) {
+			if( ag.e_member > ag.e_leader ) members.add( ag );
+		}
+
+		double sum = 0;
+		int nonZeroLeaders = 0;
+
+		for( Agent m : members ) {
+			List<AgentDePair> validPairsList = m.ms.reliableLeadersRanking.stream()
+				.filter( pair -> pair.getDe() > 0 )
+				.collect( Collectors.toList( ) );
+			nonZeroLeaders += validPairsList.stream()
+				.count();
+			sum += validPairsList.stream()
+				.mapToDouble( pair -> pair.getDe() )
+				.sum();
+		}
+		return sum/nonZeroLeaders;
+	}
+
+	public static int countReciprocalMembers() {
+		return ( int ) AgentManager.getAllAgentList().stream()
+			.filter( agent -> agent.e_member > agent.e_leader )
+			.filter( member -> member.ms.reliableLeadersRanking.get( 0 ).getDe() > threshold_of_reliable_leader )
+			.count();
+	}
+
 	@Override
 	public void replyToSolicitations( Agent member, List< Solicitation > solicitations ) {
 		if(  solicitations.isEmpty() ) return;

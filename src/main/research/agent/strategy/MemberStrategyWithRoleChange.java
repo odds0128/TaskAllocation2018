@@ -140,7 +140,7 @@ public abstract class MemberStrategyWithRoleChange implements Strategy, SetParam
             member.required[currentSubtask.resType]++;
             TransmissionPath.sendMessage( new Done( member, currentLeader ) );
 
-            if ( Agent._coalition_check_end_time - getCurrentTime() < COALITION_CHECK_SPAN) {
+            if ( withinTimeWindow() ) {
                 member.workWithAsM[currentLeader.id]++;
                 member.didTasksAsMember++;
             }

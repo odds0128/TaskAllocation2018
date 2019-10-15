@@ -33,7 +33,11 @@ class OCTupleTest {
 	void setUp() throws NoSuchFieldException, IllegalAccessException {
 		List< Agent > agentList = Initiation.getNewAgentList();
 		for( Agent ag : agentList ) {
+<<<<<<< HEAD:test/main/research/agent/strategy/reliableAgents/CDTupleTest.java
 			ocTupleList.add( new OCTuple( ag, new double[RESOURCE_TYPES], MyRandom.getRandomInt( 0, currentTime ) ) );
+=======
+			cdTupleList.add( new CDTuple( ag, new double[ resource_types_ ], MyRandom.getRandomInt( 0, currentTime ) ) );
+>>>>>>> @{-1}:test/main/research/agent/strategy/ProposedStrategy/CDTupleTest.java
 		}
 		Collections.sort( ocTupleList, Comparator.comparingInt( OCTuple::getLastUpdatedTime ) );
 

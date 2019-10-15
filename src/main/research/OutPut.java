@@ -1,10 +1,13 @@
 package main.research;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import main.research.agent.AgentDePair;
 import main.research.agent.AgentManager;
 import main.research.agent.strategy.OCTuple;
 import main.research.agent.strategy.reliableAgents.LeaderStrategy;
+import main.research.agent.strategy.reliableAgents.MemberStrategy;
 import main.research.task.Task;
+import main.research.task.TaskManager;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.*;
@@ -22,6 +25,7 @@ import java.util.*;
 import static main.research.SetParam.Principle.RATIONAL;
 import static main.research.SetParam.Principle.RECIPROCAL;
 import static main.research.SetParam.Role.LEADER;
+import static main.research.agent.Agent.resource_types_;
 
 /**
  * OutPutクラス
@@ -35,8 +39,8 @@ public class OutPut implements SetParam {
 	private static int agent_num_ = AgentManager.agent_num_;
 
 	private static OutPut _singleton = new OutPut();
-    static Workbook book = null;
-    static FileOutputStream fout = null;
+	static Workbook book = null;
+	static FileOutputStream fout = null;
 
 	static int index = 0;
 
@@ -97,7 +101,7 @@ public class OutPut implements SetParam {
 		int num = taskQueue.size();
 		System.out.println( "QueueSize: " + num );
 		for ( int i = 0; i < num; i++ ) {
-			Task temp = taskQueue.remove(0);
+			Task temp = taskQueue.remove( 0 );
 			System.out.println( temp );
 			taskQueue.add( temp );
 		}
@@ -134,7 +138,7 @@ public class OutPut implements SetParam {
 	}
 
 	static void writeResults( String st ) {
-		System.out.println("called");
+		System.out.println( "called" );
 		String outputFilePath = _singleton.setPath( "results", st, "csv" );
 		System.out.println( "writing now" );
 		FileWriter fw;
@@ -182,7 +186,7 @@ public class OutPut implements SetParam {
 	static void writeAgentsSubtaskQueueSize( PrintWriter pw ) {
 		pw.print( Manager.getCurrentTime() );
 		List< Agent > agList = AgentManager.getAllAgentList();
-		for( int i = 0; i < 10; i++ ) {
+		for ( int i = 0; i < 10; i++ ) {
 			Agent ag = agList.get( i );
 			pw.print( ", " + ag.role + ", " + ag.ms.mySubtaskQueue.size() );
 //		writeLeadersOC( pw, ag );
@@ -195,7 +199,7 @@ public class OutPut implements SetParam {
 			if ( leader.role == LEADER ) {
 				LeaderStrategy pl = ( LeaderStrategy ) leader.ls;
 				boolean exists = OCTuple.alreadyExists( target, pl.getCdTupleList() );
-				double temp = exists ? OCTuple.getOC( 1, target, pl.getCdTupleList() ) : -1 ;
+				double temp = exists ? OCTuple.getOC( 1, target, pl.getCdTupleList() ) : -1;
 
 				pw.print( ", " + temp );
 			}
@@ -230,12 +234,17 @@ public class OutPut implements SetParam {
 		}
 	}
 
-	static void writeRelationsBetweenOCandDE( List< Agent > agents ) {
+	static void showRelationsBetweenOCandDE( List< Agent > agents ) {
 		double average = 0;
 		int num = 0;
 		double meanLeaderCor = 0, meanMemberCor = 0;
 		int leaders = 0, members = 0;
 
+		try {
+			LeaderStrategy.class.getDeclaredMethod( "getCdTupleList", LeaderStrategy.class );
+		} catch ( NoSuchMethodException e ) {
+			return;
+		}
 		for ( Agent ag: agents ) {
 			List< OCTuple > ocTupleList = LeaderStrategy.getOcSetList( ( LeaderStrategy ) ag.ls );
 			int size = ocTupleList.size();
@@ -282,6 +291,36 @@ public class OutPut implements SetParam {
 			.count() );
 	}
 
+	static void showGrowApartDegree() {
+		List< Agent > agentList = AgentManager.getAllAgentList();
+		int reciprocalMembersNum = 0, reciprocalApart = 0;
+		int rationalMembersNum = 0, rationalApart = 0;
+		int allMembersNum = 0, allApart = 0;
+
+		for ( Agent ag: agentList ) {
+			if ( ag.e_member > ag.e_leader ) {
+				allMembersNum++;
+				if ( ag.ms.reliableLeadersRanking.get( 0 ).getDe() > MemberStrategy.threshold_of_reliable_leader ) {
+					reciprocalMembersNum++;
+					if ( AgentDePair.searchDEofAgent( ag, ag.ms.reliableLeadersRanking.get( 0 ).getAgent().ls.reliableMembersRanking ) < MemberStrategy.threshold_of_reliable_leader ) {
+						reciprocalApart++;
+						allApart++;
+					}
+				} else {
+					rationalMembersNum++;
+					if ( AgentDePair.searchDEofAgent( ag, ag.ms.reliableLeadersRanking.get( 0 ).getAgent().ls.reliableMembersRanking ) < MemberStrategy.threshold_of_reliable_leader ) {
+						rationalApart++;
+						allApart++;
+					}
+				}
+			}
+		}
+		System.out.println( "All members num       : " + allMembersNum + ", apart num: " + allApart + ", the rate: " + ( double ) allApart / allMembersNum );
+		System.out.println( "reciprocal members num: " + reciprocalMembersNum + ", apart num: " + reciprocalApart + ", the rate: " + ( double ) reciprocalApart / reciprocalMembersNum );
+		System.out.println( "rational members num  : " + rationalMembersNum + ", apart num: " + rationalApart + ", the rate: " + ( double ) rationalApart / rationalMembersNum );
+
+	}
+
 	static void writeRelationsBetweenDelayAndDE( int[][] delays, List< Agent > agents, String st ) {
 		double meanLeaderCor = 0, meanMemberCor = 0;
 		int leaders = 0, members = 0;
@@ -324,7 +363,7 @@ public class OutPut implements SetParam {
 			String currentPath = System.getProperty( "user.dir" );
 			Date date = new Date();
 			SimpleDateFormat sdf1 = new SimpleDateFormat( ",yyyy:MM:dd,HH:mm:ss" );
-			fw = new FileWriter( currentPath + "/out/results/rel" + fileName + ", λ=" + String.format( "%.2f", ADDITIONAL_TASK_NUM ) + sdf1.format( date ) + ".csv", false );
+			fw = new FileWriter( currentPath + "/out/results/rel" + fileName + ", λ=" + String.format( "%.2f", TaskManager.getAdditional_tasks_num_() ) + sdf1.format( date ) + ".csv", false );
 			bw = new BufferedWriter( fw );
 			pw = new PrintWriter( bw );
 
@@ -362,9 +401,10 @@ public class OutPut implements SetParam {
 			e2.printStackTrace();
 		}
 	}
-	static void writeGraphInformationX( List< Agent > agents, String st ) {
+
+	static void writeGraphInformationX( List< Agent > agents, String st, JsonNode graphNode ) {
 		String outputFilePath = _singleton.setPath( "relationships", st, "xlsx" );
-		Edge edge = new Edge();
+		Edge edge = new Edge( graphNode );
 		edge.makeEdge( agents );
 		try {
 			book = new SXSSFWorkbook();
@@ -470,7 +510,7 @@ public class OutPut implements SetParam {
 					_singleton.writeCell( row, colNumber++, style_header, " delay to leader " );
 //                    _singleton.writeCell(row, colNumber++, style_header, " is lonely or not");
 //                    _singleton.writeCell(row, colNumber++, style_header, " is accompanied or not");
-					for ( int j = 0; j < RESOURCE_TYPES; j++ ) {
+					for ( int j = 0; j < resource_types_; j++ ) {
 						_singleton.writeCell( row, colNumber++, style_header, " Resources " + j );
 						_singleton.writeCell( row, colNumber++, style_header, " Required " + j );
 						_singleton.writeCell( row, colNumber++, style_header, " Allocated " + j );
@@ -520,7 +560,7 @@ public class OutPut implements SetParam {
 						_singleton.writeCell( row, colNumber++, style_int, agent.getX() * 10 );
 						_singleton.writeCell( row, colNumber++, style_int, agent.getY() * 10 );
 
-						for ( int j = 0; j < RESOURCE_TYPES; j++ ) {
+						for ( int j = 0; j < resource_types_; j++ ) {
 							_singleton.writeCell( row, colNumber++, style_int, agent.resources[ j ] );
 							_singleton.writeCell( row, colNumber++, style_int, agent.required[ j ] );
 						}
@@ -698,8 +738,8 @@ public class OutPut implements SetParam {
 		String currentPath = System.getProperty( "user.dir" );
 		Date date = new Date();
 		SimpleDateFormat sdf1 = new SimpleDateFormat( ",yyyy_MM_dd,HH_mm_ss" );
-		System.out.println( "Address: " + dir_name + "/" + file_name + ",λ=" + String.format( "%.2f", ADDITIONAL_TASK_NUM ) + sdf1.format( date ) + "." + extension );
-		return currentPath + "/out/" + dir_name + "/" + file_name + ",λ=" + String.format( "%.2f", ADDITIONAL_TASK_NUM ) + sdf1.format( date ) + "." + extension;
+		System.out.println( "Address: " + dir_name + "/" + file_name + ",λ=" + String.format( "%.2f", TaskManager.getAdditional_tasks_num_() ) + sdf1.format( date ) + "." + extension );
+		return currentPath + "/out/" + dir_name + "/" + file_name + ",λ=" + String.format( "%.2f", TaskManager.getAdditional_tasks_num_() ) + sdf1.format( date ) + "." + extension;
 	}
 
 	// あるrowのcolumn列にoを書き込むメソッド

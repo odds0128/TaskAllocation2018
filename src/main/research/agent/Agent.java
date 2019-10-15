@@ -28,28 +28,28 @@ public class Agent implements SetParam, Cloneable {
 	public static double ε_, α_;
 	public static int _coalition_check_end_time = Manager.max_turn_;
 	public static int agent_num_ = AgentManager.agent_num_;
+	public static int resource_types_;
 	public LeaderStrategyWithRoleChange ls;
 	public MemberStrategyWithRoleChange ms;
 	public static int min_capacity_value_;
 	public static int max_capacity_value_;
 
 	public static int _id = 0;
-	private static int[] resSizeArray = new int[ RESOURCE_TYPES + 1 ];
 
 	// リーダーもメンバも持つパラメータ
 	public int id;
 	private Point p;
 	public Role role = JONE_DOE;
 	public Phase phase = SELECT_ROLE;
-	public int[] resources = new int[ RESOURCE_TYPES ];
+	public int[] resources;
 	public int[] workWithAsL = new int[ agent_num_ ];
 	public int[] workWithAsM = new int[ agent_num_ ];
 	public int validatedTicks = 0;
 	public double e_leader ;
 	public double e_member ;
 	public Principle principle = RATIONAL;
-	public int[] required = new int[ RESOURCE_TYPES ];            // そのリソースを要求するサブタスクが割り当てられた回数
-	public int[][] allocated = new int[ agent_num_ ][ RESOURCE_TYPES ]; // そのエージェントからそのリソースを要求するサブタスクが割り当てられた回数
+	public int[] required = new int[ resource_types_ ];            // そのリソースを要求するサブタスクが割り当てられた回数
+	public int[][] allocated = new int[ agent_num_ ][ resource_types_ ]; // そのエージェントからそのリソースを要求するサブタスクが割り当てられた回数
 
 	// リーダーエージェントのみが持つパラメータ
 	public int didTasksAsLeader = 0;
@@ -63,6 +63,7 @@ public class Agent implements SetParam, Cloneable {
 	public static void setConstants( JsonNode parameterNode ) {
 		ε_ = parameterNode.get( "parameters" ).get( "ε" ).asDouble();
 		α_ = parameterNode.get( "parameters" ).get( "α" ).asDouble();
+		resource_types_ = parameterNode.get( "agent" ).get( "resource_types" ).asInt();
 		min_capacity_value_ = parameterNode.get( "agent" ).get( "min_capacity_value" ).asInt();
 		max_capacity_value_ = parameterNode.get( "agent" ).get( "max_capacity_value" ).asInt();
 	}
@@ -80,9 +81,10 @@ public class Agent implements SetParam, Cloneable {
 
 	private void setResource() {
 		int resSum;
+		resources = new int[resource_types_];
 		do {
 			resSum = 0;
-			for ( int i = 0; i < RESOURCE_TYPES; i++ ) {
+			for ( int i = 0; i < resource_types_; i++ ) {
 				int rand = MyRandom.getRandomInt( min_capacity_value_, max_capacity_value_ );
 				resources[ i ] = rand;
 				resSum += rand;
@@ -183,7 +185,6 @@ public class Agent implements SetParam, Cloneable {
 
 	public static void clear() {
 		_id = 0;
-		for ( int i = 0; i < RESOURCE_TYPES; i++ ) resSizeArray[ i ] = 0;
 	}
 
 	public static int countReciprocalMember( List< Agent > agents ) {

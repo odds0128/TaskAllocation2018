@@ -210,9 +210,6 @@ public abstract class LeaderStrategyWithRoleChange implements Strategy, SetParam
 		for( Agent friend : friends ) sendMessage( new ResultOfTeamFormation( failingLeader, friend, FAILURE, null ) );
 	}
 
-	protected boolean withinTimeWindow() {
-		return Agent._coalition_check_end_time - getCurrentTime() < COALITION_CHECK_SPAN;
-	}
 
 
 	protected void appendAllocationHistory( Agent member, Subtask s ) {

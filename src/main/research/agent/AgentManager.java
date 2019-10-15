@@ -16,10 +16,12 @@ import static main.research.others.random.MyRandom.getRandomInt;
 
 public class AgentManager implements SetParam {
 	public  static int agent_num_;
+	public  static int time_observing_team_formation_;
 	private static List< Agent > allAgentList;
 
 	public static void setConstants( JsonNode agentNode ) {
 		agent_num_ = agentNode.get( "agent_num" ).asInt();
+		time_observing_team_formation_ = agentNode.get( "time_observing_team_formation" ).asInt();
 		Agent.setConstants( agentNode );
 	}
 
