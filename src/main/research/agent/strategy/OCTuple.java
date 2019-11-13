@@ -40,6 +40,7 @@ public class OCTuple {
 
 	public static double getOC( int resourceIndex, Agent target, List< OCTuple > list ) {
 		int agIndex = searchAgent( target, list );
+		if( agIndex == -1 ) return -1;
 		double[] targetOC = list.get( agIndex ).ostensibleCapacity;
 		return targetOC[resourceIndex];
 	}

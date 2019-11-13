@@ -16,7 +16,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.*;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 import static main.research.SetParam.Role.*;
 
@@ -30,14 +32,14 @@ public class Manager implements SetParam {
 	static final int executionTimes_;
 	public static final int max_turn_;
 	static final int writing_times_;
-	static final int bin_;
+	public static final int bin_;
 
 	//TODO: こんな風にするならsingletonにしたほうがいいよね
 	// TODO: lsとmsで分けて指定しなきゃいけないの無駄じゃない?
-//	private static String package_name = "main.research.agent.strategy.reliableAgents.";
-	//    private static String package_name = "main.research.agent.strategy.ComparativeStrategy1.";
-//    private static String package_name = "main.research.agent.strategy.ComparativeStrategy2.";
-	private static String package_name = "main.research.agent.strategy.puttingDeOcAndDelayIntoOneDimensionalValue.";
+	private static String package_name = "main.research.agent.strategy.reliableAgents.";
+//	private static String package_name = "main.research.agent.strategy.puttingDeOcAndDelayIntoOneDimensionalValue.";
+//	private static String package_name = "main.research.agent.strategy.putRewardAndDelayIntoDeCalculation.";
+//	private static String package_name = "main.research.agent.strategy.learningOnlyTeamingSuccessRate.";
 	private static String ls_name = "LeaderStrategy";      // ICA2018における提案手法役割更新あり    //    private static main.research.strategy.Strategy strategy = new ProposedMethodForSingapore();
 	private static String ms_name = "MemberStrategy";
 
@@ -71,6 +73,20 @@ public class Manager implements SetParam {
 		while ( true ) {
 			initiate( num++ );                         // シード，タスク，エージェントの初期化処理
 
+			FileWriter fw;
+			BufferedWriter bw;
+			PrintWriter pw = null;
+			String fileName = "temp";
+			try {
+				String currentPath = System.getProperty( "user.dir" );
+				Date date = new Date();
+				SimpleDateFormat sdf1 = new SimpleDateFormat( ",yyyy:MM:dd,HH:mm:ss" );
+				fw = new FileWriter( currentPath + "/out/results/" + fileName + ", λ=" + String.format( "%.2f", TaskManager.getAdditional_tasks_num_() ) + sdf1.format( date ) + ".csv", false );
+				bw = new BufferedWriter( fw );
+				pw = new PrintWriter( bw );
+			}catch ( Exception e ) {
+				System.out.println(e);
+			}
 			// ターンの進行
 			for ( turn = 1; turn <= max_turn_; turn++ ) {
 				TaskManager.addNewTasksToQueue();
@@ -78,10 +94,11 @@ public class Manager implements SetParam {
 				TransmissionPath.transmit();                // 通信遅延あり
 				AgentManager.actLeadersAndMembers();
 
+				if( turn > max_turn_ * 0.99 ) writeAgentsSubtaskQueueSize(pw);
+
 				if ( turn % bin_ == 0 && resultTypeNode.get( "check_data" ).asBoolean() ) {
 					aggregateAgentData( AgentManager.getAllAgentList() );
-					int rmNum = Agent.countReciprocalMember( AgentManager.getAllAgentList() );
-					aggregateData( TaskManager.getFinishedTasks(), TaskManager.getDisposedTasks(), TaskManager.getOverflowTasks(), rmNum, AgentManager.getAllAgentList() );
+					aggregateData();
 					TaskManager.reset();
 				}
 
@@ -102,11 +119,13 @@ public class Manager implements SetParam {
 			System.out.println( "tired of waiting: " + main.research.agent.strategy.MemberStrategyWithRoleChange.tired_of_waiting );
 			System.out.println( "average de from member to leader: " + main.research.agent.strategy.reliableAgents.MemberStrategy.calculateMeanDE() );
 			System.out.println( "reciprocal members: " + main.research.agent.strategy.reliableAgents.MemberStrategy.countReciprocalMembers() );
-			showGrowApartDegree();
+//			showGrowApartDegree();
+//			TransmissionPath.showMessages();
 
 			System.out.println( "---------------------------------------------------------------------------------" );
-			if ( num == executionTimes_ ) break;
+			pw.close();
 			clearAll();
+			if ( num == executionTimes_ ) break;
 		}
 		// ↑ 全実験の終了のカッコ．以下は後処理
 		if ( resultTypeNode.get( "check_data" ).asBoolean() )       writeResults( strategy_name );

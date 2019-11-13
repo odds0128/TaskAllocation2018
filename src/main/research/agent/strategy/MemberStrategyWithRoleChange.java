@@ -13,6 +13,7 @@ import main.research.others.Pair;
 import main.research.others.random.MyRandom;
 import main.research.task.Subtask;
 
+import static main.research.Manager.bin_;
 import static main.research.Manager.getCurrentTime;
 import static main.research.SetParam.Phase.*;
 import static main.research.SetParam.ReplyType.ACCEPT;
@@ -30,10 +31,12 @@ public abstract class MemberStrategyWithRoleChange implements Strategy, SetParam
     private List< ResultOfTeamFormation > resultList = new ArrayList<>();
     public List<Pair<Agent, Subtask>> mySubtaskQueue = new ArrayList<>(  );  // consider Agentとsubtaskの順番逆のがよくね
 
+    public static int idleTime = 0;
     public void actAsMember(Agent member) {
         assert mySubtaskQueue.size() <= SUBTASK_QUEUE_SIZE : "Over weight " + mySubtaskQueue.size();
         member.ms.replyToSolicitations( member, solicitationList);
 
+        if( mySubtaskQueue.isEmpty() && getCurrentTime() % bin_ == 0) idleTime++;
         while( ! resultList.isEmpty() ) {
             ResultOfTeamFormation r = resultList.remove( 0 );
             expectedResultMessage--;
@@ -131,6 +134,7 @@ public abstract class MemberStrategyWithRoleChange implements Strategy, SetParam
     private void execute( Agent member ) {
         member.validatedTicks = getCurrentTime();
 
+        assert member.executionTime >= 0 : "sabotage";
         if ( --member.executionTime == 0) {
             // HACK
             Pair<Agent, Subtask> pair = mySubtaskQueue.remove( 0 );
@@ -146,7 +150,14 @@ public abstract class MemberStrategyWithRoleChange implements Strategy, SetParam
             }
             mySubtaskQueue.remove(currentSubtask);
             // consider: nextPhaseと一緒にできない？
-            member.inactivate(1);
+            if( mySubtaskQueue.isEmpty() ) member.inactivate(1);
+            else {
+                currentSubtask = mySubtaskQueue.get( 0 ).getValue();
+                currentLeader = mySubtaskQueue.get( 0 ).getKey();
+
+                member.allocated[ currentLeader.id ][ currentSubtask.resType ]++;
+                member.executionTime = Agent.calculateExecutionTime( member, currentSubtask );
+            }
         }
     }
 

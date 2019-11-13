@@ -18,36 +18,61 @@ public class TransmissionPath implements SetParam {
 	private static int totalMessageNum = 0;
 	private static int communicationTime = 0;
 
-	private static List< Pair<Message, Integer> > messageQueue = new ArrayList<>(  );
+	private static List< Pair< Message, Integer > > messageQueue = new ArrayList<>();
+
+	static int solicit_num_ = 0, reply_accept_num_ = 0, reply_decline_num_ = 0;
+	static int result_success_num_ = 0, result_failure_num_ = 0, done_num_ = 0;
 
 	public static void sendMessage( Message m ) {
 		assert m.getFrom() != m.getTo() : "he asks himself";
-		assert ! ( m.getTo().role == LEADER && m instanceof ResultOfTeamFormation ) : "Wrong result message";
-		assert ! ( m.getTo().role == MEMBER && m instanceof ReplyToSolicitation )   : "Wrong reply message.";
+		assert !( m.getTo().role == LEADER && m instanceof ResultOfTeamFormation ) : "Wrong result message";
+		assert !( m.getTo().role == MEMBER && m instanceof ReplyToSolicitation ) : "Wrong reply message.";
 
+		countMessage( m );
 		int untilArrival = Grid.getDelay( m.getFrom(), m.getTo() );
-		messageQueue.add( new Pair<>(m, untilArrival) );
+		messageQueue.add( new Pair<>( m, untilArrival ) );
 		totalMessageNum++;
 		communicationTime += untilArrival;
 	}
-	
+
+	private static void countMessage( Message m ) {
+		switch ( m.getClass().getSimpleName() ) {
+			case "Solicitation":
+				solicit_num_++;
+				break;
+			case "ReplyToSolicitation":
+				ReplyToSolicitation rs = ( ReplyToSolicitation ) m;
+				if ( rs.getReplyType() == ReplyType.ACCEPT ) reply_accept_num_++;
+				else if ( rs.getReplyType() == ReplyType.DECLINE ) reply_decline_num_++;
+				break;
+			case "ResultOfTeamFormation":
+				ResultOfTeamFormation rt = ( ResultOfTeamFormation ) m;
+				if ( rt.getResult() == ResultType.SUCCESS ) result_success_num_++;
+				else if ( rt.getResult() == ResultType.FAILURE ) result_failure_num_++;
+				break;
+			case "Done":
+				done_num_++;
+				break;
+		}
+	}
+
 	public static void transmit() {
 		Collections.sort( messageQueue, Comparator.comparing( Pair::getValue ) );
 		approaching( messageQueue );
 
-		while( ! messageQueue.isEmpty() ) {
-			Pair<Message, Integer> pair = messageQueue.remove( 0 );
-			if( pair.getValue() == 0 ) {
+		while ( !messageQueue.isEmpty() ) {
+			Pair< Message, Integer > pair = messageQueue.remove( 0 );
+			if ( pair.getValue() == 0 ) {
 				reachPost( pair.getKey() );
 			} else {
-				messageQueue.add(0, pair);
+				messageQueue.add( 0, pair );
 				break;
 			}
 		}
 	}
 
 	static void approaching( List< Pair< Message, Integer > > sortedMessageQueue ) {
-		for ( Pair<Message, Integer> pair: sortedMessageQueue ) {
+		for ( Pair< Message, Integer > pair: sortedMessageQueue ) {
 			int former = pair.getValue();
 			pair.setValue( former - 1 );
 		}
@@ -56,7 +81,7 @@ public class TransmissionPath implements SetParam {
 	static void reachPost( Message m ) {
 		switch ( m.getClass().getSimpleName() ) {
 			case "Solicitation":
-				m.getTo().ms.reachSolicitation( (Solicitation ) m );
+				m.getTo().ms.reachSolicitation( ( Solicitation ) m );
 				break;
 			case "ReplyToSolicitation":
 				m.getTo().ls.reachReply( ( ReplyToSolicitation ) m );
@@ -85,10 +110,14 @@ public class TransmissionPath implements SetParam {
 		communicationTime = 0;
 	}
 
-	@Override
-	public String toString() {
-		StringBuilder str = new StringBuilder();
-		return str.toString();
+	public static void showMessages() {
+		System.out.println( "solicitations: " + solicit_num_ );
+		System.out.println( "replies: " + ( reply_accept_num_ + reply_decline_num_ ) );
+		System.out.println( " - accept: " + reply_accept_num_ );
+		System.out.println( " - decline: " + reply_decline_num_ );
+		System.out.println( "results: " + ( result_success_num_ + result_failure_num_ ) );
+		System.out.println( " - success: " + result_success_num_ );
+		System.out.println( " - failure: " + result_failure_num_ );
+		System.out.println( "done: " + ( done_num_ ) );
 	}
-
 }

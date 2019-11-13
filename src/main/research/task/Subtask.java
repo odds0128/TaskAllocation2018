@@ -6,7 +6,7 @@ import main.research.others.random.MyRandom;
 
 import java.util.Comparator;
 
-public class Subtask implements SetParam {
+public class Subtask implements SetParam, Cloneable {
     public static int resource_types_;
     private static int min_request_value_;
     private static int max_request_value_;
@@ -59,4 +59,17 @@ public class Subtask implements SetParam {
             return Integer.compare(no2, no1);
         }
     }
+
+    @Override
+    public Subtask clone() { //基本的にはpublic修飾子を付け、自分自身の型を返り値とする
+        Subtask b = null;
+
+        try {
+            b = ( Subtask ) super.clone(); //親クラスのcloneメソッドを呼び出す(親クラスの型で返ってくるので、自分自身の型でのキャストを忘れないようにする)
+        } catch ( Exception e ) {
+            e.printStackTrace();
+        }
+        return b;
+    }
+
 }

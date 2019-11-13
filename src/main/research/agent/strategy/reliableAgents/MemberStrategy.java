@@ -20,7 +20,6 @@ import static main.research.SetParam.ReplyType.DECLINE;
 public class MemberStrategy extends MemberStrategyWithRoleChange implements SetParam {
 	public static final double threshold_of_reliable_leader = 0.7;
 
-	// remove
 	public static int waiting = 0;
 	public static double calculateMeanDE() {
 		List<Agent> agentList = AgentManager.getAllAgentList();
@@ -60,20 +59,27 @@ public class MemberStrategy extends MemberStrategyWithRoleChange implements SetP
 			compareSolicitations( solicitation1, solicitation2, reliableLeadersRanking ) );
 
 		if( haveReliableLeader() ) {
-			Agent reliableLeader = reliableLeadersRanking.get( 0 ).getAgent();
-			Solicitation s = solicitations.remove( 0 );
-			if( reliableLeader.equals( s.getFrom() ) ) {
-				accept( member, s );
-			}
-			else {
-				// remove
-				waiting++;
-				TransmissionPath.sendMessage( new ReplyToSolicitation( member, s.getFrom(), DECLINE, s.getExpectedSubtask() ) );
-			}
-			decline( member, solicitations );
+			member.principle = Principle.RECIPROCAL;
+			replyToReliableLeader( member, solicitations );
 		} else {
+			member.principle = Principle.RATIONAL;
 			replyToOrdinaryLeaders( member, solicitations );
 		}
+	}
+
+	private void replyToReliableLeader( Agent member, List< Solicitation> solicitations ) {
+		int capacity = SUBTASK_QUEUE_SIZE - mySubtaskQueue.size() - expectedResultMessage;
+		Agent relLeader = reliableLeadersRanking.get( 0 ).getAgent();
+		while( ! solicitations.isEmpty() && capacity > 0) {
+			Solicitation s = solicitations.remove( 0 );
+			if( s.getFrom() == relLeader ) {
+				accept( member, s );
+				capacity--;
+			}else {
+				TransmissionPath.sendMessage( new ReplyToSolicitation( member, s.getFrom(), DECLINE, s.getExpectedSubtask() ) );
+			}
+		}
+		declineAll( member, solicitations );
 	}
 
 	private boolean haveReliableLeader() {
@@ -86,7 +92,7 @@ public class MemberStrategy extends MemberStrategyWithRoleChange implements SetP
 		joinFlag = true;
 	}
 
-	private void decline( Agent member, List<Solicitation> solicitations ) {
+	private void declineAll( Agent member, List<Solicitation> solicitations ) {
 		while ( !solicitations.isEmpty() ) {
 			Solicitation s = solicitations.remove( 0 );
 			TransmissionPath.sendMessage( new ReplyToSolicitation( member, s.getFrom(), DECLINE, s.getExpectedSubtask() ) );
@@ -99,7 +105,7 @@ public class MemberStrategy extends MemberStrategyWithRoleChange implements SetP
 			Solicitation s = Agent.epsilonGreedy() ? selectSolicitationRandomly( solicitations ) : solicitations.remove( 0 );
 			accept( member, s );
 		}
-		decline( member, solicitations );
+		declineAll( member, solicitations );
 	}
 
 

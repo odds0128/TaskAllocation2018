@@ -5,6 +5,7 @@ import main.research.agent.Agent;
 import main.research.agent.AgentDePair;
 import main.research.agent.strategy.OCTuple;
 import main.research.agent.strategy.LeaderStrategyWithRoleChange;
+import main.research.agent.strategy.Strategy;
 import main.research.communication.message.Done;
 import main.research.communication.message.ReplyToSolicitation;
 import main.research.communication.message.ResultOfTeamFormation;
@@ -16,6 +17,7 @@ import main.research.task.TaskManager;
 import org.apache.commons.math3.stat.descriptive.SynchronizedSummaryStatistics;
 import org.apache.commons.math3.util.Precision;
 
+import javax.crypto.spec.PSource;
 import java.util.*;
 
 import static main.research.Manager.getCurrentTime;
@@ -26,6 +28,9 @@ import static main.research.communication.TransmissionPath.sendMessage;
 import static main.research.task.TaskManager.disposeTask;
 
 public class LeaderStrategy extends LeaderStrategyWithRoleChange implements SetParam {
+	static final double de_threshold_ = 0.5;
+	static final double oc_threshold_ = 3.0;
+
 	// 評価指標 = αDE + βOC + γDelay
 	static final double α = 1;
 	static final double β = 0.3;
@@ -43,63 +48,136 @@ public class LeaderStrategy extends LeaderStrategyWithRoleChange implements SetP
 	private List< OCTuple > ocTupleList = new ArrayList<>();
 
 	@Override
-	public void sendSolicitations( Agent leader, Map< Agent, Subtask > agentSubtaskMap ) {
-		for ( Map.Entry< Agent, Subtask > ag_st: agentSubtaskMap.entrySet() ) {
-			timeToStartCommunicatingMap.put( ag_st.getKey(), getCurrentTime() );
-			sendMessage( new Solicitation( leader, ag_st.getKey(), ag_st.getValue() ) );
+	protected void solicitAsL( Agent leader ) {
+		myTask = TaskManager.popTask( );
+		if ( myTask == null ) {
+			leader.inactivate( 0 );
+			return;
 		}
+		Map<Agent, List<Subtask>> allocationMap = selectMembersLocal( myTask.subtasks );
+		if( allocationMap.size() < myTask.subtasks.size() * REDUNDANT_SOLICITATION_TIMES ) {
+			leader.principle = Principle.RECIPROCAL;
+		} else {
+			leader.principle = Principle.RATIONAL;
+		}
+		repliesToCome = countRepliesToCome( allocationMap );
+
+		if ( allocationMap.isEmpty() ) {
+			leader.inactivate( 0 );
+			return;
+		} else {
+			this.sendSolicitationsLocal( leader, allocationMap );
+		}
+		Strategy.proceedToNextPhase( leader );  // 次のフェイズへ
 	}
 
-	// todo: 混雑度を元にしたメンバー選定のロジックの実装
-	@Override
-	protected Map< Agent, Subtask > selectMembers( List< Subtask > subtasks ) {
-		Map< Agent, Subtask > memberCandidates = new HashMap<>();
-		Agent candidate;
+	private int countRepliesToCome( Map< Agent, List< Subtask>> allocationMap ) {
+		int temp = allocationMap.entrySet().stream()
+			.mapToInt( entry -> entry.getValue().size() )
+			.sum();
+		return temp;
+	}
+
+	private Map< Agent, List<Subtask> > selectMembersLocal( List< Subtask > subtasks ) {
 		OCTuple.forgetOldOcInformation( ocTupleList );
 		forgetOldRoundTripTimeInformation();
 
+		Map<Agent, List<Subtask> > allocationMap = new HashMap<>(  );
+		List<Subtask> unassignedSubtasks;
+		Agent candidate;
+
+		unassignedSubtasks = allocateToRelAg( subtasks, allocationMap );
+		exceptions.addAll( allocationMap.keySet() );
 		for ( int i = 0; i < REDUNDANT_SOLICITATION_TIMES; i++ ) {
-			for ( Subtask st: subtasks ) {
+			for ( Subtask st: unassignedSubtasks ) {
 				if ( Agent.epsilonGreedy( ) ) candidate = selectMemberForASubtaskRandomly( st );
 				else candidate = this.selectMemberArbitrary( st );
-
 				if ( candidate == null ) {
 					return new HashMap<>();
 				}
-
 				exceptions.add( candidate );
-				memberCandidates.put( candidate, st );
+				List<Subtask> temp = new ArrayList<>(  );
+				temp.add( st );
+				allocationMap.put( candidate, temp );
 			}
 		}
-		return memberCandidates;
+		return allocationMap;
 	}
 
-	public static int nulls = 0;
-	public static int notNulls = 0;
+	private List<Subtask> allocateToRelAg( List< Subtask > subtasks, Map<Agent, List<Subtask>> alMap ) {
+		Map<Agent, List<Subtask>> map = new HashMap<>(  );
+		List<Subtask> unassigned = new ArrayList<>(  );
+
+		for( Subtask st : subtasks ) {
+			boolean toBeAssigned = false;
+			for( AgentDePair ag_de : reliableMembersRanking ) {
+				if( ag_de.getDe() <= de_threshold_ ) break;
+
+				Agent reliableAgent = ag_de.getAgent();
+				if( !reliableAgent.canProcessTheSubtask( st ) || exceptions.contains( reliableAgent ) ) continue;
+
+				double oc = OCTuple.getOC( st.resType, reliableAgent, getOcTupleList( this ) );
+				if( oc > oc_threshold_ ) {
+					if ( !map.containsKey( reliableAgent ) ) map.put( reliableAgent, new ArrayList<>() );
+					map.get( reliableAgent ).add( st );
+					toBeAssigned = true;
+					break;
+				} else continue;
+			}
+			if( toBeAssigned == false ) unassigned.add( st );
+		}
+		alMap.putAll( map );
+		return unassigned;
+	}
 
 	private Agent selectMemberArbitrary( Subtask st ) {
-		Agent candidate = selectMemberAccordingToEvaluation( st );
-		if ( candidate == null ) {
-			nulls++;
-			candidate = selectMemberAccordingToDE( st );
-		} else {
-			notNulls++;
+		Agent candidate;
+
+		candidate = selectMemberByEvaluation( st );
+		if( candidate == null ) candidate = selectMemberAccordingToDE( st );
+
+		return candidate;
+	}
+
+	// 信頼エージェントの中でももっともDEのたかい奴を選ぶ
+	private Agent selectReliableMember( Subtask st ) {
+		Agent candidate = null;
+		double itsEvaluation = 0;
+		int size = reliableMembersRanking.size();
+
+		for( int i = 0; i < size; i++ ) {
+			AgentDePair pair = reliableMembersRanking.get( 0 );
+			Agent currentAgent = pair.getAgent();
+
+			//
+			if( pair.getDe() <= de_threshold_ ) break;
+			if( !currentAgent.canProcessTheSubtask( st ) || exceptions.contains( currentAgent ) ) continue;
+
+			double temp = calculateMemberEvaluation( currentAgent, st );
+			if( itsEvaluation < temp ) {
+				candidate = currentAgent;
+				itsEvaluation = temp;
+			}
 		}
 		return candidate;
 	}
 
-	private Agent selectMemberAccordingToEvaluation( Subtask st ) {
+	private Agent selectMemberByEvaluation( Subtask st ) {
+		// if これで選んだやつが信頼エージェント then return true else return false
 		double maxEvaluation = 0;
 		Agent returnAgent = null;
 
 		for ( AgentDePair pair: reliableMembersRanking ) {
-			Agent tempAgent = pair.getAgent();
-			if( !tempAgent.canProcessTheSubtask( st ) ) break;
-			if ( exceptions.contains( tempAgent ) ) continue;
-			double tempEvaluation = calculateMemberEvaluation( tempAgent, st );
+			Agent currentAgent = pair.getAgent();
+			if( !currentAgent.canProcessTheSubtask( st ) || exceptions.contains( currentAgent ) ) continue;
+
+			/*
+			if currentAgent is reliable then
+			 */
+			double tempEvaluation = calculateMemberEvaluation( currentAgent, st );
 			if ( tempEvaluation > maxEvaluation ) {
 				maxEvaluation = tempEvaluation;
-				returnAgent = tempAgent;
+				returnAgent = currentAgent;
 			}
 		}
 		if( maxEvaluation < EVALUATION_THRESHOLD ) return null;
@@ -148,34 +226,44 @@ public class LeaderStrategy extends LeaderStrategyWithRoleChange implements SetP
 		return null;
 	}
 
+	private void sendSolicitationsLocal( Agent leader, Map< Agent, List<Subtask> > agentSubtaskMap ) {
+		for ( Map.Entry<Agent, List<Subtask> > ag_stList : agentSubtaskMap.entrySet() ) {
+			Agent ag = ag_stList.getKey();
+			timeToStartCommunicatingMap.put( ag, getCurrentTime() );
+			for( Subtask st : ag_stList.getValue() ) {
+				sendMessage( new Solicitation( leader, ag, st ) );
+			}
+		}
+	}
+
 	@Override
 	public void formTeamAsL( Agent leader ) {
 		if ( replyList.size() < repliesToCome ) return;
 		else repliesToCome = 0;
 
-		Map< Subtask, Agent > mapOfSubtaskAndAgent = new HashMap<>();
+		Map< Subtask, Agent > allocationMap = new HashMap<>();
 		while ( !replyList.isEmpty() ) {
 			ReplyToSolicitation r = replyList.remove( 0 );
 			Subtask st = r.getSubtask();
 			Agent currentFrom = r.getFrom();
-			// TODO: 待たせた時間は別で保持する
+
 			int extraWaitingTime = calculateExtraWaitingTime( currentFrom );
 			extraWaitingTimeMap.put( currentFrom, extraWaitingTime );
 
 			if ( r.getReplyType() == DECLINE ) treatBetrayer( currentFrom );
-			else if ( mapOfSubtaskAndAgent.containsKey( st ) ) {
-				Agent rival = mapOfSubtaskAndAgent.get( st );
+			else if ( allocationMap.containsKey( st ) ) {
+				Agent rival = allocationMap.get( st );
 				Pair winnerAndLoser = compareDE( currentFrom, rival );
 
 				exceptions.remove( winnerAndLoser.getValue() );
 				sendMessage( new ResultOfTeamFormation( leader, ( Agent ) winnerAndLoser.getValue(), FAILURE, null ) );
-				mapOfSubtaskAndAgent.put( st, ( Agent ) winnerAndLoser.getKey() );
+				allocationMap.put( st, ( Agent ) winnerAndLoser.getKey() );
 			} else {
-				mapOfSubtaskAndAgent.put( st, currentFrom );
+				allocationMap.put( st, currentFrom );
 			}
 		}
-		if ( canExecuteTheTask( myTask, mapOfSubtaskAndAgent.keySet() ) ) {
-			for ( Map.Entry entry: mapOfSubtaskAndAgent.entrySet() ) {
+		if ( canExecuteTheTask( myTask, allocationMap.keySet() ) ) {
+			for ( Map.Entry entry: allocationMap.entrySet() ) {
 				Agent friend = ( Agent ) entry.getValue();
 				Subtask st = ( Subtask ) entry.getKey();
 
@@ -186,8 +274,8 @@ public class LeaderStrategy extends LeaderStrategyWithRoleChange implements SetP
 			}
 			leader.inactivate( 1 );
 		} else {
-			apologizeToFriends( leader, new ArrayList<>( mapOfSubtaskAndAgent.values() ) );
-			exceptions.removeAll( new ArrayList<>( mapOfSubtaskAndAgent.values() ) );
+			apologizeToFriends( leader, new ArrayList<>( allocationMap.values() ) );
+			exceptions.removeAll( new ArrayList<>( allocationMap.values() ) );
 			disposeTask();
 			leader.inactivate( 0 );
 		}
@@ -210,7 +298,7 @@ public class LeaderStrategy extends LeaderStrategyWithRoleChange implements SetP
 		Subtask st = getAllocatedSubtask( d.getFrom() );
 
 		int bindingTime = getCurrentTime() - timeToStartCommunicatingMap.get( from );
-		renewCongestionDegreeMap( from, st, bindingTime );
+		updateOstensibleCapacityMap( from, st, bindingTime );
 
 		renewDE( reliableMembersRanking, from, 1 );
 		exceptions.remove( from );
@@ -222,7 +310,6 @@ public class LeaderStrategy extends LeaderStrategyWithRoleChange implements SetP
 		task.subtasks.remove( st );
 
 		if ( task.subtasks.isEmpty() ) {
-			from.pastTasks.remove( task );
 			TaskManager.finishTask();
 			from.didTasksAsLeader++;
 		}
@@ -234,14 +321,15 @@ public class LeaderStrategy extends LeaderStrategyWithRoleChange implements SetP
 		pair.renewDEbyArbitraryReward( evaluation );
 	}
 
-	private void renewCongestionDegreeMap( Agent target, Subtask st, int bindingTime ) {
+	private void updateOstensibleCapacityMap( Agent target, Subtask st, int bindingTime ) {
 		double[] tempArray = new double[ Agent.resource_types_ ];
 		int resourceType = st.resType;
 
 		if ( OCTuple.alreadyExists( target, ocTupleList ) ) {
 			double newOC = calculateOC( bindingTime, target, st );
-			assert newOC > 0 : "illegal congestion degree";
-			OCTuple.updateOC( target, ocTupleList, resourceType, newOC );
+			double oldOC = OCTuple.getOC( resourceType, target, ocTupleList );
+			// 最良の場合のみ記憶しておく
+			if( newOC >= oldOC ) OCTuple.updateOC( target, ocTupleList, resourceType, newOC );
 		} else {
 			tempArray[ resourceType ] = calculateOC( bindingTime, target, st );
 			ocTupleList.add( new OCTuple( target, tempArray, getCurrentTime() ) );
@@ -272,7 +360,7 @@ public class LeaderStrategy extends LeaderStrategyWithRoleChange implements SetP
 		return sb.toString();
 	}
 
-	public static List< OCTuple > getOcSetList( LeaderStrategy psl ) {
+	public static List< OCTuple > getOcTupleList( LeaderStrategy psl ) {
 		return psl.ocTupleList;
 	}
 

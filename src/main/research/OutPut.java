@@ -3,6 +3,7 @@ package main.research;
 import com.fasterxml.jackson.databind.JsonNode;
 import main.research.agent.AgentDePair;
 import main.research.agent.AgentManager;
+import main.research.agent.strategy.MemberStrategyWithRoleChange;
 import main.research.agent.strategy.OCTuple;
 import main.research.agent.strategy.reliableAgents.LeaderStrategy;
 import main.research.agent.strategy.reliableAgents.MemberStrategy;
@@ -25,6 +26,7 @@ import java.util.*;
 import static main.research.SetParam.Principle.RATIONAL;
 import static main.research.SetParam.Principle.RECIPROCAL;
 import static main.research.SetParam.Role.LEADER;
+import static main.research.agent.Agent.countReciprocalMember;
 import static main.research.agent.Agent.resource_types_;
 
 /**
@@ -51,9 +53,10 @@ public class OutPut implements SetParam {
 	static double[] communicationDelayArray = new double[ writing_times_ ];
 	static int[] leaderNumArray = new int[ writing_times_ ];
 	static int[] neetMembersArray = new int[ writing_times_ ];
-	static int[] reciprocalistsArray = new int[ writing_times_ ];
+	static int[] reciprocalLeaderArray = new int[ writing_times_ ];
 	static int[] rationalistsArray = new int[ writing_times_ ];
 	static int[] reciprocalMembersArray = new int[ writing_times_ ];
+	static double[] idleMembersRateArray = new double[ writing_times_ ];
 	static int[] finishedTasksInDepopulatedAreaArray = new int[ writing_times_ ];
 	static int[] finishedTasksInPopulatedAreaArray = new int[ writing_times_ ];
 	static int[] tempTaskExecutionTimeArray = new int[ writing_times_ ];
@@ -73,18 +76,21 @@ public class OutPut implements SetParam {
 
 	static int[] tempMessagesArray = new int[ writing_times_ ];
 
-	static void aggregateData( int ft, int dt, int ot, int rm, List< Agent > agentList ) {
-		finishedTasksArray[ index ] += ft;
+	static void aggregateData() {
+		finishedTasksArray[ index ] += TaskManager.getFinishedTasks();
 		tempMessagesArray[ index ] = TransmissionPath.getMessageNum();
 		int gap = index > 0 ? tempMessagesArray[ index - 1 ] : 0;
 		messagesArray[ index ] += TransmissionPath.getMessageNum() - gap;
 		communicationDelayArray[ index ] += TransmissionPath.getAverageCommunicationTime();
-		disposedTasksArray[ index ] += dt;
-		overflownTasksArray[ index ] += ot;
-		reciprocalMembersArray[ index ] += rm;
+		disposedTasksArray[ index ] += TaskManager.getDisposedTasks();
+		overflownTasksArray[ index ] += TaskManager.getOverflowTasks();
+		reciprocalMembersArray[ index ] += Agent.countReciprocalMember( AgentManager.getAllAgentList() );
+		reciprocalLeaderArray[ index ] += Agent.countReciprocalLeader( AgentManager.getAllAgentList() );
 		if ( index == writing_times_ - 1 ) {
 			tempMessagesArray = new int[ writing_times_ ];
 		}
+		idleMembersRateArray[ index ] += (double) MemberStrategyWithRoleChange.idleTime / AgentManager.countMembers();
+		MemberStrategyWithRoleChange.idleTime = 0;
 		indexIncrement();
 	}
 
@@ -108,7 +114,7 @@ public class OutPut implements SetParam {
 		System.out.println( "  Remains: " + taskQueue.size() );
 	}
 
-	static void checkGrid( Agent[][] grid ) {
+	public static void checkGrid( Agent[][] grid ) {
 		System.out.println( "Total Agents is " + Agent._id );
 		for ( int i = 0; i < MAX_X; i++ ) {
 			for ( int j = 0; j < MAX_Y; j++ ) {
@@ -119,7 +125,7 @@ public class OutPut implements SetParam {
 		}
 	}
 
-	static void checkDelay( int[][] delays ) {
+	public static void checkDelay( int[][] delays ) {
 		int[] countDelay = new int[ MAX_DELAY ];
 		for ( int i = 0; i < agent_num_; i++ ) {
 			System.out.print( "ID: " + i + "..." );
@@ -158,6 +164,7 @@ public class OutPut implements SetParam {
 					// + "Lonely leaders"                    + ", " + "Lonely members"                    + ", "
 					// + "Accompanied leaders"               + ", " + "Accompanied members"               + ", "
 					+ "ReciprocalLeaders" + ", " + "ReciprocalMembers" + ", "
+					+ "IdleTime" + ", "
 				// + "Rational"                          + ", " + "ReciprocalMembers" + ","
 				// + "FinishedTasks in depopulated area" + ", " + "FinishedTasks in populated area"   + ", "
 			);
@@ -173,8 +180,9 @@ public class OutPut implements SetParam {
 					+ ( double ) taskExecutionTimeArray[ i ] / executionTimes_ + ", "
 					+ ( double ) leaderNumArray[ i ] / executionTimes_ + ", "
 					+ ( double ) neetMembersArray[ i ] / executionTimes_ + ", "
-					+ ( double ) ( reciprocalistsArray[ i ] - reciprocalMembersArray[ i ] ) / executionTimes_ + ", "
+					+ ( double ) reciprocalLeaderArray[ i ] / executionTimes_ + ", "
 					+ ( double ) reciprocalMembersArray[ i ] / executionTimes_ + ", "
+					+ ( double ) idleMembersRateArray[i] / executionTimes_ + ", "
 				);
 			}
 			pw.close();
@@ -186,7 +194,7 @@ public class OutPut implements SetParam {
 	static void writeAgentsSubtaskQueueSize( PrintWriter pw ) {
 		pw.print( Manager.getCurrentTime() );
 		List< Agent > agList = AgentManager.getAllAgentList();
-		for ( int i = 0; i < 10; i++ ) {
+		for ( int i = 0; i < agent_num_; i++ ) {
 			Agent ag = agList.get( i );
 			pw.print( ", " + ag.role + ", " + ag.ms.mySubtaskQueue.size() );
 //		writeLeadersOC( pw, ag );
@@ -220,7 +228,7 @@ public class OutPut implements SetParam {
 
 			pw.print( "id" );
 			for ( int i = 0; i < agent_num_; i++ ) pw.print( ", " + i );
-			pw.println();
+			pw.println(", ");
 			for ( int i = 0; i < agent_num_; i++ ) {
 				pw.print( i + ", " );
 				for ( int j = 0; j < agent_num_; j++ ) {
@@ -246,7 +254,7 @@ public class OutPut implements SetParam {
 			return;
 		}
 		for ( Agent ag: agents ) {
-			List< OCTuple > ocTupleList = LeaderStrategy.getOcSetList( ( LeaderStrategy ) ag.ls );
+			List< OCTuple > ocTupleList = LeaderStrategy.getOcTupleList( ( LeaderStrategy ) ag.ls );
 			int size = ocTupleList.size();
 			if ( size == 0 || size == 1 ) continue;
 
@@ -315,9 +323,9 @@ public class OutPut implements SetParam {
 				}
 			}
 		}
-		System.out.println( "All members num       : " + allMembersNum + ", apart num: " + allApart + ", the rate: " + ( double ) allApart / allMembersNum );
-		System.out.println( "reciprocal members num: " + reciprocalMembersNum + ", apart num: " + reciprocalApart + ", the rate: " + ( double ) reciprocalApart / reciprocalMembersNum );
-		System.out.println( "rational members num  : " + rationalMembersNum + ", apart num: " + rationalApart + ", the rate: " + ( double ) rationalApart / rationalMembersNum );
+		System.out.println( "All members num       : " + allMembersNum + ", apart relationships: " + allApart + ", apart rate: " + ( double ) allApart / allMembersNum );
+		System.out.println( "reciprocal members num: " + reciprocalMembersNum + ", apart relationships: " + reciprocalApart + ", apart rate: " + ( double ) reciprocalApart / reciprocalMembersNum );
+		System.out.println( "rational members num  : " + rationalMembersNum + ", apart relationships: " + rationalApart + ", apart rate: " + ( double ) rationalApart / rationalMembersNum );
 
 	}
 

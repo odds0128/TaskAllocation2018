@@ -1,6 +1,7 @@
 package main.research.agent;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import main.research.OutPut;
 import main.research.SetParam;
 import main.research.grid.Grid;
 import main.research.others.random.MyRandom;
@@ -122,5 +123,11 @@ public class AgentManager implements SetParam {
 		assert leaders.size() + members.size() == agent_num_ : "Some agents sabotage" + ( leaders.size() + members.size() );
 		actRandom( leaders, LEADER );
 		actRandom( members, MEMBER );
+	}
+
+	public static int countMembers() {
+		return ( int ) allAgentList.stream()
+			.filter( ag -> ag.e_member > ag.e_leader )
+			.count();
 	}
 }

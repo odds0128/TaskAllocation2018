@@ -52,8 +52,4 @@ public interface SetParam {
 		EXECUTE_SUBTASK            // メンバ
 	}
 
-	enum DERenewalStrategy {
-		withBinary,
-		withReward
-	}
 }

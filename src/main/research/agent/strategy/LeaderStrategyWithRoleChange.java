@@ -58,7 +58,7 @@ public abstract class LeaderStrategyWithRoleChange implements Strategy, SetParam
 
 		Collections.sort( reliableMembersRanking, Comparator.comparingDouble( AgentDePair::getDe ).reversed() );
 
-		if ( leader.phase == SOLICIT ) solicitAsL( leader );
+		if ( leader.phase == SOLICIT ) leader.ls.solicitAsL( leader );
 		else if ( leader.phase == FORM_TEAM ) leader.ls.formTeamAsL( leader );
 
 		evaporateDE( reliableMembersRanking );
@@ -89,7 +89,7 @@ public abstract class LeaderStrategyWithRoleChange implements Strategy, SetParam
 		}
 	}
 
-	private void solicitAsL( Agent leader ) {
+	protected void solicitAsL( Agent leader ) {
 		myTask = TaskManager.popTask( );
 		if ( myTask == null ) {
 			leader.inactivate( 0 );

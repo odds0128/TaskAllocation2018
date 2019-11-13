@@ -165,6 +165,7 @@ public class Agent implements SetParam, Cloneable {
 		}
 		role = JONE_DOE;
 		phase = SELECT_ROLE;
+		principle = RATIONAL;
 		this.validatedTicks = Manager.getCurrentTime();
 	}
 
@@ -191,6 +192,16 @@ public class Agent implements SetParam, Cloneable {
 		int temp = 0;
 		for ( Agent ag: agents ) {
 			if ( ag.e_member > ag.e_leader && ag.principle == RECIPROCAL ) {
+				temp++;
+			}
+		}
+		return temp;
+	}
+
+	public static int countReciprocalLeader(List<Agent> agents) {
+		int temp = 0;
+		for ( Agent ag: agents ) {
+			if ( ag.e_leader > ag.e_member && ag.principle == RECIPROCAL ) {
 				temp++;
 			}
 		}
@@ -236,7 +247,6 @@ public class Agent implements SetParam, Cloneable {
 
 		}else if( role == MEMBER ){
 			str.append( "resources: " + Arrays.toString( resources ) + ", ");
-			str.append( "subtasks: " + ms.mySubtaskQueue.size() + ", ");
 		}
 		return str.toString();
 	}
