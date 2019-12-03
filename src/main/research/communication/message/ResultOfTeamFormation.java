@@ -2,11 +2,13 @@ package main.research.communication.message;
 
 import main.research.SetParam.ResultType;
 import main.research.agent.Agent;
+import main.research.graph.GraphAtAnWindow;
 import main.research.task.Subtask;
 
 public class ResultOfTeamFormation extends Message{
 
 	static private int results = 0;
+	static GraphAtAnWindow graph;
 
 	ResultType result;
 	Subtask allocatedSubtask;
@@ -15,6 +17,7 @@ public class ResultOfTeamFormation extends Message{
 		super( from, to );
 		results++;
 		this.result = result;
+		if( result == ResultType.SUCCESS ) graph.aggregate(from.id, to.id );
 		this.allocatedSubtask = allocatedSubtask;
 	}
 
@@ -28,6 +31,10 @@ public class ResultOfTeamFormation extends Message{
 
 	public static int getResults() {
 		return results;
+	}
+
+	public static void setGraph( GraphAtAnWindow currentGraph ) {
+		graph = currentGraph;
 	}
 
 	@Override
