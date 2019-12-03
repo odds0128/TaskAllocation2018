@@ -223,7 +223,7 @@ public class OutPut implements SetParam {
 	static void writeNodeInformationAsCSV( int currentTicks, List<Agent> agentList ) {
 		try{
 			// nodeファイルを作ってそこにnode(agent)の情報を出力する
-			PrintWriter pw = newCSVPrintWriter( "graph/" + graphDirectoryName + "/nodes/" + String.format( "", currentTicks) );
+			PrintWriter pw = newCSVPrintWriter( "graph/" + graphDirectoryName + "/nodes/" +  currentTicks);
 			pw.print( "id," );
 			pw.print( "role," );
 			pw.print( "x," );

@@ -31,12 +31,6 @@ public class LeaderStrategy extends LeaderStrategyWithRoleChange implements SetP
 	static final double de_threshold_ = 0.5;
 	static final double oc_threshold_ = 3.0;
 
-	// 評価指標 = αDE + βOC + γDelay
-	static final double α = 1;
-	static final double β = 0.3;
-	static final double γ = 0.3 ;
-	private static final double EVALUATION_THRESHOLD = 0.5;
-
 	private Map< Agent, Integer > timeToStartCommunicatingMap = new HashMap<>();
 	private Map< Agent, Integer > roundTripTimeMap = new HashMap<>();
 	private Map< Agent, Integer > extraWaitingTimeMap = new HashMap<>();
@@ -131,91 +125,7 @@ public class LeaderStrategy extends LeaderStrategyWithRoleChange implements SetP
 	}
 
 	private Agent selectMemberArbitrary( Subtask st ) {
-		Agent candidate;
-
-		candidate = selectMemberByEvaluation( st );
-		if( candidate == null ) candidate = selectMemberAccordingToDE( st );
-
-		return candidate;
-	}
-
-	// 信頼エージェントの中でももっともDEのたかい奴を選ぶ
-	private Agent selectReliableMember( Subtask st ) {
-		Agent candidate = null;
-		double itsEvaluation = 0;
-		int size = reliableMembersRanking.size();
-
-		for( int i = 0; i < size; i++ ) {
-			AgentDePair pair = reliableMembersRanking.get( 0 );
-			Agent currentAgent = pair.getAgent();
-
-			//
-			if( pair.getDe() <= de_threshold_ ) break;
-			if( !currentAgent.canProcessTheSubtask( st ) || exceptions.contains( currentAgent ) ) continue;
-
-			double temp = calculateMemberEvaluation( currentAgent, st );
-			if( itsEvaluation < temp ) {
-				candidate = currentAgent;
-				itsEvaluation = temp;
-			}
-		}
-		return candidate;
-	}
-
-	private Agent selectMemberByEvaluation( Subtask st ) {
-		// if これで選んだやつが信頼エージェント then return true else return false
-		double maxEvaluation = 0;
-		Agent returnAgent = null;
-
-		for ( AgentDePair pair: reliableMembersRanking ) {
-			Agent currentAgent = pair.getAgent();
-			if( !currentAgent.canProcessTheSubtask( st ) || exceptions.contains( currentAgent ) ) continue;
-
-			/*
-			if currentAgent is reliable then
-			 */
-			double tempEvaluation = calculateMemberEvaluation( currentAgent, st );
-			if ( tempEvaluation > maxEvaluation ) {
-				maxEvaluation = tempEvaluation;
-				returnAgent = currentAgent;
-			}
-		}
-		if( maxEvaluation < EVALUATION_THRESHOLD ) return null;
-		return returnAgent;
-	}
-
-	private double calculateMemberEvaluation( Agent target, Subtask st ) {
-		if ( !OCTuple.alreadyExists( target, ocTupleList ) ) {
-			return α * AgentDePair.searchDEofAgent( target, reliableMembersRanking );
-		}
-
-		double[] ocs = ocTupleList.stream()
-			.mapToDouble( tuple -> tuple.getOCArray()[st.resType] )
-			.toArray();
-		double[] rtts = roundTripTimeMap.values().stream()
-			.mapToDouble( value -> value )
-			.toArray();
-
-		double oc_standard_deviation = calculateStandardDeviation( ocs );
-		double rtt_standard_deviation = calculateStandardDeviation( rtts );
-
-		return α * AgentDePair.searchDEofAgent( target, reliableMembersRanking )
-			+ β * ( OCTuple.calculateAverageOC( st.resType, ocTupleList ) - OCTuple.getOC( st.resType, target, ocTupleList ) ) / oc_standard_deviation
-			+ γ * ( calculateAverageRoundTripTime() - roundTripTimeMap.get( target ) ) / rtt_standard_deviation ;
-	}
-
-	public static Double calculateStandardDeviation( double[] values ){
-		SynchronizedSummaryStatistics stats = new SynchronizedSummaryStatistics();
-		for( double value: values ) stats.addValue( value );
-		return Precision.round( stats.getStandardDeviation(), 2);
-	}
-
-
-	private double calculateAverageRoundTripTime() {
-		return roundTripTimeMap.values().stream()
-			.mapToDouble( v -> v )
-			.average()
-			.getAsDouble();
+		return  selectMemberAccordingToDE( st );
 	}
 
 	private Agent selectMemberAccordingToDE( Subtask st ) {
