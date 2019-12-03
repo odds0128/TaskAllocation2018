@@ -136,9 +136,9 @@ public class Agent implements SetParam, Cloneable {
 
 	private void selectReverseRole() {
 		if( e_leader > e_member ) {
-			selectLeaderRole();
-		}else if( e_member > e_leader ){
 			selectMemberRole();
+		}else if( e_member > e_leader ){
+			selectLeaderRole();
 		}else{
 			selectRandomRole();
 		}
