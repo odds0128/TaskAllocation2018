@@ -6,13 +6,14 @@
   },
   "result_type" : {
     "check_data" : true,
+    "check_network" : true,
     "check_relationships" : false,
     "check_interim_relationships" : false,
     "check_initiation" : false,
     "check_agents" : false
   },
   "agents" : {
-    "agent_num" : 500,
+    "agent_num" : 30,
     "time_observing_team_formation" : 50,
     "agent" : {
       "resource_types": 3,
@@ -35,7 +36,7 @@
   },
   "tasks" : {
     "initial_tasks_num" : 0,
-    "additional_tasks_num" : 12.5,
+    "additional_tasks_num" : 1.0,
     "distribution" : "poisson",
     "task_queue_size" : 500,
     "min_subtasks_num" : 3,

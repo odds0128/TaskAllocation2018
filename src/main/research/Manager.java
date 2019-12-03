@@ -8,6 +8,8 @@ import static main.research.OutPut.*;
 import static main.research.others.random.MyRandom.*;
 
 import main.research.communication.TransmissionPath;
+import main.research.communication.message.ResultOfTeamFormation;
+import main.research.graph.GraphAtAnWindow;
 import main.research.grid.Grid;
 import main.research.task.Task;
 import main.research.task.TaskManager;
@@ -44,6 +46,7 @@ public class Manager implements SetParam {
 	private static String ms_name = "MemberStrategy";
 
 	static {
+		System.out.println(System.getProperty( "user.dir" ));
 		try {
 			jsonNode = mapper.readTree( new File( System.getProperty( "user.dir" ) + INIT_FILE_PATH ) );
 		} catch ( IOException e ) {
@@ -73,34 +76,36 @@ public class Manager implements SetParam {
 		while ( true ) {
 			initiate( num++ );                         // シード，タスク，エージェントの初期化処理
 
-			FileWriter fw;
-			BufferedWriter bw;
-			PrintWriter pw = null;
-			String fileName = "temp";
-			try {
-				String currentPath = System.getProperty( "user.dir" );
-				Date date = new Date();
-				SimpleDateFormat sdf1 = new SimpleDateFormat( ",yyyy:MM:dd,HH:mm:ss" );
-				fw = new FileWriter( currentPath + "/out/results/" + fileName + ", λ=" + String.format( "%.2f", TaskManager.getAdditional_tasks_num_() ) + sdf1.format( date ) + ".csv", false );
-				bw = new BufferedWriter( fw );
-				pw = new PrintWriter( bw );
-			}catch ( Exception e ) {
-				System.out.println(e);
+			Stdout.checkGrid( Grid.getGrid() );
+			if ( resultTypeNode.get( "check_network" ).asBoolean() ) {
+				OutPut.makeGraphDirectory();
 			}
+			GraphAtAnWindow graph = null ;
+
 			// ターンの進行
 			for ( turn = 1; turn <= max_turn_; turn++ ) {
+
 				TaskManager.addNewTasksToQueue();
 				AgentManager.JoneDoesSelectRole();
+
+				if ( turn % bin_ == 0 ) {
+					if( resultTypeNode.get( "check_data" ).asBoolean()  ) {
+						aggregateData( AgentManager.getAllAgentList() );
+						TaskManager.forget();
+					}
+					if( resultTypeNode.get( "check_network" ).asBoolean() ) {
+						OutPut.writeNodeInformationAsCSV( turn, AgentManager.getAllAgentList() );
+						OutPut.writeGraphInformationAsCSV( turn, graph );
+					}
+				}
+
+				if ( turn % bin_ == 1 && resultTypeNode.get( "check_network" ).asBoolean() ) {
+					graph = new GraphAtAnWindow();
+					ResultOfTeamFormation.setGraph( graph );
+				}
+
 				TransmissionPath.transmit();                // 通信遅延あり
 				AgentManager.actLeadersAndMembers();
-
-				if( turn > max_turn_ * 0.99 ) writeAgentsSubtaskQueueSize(pw);
-
-				if ( turn % bin_ == 0 && resultTypeNode.get( "check_data" ).asBoolean() ) {
-					aggregateAgentData( AgentManager.getAllAgentList() );
-					aggregateData();
-					TaskManager.reset();
-				}
 
 				// ここが1tickの最後の部分．次のtickまでにやることあったらここで．
 			}
@@ -123,13 +128,11 @@ public class Manager implements SetParam {
 //			TransmissionPath.showMessages();
 
 			System.out.println( "---------------------------------------------------------------------------------" );
-			pw.close();
 			clearAll();
 			if ( num == executionTimes_ ) break;
 		}
 		// ↑ 全実験の終了のカッコ．以下は後処理
 		if ( resultTypeNode.get( "check_data" ).asBoolean() )       writeResults( strategy_name );
-		if ( resultTypeNode.get( "check_relationships" ).asBoolean() ) writeGraphInformationX( AgentManager.getAllAgentList(), strategy_name, jsonNode.get( "others" ) );
 		AgentManager.getAllAgentList().stream()
 			.filter( ag -> ag.id < 10 )
 			.forEach( ag -> System.out.println("id: " + ag.id + ", role: " + ag.role) );

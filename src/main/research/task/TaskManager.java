@@ -68,7 +68,7 @@ public class TaskManager {
 		return overflowTasks;
 	}
 
-	public static void reset() {
+	public static void forget() {
 		finishedTasks = 0;
 		disposedTasks = 0;
 		overflowTasks = 0;
