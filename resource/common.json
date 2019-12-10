@@ -1,12 +1,12 @@
 {
   "environment" : {
-    "execution_times" : 1,
+    "execution_times" : 2,
     "max_turn" : 10000,
     "writing_times" : 100
   },
   "result_type" : {
     "check_data" : true,
-    "check_network" : true,
+    "check_network" : false,
     "check_relationships" : false,
     "check_interim_relationships" : false,
     "check_initiation" : false,
@@ -36,7 +36,7 @@
   },
   "tasks" : {
     "initial_tasks_num" : 0,
-    "additional_tasks_num" : 1.0,
+    "additional_tasks_num" : 3.0,
     "distribution" : "poisson",
     "task_queue_size" : 500,
     "min_subtasks_num" : 3,

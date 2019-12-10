@@ -17,7 +17,7 @@ public class ResultOfTeamFormation extends Message{
 		super( from, to );
 		results++;
 		this.result = result;
-		if( result == ResultType.SUCCESS ) graph.aggregate(from.id, to.id );
+		if( graph != null && result == ResultType.SUCCESS ) graph.aggregate(from.id, to.id );
 		this.allocatedSubtask = allocatedSubtask;
 	}
 

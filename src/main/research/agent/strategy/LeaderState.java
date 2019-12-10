@@ -34,8 +34,8 @@ public abstract class LeaderState implements Strategy, SetParam {
 	private Map< Agent, List< Subtask > > allocationHistory = new HashMap<>();
 	public List< AgentDePair > reliableMembersRanking = new ArrayList<>(  );
 
-	protected List< ReplyToSolicitation > replyList = new ArrayList<>();
-	List< Done > doneList = new ArrayList<>(); // HACK: 可視性狭めたい
+	public List< ReplyToSolicitation > replyList = new ArrayList<>();
+	public List< Done > doneList = new ArrayList<>(); // HACK: 可視性狭めたい
 
 	public static void setConstants( JsonNode parameterNode ) {
 		γ_ = parameterNode.get( "γ" ).asDouble();
@@ -47,8 +47,8 @@ public abstract class LeaderState implements Strategy, SetParam {
 	// question: Leader has a LeaderStrategy のはずなので本来引数に「自分」を渡さなくてもいいはずでは？
 	// TODO: Leaderクラスのインスタンスメソッドにする
 	public void actAsLeader( Agent leader ) {
-		while ( !leader.ms.solicitationList.isEmpty() ) {
-			Solicitation s = leader.ms.solicitationList.remove( 0 );
+		while ( !leader.solicitationList.isEmpty() ) {
+			Solicitation s = leader.solicitationList.remove( 0 );
 			declineSolicitation( leader, s );
 		}
 		while ( !doneList.isEmpty() ) {
@@ -242,15 +242,12 @@ public abstract class LeaderState implements Strategy, SetParam {
 		reliableMembersRanking.remove( self );
 	}
 
-	public void reachReply( ReplyToSolicitation r ) {
-		this.replyList.add( r );
-	}
-
-	public void reachDone( Done d ) {
-		this.doneList.add( d );
-	}
 
 	protected abstract void renewDE( List<AgentDePair> pairList, Agent target, double evaluation );
 
+	// todo: 削除
+	public void reachReply(ReplyToSolicitation r){
+		r.getTo().ls.replyList.add( r );
+	}
 
 }

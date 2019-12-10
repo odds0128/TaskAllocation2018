@@ -27,18 +27,16 @@ public abstract class MemberState implements Strategy, SetParam {
     public List< AgentDePair > reliableLeadersRanking = new ArrayList<>(  );
 
     protected int expectedResultMessage = 0;
-    List< Solicitation > solicitationList = new ArrayList<>();
-    private List< ResultOfTeamFormation > resultList = new ArrayList<>();
     public List<Pair<Agent, Subtask>> mySubtaskQueue = new ArrayList<>(  );  // consider Agentとsubtaskの順番逆のがよくね
 
     public static int idleTime = 0;
     public void actAsMember(Agent member) {
         assert mySubtaskQueue.size() <= SUBTASK_QUEUE_SIZE : "Over weight " + mySubtaskQueue.size();
-        member.ms.replyToSolicitations( member, solicitationList);
+        member.ms.replyToSolicitations( member, member.solicitationList);
 
         if( mySubtaskQueue.isEmpty() && getCurrentTime() % bin_ == 0) idleTime++;
-        while( ! resultList.isEmpty() ) {
-            ResultOfTeamFormation r = resultList.remove( 0 );
+        while( ! member.resultList.isEmpty() ) {
+            ResultOfTeamFormation r = member.resultList.remove( 0 );
             expectedResultMessage--;
             member.ms.reactToResultMessage( r );
         }
@@ -166,13 +164,6 @@ public abstract class MemberState implements Strategy, SetParam {
         return solicitations.remove(index);
     }
 
-    public void reachSolicitation( Solicitation s ) {
-        this.solicitationList.add( s );
-    }
-
-    public void reachResult( ResultOfTeamFormation r ) {
-        this.resultList.add(r);
-    }
 
     protected abstract void renewDE( List<AgentDePair> pairList, Agent target, double evaluation );
 }

@@ -76,7 +76,7 @@ public class Manager implements SetParam {
 		while ( true ) {
 			initiate( num++ );                         // シード，タスク，エージェントの初期化処理
 
-			Stdout.checkGrid( Grid.getGrid() );
+//			Stdout.checkGrid( Grid.getGrid() );
 			if ( resultTypeNode.get( "check_network" ).asBoolean() ) {
 				OutPut.makeGraphDirectory();
 			}
