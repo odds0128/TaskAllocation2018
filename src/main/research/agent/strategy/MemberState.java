@@ -31,8 +31,6 @@ public abstract class MemberState implements Strategy, SetParam {
 
     public static int idleTime = 0;
     public void actAsMember(Agent member) {
-        assert mySubtaskQueue.size() <= SUBTASK_QUEUE_SIZE : "Over weight " + mySubtaskQueue.size();
-
         preprocess( member );
 
         // CONSIDER: CPU使用量馬鹿高い
@@ -44,6 +42,8 @@ public abstract class MemberState implements Strategy, SetParam {
     }
 
     private void preprocess( Agent member ) {
+        assert mySubtaskQueue.size() <= SUBTASK_QUEUE_SIZE : "Over weight " + mySubtaskQueue.size();
+
         member.ms.replyToSolicitations( member, member.solicitationList );
 
         if ( mySubtaskQueue.isEmpty() && getCurrentTime() % bin_ == 0 ) idleTime++;
