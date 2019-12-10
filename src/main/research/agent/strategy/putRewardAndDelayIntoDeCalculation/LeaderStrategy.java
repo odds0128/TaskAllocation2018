@@ -3,7 +3,7 @@ package main.research.agent.strategy.putRewardAndDelayIntoDeCalculation;
 import main.research.Manager;
 import main.research.agent.Agent;
 import main.research.agent.AgentDePair;
-import main.research.agent.strategy.LeaderStrategyWithRoleChange;
+import main.research.agent.strategy.LeaderState;
 import main.research.communication.message.Done;
 import main.research.communication.message.ReplyToSolicitation;
 import main.research.communication.message.ResultOfTeamFormation;
@@ -23,7 +23,7 @@ import static main.research.SetParam.ResultType.SUCCESS;
 import static main.research.communication.TransmissionPath.sendMessage;
 import static main.research.task.TaskManager.disposeTask;
 
-public class LeaderStrategy extends LeaderStrategyWithRoleChange {
+public class LeaderStrategy extends LeaderState {
 	Map< Agent, Integer > agentStartTimeMap = new HashMap<>();
 
 	@Override

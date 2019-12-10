@@ -12,8 +12,8 @@ import static main.research.SetParam.Principle.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import main.research.Manager;
 import main.research.SetParam;
-import main.research.agent.strategy.LeaderStrategyWithRoleChange;
-import main.research.agent.strategy.MemberStrategyWithRoleChange;
+import main.research.agent.strategy.LeaderState;
+import main.research.agent.strategy.MemberState;
 import main.research.others.random.*;
 import main.research.task.Subtask;
 import main.research.task.Task;
@@ -29,8 +29,8 @@ public class Agent implements SetParam, Cloneable {
 	public static int _coalition_check_end_time = Manager.max_turn_;
 	public static int agent_num_ = AgentManager.agent_num_;
 	public static int resource_types_;
-	public LeaderStrategyWithRoleChange ls;
-	public MemberStrategyWithRoleChange ms;
+	public LeaderState ls;
+	public MemberState ms;
 	public static int min_capacity_value_;
 	public static int max_capacity_value_;
 
@@ -258,8 +258,8 @@ public class Agent implements SetParam, Cloneable {
 		try {
 			LeaderStrategyClass = Class.forName( package_name.concat( ls_name ) );
 			MemberStrategyClass = Class.forName( package_name.concat( ms_name ) );
-			this.ls = ( LeaderStrategyWithRoleChange ) LeaderStrategyClass.getDeclaredConstructor().newInstance();
-			this.ms = ( MemberStrategyWithRoleChange ) MemberStrategyClass.getDeclaredConstructor().newInstance();
+			this.ls = ( LeaderState ) LeaderStrategyClass.getDeclaredConstructor().newInstance();
+			this.ms = ( MemberState ) MemberStrategyClass.getDeclaredConstructor().newInstance();
 			this.ls.addMyselfToExceptions( this );
 		} catch ( ClassNotFoundException | NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException e ) {
 			e.printStackTrace();

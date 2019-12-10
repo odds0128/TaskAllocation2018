@@ -1,11 +1,11 @@
 package main.research.agent;
 
-import main.research.agent.strategy.LeaderStrategyWithRoleChange;
+import main.research.agent.strategy.LeaderState;
 
 import java.util.*;
 
 public class AgentDePair {
-	private static final double γ  = LeaderStrategyWithRoleChange.γ_;
+	private static final double γ  = LeaderState.γ_;
 	private static final double α_ = Agent.α_;
 
 	private Agent agent;

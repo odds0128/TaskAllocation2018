@@ -15,7 +15,7 @@ import static main.research.SetParam.Role.MEMBER;
 
 public interface Strategy {
 	double α_ = Agent.α_;
-	double γ_ = LeaderStrategyWithRoleChange.γ_;
+	double γ_ = LeaderState.γ_;
 	int agent_num_ = AgentManager.agent_num_;
 	int time_observing_team_formation_ = AgentManager.time_observing_team_formation_;
 

@@ -4,7 +4,7 @@ import main.research.SetParam;
 import main.research.agent.Agent;
 import main.research.agent.AgentDePair;
 import main.research.agent.strategy.OCTuple;
-import main.research.agent.strategy.LeaderStrategyWithRoleChange;
+import main.research.agent.strategy.LeaderState;
 import main.research.communication.message.Done;
 import main.research.communication.message.ReplyToSolicitation;
 import main.research.communication.message.ResultOfTeamFormation;
@@ -29,7 +29,7 @@ import static main.research.communication.TransmissionPath.sendMessage;
 import static main.research.task.TaskManager.disposeTask;
 
 // TODO: 中身を表したクラス名にする
-public class LeaderStrategy extends LeaderStrategyWithRoleChange implements SetParam {
+public class LeaderStrategy extends LeaderState implements SetParam {
 	// 評価指標 = αDE + βOC + γDelay
 	static final double α = 1;
 	static final double β = 0.3;

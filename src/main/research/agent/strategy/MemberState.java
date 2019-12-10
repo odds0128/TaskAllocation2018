@@ -22,7 +22,7 @@ import static main.research.SetParam.ResultType.*;
 
 import java.util.*;
 
-public abstract class MemberStrategyWithRoleChange implements Strategy, SetParam {
+public abstract class MemberState implements Strategy, SetParam {
     protected boolean joinFlag = false;
     public List< AgentDePair > reliableLeadersRanking = new ArrayList<>(  );
 
@@ -61,7 +61,7 @@ public abstract class MemberStrategyWithRoleChange implements Strategy, SetParam
         List< Agent > tempList = AgentManager.generateRandomAgentList( agentList );
         for ( Agent temp: tempList ) {
             if( temp.equals( self ) ) continue;
-            reliableLeadersRanking.add( new AgentDePair( temp, LeaderStrategyWithRoleChange.initial_de_ ) );
+            reliableLeadersRanking.add( new AgentDePair( temp, LeaderState.initial_de_ ) );
         }
     }
 

@@ -121,7 +121,7 @@ public class Manager implements SetParam {
 			// remove
 			// 信頼エージェントについて
 			System.out.println( "waiting: " + main.research.agent.strategy.reliableAgents.MemberStrategy.waiting );
-			System.out.println( "tired of waiting: " + main.research.agent.strategy.MemberStrategyWithRoleChange.tired_of_waiting );
+			System.out.println( "tired of waiting: " + main.research.agent.strategy.MemberState.tired_of_waiting );
 			System.out.println( "average de from member to leader: " + main.research.agent.strategy.reliableAgents.MemberStrategy.calculateMeanDE() );
 			System.out.println( "reciprocal members: " + main.research.agent.strategy.reliableAgents.MemberStrategy.countReciprocalMembers() );
 //			showGrowApartDegree();

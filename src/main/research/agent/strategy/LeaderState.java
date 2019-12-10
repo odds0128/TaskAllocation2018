@@ -24,7 +24,7 @@ import static main.research.task.TaskManager.disposeTask;
 
 import java.util.*;
 
-public abstract class LeaderStrategyWithRoleChange implements Strategy, SetParam {
+public abstract class LeaderState implements Strategy, SetParam {
 	public static double γ_;
 	public static double initial_de_, initial_el_, initial_em_;
 

@@ -1,9 +1,9 @@
 package main.research.agent;
 
-import main.research.agent.strategy.MemberStrategyWithRoleChange;
+import main.research.agent.strategy.MemberState;
 import main.research.grid.Grid;
 import main.research.others.random.MyRandom;
-import main.research.agent.strategy.LeaderStrategyWithRoleChange;
+import main.research.agent.strategy.LeaderState;
 import org.junit.jupiter.api.*;
 
 import java.lang.reflect.Field;
@@ -31,7 +31,7 @@ public class AgentTest {
         MyRandom.setNewSfmt(0);
         AgentManager am = new AgentManager();
 
-        Method ga = AgentManager.class.getDeclaredMethod("generateAgents", LeaderStrategyWithRoleChange.class, MemberStrategyWithRoleChange.class);
+        Method ga = AgentManager.class.getDeclaredMethod("generateAgents", LeaderState.class, MemberState.class);
         ga.setAccessible(true);
         agentList = (List<Agent>) ga.invoke( am, package_name, ls_name, ms_name );
 

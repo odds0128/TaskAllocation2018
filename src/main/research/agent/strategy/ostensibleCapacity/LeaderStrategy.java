@@ -4,7 +4,7 @@ import main.research.*;
 import main.research.agent.Agent;
 import main.research.agent.AgentDePair;
 import main.research.agent.strategy.OCTuple;
-import main.research.agent.strategy.LeaderStrategyWithRoleChange;
+import main.research.agent.strategy.LeaderState;
 import main.research.communication.message.*;
 import main.research.others.Pair;
 import main.research.task.Subtask;
@@ -21,7 +21,7 @@ import static main.research.communication.TransmissionPath.*;
 import java.util.*;
 
 // TODO: 中身を表したクラス名にする
-public class LeaderStrategy extends LeaderStrategyWithRoleChange implements SetParam {
+public class LeaderStrategy extends LeaderState implements SetParam {
 	static double OC_THRESHOLD = 3.0;
 
 	private Map< Agent, Integer > timeToStartCommunicatingMap = new HashMap<>();

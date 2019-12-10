@@ -4,7 +4,7 @@ import main.research.SetParam;
 import main.research.agent.Agent;
 import main.research.agent.AgentDePair;
 import main.research.agent.AgentManager;
-import main.research.agent.strategy.MemberStrategyWithRoleChange;
+import main.research.agent.strategy.MemberState;
 import main.research.communication.TransmissionPath;
 import main.research.communication.message.ReplyToSolicitation;
 import main.research.communication.message.Solicitation;
@@ -17,7 +17,7 @@ import static main.research.SetParam.ReplyType.ACCEPT;
 import static main.research.SetParam.ReplyType.DECLINE;
 
 
-public class MemberStrategy extends MemberStrategyWithRoleChange implements SetParam {
+public class MemberStrategy extends MemberState implements SetParam {
 	public static final double threshold_of_reliable_leader = 0.7;
 
 	public static int waiting = 0;

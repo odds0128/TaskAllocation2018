@@ -3,7 +3,7 @@ package main.research;
 import com.fasterxml.jackson.databind.JsonNode;
 import main.research.agent.AgentDePair;
 import main.research.agent.AgentManager;
-import main.research.agent.strategy.MemberStrategyWithRoleChange;
+import main.research.agent.strategy.MemberState;
 import main.research.agent.strategy.OCTuple;
 import main.research.agent.strategy.reliableAgents.LeaderStrategy;
 import main.research.graph.Edge;
@@ -79,8 +79,8 @@ public class OutPut implements SetParam {
 		if ( index == writing_times_ - 1 ) {
 			tempMessagesArray = new int[ writing_times_ ];
 		}
-		idleMembersRateArray[ index ] += (double) MemberStrategyWithRoleChange.idleTime / AgentManager.countMembers();
-		MemberStrategyWithRoleChange.idleTime = 0;
+		idleMembersRateArray[ index ] += (double) MemberState.idleTime / AgentManager.countMembers();
+		MemberState.idleTime = 0;
 		indexIncrement();
 	}
 
