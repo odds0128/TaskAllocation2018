@@ -26,7 +26,8 @@ import java.util.List;
 
 
 public class Agent implements SetParam, Cloneable {
-	public static double ε_, α_;
+	public static double ε_, α_, γ_;
+	public static double initial_de_, initial_el_, initial_em_;
 	public static int _coalition_check_end_time = Manager.max_turn_;
 	public static int agent_num_ = AgentManager.agent_num_;
 	public static int resource_types_;
@@ -66,12 +67,18 @@ public class Agent implements SetParam, Cloneable {
 	public int executionTime = 0;
 
 
-	public static void setConstants( JsonNode parameterNode ) {
-		ε_ = parameterNode.get( "parameters" ).get( "ε" ).asDouble();
-		α_ = parameterNode.get( "parameters" ).get( "α" ).asDouble();
-		resource_types_ = parameterNode.get( "agent" ).get( "resource_types" ).asInt();
-		min_capacity_value_ = parameterNode.get( "agent" ).get( "min_capacity_value" ).asInt();
-		max_capacity_value_ = parameterNode.get( "agent" ).get( "max_capacity_value" ).asInt();
+	public static void setConstants( JsonNode agentNode ) {
+		ε_ = agentNode.get( "parameters" ).get( "ε" ).asDouble();
+		α_ = agentNode.get( "parameters" ).get( "α" ).asDouble();
+		resource_types_ = agentNode.get( "agent" ).get( "resource_types" ).asInt();
+		min_capacity_value_ = agentNode.get( "agent" ).get( "min_capacity_value" ).asInt();
+		max_capacity_value_ = agentNode.get( "agent" ).get( "max_capacity_value" ).asInt();
+
+		JsonNode parameterNode = agentNode.get("parameters");
+		γ_ = parameterNode.get( "γ" ).asDouble();
+		initial_de_ = parameterNode.get( "initial_de" ).asDouble();
+		initial_el_ = parameterNode.get( "initial_el" ).asDouble();
+		initial_em_ = parameterNode.get( "initial_em" ).asDouble();
 	}
 	public Agent( String package_name, String ls_name, String ms_name ) {
 		this.id = _id++;
@@ -141,34 +148,14 @@ public class Agent implements SetParam, Cloneable {
 	}
 
 	private void selectReverseRole() {
-		if( e_leader > e_member ) {
-			selectMemberRole();
-		}else if( e_member > e_leader ){
-			selectLeaderRole();
-		}else{
-			selectRandomRole();
-		}
-	}
-
-
-
-	void selectRoleWithoutLearning() {
-		int ran = MyRandom.getRandomInt( 0, 6 );
-		if ( ms.mySubtaskQueue.size() > 0 ) {
-			role = MEMBER;
-			this.phase = EXECUTE_SUBTASK;
-		}
-
-		if ( ran == 0 ) selectLeaderRole();
-		else selectMemberRole();
+		if( e_leader > e_member ) selectMemberRole();
+		else if( e_member > e_leader ) selectLeaderRole();
+		else selectRandomRole();
 	}
 
 	public void inactivate( double success ) {
-		if ( role == LEADER ) {
-			e_leader = e_leader * ( 1.0 - α_ ) + α_ * success;
-		} else{
-			e_member = e_member * ( 1.0 - α_ ) + α_ * success;
-		}
+		if ( role == LEADER ) e_leader = e_leader * ( 1.0 - α_ ) + α_ * success;
+		else e_member = e_member * ( 1.0 - α_ ) + α_ * success;
 		role = JONE_DOE;
 		phase = SELECT_ROLE;
 		principle = RATIONAL;
@@ -195,42 +182,22 @@ public class Agent implements SetParam, Cloneable {
 	}
 
 	public static int countReciprocalMember( List< Agent > agents ) {
-		int temp = 0;
-		for ( Agent ag: agents ) {
-			if ( ag.e_member > ag.e_leader && ag.principle == RECIPROCAL ) {
-				temp++;
-			}
-		}
-		return temp;
+		return ( int ) agents.stream()
+			.filter( ag -> ag.e_member > ag.e_leader && ag.principle == RECIPROCAL )
+			.count();
 	}
 
 	public static int countReciprocalLeader(List<Agent> agents) {
-		int temp = 0;
-		for ( Agent ag: agents ) {
-			if ( ag.e_leader > ag.e_member && ag.principle == RECIPROCAL ) {
-				temp++;
-			}
-		}
-		return temp;
+		return ( int ) agents.stream()
+			.filter( ag -> ag.e_leader > ag.e_member && ag.principle == RECIPROCAL )
+			.count();
 	}
 
-
-	/**
-	 * agentsの中でspan以上の時間誰からの依頼も受けずチームに参加していないメンバ数を返す．
-	 *
-	 * @param agents
-	 * @param span
-	 * @return
-	 */
 	public static int countNEETmembers( List< Agent > agents, int span ) {
-		int neetM = 0;
 		int now = Manager.getCurrentTime();
-		for ( Agent ag: agents ) {
-			if ( now - ag.validatedTicks > span ) {
-				neetM++;
-			}
-		}
-		return neetM;
+		return ( int ) agents.stream()
+			.filter( ag -> now - ag.validatedTicks > span )
+			.count();
 	}
 
 	@Override

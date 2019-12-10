@@ -32,38 +32,38 @@ public abstract class MemberState implements Strategy, SetParam {
     public static int idleTime = 0;
     public void actAsMember(Agent member) {
         assert mySubtaskQueue.size() <= SUBTASK_QUEUE_SIZE : "Over weight " + mySubtaskQueue.size();
-        member.ms.replyToSolicitations( member, member.solicitationList);
 
-        if( mySubtaskQueue.isEmpty() && getCurrentTime() % bin_ == 0) idleTime++;
-        while( ! member.resultList.isEmpty() ) {
-            ResultOfTeamFormation r = member.resultList.remove( 0 );
-            expectedResultMessage--;
-            member.ms.reactToResultMessage( r );
-        }
-
-        while( ! member.doneList.isEmpty() ) {
-            Done d = member.doneList.remove( 0 );
-            member.ls.checkDoneMessage( member, d );
-        }
+        preprocess( member );
 
         // CONSIDER: CPU使用量馬鹿高い
         Collections.sort( reliableLeadersRanking, Comparator.comparingDouble( AgentDePair::getDe ).reversed() );
-
         if      (member.phase == WAIT_FOR_SOLICITATION ) replyAsM(member);
         else if (member.phase == WAIT_FOR_SUBTASK )      receiveAsM(member);
         else if (member.phase == EXECUTE_SUBTASK )       execute(member);
         evaporateDE( reliableLeadersRanking );
     }
 
-    public void setLeaderRankingRandomly( Agent self, List< Agent > agentList ) {
-        List< Agent > tempList = AgentManager.generateRandomAgentList( agentList );
-        for ( Agent temp: tempList ) {
-            if( temp.equals( self ) ) continue;
-            reliableLeadersRanking.add( new AgentDePair( temp, LeaderState.initial_de_ ) );
+    private void preprocess( Agent member ) {
+        member.ms.replyToSolicitations( member, member.solicitationList );
+
+        if ( mySubtaskQueue.isEmpty() && getCurrentTime() % bin_ == 0 ) idleTime++;
+        while ( !member.resultList.isEmpty() ) {
+            ResultOfTeamFormation r = member.resultList.remove( 0 );
+            expectedResultMessage--;
+            member.ms.reactToResultMessage( r );
+        }
+
+        while ( !member.doneList.isEmpty() ) {
+            Done d = member.doneList.remove( 0 );
+            member.ls.checkDoneMessage( member, d );
         }
     }
 
-    public void removeMyselfFromRanking( Agent self ) {
+    public void setLeaderRankingRandomly( Agent self, List< Agent > agentList ) {
+        List< Agent > tempList = AgentManager.generateRandomAgentList( agentList );
+        for ( Agent temp: tempList ) {
+            reliableLeadersRanking.add( new AgentDePair( temp, Agent.initial_de_ ) );
+        }
         reliableLeadersRanking.remove( self );
     }
 

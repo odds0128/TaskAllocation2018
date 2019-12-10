@@ -1,23 +1,19 @@
 package main.research.agent;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import main.research.OutPut;
 import main.research.SetParam;
 import main.research.grid.Grid;
 import main.research.others.random.MyRandom;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static main.research.SetParam.Role.*;
 import static main.research.others.random.MyRandom.getRandomInt;
 
 
 public class AgentManager implements SetParam {
-	public  static int agent_num_;
-	public  static int time_observing_team_formation_;
+	public static int agent_num_;
+	public static int time_observing_team_formation_;
 	private static List< Agent > allAgentList;
 
 	public static void setConstants( JsonNode agentNode ) {
@@ -26,7 +22,6 @@ public class AgentManager implements SetParam {
 		Agent.setConstants( agentNode );
 	}
 
-	// TODO: Agentインスタンスを生成する → 被らないように座標を設定する
 	public static void initiateAgents( String package_name, String ls_name, String ms_name ) {
 		allAgentList = generateAgents( package_name, ls_name, ms_name );
 		deployAgents();
@@ -51,9 +46,7 @@ public class AgentManager implements SetParam {
 	private static void setReliabilityRanking() {
 		for ( Agent ag: allAgentList ) {
 			ag.ls.setMemberRankingRandomly( ag, allAgentList );
-			ag.ls.removeMyselfFromRanking( ag );
 			ag.ms.setLeaderRankingRandomly( ag, allAgentList );
-			ag.ms.removeMyselfFromRanking( ag );
 		}
 	}
 
@@ -86,25 +79,12 @@ public class AgentManager implements SetParam {
 		allAgentList.clear();
 	}
 
-	public static void actRandom( List< Agent > agents, Role role ) {
-		List< Agent > temp = new ArrayList<>( agents );
-		int rand;
-		switch ( role ) {
-			case LEADER:
-				while ( !temp.isEmpty() ) {
-					rand = getRandomInt( 0, temp.size() - 1 );
-					temp.remove( rand ).actAsLeader();
-				}
-				break;
-			case MEMBER:
-				while ( !temp.isEmpty() ) {
-					rand = getRandomInt( 0, temp.size() - 1 );
-					temp.remove( rand ).actAsMember();
-				}
-				break;
-		}
-		assert temp.size() == 0 : "Some agents do nothing.";
-		temp.clear();
+	private static void actLeaders( List< Agent > leaders ) {
+		for ( Agent leader: leaders ) leader.actAsLeader();
+	}
+
+	private static void actMembers( List< Agent > members ) {
+		for ( Agent member: members ) member.actAsMember();
 	}
 
 	public static void JoneDoesSelectRole() {
@@ -121,8 +101,8 @@ public class AgentManager implements SetParam {
 			else if ( ag.role == LEADER ) leaders.add( ag );
 		}
 		assert leaders.size() + members.size() == agent_num_ : "Some agents sabotage" + ( leaders.size() + members.size() );
-		actRandom( leaders, LEADER );
-		actRandom( members, MEMBER );
+		actLeaders( leaders );
+		actMembers( members );
 	}
 
 	public static int countMembers() {

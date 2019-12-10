@@ -24,8 +24,6 @@ import static main.research.task.TaskManager.disposeTask;
 import java.util.*;
 
 public abstract class LeaderState implements Strategy, SetParam {
-	public static double γ_;
-	public static double initial_de_, initial_el_, initial_em_;
 
 	protected Set< Agent > exceptions = new HashSet<>();
 	protected int repliesToCome = 0;            // 送ったsolicitationの数を覚えておく
@@ -33,17 +31,19 @@ public abstract class LeaderState implements Strategy, SetParam {
 	private Map< Agent, List< Subtask > > allocationHistory = new HashMap<>();
 	public List< AgentDePair > reliableMembersRanking = new ArrayList<>(  );
 
-
-	public static void setConstants( JsonNode parameterNode ) {
-		γ_ = parameterNode.get( "γ" ).asDouble();
-		initial_de_ = parameterNode.get( "initial_de" ).asDouble();
-		initial_el_ = parameterNode.get( "initial_el" ).asDouble();
-		initial_em_ = parameterNode.get( "initial_em" ).asDouble();
-	}
-
 	// question: Leader has a LeaderStrategy のはずなので本来引数に「自分」を渡さなくてもいいはずでは？
 	// TODO: Leaderクラスのインスタンスメソッドにする
 	public void actAsLeader( Agent leader ) {
+		preprocess( leader );
+
+		Collections.sort( reliableMembersRanking, Comparator.comparingDouble( AgentDePair::getDe ).reversed() );
+		if ( leader.phase == SOLICIT ) leader.ls.solicitAsL( leader );
+		else if ( leader.phase == FORM_TEAM ) leader.ls.formTeamAsL( leader );
+
+		evaporateDE( reliableMembersRanking );
+	}
+
+	private void preprocess( Agent leader ) {
 		while ( !leader.solicitationList.isEmpty() ) {
 			Solicitation s = leader.solicitationList.remove( 0 );
 			declineSolicitation( leader, s );
@@ -52,13 +52,6 @@ public abstract class LeaderState implements Strategy, SetParam {
 			Done d = leader.doneList.remove( 0 );
 			leader.ls.checkDoneMessage( leader, d );
 		}
-
-		Collections.sort( reliableMembersRanking, Comparator.comparingDouble( AgentDePair::getDe ).reversed() );
-
-		if ( leader.phase == SOLICIT ) leader.ls.solicitAsL( leader );
-		else if ( leader.phase == FORM_TEAM ) leader.ls.formTeamAsL( leader );
-
-		evaporateDE( reliableMembersRanking );
 	}
 
 	private void declineSolicitation( Agent leader, Solicitation s ) {
@@ -226,19 +219,14 @@ public abstract class LeaderState implements Strategy, SetParam {
 	public void setMemberRankingRandomly( Agent self, List< Agent > agentList ) {
 		List< Agent > tempList = AgentManager.generateRandomAgentList( agentList );
 		for ( Agent temp: tempList ) {
-			if( temp.equals( self ) ) continue;
-			reliableMembersRanking.add( new AgentDePair( temp, initial_de_ ) );
+			reliableMembersRanking.add( new AgentDePair( temp, Agent.initial_de_ ) );
 		}
+		reliableMembersRanking.remove( self );
 	}
 
 	public void addMyselfToExceptions( Agent self ) {
 		exceptions.add( self );
 	}
-
-	public void removeMyselfFromRanking( Agent self ) {
-		reliableMembersRanking.remove( self );
-	}
-
 
 	protected abstract void renewDE( List<AgentDePair> pairList, Agent target, double evaluation );
 
