@@ -41,8 +41,8 @@ public abstract class MemberState implements Strategy, SetParam {
             member.ms.reactToResultMessage( r );
         }
 
-        while( ! member.ls.doneList.isEmpty() ) {
-            Done d = member.ls.doneList.remove( 0 );
+        while( ! member.doneList.isEmpty() ) {
+            Done d = member.doneList.remove( 0 );
             member.ls.checkDoneMessage( member, d );
         }
 

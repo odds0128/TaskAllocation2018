@@ -14,7 +14,6 @@ import main.research.task.Subtask;
 import main.research.task.Task;
 import main.research.task.TaskManager;
 
-import static main.research.Manager.getCurrentTime;
 import static main.research.SetParam.Phase.*;
 import static main.research.SetParam.ReplyType.DECLINE;
 import static main.research.SetParam.ResultType.FAILURE;
@@ -34,8 +33,6 @@ public abstract class LeaderState implements Strategy, SetParam {
 	private Map< Agent, List< Subtask > > allocationHistory = new HashMap<>();
 	public List< AgentDePair > reliableMembersRanking = new ArrayList<>(  );
 
-	public List< ReplyToSolicitation > replyList = new ArrayList<>();
-	public List< Done > doneList = new ArrayList<>(); // HACK: 可視性狭めたい
 
 	public static void setConstants( JsonNode parameterNode ) {
 		γ_ = parameterNode.get( "γ" ).asDouble();
@@ -51,8 +48,8 @@ public abstract class LeaderState implements Strategy, SetParam {
 			Solicitation s = leader.solicitationList.remove( 0 );
 			declineSolicitation( leader, s );
 		}
-		while ( !doneList.isEmpty() ) {
-			Done d = doneList.remove( 0 );
+		while ( !leader.doneList.isEmpty() ) {
+			Done d = leader.doneList.remove( 0 );
 			leader.ls.checkDoneMessage( leader, d );
 		}
 
@@ -148,12 +145,12 @@ public abstract class LeaderState implements Strategy, SetParam {
 	}
 
 	public void formTeamAsL( Agent leader ) {
-		if ( replyList.size() < repliesToCome ) return;
+		if ( leader.replyList.size() < repliesToCome ) return;
 		else repliesToCome = 0;
 
 		Map< Subtask, Agent > SubtaskAgentMap = new HashMap<>();
-		while ( !replyList.isEmpty() ) {
-			ReplyToSolicitation r = replyList.remove( 0 );
+		while ( !leader.replyList.isEmpty() ) {
+			ReplyToSolicitation r = leader.replyList.remove( 0 );
 			Subtask st = r.getSubtask();
 			Agent currentFrom = r.getFrom();
 
@@ -247,7 +244,7 @@ public abstract class LeaderState implements Strategy, SetParam {
 
 	// todo: 削除
 	public void reachReply(ReplyToSolicitation r){
-		r.getTo().ls.replyList.add( r );
+		r.getTo().replyList.add( r );
 	}
 
 }

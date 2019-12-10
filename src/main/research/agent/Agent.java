@@ -53,7 +53,9 @@ public class Agent implements SetParam, Cloneable {
 	public int[][] allocated = new int[ agent_num_ ][ resource_types_ ]; // そのエージェントからそのリソースを要求するサブタスクが割り当てられた回数
 
 	public List< Solicitation > solicitationList = new ArrayList<>();
+	public List< ReplyToSolicitation > replyList = new ArrayList<>();
 	public List< ResultOfTeamFormation > resultList = new ArrayList<>();
+	public List< Done > doneList = new ArrayList<>(); // HACK: 可視性狭めたい
 
 	// リーダーエージェントのみが持つパラメータ
 	public int didTasksAsLeader = 0;
@@ -317,7 +319,7 @@ public class Agent implements SetParam, Cloneable {
 				resultList.add( ( ResultOfTeamFormation ) m );
 				break;
 			case "Done":
-				m.getTo().ls.doneList.add( ( Done ) m );
+				doneList.add( ( Done ) m );
 				break;
 		}
 	}

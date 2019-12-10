@@ -148,12 +148,12 @@ public class LeaderStrategy extends LeaderState implements SetParam {
 
 	@Override
 	public void formTeamAsL( Agent leader ) {
-		if ( replyList.size() < repliesToCome ) return;
+		if ( leader.replyList.size() < repliesToCome ) return;
 		else repliesToCome = 0;
 
 		Map< Subtask, Agent > allocationMap = new HashMap<>();
-		while ( !replyList.isEmpty() ) {
-			ReplyToSolicitation r = replyList.remove( 0 );
+		while ( !leader.replyList.isEmpty() ) {
+			ReplyToSolicitation r = leader.replyList.remove( 0 );
 			Subtask st = r.getSubtask();
 			Agent currentFrom = r.getFrom();
 
