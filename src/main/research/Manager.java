@@ -38,10 +38,10 @@ public class Manager implements SetParam {
 
 	//TODO: こんな風にするならsingletonにしたほうがいいよね
 	// TODO: lsとmsで分けて指定しなきゃいけないの無駄じゃない?
-	private static String package_name = "main.research.agent.strategy.reliableAgents.";
+//	private static String package_name = "main.research.agent.strategy.reliableAgents.";
 //	private static String package_name = "main.research.agent.strategy.puttingDeOcAndDelayIntoOneDimensionalValue.";
 //	private static String package_name = "main.research.agent.strategy.putRewardAndDelayIntoDeCalculation.";
-//	private static String package_name = "main.research.agent.strategy.learningOnlyTeamingSuccessRate.";
+	private static String package_name = "main.research.agent.strategy.learningOnlyTeamingSuccessRate.";
 	private static String ls_name = "LeaderStrategy";      // ICA2018における提案手法役割更新あり    //    private static main.research.strategy.Strategy strategy = new ProposedMethodForSingapore();
 	private static String ms_name = "MemberStrategy";
 

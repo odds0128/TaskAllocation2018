@@ -25,8 +25,6 @@ public class TransmissionPath implements SetParam {
 
 	public static void sendMessage( Message m ) {
 		assert m.getFrom() != m.getTo() : "he asks himself";
-		assert !( m.getTo().role == LEADER && m instanceof ResultOfTeamFormation ) : "Wrong result message";
-		assert !( m.getTo().role == MEMBER && m instanceof ReplyToSolicitation ) : "Wrong reply message.";
 
 		countMessage( m );
 		int untilArrival = Grid.getDelay( m.getFrom(), m.getTo() );
@@ -63,7 +61,8 @@ public class TransmissionPath implements SetParam {
 		while ( !messageQueue.isEmpty() ) {
 			Pair< Message, Integer > pair = messageQueue.remove( 0 );
 			if ( pair.getValue() == 0 ) {
-				reachPost( pair.getKey() );
+				// todo: 回りくどすぎ
+				pair.getKey().getTo().reachPost( pair.getKey() );
 			} else {
 				messageQueue.add( 0, pair );
 				break;
@@ -75,23 +74,6 @@ public class TransmissionPath implements SetParam {
 		for ( Pair< Message, Integer > pair: sortedMessageQueue ) {
 			int former = pair.getValue();
 			pair.setValue( former - 1 );
-		}
-	}
-
-	static void reachPost( Message m ) {
-		switch ( m.getClass().getSimpleName() ) {
-			case "Solicitation":
-				m.getTo().ms.reachSolicitation( ( Solicitation ) m );
-				break;
-			case "ReplyToSolicitation":
-				m.getTo().ls.reachReply( ( ReplyToSolicitation ) m );
-				break;
-			case "ResultOfTeamFormation":
-				m.getTo().ms.reachResult( ( ResultOfTeamFormation ) m );
-				break;
-			case "Done":
-				m.getTo().ls.reachDone( ( Done ) m );
-				break;
 		}
 	}
 

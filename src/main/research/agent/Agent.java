@@ -14,6 +14,7 @@ import main.research.Manager;
 import main.research.SetParam;
 import main.research.agent.strategy.LeaderState;
 import main.research.agent.strategy.MemberState;
+import main.research.communication.message.*;
 import main.research.others.random.*;
 import main.research.task.Subtask;
 import main.research.task.Task;
@@ -300,10 +301,20 @@ public class Agent implements SetParam, Cloneable {
 		}
 	}
 
-
-	public static class AgentIdComparator implements Comparator< Agent > {
-		public int compare( Agent a, Agent b ) {
-			return a.id >= b.id ? 1 : -1;
+	public static void reachPost( Message m ) {
+		switch ( m.getClass().getSimpleName() ) {
+			case "Solicitation":
+				m.getTo().ms.reachSolicitation( ( Solicitation ) m );
+				break;
+			case "ReplyToSolicitation":
+				m.getTo().ls.reachReply( ( ReplyToSolicitation ) m );
+				break;
+			case "ResultOfTeamFormation":
+				m.getTo().ms.reachResult( ( ResultOfTeamFormation ) m );
+				break;
+			case "Done":
+				m.getTo().ls.reachDone( ( Done ) m );
+				break;
 		}
 	}
 
