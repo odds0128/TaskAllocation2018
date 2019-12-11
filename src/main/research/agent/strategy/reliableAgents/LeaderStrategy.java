@@ -14,10 +14,7 @@ import main.research.others.Pair;
 import main.research.task.Subtask;
 import main.research.task.Task;
 import main.research.task.TaskManager;
-import org.apache.commons.math3.stat.descriptive.SynchronizedSummaryStatistics;
-import org.apache.commons.math3.util.Precision;
 
-import javax.crypto.spec.PSource;
 import java.util.*;
 
 import static main.research.Manager.getCurrentTime;

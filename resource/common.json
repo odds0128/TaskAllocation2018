@@ -1,6 +1,6 @@
 {
   "environment" : {
-    "execution_times" : 2,
+    "execution_times" : 1,
     "max_turn" : 10000,
     "writing_times" : 100
   },

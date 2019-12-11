@@ -56,7 +56,7 @@ public class Agent implements SetParam, Cloneable {
 	public List< Solicitation > solicitationList = new ArrayList<>();
 	public List< ReplyToSolicitation > replyList = new ArrayList<>();
 	public List< ResultOfTeamFormation > resultList = new ArrayList<>();
-	public List< Done > doneList = new ArrayList<>(); // HACK: 可視性狭めたい
+	public List< Done > doneList = new ArrayList<>();
 
 	// リーダーエージェントのみが持つパラメータ
 	public int didTasksAsLeader = 0;
@@ -119,10 +119,18 @@ public class Agent implements SetParam, Cloneable {
 
 	void selectRole() {
 		validatedTicks = Manager.getCurrentTime();
+		// いずれかのリーダーに「参加してもいいですよ」って言ってあるならメンバをやめるわけにいかない
+		if( ms.expectedResultMessage > 0 ) {
+			role = MEMBER;
+			this.phase = WAIT_FOR_SUBTASK;
+			return;
+		}
+		// やるべきサブタスクが残っている場合もメンバをやめるわけにいかない
 		if ( ms.mySubtaskQueue.size() > 0 ) {
 			role = MEMBER;
 			this.phase = EXECUTE_SUBTASK;
 			executionTime = calculateExecutionTime( this, ms.mySubtaskQueue.get( 0 ).getValue() );
+			return;
 		}
 
 		if( e_leader == e_member ) { selectRandomRole(); return; }
@@ -132,7 +140,7 @@ public class Agent implements SetParam, Cloneable {
 	}
 
 	private void selectLeaderRole(  ) {
-		this.role  = LEADER;
+		this.role = LEADER;
 		this.phase = SOLICIT;
 	}
 
