@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import main.research.Manager;
 import main.research.others.random.MyRandom;
 import org.apache.commons.math3.distribution.AbstractIntegerDistribution;
 import org.apache.commons.math3.distribution.PoissonDistribution;
@@ -48,7 +49,7 @@ public class TaskManager {
 	private static int poissonDistribution() {
 		double xp;
 		int k = 0;
-		xp = Math.random();
+		xp = MyRandom.getRandomDouble();
 		while ( xp >= Math.exp( -1 * additional_tasks_num_ ) ){
 			xp = xp * MyRandom.getRandomDouble();
 			k = k + 1;
