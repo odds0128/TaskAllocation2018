@@ -157,7 +157,6 @@ public class Manager implements SetParam {
 		TaskManager.clear();
 		Task.clear();
 		Agent.clear();
-		Strategy.clear();
 		Grid.clear();
 		AgentManager.clear();
 	}
