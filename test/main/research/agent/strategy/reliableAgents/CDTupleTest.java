@@ -3,9 +3,7 @@ package main.research.agent.strategy.reliableAgents;
 import main.research.Manager;
 import main.research.agent.Agent;
 import main.research.agent.strategy.OCTuple;
-import main.research.others.random.MyRandom;
 import main.research.util.Initiation;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
@@ -14,7 +12,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.ArrayList;
 
-import static main.research.SetParam.*;
+import static main.research.Parameter.*;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;

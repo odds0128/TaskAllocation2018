@@ -1,6 +1,6 @@
 package main.research.communication.message;
 
-import main.research.SetParam.ResultType;
+import main.research.Parameter.ResultType;
 import main.research.agent.Agent;
 import main.research.graph.GraphAtAnWindow;
 import main.research.task.Subtask;

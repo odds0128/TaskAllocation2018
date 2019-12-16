@@ -1,6 +1,6 @@
 package main.research.communication.message;
 
-import static main.research.SetParam.ReplyType;
+import static main.research.Parameter.ReplyType;
 
 import main.research.agent.Agent;
 import main.research.task.Subtask;

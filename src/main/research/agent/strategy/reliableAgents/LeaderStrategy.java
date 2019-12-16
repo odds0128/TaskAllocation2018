@@ -1,11 +1,10 @@
 package main.research.agent.strategy.reliableAgents;
 
-import main.research.SetParam;
+import main.research.Parameter;
 import main.research.agent.Agent;
 import main.research.agent.AgentDePair;
 import main.research.agent.strategy.OCTuple;
-import main.research.agent.strategy.LeaderState;
-import main.research.agent.strategy.Strategy;
+import main.research.agent.strategy.LeaderTemplateStrategy;
 import main.research.communication.message.Done;
 import main.research.communication.message.ReplyToSolicitation;
 import main.research.communication.message.ResultOfTeamFormation;
@@ -18,13 +17,14 @@ import main.research.task.TaskManager;
 import java.util.*;
 
 import static main.research.Manager.getCurrentTime;
-import static main.research.SetParam.ReplyType.DECLINE;
-import static main.research.SetParam.ResultType.FAILURE;
-import static main.research.SetParam.ResultType.SUCCESS;
+import static main.research.Parameter.ReplyType.DECLINE;
+import static main.research.Parameter.ResultType.FAILURE;
+import static main.research.Parameter.ResultType.SUCCESS;
+import static main.research.agent.AgentDePair.getPairByAgent;
 import static main.research.communication.TransmissionPath.sendMessage;
 import static main.research.task.TaskManager.disposeTask;
 
-public class LeaderStrategy extends LeaderState implements SetParam {
+public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter {
 	static final double de_threshold_ = 0.5;
 	static final double oc_threshold_ = 3.0;
 
@@ -41,25 +41,23 @@ public class LeaderStrategy extends LeaderState implements SetParam {
 	@Override
 	protected void solicitAsL( Agent leader ) {
 		myTask = TaskManager.popTask();
-		if ( myTask == null ) {
-			leader.inactivate( 0 );
-			return;
-		}
-		Map< Agent, List< Subtask > > allocationMap = selectMembersLocal( myTask.subtasks );
-		if ( allocationMap.size() < myTask.subtasks.size() * REDUNDANT_SOLICITATION_TIMES ) {
-			leader.principle = Principle.RECIPROCAL;
-		} else {
-			leader.principle = Principle.RATIONAL;
-		}
-		repliesToCome = countRepliesToCome( allocationMap );
+		boolean canGoNext = false;
 
-		if ( allocationMap.isEmpty() ) {
-			leader.inactivate( 0 );
-			return;
-		} else {
-			this.sendSolicitationsLocal( leader, allocationMap );
+		if ( myTask != null ) {
+			Map< Agent, List< Subtask > > allocationMap = selectMembersLocal( myTask.subtasks );
+			if ( allocationMap.size() < myTask.subtasks.size() * REDUNDANT_SOLICITATION_TIMES ) {
+				leader.principle = Principle.RECIPROCAL;
+			} else {
+				leader.principle = Principle.RATIONAL;
+			}
+			repliesToCome = countRepliesToCome( allocationMap );
+
+			if ( !allocationMap.isEmpty() ) {
+				canGoNext = true;
+				this.sendSolicitationsLocal( leader, allocationMap );
+			}
 		}
-		Strategy.proceedToNextPhase( leader );  // 次のフェイズへ
+		leader.phase = nextPhase( leader, canGoNext );  // 次のフェイズへ
 	}
 
 	private int countRepliesToCome( Map< Agent, List< Subtask > > allocationMap ) {
@@ -179,12 +177,12 @@ public class LeaderStrategy extends LeaderState implements SetParam {
 				if ( withinTimeWindow() ) leader.workWithAsL[ friend.id ]++;
 				leader.pastTasks.add( myTask );
 			}
-			leader.inactivate( 1 );
+			leader.phase = nextPhase( leader, true );
 		} else {
 			apologizeToFriends( leader, new ArrayList<>( allocationMap.values() ) );
 			exceptions.removeAll( new ArrayList<>( allocationMap.values() ) );
 			disposeTask();
-			leader.inactivate( 0 );
+			leader.phase = nextPhase( leader, false );
 		}
 		myTask = null;
 	}
@@ -273,8 +271,5 @@ public class LeaderStrategy extends LeaderState implements SetParam {
 
 	public static List< OCTuple > getOcTupleList( LeaderStrategy psl ) {
 		return psl.ocTupleList;
-	}
-
-	void clear() {
 	}
 }

@@ -1,12 +1,12 @@
 package main.research.task;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import main.research.SetParam;
+import main.research.Parameter;
 import main.research.others.random.MyRandom;
 
 import java.util.Comparator;
 
-public class Subtask implements SetParam, Cloneable {
+public class Subtask implements Parameter, Cloneable {
     public static int resource_types_;
     private static int min_request_value_;
     private static int max_request_value_;

@@ -2,11 +2,11 @@ package main.research;
 
 import main.research.agent.Agent;
 import main.research.agent.AgentManager;
-import main.research.agent.strategy.Strategy;
 
 import static main.research.OutPut.*;
 import static main.research.others.random.MyRandom.*;
 
+import main.research.agent.strategy.MemberTemplateStrategy;
 import main.research.communication.TransmissionPath;
 import main.research.communication.message.ResultOfTeamFormation;
 import main.research.graph.GraphAtAnWindow;
@@ -18,13 +18,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.*;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
-import java.util.Date;
 
-import static main.research.SetParam.Role.*;
+import static main.research.Parameter.Role.*;
 
-public class Manager implements SetParam {
+public class Manager implements Parameter {
 	private static final String INIT_FILE_PATH = "/resource/common.json";
 	private static ObjectMapper mapper = new ObjectMapper();
 	private static JsonNode jsonNode;
@@ -121,7 +119,7 @@ public class Manager implements SetParam {
 			// remove
 			// 信頼エージェントについて
 			System.out.println( "waiting: " + main.research.agent.strategy.reliableAgents.MemberStrategy.waiting );
-			System.out.println( "tired of waiting: " + main.research.agent.strategy.MemberState.tired_of_waiting );
+			System.out.println( "tired of waiting: " + MemberTemplateStrategy.tired_of_waiting );
 			System.out.println( "average de from member to leader: " + main.research.agent.strategy.reliableAgents.MemberStrategy.calculateMeanDE() );
 			System.out.println( "reciprocal members: " + main.research.agent.strategy.reliableAgents.MemberStrategy.countReciprocalMembers() );
 //			showGrowApartDegree();

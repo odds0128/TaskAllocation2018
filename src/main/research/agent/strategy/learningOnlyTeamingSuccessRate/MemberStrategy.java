@@ -2,11 +2,13 @@ package main.research.agent.strategy.learningOnlyTeamingSuccessRate;
 
 import main.research.agent.Agent;
 import main.research.agent.AgentDePair;
-import main.research.agent.strategy.MemberState;
+import main.research.agent.strategy.MemberTemplateStrategy;
 
 import java.util.List;
 
-public class MemberStrategy extends MemberState {
+import static main.research.agent.AgentDePair.getPairByAgent;
+
+public class MemberStrategy extends MemberTemplateStrategy {
 
 	@Override
 	protected void renewDE( List< AgentDePair > pairList, Agent target, double evaluation ) {

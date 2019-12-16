@@ -1,10 +1,10 @@
 package main.research.agent.strategy;
 
-import main.research.SetParam;
+import main.research.Manager;
+import main.research.Parameter;
 import main.research.agent.Agent;
 import main.research.agent.AgentDePair;
 import main.research.agent.AgentManager;
-import main.research.communication.message.Done;
 import main.research.communication.message.ReplyToSolicitation;
 import main.research.communication.message.ResultOfTeamFormation;
 import main.research.communication.message.Solicitation;
@@ -13,16 +13,17 @@ import main.research.task.Subtask;
 import main.research.task.Task;
 import main.research.task.TaskManager;
 
-import static main.research.SetParam.Phase.*;
-import static main.research.SetParam.ReplyType.DECLINE;
-import static main.research.SetParam.ResultType.FAILURE;
-import static main.research.SetParam.ResultType.SUCCESS;
+import static main.research.Parameter.Phase.*;
+import static main.research.Parameter.ReplyType.DECLINE;
+import static main.research.Parameter.ResultType.FAILURE;
+import static main.research.Parameter.ResultType.SUCCESS;
+import static main.research.agent.Agent.α_;
 import static main.research.communication.TransmissionPath.sendMessage;
 import static main.research.task.TaskManager.disposeTask;
 
 import java.util.*;
 
-public abstract class LeaderState implements Strategy, SetParam {
+public abstract class LeaderTemplateStrategy extends TemplateStrategy implements Parameter {
 
 	protected Set< Agent > exceptions = new HashSet<>();
 	protected int repliesToCome = 0;            // 送ったsolicitationの数を覚えておく
@@ -58,21 +59,20 @@ public abstract class LeaderState implements Strategy, SetParam {
 
 	protected void solicitAsL( Agent leader ) {
 		myTask = TaskManager.popTask();
-		if ( myTask == null ) {
-			leader.inactivate( 0 );
-			return;
-		}
-		Map< Agent, Subtask > allocationMap = selectMembers( myTask.subtasks );
-		repliesToCome = allocationMap.size();
+		boolean canGoNext = false;
 
-		if ( allocationMap.isEmpty() ) {
-			leader.inactivate( 0 );
-			return;
-		} else {
-			leader.ls.sendSolicitations( leader, allocationMap );
+		if ( myTask != null ) {
+			Map< Agent, Subtask > allocationMap = selectMembers( myTask.subtasks );
+			repliesToCome = allocationMap.size();
+
+			if ( ! allocationMap.isEmpty() ) {
+				leader.ls.sendSolicitations( leader, allocationMap );
+				canGoNext = true;
+			}
 		}
-		Strategy.proceedToNextPhase( leader );  // 次のフェイズへ
+		leader.phase = nextPhase( leader, canGoNext );  // 次のフェイズへ
 	}
+
 
 	protected Map< Agent, Subtask > selectMembers( List< Subtask > subtasks ) {
 		Map< Agent, Subtask > memberCandidates = new HashMap<>();
@@ -146,18 +146,18 @@ public abstract class LeaderState implements Strategy, SetParam {
 				if ( withinTimeWindow() ) leader.workWithAsL[ friend.id ]++;
 				leader.pastTasks.add( myTask );
 			}
-			leader.inactivate( 1 );
+			nextPhase(leader, true );
 		} else {
 			apologizeToFriends( leader, new ArrayList<>( SubtaskAgentMap.values() ) );
 			exceptions.removeAll( new ArrayList<>( SubtaskAgentMap.values() ) );
 			disposeTask();
-			leader.inactivate( 0 );
+			nextPhase( leader, false );
 		}
 		myTask = null;
 	}
 
 	protected Pair compareDE( Agent a, Agent b ) {
-		if ( getPairByAgent( a, reliableMembersRanking ).getDe() < getPairByAgent( b, reliableMembersRanking ).getDe() )
+		if ( AgentDePair.getPairByAgent( a, reliableMembersRanking ).getDe() < AgentDePair.getPairByAgent( b, reliableMembersRanking ).getDe() )
 			return new Pair( b, a );
 		return new Pair( a, b );
 	}
@@ -212,4 +212,27 @@ public abstract class LeaderState implements Strategy, SetParam {
 		r.getTo().replyList.add( r );
 	}
 
+	@Override
+	protected Phase nextPhase( Agent leader, boolean wasSuccess ) {
+		leader.validatedTicks = Manager.getCurrentTime();
+
+		if ( !wasSuccess ) {
+			leader.role = inactivate( leader, 0 );
+			return SELECT_ROLE;
+		}
+		switch ( leader.phase ) {
+			case SOLICIT:
+				return FORM_TEAM;
+			case FORM_TEAM:
+				leader.role = inactivate( leader, 1 );
+			default:
+				return SELECT_ROLE;
+		}
+	}
+
+	@Override
+	public Role inactivate( Agent leader, double value ) {
+		leader.e_leader = leader.e_leader * ( 1.0 - α_ ) + α_ * value;
+		return Role.JONE_DOE;
+	}
 }

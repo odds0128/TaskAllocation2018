@@ -1,10 +1,10 @@
 package main.research.agent.strategy.puttingDeOcAndDelayIntoOneDimensionalValue;
 
-import main.research.SetParam;
+import main.research.Parameter;
 import main.research.agent.Agent;
 import main.research.agent.AgentDePair;
+import main.research.agent.strategy.LeaderTemplateStrategy;
 import main.research.agent.strategy.OCTuple;
-import main.research.agent.strategy.LeaderState;
 import main.research.communication.message.Done;
 import main.research.communication.message.ReplyToSolicitation;
 import main.research.communication.message.ResultOfTeamFormation;
@@ -22,14 +22,15 @@ import java.util.List;
 import java.util.Map;
 
 import static main.research.Manager.getCurrentTime;
-import static main.research.SetParam.ReplyType.DECLINE;
-import static main.research.SetParam.ResultType.FAILURE;
-import static main.research.SetParam.ResultType.SUCCESS;
+import static main.research.Parameter.ReplyType.DECLINE;
+import static main.research.Parameter.ResultType.FAILURE;
+import static main.research.Parameter.ResultType.SUCCESS;
+import static main.research.agent.AgentDePair.getPairByAgent;
 import static main.research.communication.TransmissionPath.sendMessage;
 import static main.research.task.TaskManager.disposeTask;
 
 // TODO: 中身を表したクラス名にする
-public class LeaderStrategy extends LeaderState implements SetParam {
+public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter {
 	// 評価指標 = αDE + βOC + γDelay
 	static final double α = 1;
 	static final double β = 0.3;
@@ -39,11 +40,6 @@ public class LeaderStrategy extends LeaderState implements SetParam {
 	private Map< Agent, Integer > timeToStartCommunicatingMap = new HashMap<>();
 	private Map< Agent, Integer > roundTripTimeMap = new HashMap<>();
 	private Map< Agent, Integer > extraWaitingTimeMap = new HashMap<>();
-
-	public List< OCTuple > getCdTupleList() {
-		return ocTupleList;
-	}
-
 	private List< OCTuple > ocTupleList = new ArrayList<>();
 
 	@Override
@@ -188,12 +184,12 @@ public class LeaderStrategy extends LeaderState implements SetParam {
 				if ( withinTimeWindow() ) leader.workWithAsL[ friend.id ]++;
 				leader.pastTasks.add( myTask );
 			}
-			leader.inactivate( 1 );
+			leader.phase = nextPhase( leader, true );
 		} else {
 			apologizeToFriends( leader, new ArrayList<>( mapOfSubtaskAndAgent.values() ) );
 			exceptions.removeAll( new ArrayList<>( mapOfSubtaskAndAgent.values() ) );
 			disposeTask();
-			leader.inactivate( 0 );
+			leader.phase = nextPhase( leader, false );
 		}
 		myTask = null;
 	}

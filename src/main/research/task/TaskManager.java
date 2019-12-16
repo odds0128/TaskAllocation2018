@@ -4,12 +4,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import main.research.Manager;
 import main.research.others.random.MyRandom;
-import org.apache.commons.math3.distribution.AbstractIntegerDistribution;
-import org.apache.commons.math3.distribution.PoissonDistribution;
-
-import static main.research.SetParam.*;
 
 public class TaskManager {
 	private static int initial_tasks_num_;

@@ -36,6 +36,14 @@ public class AgentDePair {
 		de = de * ( 1.0 - α_ ) + reward * α_;
 	}
 
+	public static AgentDePair getPairByAgent( Agent target, List< AgentDePair > pairList ) {
+		for ( AgentDePair pair: pairList ) {
+			if ( pair.getAgent().equals( target ) ) return pair;
+		}
+		assert false : "not to come";
+		return null;
+	}
+
 	public static double searchDEofAgent( Agent stray, List<AgentDePair> list ) {
 		for( AgentDePair pair : list ) {
 			if( pair.agent == stray ) return pair.de;

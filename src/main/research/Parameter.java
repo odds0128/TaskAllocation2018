@@ -5,7 +5,7 @@ package main.research;
  * @version 2.0
  */
 
-public interface SetParam {
+public interface Parameter {
 	// トーラスを考えた時に，中心が自分であるほうが考えやすいので，一片の長さは奇数にする
 	int MAX_X    = 51, MAX_Y = 51;
 	int MAX_DELAY = 5;

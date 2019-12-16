@@ -3,7 +3,7 @@ package main.research.agent.strategy.putRewardAndDelayIntoDeCalculation;
 import main.research.Manager;
 import main.research.agent.Agent;
 import main.research.agent.AgentDePair;
-import main.research.agent.strategy.LeaderState;
+import main.research.agent.strategy.LeaderTemplateStrategy;
 import main.research.communication.message.Done;
 import main.research.communication.message.ReplyToSolicitation;
 import main.research.communication.message.ResultOfTeamFormation;
@@ -17,13 +17,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static main.research.SetParam.ReplyType.DECLINE;
-import static main.research.SetParam.ResultType.FAILURE;
-import static main.research.SetParam.ResultType.SUCCESS;
+import static main.research.Parameter.ReplyType.DECLINE;
+import static main.research.Parameter.ResultType.FAILURE;
+import static main.research.Parameter.ResultType.SUCCESS;
+import static main.research.agent.AgentDePair.getPairByAgent;
 import static main.research.communication.TransmissionPath.sendMessage;
 import static main.research.task.TaskManager.disposeTask;
 
-public class LeaderStrategy extends LeaderState {
+public class LeaderStrategy extends LeaderTemplateStrategy {
 	Map< Agent, Integer > agentStartTimeMap = new HashMap<>();
 
 	@Override
@@ -61,12 +62,12 @@ public class LeaderStrategy extends LeaderState {
 				if ( withinTimeWindow() ) leader.workWithAsL[ friend.id ]++;
 				leader.pastTasks.add( myTask );
 			}
-			leader.inactivate( 1 );
+			leader.phase = nextPhase( leader, true );
 		} else {
 			apologizeToFriends( leader, new ArrayList<>( mapOfSubtaskAndAgent.values() ) );
 			exceptions.removeAll( new ArrayList<>( mapOfSubtaskAndAgent.values() ) );
 			disposeTask();
-			leader.inactivate( 0 );
+			leader.phase = nextPhase( leader, false );
 		}
 		myTask = null;
 	}

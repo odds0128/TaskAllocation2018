@@ -3,7 +3,7 @@ package main.research.agent.strategy.putRewardAndDelayIntoDeCalculation;
 import main.research.Manager;
 import main.research.agent.Agent;
 import main.research.agent.AgentDePair;
-import main.research.agent.strategy.MemberState;
+import main.research.agent.strategy.MemberTemplateStrategy;
 import main.research.communication.TransmissionPath;
 import main.research.communication.message.ReplyToSolicitation;
 import main.research.communication.message.ResultOfTeamFormation;
@@ -15,11 +15,12 @@ import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 
-import static main.research.SetParam.ReplyType.ACCEPT;
-import static main.research.SetParam.ReplyType.DECLINE;
-import static main.research.SetParam.ResultType.SUCCESS;
+import static main.research.Parameter.ReplyType.ACCEPT;
+import static main.research.Parameter.ReplyType.DECLINE;
+import static main.research.Parameter.ResultType.SUCCESS;
+import static main.research.agent.AgentDePair.getPairByAgent;
 
-public class MemberStrategy extends MemberState {
+public class MemberStrategy extends MemberTemplateStrategy {
 	Map< Agent, Integer > agentStartTimeMap = new HashMap<>();
 
 	@Override

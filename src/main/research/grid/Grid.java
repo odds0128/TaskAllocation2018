@@ -8,7 +8,7 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import static main.research.SetParam.*;
+import static main.research.Parameter.*;
 
 public class Grid {
     private static final int agent_num_ = AgentManager.agent_num_;

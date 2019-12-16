@@ -9,7 +9,7 @@ import java.util.*;
 
 import static org.hamcrest.CoreMatchers.*;
 
-import static main.research.SetParam.agent_num_;
+import static main.research.Parameter.agent_num_;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 class GridTest {

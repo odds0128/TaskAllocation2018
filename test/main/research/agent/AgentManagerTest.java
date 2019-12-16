@@ -3,7 +3,7 @@ package main.research.agent;
 import main.research.util.Initiation;
 import org.junit.jupiter.api.*;
 
-import static main.research.SetParam.agent_num_;
+import static main.research.Parameter.agent_num_;
 import static org.hamcrest.CoreMatchers.*;
 
 import java.lang.reflect.InvocationTargetException;

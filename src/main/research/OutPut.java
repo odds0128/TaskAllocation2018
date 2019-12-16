@@ -1,19 +1,14 @@
 package main.research;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import main.research.agent.AgentDePair;
 import main.research.agent.AgentManager;
-import main.research.agent.strategy.MemberState;
+import main.research.agent.strategy.MemberTemplateStrategy;
 import main.research.agent.strategy.OCTuple;
 import main.research.agent.strategy.reliableAgents.LeaderStrategy;
 import main.research.graph.Edge;
 import main.research.task.TaskManager;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
-import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.ss.util.CellRangeAddress;
-import org.apache.poi.xssf.streaming.SXSSFSheet;
-import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import main.research.agent.Agent;
 import main.research.communication.TransmissionPath;
 import main.research.graph.GraphAtAnWindow;
@@ -22,17 +17,14 @@ import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import static main.research.SetParam.Principle.RATIONAL;
-import static main.research.SetParam.Principle.RECIPROCAL;
-import static main.research.SetParam.Role.LEADER;
-import static main.research.agent.Agent.resource_types_;
+import static main.research.Parameter.Role.LEADER;
 
 /**
  * OutPutクラス
  * Singletonで実装
  * 結果の画面出力とファイル出力を管理
  */
-public class OutPut implements SetParam {
+public class OutPut implements Parameter {
 	private static int executionTimes_ = Manager.executionTimes_;
 	private static int writing_times_ = Manager.writing_times_;
 	private static int max_turn_ = Manager.max_turn_;
@@ -79,8 +71,8 @@ public class OutPut implements SetParam {
 		if ( index == writing_times_ - 1 ) {
 			tempMessagesArray = new int[ writing_times_ ];
 		}
-		idleMembersRateArray[ index ] += (double) MemberState.idleTime / AgentManager.countMembers();
-		MemberState.idleTime = 0;
+		idleMembersRateArray[ index ] += (double) MemberTemplateStrategy.idleTime / AgentManager.countMembers();
+		MemberTemplateStrategy.idleTime = 0;
 		indexIncrement();
 	}
 

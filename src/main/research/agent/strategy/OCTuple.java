@@ -4,7 +4,7 @@ import main.research.Manager;
 import main.research.agent.Agent;
 
 import java.util.*;
-import static main.research.SetParam.*;
+import static main.research.Parameter.*;
 
 public class OCTuple {
 	private Agent target;
@@ -22,15 +22,6 @@ public class OCTuple {
 			if ( entry.getTarget().equals( target ) ) return true;
 		}
 		return false;
-	}
-
-	public static void replace( Agent target, double[] tempArray, List< OCTuple > list ) {
-		for( OCTuple entry : list ) {
-			if( entry.getTarget().equals( target ) ) {
-				entry.setOstensibleCapacity( tempArray );
-				entry.setLastUpdatedTime( Manager.getCurrentTime() );
-			}
-		}
 	}
 
 	public static void updateOC( Agent target, List<OCTuple> list, int resourceType, double value ) {

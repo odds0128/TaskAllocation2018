@@ -12,7 +12,7 @@ import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import java.util.Arrays;
 import java.util.List;
 
-import static main.research.SetParam.*;
+import static main.research.Parameter.*;
 
 public class Stdout {
 	private static int agent_num_ = AgentManager.agent_num_;

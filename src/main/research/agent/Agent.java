@@ -5,15 +5,15 @@
 
 package main.research.agent;
 
-import static main.research.SetParam.Phase.*;
-import static main.research.SetParam.Role.*;
-import static main.research.SetParam.Principle.*;
+import static main.research.Parameter.Phase.*;
+import static main.research.Parameter.Role.*;
+import static main.research.Parameter.Principle.*;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import main.research.Manager;
-import main.research.SetParam;
-import main.research.agent.strategy.LeaderState;
-import main.research.agent.strategy.MemberState;
+import main.research.Parameter;
+import main.research.agent.strategy.LeaderTemplateStrategy;
+import main.research.agent.strategy.MemberTemplateStrategy;
 import main.research.communication.message.*;
 import main.research.others.random.*;
 import main.research.task.Subtask;
@@ -25,14 +25,14 @@ import java.util.*;
 import java.util.List;
 
 
-public class Agent implements SetParam, Cloneable {
+public class Agent implements Parameter, Cloneable {
 	public static double ε_, α_, γ_;
 	public static double initial_de_, initial_el_, initial_em_;
 	public static int _coalition_check_end_time = Manager.max_turn_;
 	public static int agent_num_ = AgentManager.agent_num_;
 	public static int resource_types_;
-	public LeaderState ls;
-	public MemberState ms;
+	public LeaderTemplateStrategy ls;
+	public MemberTemplateStrategy ms;
 	public static int min_capacity_value_;
 	public static int max_capacity_value_;
 
@@ -47,8 +47,8 @@ public class Agent implements SetParam, Cloneable {
 	public int[] workWithAsL = new int[ agent_num_ ];
 	public int[] workWithAsM = new int[ agent_num_ ];
 	public int validatedTicks = 0;
-	public double e_leader ;
-	public double e_member ;
+	public double e_leader;
+	public double e_member;
 	public Principle principle = RATIONAL;
 	public int[] required = new int[ resource_types_ ];            // そのリソースを要求するサブタスクが割り当てられた回数
 	public int[][] allocated = new int[ agent_num_ ][ resource_types_ ]; // そのエージェントからそのリソースを要求するサブタスクが割り当てられた回数
@@ -74,12 +74,13 @@ public class Agent implements SetParam, Cloneable {
 		min_capacity_value_ = agentNode.get( "agent" ).get( "min_capacity_value" ).asInt();
 		max_capacity_value_ = agentNode.get( "agent" ).get( "max_capacity_value" ).asInt();
 
-		JsonNode parameterNode = agentNode.get("parameters");
+		JsonNode parameterNode = agentNode.get( "parameters" );
 		γ_ = parameterNode.get( "γ" ).asDouble();
 		initial_de_ = parameterNode.get( "initial_de" ).asDouble();
 		initial_el_ = parameterNode.get( "initial_el" ).asDouble();
 		initial_em_ = parameterNode.get( "initial_em" ).asDouble();
 	}
+
 	public Agent( String package_name, String ls_name, String ms_name ) {
 		this.id = _id++;
 		setResource();
@@ -87,14 +88,14 @@ public class Agent implements SetParam, Cloneable {
 		selectRole();
 	}
 
-	public static boolean epsilonGreedy( ) {
+	public static boolean epsilonGreedy() {
 		double random = MyRandom.getRandomDouble();
 		return random < ε_;
 	}
 
 	private void setResource() {
 		int resSum;
-		resources = new int[resource_types_];
+		resources = new int[ resource_types_ ];
 		do {
 			resSum = 0;
 			for ( int i = 0; i < resource_types_; i++ ) {
@@ -118,63 +119,43 @@ public class Agent implements SetParam, Cloneable {
 	}
 
 	void selectRole() {
-		validatedTicks = Manager.getCurrentTime();
-		// いずれかのリーダーに「参加してもいいですよ」って言ってあるならメンバをやめるわけにいかない
-		if( ms.expectedResultMessage > 0 ) {
-			role = MEMBER;
-			this.phase = WAIT_FOR_SUBTASK;
-			return;
-		}
-		// やるべきサブタスクが残っている場合もメンバをやめるわけにいかない
-		if ( ms.mySubtaskQueue.size() > 0 ) {
-			role = MEMBER;
-			this.phase = EXECUTE_SUBTASK;
-			executionTime = calculateExecutionTime( this, ms.mySubtaskQueue.get( 0 ).getValue() );
-			return;
-		}
+		assert ms.expectedResultMessage == 0 : "Expect some result message.";
+		assert ms.mySubtaskQueue.size() == 0 : "Remain some subtasks not finished.";
 
-		if( e_leader == e_member ) { selectRandomRole(); return; }
-		if( epsilonGreedy( )     ) { selectReverseRole(); return; }
-		if ( e_leader > e_member ) { selectLeaderRole(); return; }
-		if ( e_member > e_leader ) { selectMemberRole(); return; }
+		if ( e_leader == e_member ) selectRandomRole();
+		else if ( epsilonGreedy() ) selectReverseRole();
+		else if ( e_leader > e_member ) selectLeaderRole();
+		else if ( e_member > e_leader ) selectMemberRole();
 	}
 
-	private void selectLeaderRole(  ) {
+	private void selectLeaderRole() {
 		this.role = LEADER;
 		this.phase = SOLICIT;
 	}
 
 	private void selectMemberRole() {
-		this.role  = MEMBER;
+		this.role = MEMBER;
 		this.phase = WAIT_FOR_SOLICITATION;
 	}
 
 	private void selectRandomRole() {
 		int toBeLeader = MyRandom.getRandomInt( 0, 1 );
-		if( toBeLeader == 1 ) selectLeaderRole();
+		if ( toBeLeader == 1 ) selectLeaderRole();
 		else selectMemberRole();
 	}
 
 	private void selectReverseRole() {
-		if( e_leader > e_member ) selectMemberRole();
-		else if( e_member > e_leader ) selectLeaderRole();
+		if ( e_leader > e_member ) selectMemberRole();
+		else if ( e_member > e_leader ) selectLeaderRole();
 		else selectRandomRole();
 	}
 
-	public void inactivate( double success ) {
-		if ( role == LEADER ) e_leader = e_leader * ( 1.0 - α_ ) + α_ * success;
-		else e_member = e_member * ( 1.0 - α_ ) + α_ * success;
-		role = JONE_DOE;
-		phase = SELECT_ROLE;
-		principle = RATIONAL;
-		this.validatedTicks = Manager.getCurrentTime();
-	}
 
 	public static int calculateExecutionTime( Agent a, Subtask st ) {
 		return ( int ) Math.ceil( ( double ) st.reqRes[ st.resType ] / ( double ) a.resources[ st.resType ] );
 	}
 
-	public boolean canProcessTheSubtask( Subtask subtask) {
+	public boolean canProcessTheSubtask( Subtask subtask ) {
 		return resources[ subtask.resType ] > 0;
 	}
 
@@ -195,7 +176,7 @@ public class Agent implements SetParam, Cloneable {
 			.count();
 	}
 
-	public static int countReciprocalLeader(List<Agent> agents) {
+	public static int countReciprocalLeader( List< Agent > agents ) {
 		return ( int ) agents.stream()
 			.filter( ag -> ag.e_leader > ag.e_member && ag.principle == RECIPROCAL )
 			.count();
@@ -222,12 +203,12 @@ public class Agent implements SetParam, Cloneable {
 
 	@Override
 	public String toString() {
-		StringBuilder str = new StringBuilder( );
+		StringBuilder str = new StringBuilder();
 		str.append( role + " No." + String.format( "%3d, ", id ) );
-		if( role == LEADER ) {
+		if ( role == LEADER ) {
 
-		}else if( role == MEMBER ){
-			str.append( "resources: " + Arrays.toString( resources ) + ", ");
+		} else if ( role == MEMBER ) {
+			str.append( "resources: " + Arrays.toString( resources ) + ", " );
 		}
 		return str.toString();
 	}
@@ -239,8 +220,8 @@ public class Agent implements SetParam, Cloneable {
 		try {
 			LeaderStrategyClass = Class.forName( package_name.concat( ls_name ) );
 			MemberStrategyClass = Class.forName( package_name.concat( ms_name ) );
-			this.ls = ( LeaderState ) LeaderStrategyClass.getDeclaredConstructor().newInstance();
-			this.ms = ( MemberState ) MemberStrategyClass.getDeclaredConstructor().newInstance();
+			this.ls = ( LeaderTemplateStrategy ) LeaderStrategyClass.getDeclaredConstructor().newInstance();
+			this.ms = ( MemberTemplateStrategy ) MemberStrategyClass.getDeclaredConstructor().newInstance();
 			this.ls.addMyselfToExceptions( this );
 		} catch ( ClassNotFoundException | NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException e ) {
 			e.printStackTrace();
@@ -252,33 +233,11 @@ public class Agent implements SetParam, Cloneable {
 	}
 
 	public int getX() {
-		return (int) p.getX();
+		return ( int ) p.getX();
 	}
 
 	public int getY() {
-		return (int) p.getY();
-	}
-
-	public static class AgentExcellenceComparator implements Comparator< Agent > {
-		public int compare( Agent a, Agent b ) {
-			Integer resCount_a = ( int ) Arrays.stream( a.resources )
-				.filter( resource -> resource > 0 )
-				.count();
-			Integer resCount_b = ( int ) Arrays.stream( b.resources )
-				.filter( resource -> resource > 0 )
-				.count();
-
-			Double excellence_a = ( double ) Arrays.stream( a.resources ).sum() / resCount_a;
-			Double excellence_b = ( double ) Arrays.stream( b.resources ).sum() / resCount_b;
-
-			int result = excellence_a.compareTo( excellence_b );
-			if ( result != 0 ) return result;
-
-			result = resCount_a.compareTo( resCount_b );
-			if ( result != 0 ) return result;
-
-			return a.id >= b.id ? 1 : -1;
-		}
+		return ( int ) p.getY();
 	}
 
 	public void reachPost( Message m ) {

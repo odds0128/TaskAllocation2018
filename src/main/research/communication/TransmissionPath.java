@@ -1,9 +1,8 @@
 package main.research.communication;
 
-import main.research.Manager;
 import main.research.communication.message.*;
 import main.research.others.Pair;
-import main.research.SetParam;
+import main.research.Parameter;
 import main.research.grid.Grid;
 
 import java.util.ArrayList;
@@ -11,10 +10,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import static main.research.SetParam.Role.LEADER;
-import static main.research.SetParam.Role.MEMBER;
-
-public class TransmissionPath implements SetParam {
+public class TransmissionPath implements Parameter {
 	private static int totalMessageNum = 0;
 	private static int communicationTime = 0;
 

@@ -1,6 +1,7 @@
 package main.research.agent.strategy;
 
-import main.research.SetParam;
+import main.research.Manager;
+import main.research.Parameter;
 import main.research.agent.Agent;
 import main.research.agent.AgentDePair;
 import main.research.agent.AgentManager;
@@ -15,14 +16,17 @@ import main.research.task.Subtask;
 
 import static main.research.Manager.bin_;
 import static main.research.Manager.getCurrentTime;
-import static main.research.SetParam.Phase.*;
-import static main.research.SetParam.ReplyType.ACCEPT;
-import static main.research.SetParam.ReplyType.DECLINE;
-import static main.research.SetParam.ResultType.*;
+import static main.research.Parameter.Phase.*;
+import static main.research.Parameter.ReplyType.ACCEPT;
+import static main.research.Parameter.ReplyType.DECLINE;
+import static main.research.Parameter.ResultType.*;
+import static main.research.Parameter.Role.JONE_DOE;
+import static main.research.agent.Agent.α_;
+import static main.research.agent.AgentDePair.getPairByAgent;
 
 import java.util.*;
 
-public abstract class MemberState implements Strategy, SetParam {
+public abstract class MemberTemplateStrategy extends TemplateStrategy implements Parameter {
 	protected boolean joinFlag = false;
 	public List< AgentDePair > reliableLeadersRanking = new ArrayList<>();
 
@@ -34,8 +38,6 @@ public abstract class MemberState implements Strategy, SetParam {
 	public void actAsMember( Agent member ) {
 		preprocess( member );
 
-		// CONSIDER: CPU使用量馬鹿高い
-		Collections.sort( reliableLeadersRanking, Comparator.comparingDouble( AgentDePair::getDe ).reversed() );
 		if ( member.phase == WAIT_FOR_SOLICITATION ) replyAsM( member );
 		else if ( member.phase == WAIT_FOR_SUBTASK ) receiveAsM( member );
 		else if ( member.phase == EXECUTE_SUBTASK ) execute( member );
@@ -56,6 +58,8 @@ public abstract class MemberState implements Strategy, SetParam {
 		}
 
 		member.ls.checkAllDoneMessages( member );
+
+		Collections.sort( reliableLeadersRanking, Comparator.comparingDouble( AgentDePair::getDe ).reversed() );
 	}
 
 	public void setLeaderRankingRandomly( Agent self, List< Agent > agentList ) {
@@ -81,11 +85,11 @@ public abstract class MemberState implements Strategy, SetParam {
 
 	private void replyAsM( Agent member ) {
 		if ( joinFlag ) {
-			Strategy.proceedToNextPhase( member );
+			member.phase = this.nextPhase( member, true );
 			joinFlag = false;
 		} else if ( getCurrentTime() - member.validatedTicks > THRESHOLD_FOR_ROLE_RENEWAL ) {
 			tired_of_waiting++;
-			member.inactivate( 0 );
+			member.phase = nextPhase( member, false );
 		}
 	}
 
@@ -117,47 +121,29 @@ public abstract class MemberState implements Strategy, SetParam {
 	private void receiveAsM( Agent member ) {
 		if ( expectedResultMessage > 0 ) return;
 
-		if ( mySubtaskQueue.isEmpty() ) {
-			member.inactivate( 0 );
-		} else {
+		boolean canGoNext = false;
+		// todo: ここに至るまでにmySubtaskQueueに放り込まれてるのはおかしくない？
+		if ( !mySubtaskQueue.isEmpty() ) {
 			Subtask currentSubtask = mySubtaskQueue.get( 0 ).getValue();
 			Agent currentLeader = mySubtaskQueue.get( 0 ).getKey();
 
 			member.allocated[ currentLeader.id ][ currentSubtask.resType ]++;
 			member.executionTime = Agent.calculateExecutionTime( member, currentSubtask );
-			Strategy.proceedToNextPhase( member );
+			canGoNext = true;
 		}
+		member.phase = nextPhase( member, canGoNext );
 	}
 
 	private void execute( Agent member ) {
-		member.validatedTicks = getCurrentTime();
-
 		assert member.executionTime >= 0 : "sabotage";
-		if ( --member.executionTime == 0 ) {
-			// HACK
-			Pair< Agent, Subtask > pair = mySubtaskQueue.remove( 0 );
-			Agent currentLeader = pair.getKey();
-			Subtask currentSubtask = pair.getValue();
-
-			member.required[ currentSubtask.resType ]++;
-			TransmissionPath.sendMessage( new Done( member, currentLeader ) );
-
-			if ( withinTimeWindow() ) {
-				member.workWithAsM[ currentLeader.id ]++;
-				member.didTasksAsMember++;
-			}
-			mySubtaskQueue.remove( currentSubtask );
-			// consider: nextPhaseと一緒にできない？
-			if ( mySubtaskQueue.isEmpty() ) {
-				member.inactivate( 1 );
-			} else {
-				currentSubtask = mySubtaskQueue.get( 0 ).getValue();
-				currentLeader = mySubtaskQueue.get( 0 ).getKey();
-
-				member.allocated[ currentLeader.id ][ currentSubtask.resType ]++;
-				member.executionTime = Agent.calculateExecutionTime( member, currentSubtask );
-			}
+		if ( --member.executionTime > 0 ) {
+			member.validatedTicks = getCurrentTime();
+			return;
 		}
+		Pair< Agent, Subtask > pair = mySubtaskQueue.remove( 0 );
+		TransmissionPath.sendMessage( new Done( member, pair.getKey() ) );
+		mySubtaskQueue.remove( pair.getValue() );
+		member.phase = nextPhase( member, true );
 	}
 
 	protected static Solicitation selectSolicitationRandomly( List< Solicitation > solicitations ) {
@@ -167,4 +153,40 @@ public abstract class MemberState implements Strategy, SetParam {
 
 
 	protected abstract void renewDE( List< AgentDePair > pairList, Agent target, double evaluation );
+
+	@Override
+	protected Phase nextPhase( Agent member, boolean wasSuccess ) {
+		member.validatedTicks = Manager.getCurrentTime();
+
+		if ( !wasSuccess ) {
+			member.role = inactivate( member, 0 );
+			return SELECT_ROLE;
+		}
+		switch ( member.phase ) {
+			case WAIT_FOR_SOLICITATION:
+				return WAIT_FOR_SUBTASK;
+			case WAIT_FOR_SUBTASK:
+				return EXECUTE_SUBTASK;
+			case EXECUTE_SUBTASK:
+ 				member.e_member = member.e_member * ( 1.0 - α_ ) + α_ * 1.0;
+				if ( !mySubtaskQueue.isEmpty() ) {
+					member.executionTime = Agent.calculateExecutionTime( member, mySubtaskQueue.get( 0 ).getValue() );
+					return EXECUTE_SUBTASK;
+				}
+				else if ( expectedResultMessage > 0 ) {
+					return WAIT_FOR_SUBTASK;
+				} else {
+					member.role = inactivate( member, 1 );
+				}
+			default:
+				return SELECT_ROLE;
+		}
+	}
+
+	@Override
+	public Role inactivate( Agent member, double value ) {
+		member.e_member = member.e_member * ( 1.0 - α_ ) + α_ * value;
+		return JONE_DOE;
+	}
+
 }

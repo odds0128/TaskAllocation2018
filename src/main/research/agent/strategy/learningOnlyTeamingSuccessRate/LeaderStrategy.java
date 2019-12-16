@@ -2,16 +2,18 @@ package main.research.agent.strategy.learningOnlyTeamingSuccessRate;
 
 import main.research.agent.Agent;
 import main.research.agent.AgentDePair;
-import main.research.agent.strategy.LeaderState;
+import main.research.agent.strategy.LeaderTemplateStrategy;
 import main.research.communication.message.Done;
 import main.research.task.Subtask;
 import main.research.task.Task;
 import main.research.task.TaskManager;
 
 import java.util.List;
+import java.util.Map;
 
-public class LeaderStrategy extends LeaderState {
+import static main.research.agent.AgentDePair.getPairByAgent;
 
+public class LeaderStrategy extends LeaderTemplateStrategy {
 	@Override
 	public void checkAllDoneMessages( Agent leader ) {
 		while ( !leader.doneList.isEmpty() ) {

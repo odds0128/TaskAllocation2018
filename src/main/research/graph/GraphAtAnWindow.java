@@ -1,16 +1,8 @@
 package main.research.graph;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import main.research.SetParam;
-import main.research.agent.Agent;
-import main.research.agent.AgentManager;
-import main.research.grid.Grid;
+import main.research.Parameter;
 
-import static main.research.SetParam.Principle.*;
-
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 
@@ -18,7 +10,7 @@ import java.util.Map;
  * Edgeクラス
  * 辺の情報を格納するクラス
  */
-public class GraphAtAnWindow implements SetParam {
+public class GraphAtAnWindow implements Parameter {
 	private Map<Edge, Integer> graph;
 
     public GraphAtAnWindow( ) {

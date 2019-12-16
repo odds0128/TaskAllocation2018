@@ -1,12 +1,12 @@
 package main.research.task;
 
-import main.research.SetParam;
+import main.research.Parameter;
 import main.research.others.random.MyRandom;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class Task implements SetParam {
+public class Task implements Parameter {
     private static int _task_id = 0;
 
     private int id;

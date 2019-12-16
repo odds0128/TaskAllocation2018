@@ -1,17 +1,17 @@
 package main.research.agent;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import main.research.SetParam;
+import main.research.Parameter;
 import main.research.grid.Grid;
 import main.research.others.random.MyRandom;
 
 import java.util.*;
 
-import static main.research.SetParam.Role.*;
+import static main.research.Parameter.Role.*;
 import static main.research.others.random.MyRandom.getRandomInt;
 
 
-public class AgentManager implements SetParam {
+public class AgentManager implements Parameter {
 	public static int agent_num_;
 	public static int time_observing_team_formation_;
 	private static List< Agent > allAgentList;

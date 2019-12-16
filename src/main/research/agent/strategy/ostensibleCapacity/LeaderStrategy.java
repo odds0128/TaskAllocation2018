@@ -3,25 +3,26 @@ package main.research.agent.strategy.ostensibleCapacity;
 import main.research.*;
 import main.research.agent.Agent;
 import main.research.agent.AgentDePair;
+import main.research.agent.strategy.LeaderTemplateStrategy;
 import main.research.agent.strategy.OCTuple;
-import main.research.agent.strategy.LeaderState;
 import main.research.communication.message.*;
 import main.research.others.Pair;
 import main.research.task.Subtask;
 import main.research.task.Task;
 import main.research.task.TaskManager;
 
+import static main.research.agent.AgentDePair.getPairByAgent;
 import static main.research.task.TaskManager.disposeTask;
 import static main.research.Manager.getCurrentTime;
-import static main.research.SetParam.ReplyType.*;
-import static main.research.SetParam.ResultType.FAILURE;
-import static main.research.SetParam.ResultType.SUCCESS;
+import static main.research.Parameter.ReplyType.*;
+import static main.research.Parameter.ResultType.FAILURE;
+import static main.research.Parameter.ResultType.SUCCESS;
 import static main.research.communication.TransmissionPath.*;
 
 import java.util.*;
 
 // TODO: 中身を表したクラス名にする
-public class LeaderStrategy extends LeaderState implements SetParam {
+public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter {
 	static double OC_THRESHOLD = 3.0;
 
 	private Map< Agent, Integer > timeToStartCommunicatingMap = new HashMap<>();
@@ -130,12 +131,12 @@ public class LeaderStrategy extends LeaderState implements SetParam {
 				if ( withinTimeWindow() ) leader.workWithAsL[ friend.id ]++;
 				leader.pastTasks.add( myTask );
 			}
-			leader.inactivate( 1 );
+			leader.phase = nextPhase( leader, true );
 		} else {
 			apologizeToFriends( leader, new ArrayList<>( mapOfSubtaskAndAgent.values() ) );
 			exceptions.removeAll( new ArrayList<>( mapOfSubtaskAndAgent.values() ) );
 			disposeTask();
-			leader.inactivate( 0 );
+			leader.phase = nextPhase( leader, false );
 		}
 		myTask = null;
 	}

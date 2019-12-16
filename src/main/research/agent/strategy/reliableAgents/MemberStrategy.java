@@ -1,10 +1,10 @@
 package main.research.agent.strategy.reliableAgents;
 
-import main.research.SetParam;
+import main.research.Parameter;
 import main.research.agent.Agent;
 import main.research.agent.AgentDePair;
 import main.research.agent.AgentManager;
-import main.research.agent.strategy.MemberState;
+import main.research.agent.strategy.MemberTemplateStrategy;
 import main.research.communication.TransmissionPath;
 import main.research.communication.message.ReplyToSolicitation;
 import main.research.communication.message.Solicitation;
@@ -13,11 +13,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static main.research.SetParam.ReplyType.ACCEPT;
-import static main.research.SetParam.ReplyType.DECLINE;
+import static main.research.Parameter.ReplyType.ACCEPT;
+import static main.research.Parameter.ReplyType.DECLINE;
+import static main.research.agent.AgentDePair.getPairByAgent;
 
 
-public class MemberStrategy extends MemberState implements SetParam {
+public class MemberStrategy extends MemberTemplateStrategy implements Parameter {
 	public static final double threshold_of_reliable_leader = 0.7;
 
 	public static int waiting = 0;
