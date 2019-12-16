@@ -33,7 +33,7 @@ public class LeaderStrategy extends LeaderState implements SetParam {
 	// 評価指標 = αDE + βOC + γDelay
 	static final double α = 1;
 	static final double β = 0.3;
-	static final double γ = 0.3 ;
+	static final double γ = 0.3;
 	private static final double EVALUATION_THRESHOLD = 0.5;
 
 	private Map< Agent, Integer > timeToStartCommunicatingMap = new HashMap<>();
@@ -64,7 +64,7 @@ public class LeaderStrategy extends LeaderState implements SetParam {
 
 		for ( int i = 0; i < REDUNDANT_SOLICITATION_TIMES; i++ ) {
 			for ( Subtask st: subtasks ) {
-				if ( Agent.epsilonGreedy( ) ) candidate = selectMemberForASubtaskRandomly( st );
+				if ( Agent.epsilonGreedy() ) candidate = selectMemberForASubtaskRandomly( st );
 				else candidate = this.selectMemberArbitrary( st );
 
 				if ( candidate == null ) {
@@ -98,7 +98,7 @@ public class LeaderStrategy extends LeaderState implements SetParam {
 
 		for ( AgentDePair pair: reliableMembersRanking ) {
 			Agent tempAgent = pair.getAgent();
-			if( !tempAgent.canProcessTheSubtask( st ) ) break;
+			if ( !tempAgent.canProcessTheSubtask( st ) ) break;
 			if ( exceptions.contains( tempAgent ) ) continue;
 			double tempEvaluation = calculateMemberEvaluation( tempAgent, st );
 			if ( tempEvaluation > maxEvaluation ) {
@@ -106,7 +106,7 @@ public class LeaderStrategy extends LeaderState implements SetParam {
 				returnAgent = tempAgent;
 			}
 		}
-		if( maxEvaluation < EVALUATION_THRESHOLD ) return null;
+		if ( maxEvaluation < EVALUATION_THRESHOLD ) return null;
 		return returnAgent;
 	}
 
@@ -116,7 +116,7 @@ public class LeaderStrategy extends LeaderState implements SetParam {
 		}
 
 		double[] ocs = ocTupleList.stream()
-			.mapToDouble( tuple -> tuple.getOCArray()[st.resType] )
+			.mapToDouble( tuple -> tuple.getOCArray()[ st.resType ] )
 			.toArray();
 		double[] rtts = roundTripTimeMap.values().stream()
 			.mapToDouble( value -> value )
@@ -127,13 +127,13 @@ public class LeaderStrategy extends LeaderState implements SetParam {
 
 		return α * AgentDePair.searchDEofAgent( target, reliableMembersRanking )
 			+ β * ( OCTuple.calculateAverageOC( st.resType, ocTupleList ) - OCTuple.getOC( st.resType, target, ocTupleList ) ) / oc_standard_deviation
-			+ γ * ( calculateAverageRoundTripTime() - roundTripTimeMap.get( target ) ) / rtt_standard_deviation ;
+			+ γ * ( calculateAverageRoundTripTime() - roundTripTimeMap.get( target ) ) / rtt_standard_deviation;
 	}
 
-	public static Double calculateStandardDeviation( double[] values ){
+	public static Double calculateStandardDeviation( double[] values ) {
 		SynchronizedSummaryStatistics stats = new SynchronizedSummaryStatistics();
-		for( double value: values ) stats.addValue( value );
-		return Precision.round( stats.getStandardDeviation(), 2);
+		for ( double value: values ) stats.addValue( value );
+		return Precision.round( stats.getStandardDeviation(), 2 );
 	}
 
 
@@ -209,26 +209,29 @@ public class LeaderStrategy extends LeaderState implements SetParam {
 	}
 
 	@Override
-	public void checkDoneMessage( Agent leader, Done d ) {
-		Agent from = d.getFrom();
-		Subtask st = getAllocatedSubtask( d.getFrom() );
+	public void checkAllDoneMessages( Agent leader ) {
+		while ( !leader.doneList.isEmpty() ) {
+			Done d = leader.doneList.remove( 0 );
+			Agent from = d.getFrom();
+			Subtask st = getAllocatedSubtask( from );
 
-		int bindingTime = getCurrentTime() - timeToStartCommunicatingMap.get( from );
-		renewCongestionDegreeMap( from, st, bindingTime );
+			int bindingTime = getCurrentTime() - timeToStartCommunicatingMap.get( from );
+			renewCongestionDegreeMap( from, st, bindingTime );
 
-		renewDE( reliableMembersRanking, from, 1 );
-		exceptions.remove( from );
+			renewDE( reliableMembersRanking, from, 1 );
+			exceptions.remove( from );
 
-		// タスク全体が終わったかどうかの判定と，それによる処理
-		// HACK: もうちょいどうにかならんか
-		Task task = leader.findTaskContainingThisSubtask( st );
+			// タスク全体が終わったかどうかの判定と，それによる処理
+			// HACK: もうちょいどうにかならんか
+			Task task = leader.findTaskContainingThisSubtask( st );
 
-		task.subtasks.remove( st );
+			task.subtasks.remove( st );
 
-		if ( task.subtasks.isEmpty() ) {
-			from.pastTasks.remove( task );
-			TaskManager.finishTask();
-			from.didTasksAsLeader++;
+			if ( task.subtasks.isEmpty() ) {
+				from.pastTasks.remove( task );
+				TaskManager.finishTask();
+				from.didTasksAsLeader++;
+			}
 		}
 	}
 
@@ -280,6 +283,4 @@ public class LeaderStrategy extends LeaderState implements SetParam {
 		return psl.ocTupleList;
 	}
 
-	void clear() {
-	}
 }

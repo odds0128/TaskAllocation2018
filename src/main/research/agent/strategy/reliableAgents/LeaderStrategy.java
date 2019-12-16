@@ -40,13 +40,13 @@ public class LeaderStrategy extends LeaderState implements SetParam {
 
 	@Override
 	protected void solicitAsL( Agent leader ) {
-		myTask = TaskManager.popTask( );
+		myTask = TaskManager.popTask();
 		if ( myTask == null ) {
 			leader.inactivate( 0 );
 			return;
 		}
-		Map<Agent, List<Subtask>> allocationMap = selectMembersLocal( myTask.subtasks );
-		if( allocationMap.size() < myTask.subtasks.size() * REDUNDANT_SOLICITATION_TIMES ) {
+		Map< Agent, List< Subtask > > allocationMap = selectMembersLocal( myTask.subtasks );
+		if ( allocationMap.size() < myTask.subtasks.size() * REDUNDANT_SOLICITATION_TIMES ) {
 			leader.principle = Principle.RECIPROCAL;
 		} else {
 			leader.principle = Principle.RATIONAL;
@@ -62,32 +62,32 @@ public class LeaderStrategy extends LeaderState implements SetParam {
 		Strategy.proceedToNextPhase( leader );  // 次のフェイズへ
 	}
 
-	private int countRepliesToCome( Map< Agent, List< Subtask>> allocationMap ) {
+	private int countRepliesToCome( Map< Agent, List< Subtask > > allocationMap ) {
 		int temp = allocationMap.entrySet().stream()
 			.mapToInt( entry -> entry.getValue().size() )
 			.sum();
 		return temp;
 	}
 
-	private Map< Agent, List<Subtask> > selectMembersLocal( List< Subtask > subtasks ) {
+	private Map< Agent, List< Subtask > > selectMembersLocal( List< Subtask > subtasks ) {
 		OCTuple.forgetOldOcInformation( ocTupleList );
 		forgetOldRoundTripTimeInformation();
 
-		Map<Agent, List<Subtask> > allocationMap = new HashMap<>(  );
-		List<Subtask> unassignedSubtasks;
+		Map< Agent, List< Subtask > > allocationMap = new HashMap<>();
+		List< Subtask > unassignedSubtasks;
 		Agent candidate;
 
 		unassignedSubtasks = allocateToRelAg( subtasks, allocationMap );
 		exceptions.addAll( allocationMap.keySet() );
 		for ( int i = 0; i < REDUNDANT_SOLICITATION_TIMES; i++ ) {
 			for ( Subtask st: unassignedSubtasks ) {
-				if ( Agent.epsilonGreedy( ) ) candidate = selectMemberForASubtaskRandomly( st );
+				if ( Agent.epsilonGreedy() ) candidate = selectMemberForASubtaskRandomly( st );
 				else candidate = this.selectMemberArbitrary( st );
 				if ( candidate == null ) {
 					return new HashMap<>();
 				}
 				exceptions.add( candidate );
-				List<Subtask> temp = new ArrayList<>(  );
+				List< Subtask > temp = new ArrayList<>();
 				temp.add( st );
 				allocationMap.put( candidate, temp );
 			}
@@ -95,34 +95,34 @@ public class LeaderStrategy extends LeaderState implements SetParam {
 		return allocationMap;
 	}
 
-	private List<Subtask> allocateToRelAg( List< Subtask > subtasks, Map<Agent, List<Subtask>> alMap ) {
-		Map<Agent, List<Subtask>> map = new HashMap<>(  );
-		List<Subtask> unassigned = new ArrayList<>(  );
+	private List< Subtask > allocateToRelAg( List< Subtask > subtasks, Map< Agent, List< Subtask > > alMap ) {
+		Map< Agent, List< Subtask > > map = new HashMap<>();
+		List< Subtask > unassigned = new ArrayList<>();
 
-		for( Subtask st : subtasks ) {
+		for ( Subtask st: subtasks ) {
 			boolean toBeAssigned = false;
-			for( AgentDePair ag_de : reliableMembersRanking ) {
-				if( ag_de.getDe() <= de_threshold_ ) break;
+			for ( AgentDePair ag_de: reliableMembersRanking ) {
+				if ( ag_de.getDe() <= de_threshold_ ) break;
 
 				Agent reliableAgent = ag_de.getAgent();
-				if( !reliableAgent.canProcessTheSubtask( st ) || exceptions.contains( reliableAgent ) ) continue;
+				if ( !reliableAgent.canProcessTheSubtask( st ) || exceptions.contains( reliableAgent ) ) continue;
 
 				double oc = OCTuple.getOC( st.resType, reliableAgent, getOcTupleList( this ) );
-				if( oc > oc_threshold_ ) {
+				if ( oc > oc_threshold_ ) {
 					if ( !map.containsKey( reliableAgent ) ) map.put( reliableAgent, new ArrayList<>() );
 					map.get( reliableAgent ).add( st );
 					toBeAssigned = true;
 					break;
 				} else continue;
 			}
-			if( toBeAssigned == false ) unassigned.add( st );
+			if ( toBeAssigned == false ) unassigned.add( st );
 		}
 		alMap.putAll( map );
 		return unassigned;
 	}
 
 	private Agent selectMemberArbitrary( Subtask st ) {
-		return  selectMemberAccordingToDE( st );
+		return selectMemberAccordingToDE( st );
 	}
 
 	private Agent selectMemberAccordingToDE( Subtask st ) {
@@ -133,11 +133,11 @@ public class LeaderStrategy extends LeaderState implements SetParam {
 		return null;
 	}
 
-	private void sendSolicitationsLocal( Agent leader, Map< Agent, List<Subtask> > agentSubtaskMap ) {
-		for ( Map.Entry<Agent, List<Subtask> > ag_stList : agentSubtaskMap.entrySet() ) {
+	private void sendSolicitationsLocal( Agent leader, Map< Agent, List< Subtask > > agentSubtaskMap ) {
+		for ( Map.Entry< Agent, List< Subtask > > ag_stList: agentSubtaskMap.entrySet() ) {
 			Agent ag = ag_stList.getKey();
 			timeToStartCommunicatingMap.put( ag, getCurrentTime() );
-			for( Subtask st : ag_stList.getValue() ) {
+			for ( Subtask st: ag_stList.getValue() ) {
 				sendMessage( new Solicitation( leader, ag, st ) );
 			}
 		}
@@ -200,25 +200,29 @@ public class LeaderStrategy extends LeaderState implements SetParam {
 	}
 
 	@Override
-	public void checkDoneMessage( Agent leader, Done d ) {
-		Agent from = d.getFrom();
-		Subtask st = getAllocatedSubtask( d.getFrom() );
+	public void checkAllDoneMessages( Agent leader ) {
+		while ( !leader.doneList.isEmpty() ) {
+			Done d = leader.doneList.remove( 0 );
 
-		int bindingTime = getCurrentTime() - timeToStartCommunicatingMap.get( from );
-		updateOstensibleCapacityMap( from, st, bindingTime );
+			Agent from = d.getFrom();
+			Subtask st = getAllocatedSubtask( d.getFrom() );
 
-		renewDE( reliableMembersRanking, from, 1 );
-		exceptions.remove( from );
+			int bindingTime = getCurrentTime() - timeToStartCommunicatingMap.get( from );
+			updateOstensibleCapacityMap( from, st, bindingTime );
 
-		// タスク全体が終わったかどうかの判定と，それによる処理
-		// HACK: もうちょいどうにかならんか
-		Task task = leader.findTaskContainingThisSubtask( st );
+			renewDE( reliableMembersRanking, from, 1 );
+			exceptions.remove( from );
 
-		task.subtasks.remove( st );
+			// タスク全体が終わったかどうかの判定と，それによる処理
+			// HACK: もうちょいどうにかならんか
+			Task task = leader.findTaskContainingThisSubtask( st );
 
-		if ( task.subtasks.isEmpty() ) {
-			TaskManager.finishTask();
-			from.didTasksAsLeader++;
+			task.subtasks.remove( st );
+
+			if ( task.subtasks.isEmpty() ) {
+				TaskManager.finishTask();
+				from.didTasksAsLeader++;
+			}
 		}
 	}
 
@@ -236,7 +240,7 @@ public class LeaderStrategy extends LeaderState implements SetParam {
 			double newOC = calculateOC( bindingTime, target, st );
 			double oldOC = OCTuple.getOC( resourceType, target, ocTupleList );
 			// 最良の場合のみ記憶しておく
-			if( newOC >= oldOC ) OCTuple.updateOC( target, ocTupleList, resourceType, newOC );
+			if ( newOC >= oldOC ) OCTuple.updateOC( target, ocTupleList, resourceType, newOC );
 		} else {
 			tempArray[ resourceType ] = calculateOC( bindingTime, target, st );
 			ocTupleList.add( new OCTuple( target, tempArray, getCurrentTime() ) );

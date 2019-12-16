@@ -1,6 +1,5 @@
 package main.research.agent.strategy;
 
-import main.research.Manager;
 import main.research.SetParam;
 import main.research.agent.Agent;
 import main.research.agent.AgentDePair;
@@ -56,10 +55,7 @@ public abstract class MemberState implements Strategy, SetParam {
 			member.ms.reactToResultMessage( r );
 		}
 
-		while ( !member.doneList.isEmpty() ) {
-			Done d = member.doneList.remove( 0 );
-			member.ls.checkDoneMessage( member, d );
-		}
+		member.ls.checkAllDoneMessages( member );
 	}
 
 	public void setLeaderRankingRandomly( Agent self, List< Agent > agentList ) {

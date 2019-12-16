@@ -28,7 +28,7 @@ public abstract class LeaderState implements Strategy, SetParam {
 	protected int repliesToCome = 0;            // 送ったsolicitationの数を覚えておく
 	protected Task myTask;
 	private Map< Agent, List< Subtask > > allocationHistory = new HashMap<>();
-	public List< AgentDePair > reliableMembersRanking = new ArrayList<>(  );
+	public List< AgentDePair > reliableMembersRanking = new ArrayList<>();
 
 	// question: Leader has a LeaderStrategy のはずなので本来引数に「自分」を渡さなくてもいいはずでは？
 	// TODO: Leaderクラスのインスタンスメソッドにする
@@ -43,48 +43,26 @@ public abstract class LeaderState implements Strategy, SetParam {
 	}
 
 	private void preprocess( Agent leader ) {
+		declineAllSolicitations( leader );
+		checkAllDoneMessages( leader );
+	}
+
+	private void declineAllSolicitations( Agent leader ) {
 		while ( !leader.solicitationList.isEmpty() ) {
 			Solicitation s = leader.solicitationList.remove( 0 );
-			declineSolicitation( leader, s );
-		}
-		while ( !leader.doneList.isEmpty() ) {
-			Done d = leader.doneList.remove( 0 );
-			leader.ls.checkDoneMessage( leader, d );
+			sendMessage( new ReplyToSolicitation( leader, s.getFrom(), DECLINE, s.getExpectedSubtask() ) );
 		}
 	}
 
-	private void declineSolicitation( Agent leader, Solicitation s ) {
-		sendMessage( new ReplyToSolicitation( leader, s.getFrom(), DECLINE, s.getExpectedSubtask() ) );
-	}
-
-	public void checkDoneMessage( Agent leader, Done d ) {
-		Agent from = d.getFrom();
-		Subtask st = getAllocatedSubtask( d.getFrom() );
-
-		leader.ls.renewDE( reliableMembersRanking, from, 1 );
-		exceptions.remove( from );
-
-		// タスク全体が終わったかどうかの判定と，それによる処理
-		// HACK: もうちょいどうにかならんか
-		// 今終わったサブタスクasが含まれるtaskを見つける
-		// それによってタスク全体が終われば終了報告等をする
-
-		Task task = leader.findTaskContainingThisSubtask( st );
-		task.subtasks.remove( st );
-		if ( task.subtasks.isEmpty() ) {
-			from.pastTasks.remove( task );
-			TaskManager.finishTask(  );
-			from.didTasksAsLeader++;
-		}
-	}
+	protected abstract void checkAllDoneMessages( Agent to );
 
 	protected void solicitAsL( Agent leader ) {
-		myTask = TaskManager.popTask( );
+		myTask = TaskManager.popTask();
 		if ( myTask == null ) {
 			leader.inactivate( 0 );
 			return;
 		}
-		Map<Agent, Subtask > allocationMap = selectMembers( myTask.subtasks );
+		Map< Agent, Subtask > allocationMap = selectMembers( myTask.subtasks );
 		repliesToCome = allocationMap.size();
 
 		if ( allocationMap.isEmpty() ) {
@@ -102,10 +80,10 @@ public abstract class LeaderState implements Strategy, SetParam {
 
 		for ( int i = 0; i < REDUNDANT_SOLICITATION_TIMES; i++ ) {
 			for ( Subtask st: subtasks ) {
-				if ( Agent.epsilonGreedy( ) ) candidate = selectMemberForASubtaskRandomly( st );
+				if ( Agent.epsilonGreedy() ) candidate = selectMemberForASubtaskRandomly( st );
 				else candidate = selectAMemberForASubtask( st );
 
-				if ( candidate == null ) return new HashMap< >() ;
+				if ( candidate == null ) return new HashMap<>();
 
 				exceptions.add( candidate );
 				memberCandidates.put( candidate, st );
@@ -118,20 +96,20 @@ public abstract class LeaderState implements Strategy, SetParam {
 		Agent candidate;
 		do {
 			candidate = AgentManager.getAgentRandomly( exceptions, AgentManager.getAllAgentList() );
-		} while ( ! candidate.canProcessTheSubtask( st ) );
+		} while ( !candidate.canProcessTheSubtask( st ) );
 		return candidate;
 	}
 
 	private Agent selectAMemberForASubtask( Subtask st ) {
-		for ( AgentDePair pair : reliableMembersRanking ) {
+		for ( AgentDePair pair: reliableMembersRanking ) {
 			Agent ag = pair.getAgent();
-			if ( ( ! exceptions.contains( ag ) ) && ag.canProcessTheSubtask( st ) ) return ag;
+			if ( ( !exceptions.contains( ag ) ) && ag.canProcessTheSubtask( st ) ) return ag;
 		}
 		return null;
 	}
 
 	public void sendSolicitations( Agent leader, Map< Agent, Subtask > agentSubtaskMap ) {
-		for ( Map.Entry<Agent, Subtask> ag_st : agentSubtaskMap.entrySet() ) {
+		for ( Map.Entry< Agent, Subtask > ag_st: agentSubtaskMap.entrySet() ) {
 			sendMessage( new Solicitation( leader, ag_st.getKey(), ag_st.getValue() ) );
 		}
 	}
@@ -160,8 +138,8 @@ public abstract class LeaderState implements Strategy, SetParam {
 		}
 		if ( canExecuteTheTask( myTask, SubtaskAgentMap.keySet() ) ) {
 			for ( Map.Entry entry: SubtaskAgentMap.entrySet() ) {
-				Agent   friend = ( Agent ) entry.getValue();
-				Subtask st = (Subtask ) entry.getKey();
+				Agent friend = ( Agent ) entry.getValue();
+				Subtask st = ( Subtask ) entry.getKey();
 
 				sendMessage( new ResultOfTeamFormation( leader, friend, SUCCESS, st ) );
 				appendAllocationHistory( friend, st );
@@ -179,8 +157,9 @@ public abstract class LeaderState implements Strategy, SetParam {
 	}
 
 	protected Pair compareDE( Agent a, Agent b ) {
-		if( getPairByAgent( a, reliableMembersRanking ).getDe() < getPairByAgent( b, reliableMembersRanking ).getDe() ) return new Pair(b, a);
-		return new Pair(a, b);
+		if ( getPairByAgent( a, reliableMembersRanking ).getDe() < getPairByAgent( b, reliableMembersRanking ).getDe() )
+			return new Pair( b, a );
+		return new Pair( a, b );
 	}
 
 	protected void treatBetrayer( Agent betrayer ) {
@@ -196,9 +175,8 @@ public abstract class LeaderState implements Strategy, SetParam {
 	}
 
 	protected void apologizeToFriends( Agent failingLeader, List< Agent > friends ) {
-		for( Agent friend : friends ) sendMessage( new ResultOfTeamFormation( failingLeader, friend, FAILURE, null ) );
+		for ( Agent friend: friends ) sendMessage( new ResultOfTeamFormation( failingLeader, friend, FAILURE, null ) );
 	}
-
 
 
 	protected void appendAllocationHistory( Agent member, Subtask s ) {
@@ -227,10 +205,10 @@ public abstract class LeaderState implements Strategy, SetParam {
 		exceptions.add( self );
 	}
 
-	protected abstract void renewDE( List<AgentDePair> pairList, Agent target, double evaluation );
+	protected abstract void renewDE( List< AgentDePair > pairList, Agent target, double evaluation );
 
 	// todo: 削除
-	public void reachReply(ReplyToSolicitation r){
+	public void reachReply( ReplyToSolicitation r ) {
 		r.getTo().replyList.add( r );
 	}
 

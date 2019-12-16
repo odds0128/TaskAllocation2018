@@ -72,28 +72,31 @@ public class LeaderStrategy extends LeaderState {
 	}
 
 	@Override
-	public void checkDoneMessage( Agent leader, Done d ) {
-		Agent from = d.getFrom();
-		Subtask st = getAllocatedSubtask( d.getFrom() );
+	public void checkAllDoneMessages( Agent leader ) {
+		while ( !leader.doneList.isEmpty() ) {
+			Done d = leader.doneList.remove( 0 );
+			Agent from = d.getFrom();
+			Subtask st = getAllocatedSubtask( d.getFrom() );
 
-		int roundTripTime = Manager.getCurrentTime() - this.agentStartTimeMap.remove( from );
-		// consider: 謎の5
-		double reward = 5 * ( double ) st.reqRes[ st.resType ] / ( double ) roundTripTime;
+			int roundTripTime = Manager.getCurrentTime() - this.agentStartTimeMap.remove( from );
+			// consider: 謎の5
+			double reward = 5 * ( double ) st.reqRes[ st.resType ] / ( double ) roundTripTime;
 
-		this.renewDE( reliableMembersRanking, from, reward );
-		exceptions.remove( from );
+			this.renewDE( reliableMembersRanking, from, reward );
+			exceptions.remove( from );
 
-		// タスク全体が終わったかどうかの判定と，それによる処理
-		// HACK: もうちょいどうにかならんか
-		// 今終わったサブタスクasが含まれるtaskを見つける
-		// それによってタスク全体が終われば終了報告等をする
+			// タスク全体が終わったかどうかの判定と，それによる処理
+			// HACK: もうちょいどうにかならんか
+			// 今終わったサブタスクasが含まれるtaskを見つける
+			// それによってタスク全体が終われば終了報告等をする
 
-		Task task = leader.findTaskContainingThisSubtask( st );
-		task.subtasks.remove( st );
-		if ( task.subtasks.isEmpty() ) {
-			from.pastTasks.remove( task );
-			TaskManager.finishTask();
-			from.didTasksAsLeader++;
+			Task task = leader.findTaskContainingThisSubtask( st );
+			task.subtasks.remove( st );
+			if ( task.subtasks.isEmpty() ) {
+				from.pastTasks.remove( task );
+				TaskManager.finishTask();
+				from.didTasksAsLeader++;
+			}
 		}
 	}
 

@@ -36,8 +36,6 @@ public class LeaderStrategy extends LeaderState implements SetParam {
 		}
 	}
 
-	// todo: 混雑度を元にしたメンバー選定のロジックの実装
-	//
 	@Override
 	protected Map< Agent, Subtask > selectMembers( List< Subtask > subtasks ) {
 		Map< Agent, Subtask > memberCandidates = new HashMap<>();
@@ -46,11 +44,11 @@ public class LeaderStrategy extends LeaderState implements SetParam {
 
 		for ( int i = 0; i < REDUNDANT_SOLICITATION_TIMES; i++ ) {
 			for ( Subtask st: subtasks ) {
-				if ( Agent.epsilonGreedy( ) ) candidate = selectMemberForASubtaskRandomly( st );
+				if ( Agent.epsilonGreedy() ) candidate = selectMemberForASubtaskRandomly( st );
 				else candidate = this.selectMemberArbitrary( st );
 
-				if( candidate == null ) {
-					return new HashMap< >() ;
+				if ( candidate == null ) {
+					return new HashMap<>();
 				}
 
 				exceptions.add( candidate );
@@ -61,9 +59,11 @@ public class LeaderStrategy extends LeaderState implements SetParam {
 	}
 
 	public static int nulls = 0, notNulls = 0;
+
 	private Agent selectMemberArbitrary( Subtask st ) {
 		Agent temp = selectMemberAccordingToOC( st );
-		if( temp == null ) nulls++; else notNulls++;
+		if ( temp == null ) nulls++;
+		else notNulls++;
 		return temp == null ? selectMemberAccordingToDE( st ) : temp;
 	}
 
@@ -74,22 +74,24 @@ public class LeaderStrategy extends LeaderState implements SetParam {
 		double maxOC = OC_THRESHOLD, maxDE = 0.5;
 		int resType = st.resType;
 
-		for( OCTuple set : ocTupleList ) {
+		for ( OCTuple set: ocTupleList ) {
 			Agent temp = set.getTarget();
-			if( exceptions.contains( temp ) ) continue;
+			if ( exceptions.contains( temp ) ) continue;
 			double ocValue = OCTuple.getOC( resType, temp, ocTupleList );
 			double deValue = getPairByAgent( temp, reliableMembersRanking ).getDe();
-			if( ocValue > maxOC && maxDE > 0.5 || ocValue == maxOC && maxDE < deValue ) {
-				candidate = temp; maxOC = ocValue; maxDE = deValue;
+			if ( ocValue > maxOC && maxDE > 0.5 || ocValue == maxOC && maxDE < deValue ) {
+				candidate = temp;
+				maxOC = ocValue;
+				maxDE = deValue;
 			}
 		}
 		return candidate;
 	}
 
 	private Agent selectMemberAccordingToDE( Subtask st ) {
-		for ( AgentDePair pair : reliableMembersRanking ) {
+		for ( AgentDePair pair: reliableMembersRanking ) {
 			Agent ag = pair.getAgent();
-			if ( ( ! exceptions.contains( ag ) ) && ag.canProcessTheSubtask( st ) ) return ag;
+			if ( ( !exceptions.contains( ag ) ) && ag.canProcessTheSubtask( st ) ) return ag;
 		}
 		return null;
 	}
@@ -154,26 +156,29 @@ public class LeaderStrategy extends LeaderState implements SetParam {
 	}
 
 	@Override
-	public void checkDoneMessage( Agent leader, Done d ) {
-		Agent from = d.getFrom();
-		Subtask st = getAllocatedSubtask( d.getFrom() );
+	public void checkAllDoneMessages( Agent leader ) {
+		while ( !leader.doneList.isEmpty() ) {
+			Done d = leader.doneList.remove( 0 );
+			Agent from = d.getFrom();
+			Subtask st = getAllocatedSubtask( d.getFrom() );
 
-		int bindingTime = getCurrentTime() - timeToStartCommunicatingMap.get( from );
-		renewCongestionDegreeMap( from, st, bindingTime );
+			int bindingTime = getCurrentTime() - timeToStartCommunicatingMap.get( from );
+			renewCongestionDegreeMap( from, st, bindingTime );
 
-		renewDE( reliableMembersRanking, from, 1 );
-		exceptions.remove( from );
+			renewDE( reliableMembersRanking, from, 1 );
+			exceptions.remove( from );
 
-		// タスク全体が終わったかどうかの判定と，それによる処理
-		// HACK: もうちょいどうにかならんか
-		Task task = leader.findTaskContainingThisSubtask( st );
+			// タスク全体が終わったかどうかの判定と，それによる処理
+			// HACK: もうちょいどうにかならんか
+			Task task = leader.findTaskContainingThisSubtask( st );
 
-		task.subtasks.remove( st );
+			task.subtasks.remove( st );
 
-		if ( task.subtasks.isEmpty() ) {
-			from.pastTasks.remove( task );
-			TaskManager.finishTask();
-			from.didTasksAsLeader++;
+			if ( task.subtasks.isEmpty() ) {
+				from.pastTasks.remove( task );
+				TaskManager.finishTask();
+				from.didTasksAsLeader++;
+			}
 		}
 	}
 
@@ -184,8 +189,6 @@ public class LeaderStrategy extends LeaderState implements SetParam {
 	}
 
 
-
-	// HACK
 	private void renewCongestionDegreeMap( Agent target, Subtask st, int bindingTime ) {
 		double[] tempArray = new double[ Agent.resource_types_ ];
 		int resourceType = st.resType;
@@ -211,11 +214,5 @@ public class LeaderStrategy extends LeaderState implements SetParam {
 		sb.append( ", ocList: " + ocTupleList );
 		return sb.toString();
 	}
-
-	public static List< OCTuple > getCdSetList( LeaderStrategy psl ) {
-		return psl.ocTupleList;
-	}
-
-	void clear() {
-	}
 }
+
