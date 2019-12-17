@@ -25,7 +25,7 @@ import static main.research.communication.TransmissionPath.sendMessage;
 import static main.research.task.TaskManager.disposeTask;
 
 public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter {
-	static final double de_threshold_ = 0.5;
+	static final double de_threshold_ = 0.5; // これを超えていたら信頼する（等号は含まない）
 	static final double oc_threshold_ = 3.0;
 
 	private Map< Agent, Integer > timeToStartCommunicatingMap = new HashMap<>();
@@ -76,7 +76,6 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 		Agent candidate;
 
 		unassignedSubtasks = allocateToRelAg( subtasks, allocationMap );
-		exceptions.addAll( allocationMap.keySet() );
 		for ( int i = 0; i < REDUNDANT_SOLICITATION_TIMES; i++ ) {
 			for ( Subtask st: unassignedSubtasks ) {
 				if ( Agent.epsilonGreedy() ) candidate = selectMemberForASubtaskRandomly( st );
@@ -103,7 +102,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 				if ( ag_de.getDe() <= de_threshold_ ) break;
 
 				Agent reliableAgent = ag_de.getAgent();
-				if ( !reliableAgent.canProcessTheSubtask( st ) || exceptions.contains( reliableAgent ) ) continue;
+				if ( !reliableAgent.canProcessTheSubtask( st ) ) continue;
 
 				double oc = OCTuple.getOC( st.resType, reliableAgent, getOcTupleList( this ) );
 				if ( oc > oc_threshold_ ) {
@@ -208,8 +207,11 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 			int bindingTime = getCurrentTime() - timeToStartCommunicatingMap.get( from );
 			updateOstensibleCapacityMap( from, st, bindingTime );
 
+			if( exceptions.contains( from )) {
+				exceptions.remove( from );
+			}
+
 			renewDE( reliableMembersRanking, from, 1 );
-			exceptions.remove( from );
 
 			// タスク全体が終わったかどうかの判定と，それによる処理
 			// HACK: もうちょいどうにかならんか
