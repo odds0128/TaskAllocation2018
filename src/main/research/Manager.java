@@ -19,6 +19,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.*;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static main.research.Parameter.Role.*;
 
@@ -37,8 +39,8 @@ public class Manager implements Parameter {
 	//TODO: こんな風にするならsingletonにしたほうがいいよね
 	// TODO: lsとmsで分けて指定しなきゃいけないの無駄じゃない?
 //	private static String package_name = "main.research.agent.strategy.reliableAgents.";
-//	private static String package_name = "main.research.agent.strategy.puttingDeOcAndDelayIntoOneDimensionalValue.";
-	private static String package_name = "main.research.agent.strategy.putRewardAndDelayIntoDeCalculation.";
+	private static String package_name = "main.research.agent.strategy.puttingDeOcAndDelayIntoOneDimensionalValue.";
+//	private static String package_name = "main.research.agent.strategy.putRewardAndDelayIntoDeCalculation.";
 //	private static String package_name = "main.research.agent.strategy.learningOnlyTeamingSuccessRate.";
 	private static String ls_name = "LeaderStrategy";      // ICA2018における提案手法役割更新あり    //    private static main.research.strategy.Strategy strategy = new ProposedMethodForSingapore();
 	private static String ms_name = "MemberStrategy";
@@ -107,14 +109,16 @@ public class Manager implements Parameter {
 
 				// ここが1tickの最後の部分．次のtickまでにやることあったらここで．
 			}
+
 			// ↑ 一施行のカッコ．以下は次の施行までの合間で作業する部分
 			int leader_num = ( int ) AgentManager.getAllAgentList().stream()
 				.filter( agent -> agent.role == LEADER )
 				.count();
-			int member_num = ( int ) AgentManager.getAllAgentList().stream()
+
+			List<Agent> members = AgentManager.getAllAgentList().stream()
 				.filter( agent -> agent.role == MEMBER )
-				.count();
-			System.out.println( "leaders:" + leader_num + ", members:" + member_num );
+				.collect( Collectors.toList());
+			System.out.println( "leaders:" + leader_num + ", members:" + members.size() );
 
 			// remove
 			// 信頼エージェントについて

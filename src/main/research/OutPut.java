@@ -16,8 +16,11 @@ import main.research.graph.GraphAtAnWindow;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static main.research.Parameter.Role.LEADER;
+import static main.research.Parameter.Role.MEMBER;
 
 /**
  * OutPutクラス
@@ -46,19 +49,32 @@ public class OutPut implements Parameter {
 	static int[] neetMembersArray = new int[ writing_times_ ];
 	static int[] reciprocalLeaderArray = new int[ writing_times_ ];
 	static int[] rationalistsArray = new int[ writing_times_ ];
+
+	static double[] membersHaveNoSubtask = new double[ writing_times_ ];
+	static double[] averageSubtaskQueueSizeForAllMembers = new double[ writing_times_ ];
+	static double[] averageSubtaskQueueSizeForWorkingMembers = new double[ writing_times_ ];
+
 	static int[] reciprocalMembersArray = new int[ writing_times_ ];
 	static double[] idleMembersRateArray = new double[ writing_times_ ];
 	static int[] finishedTasksInDepopulatedAreaArray = new int[ writing_times_ ];
 	static int[] finishedTasksInPopulatedAreaArray = new int[ writing_times_ ];
-	static int[] tempTaskExecutionTimeArray = new int[ writing_times_ ];
+	static int[] tempSubtaskExecutionTimeArray = new int[ writing_times_ ];
 	static double[] taskExecutionTimeArray = new double[ writing_times_ ];
-	static int taskExecutionTimes = 0;
+	static int subtaskExecutionCount = 0;
 
 	static void aggregateData( List< Agent > agents ) {
 		neetMembersArray[ index ] += Agent.countNEETmembers( agents, max_turn_ / writing_times_ );
 		leaderNumArray[ index ] += countLeader( agents );
 		finishedTasksArray[ index ] += TaskManager.getFinishedTasks();
 		tempMessagesArray[ index ] = TransmissionPath.getMessageNum();
+
+		List<Agent> memberList = agents.stream().filter( ag -> ag.role == MEMBER ).collect( Collectors.toList());
+		int allMemberNum = ( int ) memberList.stream().count();
+		int allSubtasksHolden =  memberList.stream().mapToInt( ag -> ag.ms.mySubtaskQueue.size() ).sum();
+		int tempMembersHaveNoSubtask = ( int ) memberList.stream().filter( ag -> ag.ms.mySubtaskQueue.size() == 0 ).count();
+		membersHaveNoSubtask[index] += tempMembersHaveNoSubtask;
+		averageSubtaskQueueSizeForAllMembers[index] += (double) allSubtasksHolden / allMemberNum;
+		averageSubtaskQueueSizeForWorkingMembers[index] += (double) allSubtasksHolden / (allMemberNum - tempMembersHaveNoSubtask);
 
 		int gap = index > 0 ? tempMessagesArray[ index - 1 ] : 0;
 		messagesArray[ index ] += TransmissionPath.getMessageNum() - gap;
@@ -76,6 +92,11 @@ public class OutPut implements Parameter {
 		indexIncrement();
 	}
 
+	public static void sumExecutionTime( int time ) {
+		subtaskExecutionCount++;
+		tempSubtaskExecutionTimeArray[index] += time;
+	}
+
 	private static int countLeader( List< Agent > agentList ) {
 		return ( int ) agentList.stream()
 			.filter( agent -> agent.role == LEADER )
@@ -85,11 +106,11 @@ public class OutPut implements Parameter {
 	static int[] tempMessagesArray = new int[ writing_times_ ];
 
 	private static void indexIncrement() {
-		if ( taskExecutionTimes != 0 ) {
-			taskExecutionTimeArray[ index ] += ( double ) tempTaskExecutionTimeArray[ index ] / taskExecutionTimes;
+		if ( subtaskExecutionCount != 0 ) {
+			taskExecutionTimeArray[ index ] += ( double ) tempSubtaskExecutionTimeArray[ index ] / subtaskExecutionCount;
 		}
-		tempTaskExecutionTimeArray[ index ] = 0;
-		taskExecutionTimes = 0;
+		tempSubtaskExecutionTimeArray[ index ] = 0;
+		subtaskExecutionCount = 0;
 		index = ( index + 1 ) % writing_times_;
 	}
 
@@ -108,7 +129,8 @@ public class OutPut implements Parameter {
 			pw.println( "turn" + ", "
 					+ "FinishedTasks" + ", " + "DisposedTasks" + ", " + "OverflownTasks" + ", "
 					+ "Success rate(except overflow)" + ", " + "Success rate" + ", "
-					+ "CommunicationTime" + ", " + "Messages" + ", " + "ExecutionTime" + ","
+					+ "CommunicationTime" + ", " + "Messages" + "," + "ExecutionTime" + ","
+					+ "Sabotage members" + ", " + "average subtasks holden for all members" + ", " + "average subtasks holden for working members" + ", "
 					+ "Leader" + ", " // + "Member"                            + ", "
 					+ "NEET Members" + ", "
 					// + "Lonely leaders"                    + ", " + "Lonely members"                    + ", "
@@ -128,6 +150,9 @@ public class OutPut implements Parameter {
 					+ ( double ) communicationDelayArray[ i ] / executionTimes_ + ", "
 					+ ( double ) messagesArray[ i ] / executionTimes_ + ", "
 					+ ( double ) taskExecutionTimeArray[ i ] / executionTimes_ + ", "
+					+ ( int  )   membersHaveNoSubtask[i] / executionTimes_ + ", "
+					+ ( double ) averageSubtaskQueueSizeForAllMembers[i] / executionTimes_ + ", "
+					+ (double) averageSubtaskQueueSizeForWorkingMembers[i] / executionTimes_ + ", "
 					+ ( double ) leaderNumArray[ i ] / executionTimes_ + ", "
 					+ ( double ) neetMembersArray[ i ] / executionTimes_ + ", "
 					+ ( double ) reciprocalLeaderArray[ i ] / executionTimes_ + ", "

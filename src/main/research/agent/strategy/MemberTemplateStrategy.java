@@ -128,15 +128,15 @@ public abstract class MemberTemplateStrategy extends TemplateStrategy implements
 			Agent currentLeader = mySubtaskQueue.get( 0 ).getKey();
 
 			member.allocated[ currentLeader.id ][ currentSubtask.resType ]++;
-			member.executionTime = Agent.calculateExecutionTime( member, currentSubtask );
+			member.processTime = Agent.calculateProcessTime( member, currentSubtask );
 			canGoNext = true;
 		}
 		member.phase = nextPhase( member, canGoNext );
 	}
 
 	private void execute( Agent member ) {
-		assert member.executionTime >= 0 : "sabotage";
-		if ( --member.executionTime > 0 ) {
+		assert member.processTime >= 0 : "sabotage";
+		if ( --member.processTime > 0 ) {
 			member.validatedTicks = getCurrentTime();
 			return;
 		}
@@ -170,7 +170,7 @@ public abstract class MemberTemplateStrategy extends TemplateStrategy implements
 			case EXECUTE_SUBTASK:
  				member.e_member = member.e_member * ( 1.0 - α_ ) + α_ * 1.0;
 				if ( !mySubtaskQueue.isEmpty() ) {
-					member.executionTime = Agent.calculateExecutionTime( member, mySubtaskQueue.get( 0 ).getValue() );
+					member.processTime = Agent.calculateProcessTime( member, mySubtaskQueue.get( 0 ).getValue() );
 					return EXECUTE_SUBTASK;
 				}
 				else if ( expectedResultMessage > 0 ) {

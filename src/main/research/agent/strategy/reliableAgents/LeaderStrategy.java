@@ -111,9 +111,9 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 					map.get( reliableAgent ).add( st );
 					toBeAssigned = true;
 					break;
-				} else continue;
+				}
 			}
-			if ( toBeAssigned == false ) unassigned.add( st );
+			if ( !toBeAssigned ) unassigned.add( st );
 		}
 		alMap.putAll( map );
 		return unassigned;

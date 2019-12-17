@@ -11,6 +11,7 @@ import static main.research.Parameter.Principle.*;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import main.research.Manager;
+import main.research.OutPut;
 import main.research.Parameter;
 import main.research.agent.strategy.LeaderTemplateStrategy;
 import main.research.agent.strategy.MemberTemplateStrategy;
@@ -64,7 +65,7 @@ public class Agent implements Parameter, Cloneable {
 
 	// メンバエージェントのみが持つパラメータ
 	public int didTasksAsMember = 0;
-	public int executionTime = 0;
+	public int processTime = 0;
 
 
 	public static void setConstants( JsonNode agentNode ) {
@@ -151,8 +152,10 @@ public class Agent implements Parameter, Cloneable {
 	}
 
 
-	public static int calculateExecutionTime( Agent a, Subtask st ) {
-		return ( int ) Math.ceil( ( double ) st.reqRes[ st.resType ] / ( double ) a.resources[ st.resType ] );
+	public static int calculateProcessTime( Agent a, Subtask st ) {
+		int res = ( int ) Math.ceil( ( double ) st.reqRes[ st.resType ] / ( double ) a.resources[ st.resType ] );
+		OutPut.sumExecutionTime( res );
+		return res;
 	}
 
 	public boolean canProcessTheSubtask( Subtask subtask ) {
