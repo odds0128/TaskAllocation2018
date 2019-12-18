@@ -54,6 +54,8 @@ public class OutPut implements Parameter {
 	static double[] averageSubtaskQueueSizeForAllMembers = new double[ writing_times_ ];
 	static double[] averageSubtaskQueueSizeForWorkingMembers = new double[ writing_times_ ];
 
+	static double[] growApartDegreeArray = new double[writing_times_];
+
 	static int[] reciprocalMembersArray = new int[ writing_times_ ];
 	static double[] idleMembersRateArray = new double[ writing_times_ ];
 	static int[] finishedTasksInDepopulatedAreaArray = new int[ writing_times_ ];
@@ -76,6 +78,8 @@ public class OutPut implements Parameter {
 		averageSubtaskQueueSizeForAllMembers[index] += (double) allSubtasksHolden / allMemberNum;
 		averageSubtaskQueueSizeForWorkingMembers[index] += (double) allSubtasksHolden / (allMemberNum - tempMembersHaveNoSubtask);
 
+		growApartDegreeArray[index] += countMutualRelations(agents);
+
 		int gap = index > 0 ? tempMessagesArray[ index - 1 ] : 0;
 		messagesArray[ index ] += TransmissionPath.getMessageNum() - gap;
 		communicationDelayArray[ index ] += TransmissionPath.getAverageCommunicationTime();
@@ -90,6 +94,10 @@ public class OutPut implements Parameter {
 		idleMembersRateArray[ index ] += (double) MemberTemplateStrategy.idleTime / AgentManager.countMembers();
 		MemberTemplateStrategy.idleTime = 0;
 		indexIncrement();
+	}
+
+	private static int countMutualRelations( List< Agent > agents ) {
+		return 0;
 	}
 
 	public static void sumExecutionTime( int time ) {
@@ -126,38 +134,38 @@ public class OutPut implements Parameter {
 			bw = new BufferedWriter( fw );
 			pw = new PrintWriter( bw );
 
-			pw.println( "turn" + ", "
-					+ "FinishedTasks" + ", " + "DisposedTasks" + ", " + "OverflownTasks" + ", "
-					+ "Success rate(except overflow)" + ", " + "Success rate" + ", "
-					+ "CommunicationTime" + ", " + "Messages" + "," + "ExecutionTime" + ","
-					+ "Sabotage members" + ", " + "average subtasks holden for all members" + ", " + "average subtasks holden for working members" + ", "
-					+ "Leader" + ", " // + "Member"                            + ", "
-					+ "NEET Members" + ", "
-					// + "Lonely leaders"                    + ", " + "Lonely members"                    + ", "
-					// + "Accompanied leaders"               + ", " + "Accompanied members"               + ", "
-					+ "ReciprocalLeaders" + ", " + "ReciprocalMembers" + ", "
-					+ "IdleTime" + ", "
-				// + "Rational"                          + ", " + "ReciprocalMembers" + ","
-				// + "FinishedTasks in depopulated area" + ", " + "FinishedTasks in populated area"   + ", "
+			pw.println( "turn" + ","
+					+ "FinishedTasks" + "," + "DisposedTasks" + "," + "OverflownTasks" + ","
+					+ "Success rate(except overflow)" + "," + "Success rate" + ","
+					+ "CommunicationTime" + "," + "Messages" + "," + "ExecutionTime" + ","
+					+ "Sabotage members" + "," + "average subtasks holden for all members" + "," + "average subtasks holden for working members" + ","
+					+ "Leader" + "," // + "Member"                            + ","
+					+ "NEET Members" + ","
+					// + "Lonely leaders"                    + "," + "Lonely members"                    + ","
+					// + "Accompanied leaders"               + "," + "Accompanied members"               + ","
+					+ "ReciprocalLeaders" + "," + "ReciprocalMembers" + ","
+					+ "IdleTime" + ","
+				// + "Rational"                          + "," + "ReciprocalMembers" + ","
+				// + "FinishedTasks in depopulated area" + "," + "FinishedTasks in populated area"   + ","
 			);
 			for ( int i = 0; i < writing_times_; i++ ) {
-				pw.println( ( i + 1 ) * ( max_turn_ / writing_times_ ) + ", "
-					+ finishedTasksArray[ i ] / executionTimes_ + ", "
-					+ disposedTasksArray[ i ] / executionTimes_ + ", "
-					+ overflownTasksArray[ i ] / executionTimes_ + ", "
-					+ ( double ) finishedTasksArray[ i ] / ( finishedTasksArray[ i ] + disposedTasksArray[ i ] ) + ", "
-					+ ( double ) finishedTasksArray[ i ] / ( finishedTasksArray[ i ] + disposedTasksArray[ i ] + overflownTasksArray[ i ] ) + ", "
-					+ ( double ) communicationDelayArray[ i ] / executionTimes_ + ", "
-					+ ( double ) messagesArray[ i ] / executionTimes_ + ", "
-					+ ( double ) taskExecutionTimeArray[ i ] / executionTimes_ + ", "
-					+ ( int  )   membersHaveNoSubtask[i] / executionTimes_ + ", "
-					+ ( double ) averageSubtaskQueueSizeForAllMembers[i] / executionTimes_ + ", "
-					+ (double) averageSubtaskQueueSizeForWorkingMembers[i] / executionTimes_ + ", "
-					+ ( double ) leaderNumArray[ i ] / executionTimes_ + ", "
-					+ ( double ) neetMembersArray[ i ] / executionTimes_ + ", "
-					+ ( double ) reciprocalLeaderArray[ i ] / executionTimes_ + ", "
-					+ ( double ) reciprocalMembersArray[ i ] / executionTimes_ + ", "
-					+ ( double ) idleMembersRateArray[i] / executionTimes_ + ", "
+				pw.println( ( i + 1 ) * ( max_turn_ / writing_times_ ) + ","
+					+ finishedTasksArray[ i ] / executionTimes_ + ","
+					+ disposedTasksArray[ i ] / executionTimes_ + ","
+					+ overflownTasksArray[ i ] / executionTimes_ + ","
+					+ ( double ) finishedTasksArray[ i ] / ( finishedTasksArray[ i ] + disposedTasksArray[ i ] ) + ","
+					+ ( double ) finishedTasksArray[ i ] / ( finishedTasksArray[ i ] + disposedTasksArray[ i ] + overflownTasksArray[ i ] ) + ","
+					+ ( double ) communicationDelayArray[ i ] / executionTimes_ + ","
+					+ ( double ) messagesArray[ i ] / executionTimes_ + ","
+					+ ( double ) taskExecutionTimeArray[ i ] / executionTimes_ + ","
+					+ ( int  )   membersHaveNoSubtask[i] / executionTimes_ + ","
+					+ ( double ) averageSubtaskQueueSizeForAllMembers[i] / executionTimes_ + ","
+					+ (double) averageSubtaskQueueSizeForWorkingMembers[i] / executionTimes_ + ","
+					+ ( double ) leaderNumArray[ i ] / executionTimes_ + ","
+					+ ( double ) neetMembersArray[ i ] / executionTimes_ + ","
+					+ ( double ) reciprocalLeaderArray[ i ] / executionTimes_ + ","
+					+ ( double ) reciprocalMembersArray[ i ] / executionTimes_ + ","
+					+ ( double ) idleMembersRateArray[i] / executionTimes_ + ","
 				);
 			}
 			pw.close();
@@ -171,7 +179,7 @@ public class OutPut implements Parameter {
 		List< Agent > agList = AgentManager.getAllAgentList();
 		for ( int i = 0; i < agent_num_; i++ ) {
 			Agent ag = agList.get( i );
-			pw.print( ", " + ag.role + ", " + ag.ms.mySubtaskQueue.size() );
+			pw.print( "," + ag.role + "," + ag.ms.mySubtaskQueue.size() );
 //		writeLeadersOC( pw, ag );
 		}
 		pw.println();
@@ -184,7 +192,7 @@ public class OutPut implements Parameter {
 				boolean exists = OCTuple.alreadyExists( target, pl.getCdTupleList() );
 				double temp = exists ? OCTuple.getOC( 1, target, pl.getCdTupleList() ) : -1;
 
-				pw.print( ", " + temp );
+				pw.print( "," + temp );
 			}
 		}
 	}
@@ -195,12 +203,12 @@ public class OutPut implements Parameter {
 		PrintWriter pw = newCSVPrintWriter( path );
 
 		pw.print( "id" );
-		for ( int i = 0; i < agent_num_; i++ ) pw.print( ", " + i );
-		pw.println(", ");
+		for ( int i = 0; i < agent_num_; i++ ) pw.print( "," + i );
+		pw.println(",");
 		for ( int i = 0; i < agent_num_; i++ ) {
-			pw.print( i + ", " );
+			pw.print( i + "," );
 			for ( int j = 0; j < agent_num_; j++ ) {
-				pw.print( delays[ i ][ j ] + ", " );
+				pw.print( delays[ i ][ j ] + "," );
 			}
 			pw.println();
 		}

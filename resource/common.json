@@ -13,7 +13,7 @@
     "check_agents" : false
   },
   "agents" : {
-    "agent_num" : 100,
+    "agent_num" : 500,
     "time_observing_team_formation" : 50,
     "agent" : {
       "resource_types": 3,
@@ -36,7 +36,7 @@
   },
   "tasks" : {
     "initial_tasks_num" : 0,
-    "additional_tasks_num" : 3.0,
+    "additional_tasks_num" : 10.0,
     "distribution" : "poisson",
     "task_queue_size" : 500,
     "min_subtasks_num" : 3,

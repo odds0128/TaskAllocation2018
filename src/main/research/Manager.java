@@ -126,7 +126,6 @@ public class Manager implements Parameter {
 			System.out.println( "tired of waiting: " + MemberTemplateStrategy.tired_of_waiting );
 			System.out.println( "average de from member to leader: " + main.research.agent.strategy.reliableAgents.MemberStrategy.calculateMeanDE() );
 			System.out.println( "reciprocal members: " + main.research.agent.strategy.reliableAgents.MemberStrategy.countReciprocalMembers() );
-//			showGrowApartDegree();
 //			TransmissionPath.showMessages();
 
 			System.out.println( "---------------------------------------------------------------------------------" );
