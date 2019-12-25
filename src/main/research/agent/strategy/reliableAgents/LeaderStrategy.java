@@ -25,7 +25,7 @@ import static main.research.communication.TransmissionPath.sendMessage;
 import static main.research.task.TaskManager.disposeTask;
 
 public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter {
-	static final double de_threshold_ = 0.5;
+	public static final double de_threshold_ = 0.5;
 	static final double oc_threshold_ = 3.0;
 
 	private Map< Agent, Integer > timeToStartCommunicatingMap = new HashMap<>();
@@ -51,7 +51,6 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 				leader.principle = Principle.RATIONAL;
 			}
 			repliesToCome = countRepliesToCome( allocationMap );
-
 			if ( !allocationMap.isEmpty() ) {
 				canGoNext = true;
 				this.sendSolicitationsLocal( leader, allocationMap );
@@ -72,7 +71,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 		forgetOldRoundTripTimeInformation();
 
 		Map< Agent, List< Subtask > > allocationMap = new HashMap<>();
-		List< Subtask > unassignedSubtasks;
+		List< Subtask > unassignedSubtasks = subtasks;
 		Agent candidate;
 
 		unassignedSubtasks = allocateToRelAg( subtasks, allocationMap );
@@ -80,7 +79,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 		for ( int i = 0; i < REDUNDANT_SOLICITATION_TIMES; i++ ) {
 			for ( Subtask st: unassignedSubtasks ) {
 				if ( Agent.epsilonGreedy() ) candidate = selectMemberForASubtaskRandomly( st );
-				else candidate = this.selectMemberArbitrary( st );
+				else candidate = this.selectMemberAccordingToDE( st );
 				if ( candidate == null ) {
 					return new HashMap<>();
 				}
@@ -117,10 +116,6 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 		}
 		alMap.putAll( map );
 		return unassigned;
-	}
-
-	private Agent selectMemberArbitrary( Subtask st ) {
-		return selectMemberAccordingToDE( st );
 	}
 
 	private Agent selectMemberAccordingToDE( Subtask st ) {
@@ -181,7 +176,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 		} else {
 			apologizeToFriends( leader, new ArrayList<>( allocationMap.values() ) );
 			exceptions.removeAll( new ArrayList<>( allocationMap.values() ) );
-			disposeTask();
+			disposeTask(leader);
 			leader.phase = nextPhase( leader, false );
 		}
 		myTask = null;
@@ -218,7 +213,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 			task.subtasks.remove( st );
 
 			if ( task.subtasks.isEmpty() ) {
-				TaskManager.finishTask();
+				TaskManager.finishTask(leader);
 				from.didTasksAsLeader++;
 			}
 		}

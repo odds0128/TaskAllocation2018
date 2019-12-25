@@ -6,8 +6,7 @@
   },
   "result_type" : {
     "check_data" : true,
-    "check_network" : false,
-    "check_relationships" : false,
+    "check_network" : true,
     "check_interim_relationships" : false,
     "check_initiation" : false,
     "check_agents" : false

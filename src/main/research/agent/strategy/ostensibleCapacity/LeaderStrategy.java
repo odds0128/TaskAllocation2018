@@ -135,7 +135,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 		} else {
 			apologizeToFriends( leader, new ArrayList<>( mapOfSubtaskAndAgent.values() ) );
 			exceptions.removeAll( new ArrayList<>( mapOfSubtaskAndAgent.values() ) );
-			disposeTask();
+			disposeTask(leader);
 			leader.phase = nextPhase( leader, false );
 		}
 		myTask = null;
@@ -177,7 +177,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 
 			if ( task.subtasks.isEmpty() ) {
 				from.pastTasks.remove( task );
-				TaskManager.finishTask();
+				TaskManager.finishTask(leader);
 				from.didTasksAsLeader++;
 			}
 		}

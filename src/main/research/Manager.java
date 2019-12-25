@@ -38,8 +38,8 @@ public class Manager implements Parameter {
 
 	//TODO: こんな風にするならsingletonにしたほうがいいよね
 	// TODO: lsとmsで分けて指定しなきゃいけないの無駄じゃない?
-//	private static String package_name = "main.research.agent.strategy.reliableAgents.";
-	private static String package_name = "main.research.agent.strategy.puttingDeOcAndDelayIntoOneDimensionalValue.";
+	private static String package_name = "main.research.agent.strategy.reliableAgents.";
+//	private static String package_name = "main.research.agent.strategy.puttingDeOcAndDelayIntoOneDimensionalValue.";
 //	private static String package_name = "main.research.agent.strategy.putRewardAndDelayIntoDeCalculation.";
 //	private static String package_name = "main.research.agent.strategy.learningOnlyTeamingSuccessRate.";
 	private static String ls_name = "LeaderStrategy";      // ICA2018における提案手法役割更新あり    //    private static main.research.strategy.Strategy strategy = new ProposedMethodForSingapore();
@@ -128,12 +128,18 @@ public class Manager implements Parameter {
 			System.out.println( "reciprocal members: " + main.research.agent.strategy.reliableAgents.MemberStrategy.countReciprocalMembers() );
 //			TransmissionPath.showMessages();
 
+			writeSolicitationsReached( strategy_name );
+//			writeSubtasksHoldenByMembers( strategy_name );
 			System.out.println( "---------------------------------------------------------------------------------" );
+//			TransmissionPath.showMessages();
 			clearAll();
 			if ( num == executionTimes_ ) break;
 		}
 		// ↑ 全実験の終了のカッコ．以下は後処理
-		if ( resultTypeNode.get( "check_data" ).asBoolean() )       writeResults( strategy_name );
+		if ( resultTypeNode.get( "check_data" ).asBoolean() )  {
+			writeLeadersExecutionNum( strategy_name );
+			writeMainResultData( strategy_name );
+		}
 		AgentManager.getAllAgentList().stream()
 			.filter( ag -> ag.id < 10 )
 			.forEach( ag -> System.out.println("id: " + ag.id + ", role: " + ag.role) );

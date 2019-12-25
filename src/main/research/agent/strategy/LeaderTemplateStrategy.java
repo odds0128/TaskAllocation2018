@@ -37,6 +37,7 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 		preprocess( leader );
 
 		Collections.sort( reliableMembersRanking, Comparator.comparingDouble( AgentDePair::getDe ).reversed() );
+
 		if ( leader.phase == SOLICIT ) leader.ls.solicitAsL( leader );
 		else if ( leader.phase == FORM_TEAM ) leader.ls.formTeamAsL( leader );
 
@@ -73,7 +74,7 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 		leader.phase = nextPhase( leader, canGoNext );  // 次のフェイズへ
 	}
 
-
+	
 	protected Map< Agent, Subtask > selectMembers( List< Subtask > subtasks ) {
 		Map< Agent, Subtask > memberCandidates = new HashMap<>();
 		Agent candidate;
@@ -150,7 +151,7 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 		} else {
 			apologizeToFriends( leader, new ArrayList<>( SubtaskAgentMap.values() ) );
 			exceptions.removeAll( new ArrayList<>( SubtaskAgentMap.values() ) );
-			disposeTask();
+			disposeTask(leader);
 			nextPhase( leader, false );
 		}
 		myTask = null;

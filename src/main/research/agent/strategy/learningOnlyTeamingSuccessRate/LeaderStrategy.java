@@ -9,7 +9,6 @@ import main.research.task.Task;
 import main.research.task.TaskManager;
 
 import java.util.List;
-import java.util.Map;
 
 import static main.research.agent.AgentDePair.getPairByAgent;
 
@@ -33,7 +32,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy {
 			task.subtasks.remove( st );
 			if ( task.subtasks.isEmpty() ) {
 				from.pastTasks.remove( task );
-				TaskManager.finishTask();
+				TaskManager.finishTask(leader);
 				from.didTasksAsLeader++;
 			}
 		}
