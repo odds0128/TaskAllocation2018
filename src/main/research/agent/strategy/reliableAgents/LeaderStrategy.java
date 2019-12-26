@@ -2,7 +2,6 @@ package main.research.agent.strategy.reliableAgents;
 
 import main.research.Parameter;
 import main.research.agent.Agent;
-import main.research.agent.AgentDePair;
 import main.research.agent.strategy.OCTuple;
 import main.research.agent.strategy.LeaderTemplateStrategy;
 import main.research.communication.message.Done;
@@ -13,6 +12,7 @@ import main.research.others.Pair;
 import main.research.task.Subtask;
 import main.research.task.Task;
 import main.research.task.TaskManager;
+import org.apache.xmlbeans.impl.xb.xsdschema.All;
 
 import java.util.*;
 
@@ -20,7 +20,6 @@ import static main.research.Manager.getCurrentTime;
 import static main.research.Parameter.ReplyType.DECLINE;
 import static main.research.Parameter.ResultType.FAILURE;
 import static main.research.Parameter.ResultType.SUCCESS;
-import static main.research.agent.AgentDePair.getPairByAgent;
 import static main.research.communication.TransmissionPath.sendMessage;
 import static main.research.task.TaskManager.disposeTask;
 
@@ -38,101 +37,101 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 
 	private List< OCTuple > ocTupleList = new ArrayList<>();
 
+	// todo: 削除
 	@Override
-	protected void solicitAsL( Agent leader ) {
-		myTask = TaskManager.popTask();
-		boolean canGoNext = false;
-
-		if ( myTask != null ) {
-			Map< Agent, List< Subtask > > allocationMap = selectMembersLocal( myTask.subtasks );
-			if ( allocationMap.size() < myTask.subtasks.size() * REDUNDANT_SOLICITATION_TIMES ) {
-				leader.principle = Principle.RECIPROCAL;
-			} else {
-				leader.principle = Principle.RATIONAL;
-			}
-			repliesToCome = countRepliesToCome( allocationMap );
-			if ( !allocationMap.isEmpty() ) {
-				canGoNext = true;
-				this.sendSolicitationsLocal( leader, allocationMap );
-			}
-		}
-		leader.phase = nextPhase( leader, canGoNext );  // 次のフェイズへ
-	}
-
-	private int countRepliesToCome( Map< Agent, List< Subtask > > allocationMap ) {
-		int temp = allocationMap.entrySet().stream()
-			.mapToInt( entry -> entry.getValue().size() )
-			.sum();
-		return temp;
-	}
-
-	private Map< Agent, List< Subtask > > selectMembersLocal( List< Subtask > subtasks ) {
-		OCTuple.forgetOldOcInformation( ocTupleList );
-		forgetOldRoundTripTimeInformation();
-
-		Map< Agent, List< Subtask > > allocationMap = new HashMap<>();
-		List< Subtask > unassignedSubtasks = subtasks;
-		Agent candidate;
-
-		unassignedSubtasks = allocateToRelAg( subtasks, allocationMap );
-		exceptions.addAll( allocationMap.keySet() );
-		for ( int i = 0; i < REDUNDANT_SOLICITATION_TIMES; i++ ) {
-			for ( Subtask st: unassignedSubtasks ) {
-				if ( Agent.epsilonGreedy() ) candidate = selectMemberForASubtaskRandomly( st );
-				else candidate = this.selectMemberAccordingToDE( st );
-				if ( candidate == null ) {
-					return new HashMap<>();
-				}
-				exceptions.add( candidate );
-				List< Subtask > temp = new ArrayList<>();
-				temp.add( st );
-				allocationMap.put( candidate, temp );
-			}
-		}
-		return allocationMap;
-	}
-
-	private List< Subtask > allocateToRelAg( List< Subtask > subtasks, Map< Agent, List< Subtask > > alMap ) {
-		Map< Agent, List< Subtask > > map = new HashMap<>();
-		List< Subtask > unassigned = new ArrayList<>();
-
-		for ( Subtask st: subtasks ) {
-			boolean toBeAssigned = false;
-			for ( AgentDePair ag_de: reliableMembersRanking ) {
-				if ( ag_de.getDe() <= de_threshold_ ) break;
-
-				Agent reliableAgent = ag_de.getAgent();
-				if ( !reliableAgent.canProcessTheSubtask( st ) || exceptions.contains( reliableAgent ) ) continue;
-
-				double oc = OCTuple.getOC( st.resType, reliableAgent, getOcTupleList( this ) );
-				if ( oc > oc_threshold_ ) {
-					if ( !map.containsKey( reliableAgent ) ) map.put( reliableAgent, new ArrayList<>() );
-					map.get( reliableAgent ).add( st );
-					toBeAssigned = true;
-					break;
-				}
-			}
-			if ( !toBeAssigned ) unassigned.add( st );
-		}
-		alMap.putAll( map );
-		return unassigned;
-	}
-
-	private Agent selectMemberAccordingToDE( Subtask st ) {
-		for ( AgentDePair pair: reliableMembersRanking ) {
+	protected Agent selectAMemberForASubtask( Subtask st ) {
+		for ( Dependability pair: reliableMembersRanking ) {
 			Agent ag = pair.getAgent();
 			if ( ( !exceptions.contains( ag ) ) && ag.canProcessTheSubtask( st ) ) return ag;
 		}
 		return null;
 	}
 
-	private void sendSolicitationsLocal( Agent leader, Map< Agent, List< Subtask > > agentSubtaskMap ) {
-		for ( Map.Entry< Agent, List< Subtask > > ag_stList: agentSubtaskMap.entrySet() ) {
-			Agent ag = ag_stList.getKey();
-			timeToStartCommunicatingMap.put( ag, getCurrentTime() );
-			for ( Subtask st: ag_stList.getValue() ) {
-				sendMessage( new Solicitation( leader, ag, st ) );
+	@Override
+	protected void solicitAsL( Agent leader ) {
+		myTask = TaskManager.popTask();
+		boolean canGoNext = false;
+
+		if ( myTask != null ) {
+			List< Allocation > allocationMap = makePreAllocation( myTask.subtasks );
+			if ( allocationMap.size() < myTask.subtasks.size() * REDUNDANT_SOLICITATION_TIMES ) {
+				leader.principle = Principle.RECIPROCAL;
+			} else {
+				leader.principle = Principle.RATIONAL;
 			}
+			repliesToCome = allocationMap.size();
+			if ( !allocationMap.isEmpty() ) {
+				canGoNext = true;
+				sendSolicitations( leader, allocationMap );
+			}
+		}
+		leader.phase = nextPhase( leader, canGoNext );  // 次のフェイズへ
+	}
+
+	private List< Allocation > makePreAllocation( List< Subtask > subtasks ) {
+		OCTuple.forgetOldOcInformation( ocTupleList );
+		forgetOldRoundTripTimeInformation();
+
+		Agent candidate;
+
+		List< Allocation > preAllocationList = allocateToRelAg( subtasks );
+		List< Subtask > unallocatedSubtasks = getUnallocatedSubtasks(subtasks, preAllocationList);
+		for ( int i = 0; i < REDUNDANT_SOLICITATION_TIMES; i++ ) {
+			for ( Subtask st: unallocatedSubtasks ) {
+				if ( Agent.epsilonGreedy() ) candidate = selectMemberForASubtaskRandomly( st );
+				else candidate = this.selectMemberAccordingToDE( st );
+				if ( candidate == null ) {
+					return null;
+				}
+				exceptions.add( candidate );
+				preAllocationList.add( new Allocation( candidate, st ) );
+			}
+		}
+		return preAllocationList;
+	}
+
+	private List< Subtask > getUnallocatedSubtasks( List< Subtask > subtasks, List< Allocation > preAllocationList ) {
+		List<Subtask> temp = new ArrayList<>( subtasks );
+		for( Allocation toBeAllocated : preAllocationList ) {
+			temp.remove( toBeAllocated.getSt() );
+		}
+		return temp;
+	}
+
+	private List< Allocation > allocateToRelAg( List< Subtask > subtasks ) {
+		List<Allocation> retAllocationList = new ArrayList<>(  );
+
+		for ( Subtask st: subtasks ) {
+			for ( Dependability ag_de: reliableMembersRanking ) {
+				if ( ag_de.getValue() <= de_threshold_ ) break;
+
+				Agent reliableAgent = ag_de.getAgent();
+				// todo: exceptionsに含めないようにする
+				if ( !reliableAgent.canProcessTheSubtask( st ) || exceptions.contains( reliableAgent ) ) continue;
+
+				double oc = OCTuple.getOC( st.resType, reliableAgent, getOcTupleList( this ) );
+				if ( oc > oc_threshold_ ) {
+					retAllocationList.add( new Allocation( reliableAgent, st ) );
+					break;
+				}
+			}
+		}
+		return retAllocationList;
+	}
+
+	private Agent selectMemberAccordingToDE( Subtask st ) {
+		for ( Dependability pair: reliableMembersRanking ) {
+			Agent ag = pair.getAgent();
+			if ( ( !exceptions.contains( ag ) ) && ag.canProcessTheSubtask( st ) ) return ag;
+		}
+		return null;
+	}
+
+	@Override
+	public void sendSolicitations( Agent leader, List< Allocation > allocationList ) {
+		for ( Allocation al: allocationList ) {
+			timeToStartCommunicatingMap.put( al.getAg(), getCurrentTime() );
+			sendMessage( new Solicitation( leader, al.getAg(), al.getSt() ) );
 		}
 	}
 
@@ -176,7 +175,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 		} else {
 			apologizeToFriends( leader, new ArrayList<>( allocationMap.values() ) );
 			exceptions.removeAll( new ArrayList<>( allocationMap.values() ) );
-			disposeTask(leader);
+			disposeTask( leader );
 			leader.phase = nextPhase( leader, false );
 		}
 		myTask = null;
@@ -198,7 +197,8 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 			Done d = leader.doneList.remove( 0 );
 
 			Agent from = d.getFrom();
-			Subtask st = getAllocatedSubtask( d.getFrom() );
+			Subtask st = d.getSt();
+			removeAllocationHistory( from, st );
 
 			int bindingTime = getCurrentTime() - timeToStartCommunicatingMap.get( from );
 			updateOstensibleCapacityMap( from, st, bindingTime );
@@ -213,15 +213,15 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 			task.subtasks.remove( st );
 
 			if ( task.subtasks.isEmpty() ) {
-				TaskManager.finishTask(leader);
+				TaskManager.finishTask( leader );
 				from.didTasksAsLeader++;
 			}
 		}
 	}
 
 	@Override
-	protected void renewDE( List< AgentDePair > pairList, Agent target, double evaluation ) {
-		AgentDePair pair = getPairByAgent( target, pairList );
+	protected void renewDE( List< Dependability > pairList, Agent target, double evaluation ) {
+		Dependability pair = getDeByAgent( target, pairList );
 		pair.renewDEbyArbitraryReward( evaluation );
 	}
 

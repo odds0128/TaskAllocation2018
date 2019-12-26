@@ -2,7 +2,6 @@ package main.research.agent.strategy.putRewardAndDelayIntoDeCalculation;
 
 import main.research.Manager;
 import main.research.agent.Agent;
-import main.research.agent.AgentDePair;
 import main.research.agent.strategy.MemberTemplateStrategy;
 import main.research.communication.TransmissionPath;
 import main.research.communication.message.ReplyToSolicitation;
@@ -18,7 +17,6 @@ import java.util.Map;
 import static main.research.Parameter.ReplyType.ACCEPT;
 import static main.research.Parameter.ReplyType.DECLINE;
 import static main.research.Parameter.ResultType.SUCCESS;
-import static main.research.agent.AgentDePair.getPairByAgent;
 
 public class MemberStrategy extends MemberTemplateStrategy {
 	Map< Agent, Integer > agentStartTimeMap = new HashMap<>();
@@ -63,8 +61,8 @@ public class MemberStrategy extends MemberTemplateStrategy {
 	}
 
 	@Override
-	protected void renewDE( List< AgentDePair > pairList, Agent target, double evaluation ) {
-		AgentDePair pair = getPairByAgent( target, pairList );
+	protected void renewDE( List< Dependability > pairList, Agent target, double evaluation ) {
+		Dependability pair = getDeByAgent( target, pairList );
 		pair.renewDEbyArbitraryReward( evaluation );
 
 	}

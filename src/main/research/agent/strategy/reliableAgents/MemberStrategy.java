@@ -2,7 +2,6 @@ package main.research.agent.strategy.reliableAgents;
 
 import main.research.Parameter;
 import main.research.agent.Agent;
-import main.research.agent.AgentDePair;
 import main.research.agent.AgentManager;
 import main.research.agent.strategy.MemberTemplateStrategy;
 import main.research.communication.TransmissionPath;
@@ -15,7 +14,6 @@ import java.util.stream.Collectors;
 
 import static main.research.Parameter.ReplyType.ACCEPT;
 import static main.research.Parameter.ReplyType.DECLINE;
-import static main.research.agent.AgentDePair.getPairByAgent;
 
 
 public class MemberStrategy extends MemberTemplateStrategy implements Parameter {
@@ -33,13 +31,13 @@ public class MemberStrategy extends MemberTemplateStrategy implements Parameter 
 		int nonZeroLeaders = 0;
 
 		for( Agent m : members ) {
-			List<AgentDePair> validPairsList = m.ms.reliableLeadersRanking.stream()
-				.filter( pair -> pair.getDe() > 0 )
+			List< Dependability > validPairsList = m.ms.reliableLeadersRanking.stream()
+				.filter( pair -> pair.getValue() > 0 )
 				.collect( Collectors.toList( ) );
 			nonZeroLeaders += validPairsList.stream()
 				.count();
 			sum += validPairsList.stream()
-				.mapToDouble( pair -> pair.getDe() )
+				.mapToDouble( pair -> pair.getValue() )
 				.sum();
 		}
 		return sum/nonZeroLeaders;
@@ -48,7 +46,7 @@ public class MemberStrategy extends MemberTemplateStrategy implements Parameter 
 	public static int countReciprocalMembers() {
 		return ( int ) AgentManager.getAllAgentList().stream()
 			.filter( agent -> agent.e_member > agent.e_leader )
-			.filter( member -> member.ms.reliableLeadersRanking.get( 0 ).getDe() > threshold_of_reliable_leader )
+			.filter( member -> member.ms.reliableLeadersRanking.get( 0 ).getValue() > threshold_of_reliable_leader )
 			.count();
 	}
 
@@ -84,7 +82,7 @@ public class MemberStrategy extends MemberTemplateStrategy implements Parameter 
 	}
 
 	private boolean haveReliableLeader() {
-		return reliableLeadersRanking.get( 0 ).getDe() >= threshold_of_reliable_leader;
+		return reliableLeadersRanking.get( 0 ).getValue() >= threshold_of_reliable_leader;
 	}
 
 	private void accept( Agent member, Solicitation s ) {
@@ -111,8 +109,8 @@ public class MemberStrategy extends MemberTemplateStrategy implements Parameter 
 
 
 	@Override
-	protected void renewDE( List<AgentDePair> pairList, Agent target, double evaluation ) {
-		AgentDePair pair = getPairByAgent( target, pairList );
+	protected void renewDE( List< Dependability > pairList, Agent target, double evaluation ) {
+		Dependability pair = getDeByAgent( target, pairList );
 		pair.renewDEbyArbitraryReward( evaluation );
 	}
 }

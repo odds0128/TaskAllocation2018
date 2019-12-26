@@ -2,11 +2,11 @@ package main.research.agent.strategy.putRewardAndDelayIntoDeCalculation;
 
 import main.research.Manager;
 import main.research.agent.Agent;
-import main.research.agent.AgentDePair;
 import main.research.agent.strategy.LeaderTemplateStrategy;
 import main.research.communication.message.Done;
 import main.research.communication.message.ReplyToSolicitation;
 import main.research.communication.message.ResultOfTeamFormation;
+import main.research.communication.message.Solicitation;
 import main.research.others.Pair;
 import main.research.task.Subtask;
 import main.research.task.Task;
@@ -20,12 +20,28 @@ import java.util.Map;
 import static main.research.Parameter.ReplyType.DECLINE;
 import static main.research.Parameter.ResultType.FAILURE;
 import static main.research.Parameter.ResultType.SUCCESS;
-import static main.research.agent.AgentDePair.getPairByAgent;
 import static main.research.communication.TransmissionPath.sendMessage;
 import static main.research.task.TaskManager.disposeTask;
 
 public class LeaderStrategy extends LeaderTemplateStrategy {
 	Map< Agent, Integer > agentStartTimeMap = new HashMap<>();
+
+	@Override
+	protected Agent selectAMemberForASubtask( Subtask st ) {
+		for ( Dependability pair: reliableMembersRanking ) {
+			Agent ag = pair.getAgent();
+			if ( ( !exceptions.contains( ag ) ) && ag.canProcessTheSubtask( st ) ) return ag;
+		}
+		return null;
+	}
+
+
+	@Override
+	public void sendSolicitations( Agent leader, List< Allocation > allocationList ) {
+		for ( Allocation al : allocationList ) {
+			sendMessage( new Solicitation( leader, al.getAg(), al.getSt() ) );
+		}
+	}
 
 	@Override
 	public void formTeamAsL( Agent leader ) {
@@ -77,7 +93,8 @@ public class LeaderStrategy extends LeaderTemplateStrategy {
 		while ( !leader.doneList.isEmpty() ) {
 			Done d = leader.doneList.remove( 0 );
 			Agent from = d.getFrom();
-			Subtask st = getAllocatedSubtask( d.getFrom() );
+			Subtask st = d.getSt();
+			removeAllocationHistory( from, st );
 
 			int roundTripTime = Manager.getCurrentTime() - this.agentStartTimeMap.remove( from );
 			// consider: 謎の5
@@ -102,8 +119,8 @@ public class LeaderStrategy extends LeaderTemplateStrategy {
 	}
 
 	@Override
-	protected void renewDE( List< AgentDePair > pairList, Agent target, double evaluation ) {
-		AgentDePair pair = getPairByAgent( target, pairList );
+	protected void renewDE( List< Dependability > pairList, Agent target, double evaluation ) {
+		Dependability pair = getDeByAgent( target, pairList );
 		pair.renewDEbyArbitraryReward( evaluation );
 	}
 }

@@ -3,7 +3,6 @@ package main.research.agent.strategy;
 import main.research.Manager;
 import main.research.Parameter;
 import main.research.agent.Agent;
-import main.research.agent.AgentDePair;
 import main.research.agent.AgentManager;
 import main.research.communication.TransmissionPath;
 import main.research.communication.message.Done;
@@ -22,13 +21,12 @@ import static main.research.Parameter.ReplyType.DECLINE;
 import static main.research.Parameter.ResultType.*;
 import static main.research.Parameter.Role.JONE_DOE;
 import static main.research.agent.Agent.α_;
-import static main.research.agent.AgentDePair.getPairByAgent;
 
 import java.util.*;
 
 public abstract class MemberTemplateStrategy extends TemplateStrategy implements Parameter {
 	protected boolean joinFlag = false;
-	public List< AgentDePair > reliableLeadersRanking = new ArrayList<>();
+	public List< Dependability > reliableLeadersRanking = new ArrayList<>();
 
 	public int expectedResultMessage = 0;
 	public List< Pair< Agent, Subtask > > mySubtaskQueue = new ArrayList<>();  // consider Agentとsubtaskの順番逆のがよくね
@@ -41,7 +39,7 @@ public abstract class MemberTemplateStrategy extends TemplateStrategy implements
 		if ( member.phase == WAIT_FOR_SOLICITATION ) replyAsM( member );
 		else if ( member.phase == WAIT_FOR_SUBTASK ) receiveAsM( member );
 		else if ( member.phase == EXECUTE_SUBTASK ) execute( member );
-		evaporateDE( reliableLeadersRanking );
+		evaporateAllDependability( reliableLeadersRanking );
 	}
 
 	private void preprocess( Agent member ) {
@@ -59,13 +57,13 @@ public abstract class MemberTemplateStrategy extends TemplateStrategy implements
 
 		member.ls.checkAllDoneMessages( member );
 
-		Collections.sort( reliableLeadersRanking, Comparator.comparingDouble( AgentDePair::getDe ).reversed() );
+		Collections.sort( reliableLeadersRanking, Comparator.comparingDouble( Dependability::getValue ).reversed() );
 	}
 
 	public void setLeaderRankingRandomly( Agent self, List< Agent > agentList ) {
 		List< Agent > tempList = AgentManager.generateRandomAgentList( agentList );
 		for ( Agent temp: tempList ) {
-			reliableLeadersRanking.add( new AgentDePair( temp, Agent.initial_de_ ) );
+			reliableLeadersRanking.add( new Dependability( temp, Agent.initial_de_ ) );
 		}
 		reliableLeadersRanking.remove( self );
 	}
@@ -112,8 +110,8 @@ public abstract class MemberTemplateStrategy extends TemplateStrategy implements
 		}
 	}
 
-	protected int compareSolicitations( Solicitation a, Solicitation b, List< AgentDePair > pairList ) {
-		if ( getPairByAgent( a.getFrom(), pairList ).getDe() < getPairByAgent( b.getFrom(), pairList ).getDe() )
+	protected int compareSolicitations( Solicitation a, Solicitation b, List< Dependability > pairList ) {
+		if ( getDeByAgent( a.getFrom(), pairList ).getValue() < getDeByAgent( b.getFrom(), pairList ).getValue() )
 			return -1;
 		else return 1;
 	}
@@ -141,7 +139,7 @@ public abstract class MemberTemplateStrategy extends TemplateStrategy implements
 			return;
 		}
 		Pair< Agent, Subtask > pair = mySubtaskQueue.remove( 0 );
-		TransmissionPath.sendMessage( new Done( member, pair.getKey() ) );
+		TransmissionPath.sendMessage( new Done( member, pair.getKey(), pair.getValue() ) );
 		mySubtaskQueue.remove( pair.getValue() );
 		member.phase = nextPhase( member, true );
 	}
@@ -152,7 +150,7 @@ public abstract class MemberTemplateStrategy extends TemplateStrategy implements
 	}
 
 
-	protected abstract void renewDE( List< AgentDePair > pairList, Agent target, double evaluation );
+	protected abstract void renewDE( List< Dependability > pairList, Agent target, double evaluation );
 
 	@Override
 	protected Phase nextPhase( Agent member, boolean wasSuccess ) {

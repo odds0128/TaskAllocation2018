@@ -3,7 +3,6 @@ package main.research.agent.strategy;
 import main.research.Manager;
 import main.research.Parameter;
 import main.research.agent.Agent;
-import main.research.agent.AgentDePair;
 import main.research.agent.AgentManager;
 import main.research.communication.message.ReplyToSolicitation;
 import main.research.communication.message.ResultOfTeamFormation;
@@ -28,20 +27,20 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 	protected Set< Agent > exceptions = new HashSet<>();
 	protected int repliesToCome = 0;            // 送ったsolicitationの数を覚えておく
 	protected Task myTask;
-	private Map< Agent, List< Subtask > > allocationHistory = new HashMap<>();
-	public List< AgentDePair > reliableMembersRanking = new ArrayList<>();
+	private List< Allocation > allocationHistory = new ArrayList<>();
+	public List< Dependability > reliableMembersRanking = new ArrayList<>();
 
 	// question: Leader has a LeaderStrategy のはずなので本来引数に「自分」を渡さなくてもいいはずでは？
 	// TODO: Leaderクラスのインスタンスメソッドにする
 	public void actAsLeader( Agent leader ) {
 		preprocess( leader );
 
-		Collections.sort( reliableMembersRanking, Comparator.comparingDouble( AgentDePair::getDe ).reversed() );
+		Collections.sort( reliableMembersRanking, Comparator.comparingDouble( Dependability::getValue ).reversed() );
 
 		if ( leader.phase == SOLICIT ) leader.ls.solicitAsL( leader );
 		else if ( leader.phase == FORM_TEAM ) leader.ls.formTeamAsL( leader );
 
-		evaporateDE( reliableMembersRanking );
+		evaporateAllDependability( reliableMembersRanking );
 	}
 
 	private void preprocess( Agent leader ) {
@@ -63,34 +62,15 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 		boolean canGoNext = false;
 
 		if ( myTask != null ) {
-			Map< Agent, Subtask > allocationMap = selectMembers( myTask.subtasks );
+			List<Allocation> allocationMap = makePreAllocationMap( myTask.subtasks );
 			repliesToCome = allocationMap.size();
 
-			if ( ! allocationMap.isEmpty() ) {
-				leader.ls.sendSolicitations( leader, allocationMap );
+			if ( !allocationMap.isEmpty() ) {
+				sendSolicitations( leader, allocationMap );
 				canGoNext = true;
 			}
 		}
 		leader.phase = nextPhase( leader, canGoNext );  // 次のフェイズへ
-	}
-
-	
-	protected Map< Agent, Subtask > selectMembers( List< Subtask > subtasks ) {
-		Map< Agent, Subtask > memberCandidates = new HashMap<>();
-		Agent candidate;
-
-		for ( int i = 0; i < REDUNDANT_SOLICITATION_TIMES; i++ ) {
-			for ( Subtask st: subtasks ) {
-				if ( Agent.epsilonGreedy() ) candidate = selectMemberForASubtaskRandomly( st );
-				else candidate = selectAMemberForASubtask( st );
-
-				if ( candidate == null ) return new HashMap<>();
-
-				exceptions.add( candidate );
-				memberCandidates.put( candidate, st );
-			}
-		}
-		return memberCandidates;
 	}
 
 	protected Agent selectMemberForASubtaskRandomly( Subtask st ) {
@@ -101,20 +81,34 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 		return candidate;
 	}
 
-	private Agent selectAMemberForASubtask( Subtask st ) {
-		for ( AgentDePair pair: reliableMembersRanking ) {
-			Agent ag = pair.getAgent();
-			if ( ( !exceptions.contains( ag ) ) && ag.canProcessTheSubtask( st ) ) return ag;
+	protected List< Allocation > makePreAllocationMap( List< Subtask > subtasks ) {
+		List<Allocation> preAllocationList = new ArrayList<>(  );
+		Agent candidate;
+
+		for ( int i = 0; i < REDUNDANT_SOLICITATION_TIMES; i++ ) {
+			for ( Subtask st: subtasks ) {
+				if ( Agent.epsilonGreedy() ) candidate = selectMemberForASubtaskRandomly( st );
+				else candidate = selectAMemberForASubtask( st );
+
+				if ( candidate == null ) return null;
+
+				exceptions.add( candidate );
+				preAllocationList.add( new Allocation( candidate, st ) );
+			}
 		}
-		return null;
+		return preAllocationList;
 	}
 
-	public void sendSolicitations( Agent leader, Map< Agent, Subtask > agentSubtaskMap ) {
-		for ( Map.Entry< Agent, Subtask > ag_st: agentSubtaskMap.entrySet() ) {
-			sendMessage( new Solicitation( leader, ag_st.getKey(), ag_st.getValue() ) );
-		}
-	}
+	protected abstract Agent selectAMemberForASubtask( Subtask st);
 
+	protected abstract void sendSolicitations( Agent from, List<Allocation> allocationList );
+
+//	public void sendSolicitations( Agent leader, Map< Agent, Subtask > agentSubtaskMap ) {
+//		for ( Map.Entry< Agent, Subtask > ag_st: agentSubtaskMap.entrySet() ) {
+//			sendMessage( new Solicitation( leader, ag_st.getKey(), ag_st.getValue() ) );
+//		}
+//	}
+//
 	public void formTeamAsL( Agent leader ) {
 		if ( leader.replyList.size() < repliesToCome ) return;
 		else repliesToCome = 0;
@@ -147,18 +141,18 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 				if ( withinTimeWindow() ) leader.workWithAsL[ friend.id ]++;
 				leader.pastTasks.add( myTask );
 			}
-			nextPhase(leader, true );
+			nextPhase( leader, true );
 		} else {
 			apologizeToFriends( leader, new ArrayList<>( SubtaskAgentMap.values() ) );
 			exceptions.removeAll( new ArrayList<>( SubtaskAgentMap.values() ) );
-			disposeTask(leader);
+			disposeTask( leader );
 			nextPhase( leader, false );
 		}
 		myTask = null;
 	}
 
 	protected Pair compareDE( Agent a, Agent b ) {
-		if ( AgentDePair.getPairByAgent( a, reliableMembersRanking ).getDe() < AgentDePair.getPairByAgent( b, reliableMembersRanking ).getDe() )
+		if ( getDeByAgent( a, reliableMembersRanking ).getValue() < getDeByAgent( b, reliableMembersRanking ).getValue() )
 			return new Pair( b, a );
 		return new Pair( a, b );
 	}
@@ -181,23 +175,26 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 
 
 	protected void appendAllocationHistory( Agent member, Subtask s ) {
-		if ( !allocationHistory.containsKey( member ) ) {
-			List temp = new ArrayList();
-			allocationHistory.put( member, temp );
-		}
-		allocationHistory.get( member ).add( s );
+		allocationHistory.add( new Allocation( member, s ) );
 	}
 
-	protected Subtask getAllocatedSubtask( Agent member ) {
-		Subtask temp = allocationHistory.get( member ).remove( 0 );
-		if ( allocationHistory.get( member ).isEmpty() ) allocationHistory.remove( member );
-		return temp;
+	private boolean haveBeenWorkedWith( Agent target ) {
+		boolean res = false;
+		for ( Allocation al: allocationHistory ) {
+			if ( target.equals( al.getAg() ) ) res = true;
+		}
+		return true;
+	}
+
+
+	protected boolean removeAllocationHistory( Agent member, Subtask st ) {
+		return allocationHistory.remove( new Allocation( member, st ) );
 	}
 
 	public void setMemberRankingRandomly( Agent self, List< Agent > agentList ) {
 		List< Agent > tempList = AgentManager.generateRandomAgentList( agentList );
 		for ( Agent temp: tempList ) {
-			reliableMembersRanking.add( new AgentDePair( temp, Agent.initial_de_ ) );
+			reliableMembersRanking.add( new Dependability( temp, Agent.initial_de_ ) );
 		}
 		reliableMembersRanking.remove( self );
 	}
@@ -206,7 +203,7 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 		exceptions.add( self );
 	}
 
-	protected abstract void renewDE( List< AgentDePair > pairList, Agent target, double evaluation );
+	protected abstract void renewDE( List< Dependability > pairList, Agent target, double evaluation );
 
 	// todo: 削除
 	public void reachReply( ReplyToSolicitation r ) {
@@ -235,5 +232,43 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 	public Role inactivate( Agent leader, double value ) {
 		leader.e_leader = leader.e_leader * ( 1.0 - α_ ) + α_ * value;
 		return Role.JONE_DOE;
+	}
+
+	protected class Allocation {
+		final Agent ag;
+		final Subtask st;
+
+		public Allocation( Agent ag, Subtask st ) {
+			this.ag = ag;
+			this.st = st;
+		}
+
+		public Agent getAg() {
+			return ag;
+		}
+
+		public Subtask getSt() {
+			return st;
+		}
+
+		@Override
+		public boolean equals( Object o ) {
+			if ( o == this ) {
+				return true;
+			}
+			if ( !( o instanceof Allocation ) ) {
+				return false;
+			}
+			Allocation d = ( Allocation ) o;
+			return d.ag == ag && d.st == st;
+		}
+
+		@Override
+		public int hashCode() {
+			int result = 17;
+			result = 31 * result + ag.id;
+			result = 31 * result + st.getId();
+			return result;
+		}
 	}
 }

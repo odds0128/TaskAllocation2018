@@ -2,7 +2,6 @@ package main.research.agent.strategy.ostensibleCapacity;
 
 import main.research.*;
 import main.research.agent.Agent;
-import main.research.agent.AgentDePair;
 import main.research.agent.strategy.LeaderTemplateStrategy;
 import main.research.agent.strategy.OCTuple;
 import main.research.communication.message.*;
@@ -11,7 +10,6 @@ import main.research.task.Subtask;
 import main.research.task.Task;
 import main.research.task.TaskManager;
 
-import static main.research.agent.AgentDePair.getPairByAgent;
 import static main.research.task.TaskManager.disposeTask;
 import static main.research.Manager.getCurrentTime;
 import static main.research.Parameter.ReplyType.*;
@@ -30,38 +28,40 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 	private List< OCTuple > ocTupleList = new ArrayList<>();
 
 	@Override
-	public void sendSolicitations( Agent leader, Map< Agent, Subtask > agentSubtaskMap ) {
-		for ( Map.Entry< Agent, Subtask > ag_st: agentSubtaskMap.entrySet() ) {
-			timeToStartCommunicatingMap.put( ag_st.getKey(), getCurrentTime() );
-			sendMessage( new Solicitation( leader, ag_st.getKey(), ag_st.getValue() ) );
+	public void sendSolicitations( Agent leader, List< Allocation > allocationList ) {
+		for ( Allocation al: allocationList ) {
+			timeToStartCommunicatingMap.put( al.getAg(), getCurrentTime() );
+			sendMessage( new Solicitation( leader, al.getAg(), al.getSt() ) );
 		}
 	}
 
+
 	@Override
-	protected Map< Agent, Subtask > selectMembers( List< Subtask > subtasks ) {
-		Map< Agent, Subtask > memberCandidates = new HashMap<>();
+	protected List< Allocation > makePreAllocationMap( List< Subtask > subtasks ) {
+		List<Allocation> preAllocationList = new ArrayList<>(  );
 		Agent candidate;
 		OCTuple.forgetOldOcInformation( ocTupleList );
 
 		for ( int i = 0; i < REDUNDANT_SOLICITATION_TIMES; i++ ) {
 			for ( Subtask st: subtasks ) {
 				if ( Agent.epsilonGreedy() ) candidate = selectMemberForASubtaskRandomly( st );
-				else candidate = this.selectMemberArbitrary( st );
+				else candidate = this.selectAMemberForASubtask( st );
 
 				if ( candidate == null ) {
-					return new HashMap<>();
+					return null;
 				}
 
 				exceptions.add( candidate );
-				memberCandidates.put( candidate, st );
+				preAllocationList.add( new Allocation( candidate, st ) );
 			}
 		}
-		return memberCandidates;
+		return preAllocationList;
 	}
 
 	public static int nulls = 0, notNulls = 0;
 
-	private Agent selectMemberArbitrary( Subtask st ) {
+	@Override
+	protected Agent selectAMemberForASubtask( Subtask st ) {
 		Agent temp = selectMemberAccordingToOC( st );
 		if ( temp == null ) nulls++;
 		else notNulls++;
@@ -79,7 +79,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 			Agent temp = set.getTarget();
 			if ( exceptions.contains( temp ) ) continue;
 			double ocValue = OCTuple.getOC( resType, temp, ocTupleList );
-			double deValue = getPairByAgent( temp, reliableMembersRanking ).getDe();
+			double deValue = getDeByAgent( temp, reliableMembersRanking ).getValue();
 			if ( ocValue > maxOC && maxDE > 0.5 || ocValue == maxOC && maxDE < deValue ) {
 				candidate = temp;
 				maxOC = ocValue;
@@ -90,7 +90,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 	}
 
 	private Agent selectMemberAccordingToDE( Subtask st ) {
-		for ( AgentDePair pair: reliableMembersRanking ) {
+		for ( Dependability pair: reliableMembersRanking ) {
 			Agent ag = pair.getAgent();
 			if ( ( !exceptions.contains( ag ) ) && ag.canProcessTheSubtask( st ) ) return ag;
 		}
@@ -135,7 +135,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 		} else {
 			apologizeToFriends( leader, new ArrayList<>( mapOfSubtaskAndAgent.values() ) );
 			exceptions.removeAll( new ArrayList<>( mapOfSubtaskAndAgent.values() ) );
-			disposeTask(leader);
+			disposeTask( leader );
 			leader.phase = nextPhase( leader, false );
 		}
 		myTask = null;
@@ -161,7 +161,8 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 		while ( !leader.doneList.isEmpty() ) {
 			Done d = leader.doneList.remove( 0 );
 			Agent from = d.getFrom();
-			Subtask st = getAllocatedSubtask( d.getFrom() );
+			Subtask st = d.getSt();
+			removeAllocationHistory( from, st );
 
 			int bindingTime = getCurrentTime() - timeToStartCommunicatingMap.get( from );
 			renewCongestionDegreeMap( from, st, bindingTime );
@@ -177,15 +178,15 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 
 			if ( task.subtasks.isEmpty() ) {
 				from.pastTasks.remove( task );
-				TaskManager.finishTask(leader);
+				TaskManager.finishTask( leader );
 				from.didTasksAsLeader++;
 			}
 		}
 	}
 
 	@Override
-	protected void renewDE( List< AgentDePair > pairList, Agent target, double evaluation ) {
-		AgentDePair pair = getPairByAgent( target, pairList );
+	protected void renewDE( List< Dependability > pairList, Agent target, double evaluation ) {
+		Dependability pair = getDeByAgent( target, pairList );
 		pair.renewDEbyArbitraryReward( evaluation );
 	}
 

@@ -1,11 +1,10 @@
 package main.research;
 
 import main.research.agent.Agent;
-import main.research.agent.AgentDePair;
 import main.research.agent.AgentManager;
 import main.research.agent.strategy.OCTuple;
+import main.research.agent.strategy.TemplateStrategy;
 import main.research.agent.strategy.reliableAgents.LeaderStrategy;
-import main.research.agent.strategy.reliableAgents.MemberStrategy;
 import main.research.task.Task;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 
@@ -84,9 +83,9 @@ public class Stdout {
 				double[] tempOC = temp.getOCArray();
 				OCs[ i ] = Arrays.stream( tempOC ).max().getAsDouble();
 
-				for ( AgentDePair pair: ag.ls.reliableMembersRanking ) {
+				for ( TemplateStrategy.Dependability pair: ag.ls.reliableMembersRanking ) {
 					if ( target.equals( pair.getAgent() ) ) {
-						DEs[ i ] = pair.getDe();
+						DEs[ i ] = pair.getValue();
 					}
 				}
 			}
@@ -113,36 +112,6 @@ public class Stdout {
 		System.out.println( agents.stream()
 			.filter( agent -> agent.e_leader < agent.e_member )
 			.count() );
-	}
-
-	static void showGrowApartDegree() {
-		List< Agent > agentList = AgentManager.getAllAgentList();
-		int reciprocalMembersNum = 0, reciprocalApart = 0;
-		int rationalMembersNum = 0, rationalApart = 0;
-		int allMembersNum = 0, allApart = 0;
-
-		for ( Agent ag: agentList ) {
-			if ( ag.e_member > ag.e_leader ) {
-				allMembersNum++;
-				if ( ag.ms.reliableLeadersRanking.get( 0 ).getDe() > MemberStrategy.threshold_of_reliable_leader ) {
-					reciprocalMembersNum++;
-					if ( AgentDePair.searchDEofAgent( ag, ag.ms.reliableLeadersRanking.get( 0 ).getAgent().ls.reliableMembersRanking ) < MemberStrategy.threshold_of_reliable_leader ) {
-						reciprocalApart++;
-						allApart++;
-					}
-				} else {
-					rationalMembersNum++;
-					if ( AgentDePair.searchDEofAgent( ag, ag.ms.reliableLeadersRanking.get( 0 ).getAgent().ls.reliableMembersRanking ) < MemberStrategy.threshold_of_reliable_leader ) {
-						rationalApart++;
-						allApart++;
-					}
-				}
-			}
-		}
-		System.out.println( "All members num       : " + allMembersNum + ", apart relationships: " + allApart + ", apart rate: " + ( double ) allApart / allMembersNum );
-		System.out.println( "reciprocal members num: " + reciprocalMembersNum + ", apart relationships: " + reciprocalApart + ", apart rate: " + ( double ) reciprocalApart / reciprocalMembersNum );
-		System.out.println( "rational members num  : " + rationalMembersNum + ", apart relationships: " + rationalApart + ", apart rate: " + ( double ) rationalApart / rationalMembersNum );
-
 	}
 
 }

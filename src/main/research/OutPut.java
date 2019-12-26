@@ -1,10 +1,9 @@
 package main.research;
 
-import main.research.agent.AgentDePair;
 import main.research.agent.AgentManager;
-import main.research.agent.strategy.LeaderTemplateStrategy;
 import main.research.agent.strategy.MemberTemplateStrategy;
 import main.research.agent.strategy.OCTuple;
+import main.research.agent.strategy.TemplateStrategy;
 import main.research.agent.strategy.reliableAgents.LeaderStrategy;
 import main.research.graph.Edge;
 import main.research.task.TaskManager;
@@ -107,8 +106,8 @@ public class OutPut implements Parameter {
 	private static int countMembersTrustedByLeader() {
 		Set<Agent> trustedMemberSet = new HashSet<>(  );
 		for( Agent ag : AgentManager.getAllAgentList() ) {
-			for( AgentDePair pair : ag.ls.reliableMembersRanking ) {
-				if( pair.getDe() > LeaderStrategy.de_threshold_ ) {
+			for( TemplateStrategy.Dependability pair : ag.ls.reliableMembersRanking ) {
+				if( pair.getValue() > LeaderStrategy.de_threshold_ ) {
 					trustedMemberSet.add( pair.getAgent() );
 				}
 			}
@@ -132,7 +131,7 @@ public class OutPut implements Parameter {
 	private static boolean isMutual( Agent from ){
 		// todo: 信頼エージェントかどうかのパラメータを導入しないとダメかこれ
 		Agent reliableLeader = from.ms.reliableLeadersRanking.get( 0 ).getAgent();
-		return AgentDePair.getPairByAgent( from, reliableLeader.ls.reliableMembersRanking ).getDe() > 0.5;
+		return reliableLeader.ls.getDeByAgent( from, reliableLeader.ls.reliableMembersRanking ).getValue() > 0.5;
 	}
 
 	public static void sumExecutionTime( int time ) {
@@ -368,16 +367,16 @@ public class OutPut implements Parameter {
 		int leaders = 0, members = 0;
 
 		for ( Agent ag: agents ) {
-			List< AgentDePair > pairList = ag.e_leader > ag.e_member ? ag.ls.reliableMembersRanking : ag.ms.reliableLeadersRanking;
+			List< TemplateStrategy.Dependability > pairList = ag.e_leader > ag.e_member ? ag.ls.reliableMembersRanking : ag.ms.reliableLeadersRanking;
 			int size = pairList.size();
 
 			double[] DEs = new double[ size ];
 			double[] delay = new double[ size ];
 			for ( int i = 0; i < size; i++ ) {
-				AgentDePair pair = pairList.get( i );
+				TemplateStrategy.Dependability pair = pairList.get( i );
 				Agent target = pair.getAgent();
 
-				DEs[ i ] = pair.getDe();
+				DEs[ i ] = pair.getValue();
 				delay[ i ] = delays[ ag.id ][ target.id ];
 			}
 			PearsonsCorrelation p = new PearsonsCorrelation();
