@@ -50,8 +50,6 @@ public class Agent implements Parameter, Cloneable {
 	public int validatedTicks = 0;
 	public double e_leader;
 	public double e_member;
-	public Principle principle = RATIONAL;
-	public int[] required = new int[ resource_types_ ];            // そのリソースを要求するサブタスクが割り当てられた回数
 	public int[][] allocated = new int[ agent_num_ ][ resource_types_ ]; // そのエージェントからそのリソースを要求するサブタスクが割り当てられた回数
 
 	public List< Solicitation > solicitationList = new ArrayList<>();
@@ -171,18 +169,6 @@ public class Agent implements Parameter, Cloneable {
 
 	public static void clear() {
 		_id = 0;
-	}
-
-	public static int countReciprocalMember( List< Agent > agents ) {
-		return ( int ) agents.stream()
-			.filter( ag -> ag.e_member > ag.e_leader && ag.principle == RECIPROCAL )
-			.count();
-	}
-
-	public static int countReciprocalLeader( List< Agent > agents ) {
-		return ( int ) agents.stream()
-			.filter( ag -> ag.e_leader > ag.e_member && ag.principle == RECIPROCAL )
-			.count();
 	}
 
 	public static int countNEETmembers( List< Agent > agents, int span ) {

@@ -20,6 +20,8 @@ public class MemberStrategy extends MemberTemplateStrategy implements Parameter 
 	public static final double threshold_of_reliable_leader = 0.7;
 
 	public static int waiting = 0;
+	public Principle principle;
+
 	public static double calculateMeanDE() {
 		List<Agent> agentList = AgentManager.getAllAgentList();
 		List<Agent> members = new ArrayList<>(  );
@@ -58,10 +60,10 @@ public class MemberStrategy extends MemberTemplateStrategy implements Parameter 
 			compareSolicitations( solicitation1, solicitation2, reliableLeadersRanking ) );
 
 		if( haveReliableLeader() ) {
-			member.principle = Principle.RECIPROCAL;
+			principle = Principle.RECIPROCAL;
 			replyToReliableLeader( member, solicitations );
 		} else {
-			member.principle = Principle.RATIONAL;
+			principle = Principle.RATIONAL;
 			replyToOrdinaryLeaders( member, solicitations );
 		}
 	}

@@ -73,14 +73,6 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 		leader.phase = nextPhase( leader, canGoNext );  // 次のフェイズへ
 	}
 
-	protected Agent selectMemberForASubtaskRandomly( Subtask st ) {
-		Agent candidate;
-		do {
-			candidate = AgentManager.getAgentRandomly( exceptions, AgentManager.getAllAgentList() );
-		} while ( !candidate.canProcessTheSubtask( st ) );
-		return candidate;
-	}
-
 	protected List< Allocation > makePreAllocationMap( List< Subtask > subtasks ) {
 		List<Allocation> preAllocationList = new ArrayList<>(  );
 		Agent candidate;
@@ -98,6 +90,15 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 		}
 		return preAllocationList;
 	}
+
+	protected Agent selectMemberForASubtaskRandomly( Subtask st ) {
+		Agent candidate;
+		do {
+			candidate = AgentManager.getAgentRandomly( exceptions, AgentManager.getAllAgentList() );
+		} while ( !candidate.canProcessTheSubtask( st ) );
+		return candidate;
+	}
+
 
 	protected abstract Agent selectAMemberForASubtask( Subtask st);
 
@@ -178,14 +179,9 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 		allocationHistory.add( new Allocation( member, s ) );
 	}
 
-	private boolean haveBeenWorkedWith( Agent target ) {
-		boolean res = false;
-		for ( Allocation al: allocationHistory ) {
-			if ( target.equals( al.getAg() ) ) res = true;
-		}
-		return true;
+	protected int countReciprocalLeader() {
+		return 0;
 	}
-
 
 	protected boolean removeAllocationHistory( Agent member, Subtask st ) {
 		return allocationHistory.remove( new Allocation( member, st ) );

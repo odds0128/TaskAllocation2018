@@ -92,8 +92,8 @@ public class OutPut implements Parameter {
 		communicationDelayArray[ index ] += TransmissionPath.getAverageCommunicationTime();
 		disposedTasksArray[ index ] += TaskManager.getDisposedTasks();
 		overflownTasksArray[ index ] += TaskManager.getOverflowTasks();
-		reciprocalMembersArray[ index ] += Agent.countReciprocalMember( agents );
-		reciprocalLeaderArray[ index ] += Agent.countReciprocalLeader( agents );
+//		reciprocalMembersArray[ index ] += Agent.countReciprocalMember( agents );
+//		reciprocalLeaderArray[ index ] += Agent.countReciprocalLeader( agents );
 
 		if ( index == writing_times_ - 1 ) {
 			tempMessagesArray = new int[ writing_times_ ];
@@ -119,7 +119,7 @@ public class OutPut implements Parameter {
 		// todo: 互恵的memberだけを計上する
 		List<Agent> reciprocalMembers = agents.stream()
 			.filter( ag -> ag.role == MEMBER )
-			.filter( ag -> ag.principle == Principle.RECIPROCAL )
+//			.filter( ag -> ag.principle == Principle.RECIPROCAL )
 			.collect( Collectors.toList() );
 		// todo: memberが信頼できるリーダーの数を増やす場合，変更しなければならない
 		int mutualRelationships = ( int ) reciprocalMembers.stream()
@@ -336,7 +336,7 @@ public class OutPut implements Parameter {
 				pw.print( ag.role +"," );
 				pw.print( ag.getX() + "," );
 				pw.print( ag.getY() + "," );
-				pw.println( ag.principle );
+//				pw.println( ag.principle );
 			}
 
 			pw.close();

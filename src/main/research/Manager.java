@@ -90,6 +90,7 @@ public class Manager implements Parameter {
 
 				if ( turn % bin_ == 0 ) {
 					if( resultTypeNode.get( "check_data" ).asBoolean()  ) {
+//						aggregateData( AgentManager.getAllAgentList(), strategy_name );
 						aggregateData( AgentManager.getAllAgentList() );
 						TaskManager.forget();
 					}
@@ -128,7 +129,7 @@ public class Manager implements Parameter {
 			System.out.println( "reciprocal members: " + main.research.agent.strategy.reliableAgents.MemberStrategy.countReciprocalMembers() );
 //			TransmissionPath.showMessages();
 
-			writeSolicitationsReached( strategy_name );
+//			writeSolicitationsReached( strategy_name );
 //			writeSubtasksHoldenByMembers( strategy_name );
 			System.out.println( "---------------------------------------------------------------------------------" );
 //			TransmissionPath.showMessages();
@@ -137,7 +138,7 @@ public class Manager implements Parameter {
 		}
 		// ↑ 全実験の終了のカッコ．以下は後処理
 		if ( resultTypeNode.get( "check_data" ).asBoolean() )  {
-			writeLeadersExecutionNum( strategy_name );
+//			writeLeadersExecutionNum( strategy_name );
 			writeMainResultData( strategy_name );
 		}
 		AgentManager.getAllAgentList().stream()

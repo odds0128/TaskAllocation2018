@@ -27,6 +27,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 	public static final double de_threshold_ = 0.5;
 	static final double oc_threshold_ = 3.0;
 
+	public Principle principle = Principle.RATIONAL;
 	private Map< Agent, Integer > timeToStartCommunicatingMap = new HashMap<>();
 	private Map< Agent, Integer > roundTripTimeMap = new HashMap<>();
 	private Map< Agent, Integer > extraWaitingTimeMap = new HashMap<>();
@@ -55,9 +56,9 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 		if ( myTask != null ) {
 			List< Allocation > allocationMap = makePreAllocation( myTask.subtasks );
 			if ( allocationMap.size() < myTask.subtasks.size() * REDUNDANT_SOLICITATION_TIMES ) {
-				leader.principle = Principle.RECIPROCAL;
+				principle = Principle.RECIPROCAL;
 			} else {
-				leader.principle = Principle.RATIONAL;
+				principle = Principle.RATIONAL;
 			}
 			repliesToCome = allocationMap.size();
 			if ( !allocationMap.isEmpty() ) {
