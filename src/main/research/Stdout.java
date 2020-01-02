@@ -10,6 +10,7 @@ import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static main.research.Parameter.*;
 
@@ -56,6 +57,7 @@ public class Stdout {
 		}
 	}
 
+
 	static void showRelationsBetweenOCandDE( List< Agent > agents ) {
 		double average = 0;
 		int num = 0;
@@ -83,7 +85,7 @@ public class Stdout {
 				double[] tempOC = temp.getOCArray();
 				OCs[ i ] = Arrays.stream( tempOC ).max().getAsDouble();
 
-				for ( TemplateStrategy.Dependability pair: ag.ls.reliableMembersRanking ) {
+				for ( TemplateStrategy.Dependability pair: ag.ls.dependabilityRanking ) {
 					if ( target.equals( pair.getAgent() ) ) {
 						DEs[ i ] = pair.getValue();
 					}

@@ -38,11 +38,11 @@ public class Manager implements Parameter {
 
 	//TODO: こんな風にするならsingletonにしたほうがいいよね
 	// TODO: lsとmsで分けて指定しなきゃいけないの無駄じゃない?
-	private static String package_name = "main.research.agent.strategy.reliableAgents.";
+//	private static String package_name = "main.research.agent.strategy.reliableAgents.";
 //	private static String package_name = "main.research.agent.strategy.puttingDeOcAndDelayIntoOneDimensionalValue.";
 //	private static String package_name = "main.research.agent.strategy.putRewardAndDelayIntoDeCalculation.";
-//	private static String package_name = "main.research.agent.strategy.learningOnlyTeamingSuccessRate.";
-	private static String ls_name = "LeaderStrategy";      // ICA2018における提案手法役割更新あり    //    private static main.research.strategy.Strategy strategy = new ProposedMethodForSingapore();
+	private static String package_name = "main.research.agent.strategy.learningOnlyTeamingSuccessRate.";
+	private static String ls_name = "LeaderStrategy";
 	private static String ms_name = "MemberStrategy";
 
 	static {
@@ -90,8 +90,7 @@ public class Manager implements Parameter {
 
 				if ( turn % bin_ == 0 ) {
 					if( resultTypeNode.get( "check_data" ).asBoolean()  ) {
-//						aggregateData( AgentManager.getAllAgentList(), strategy_name );
-						aggregateData( AgentManager.getAllAgentList() );
+						aggregateData( AgentManager.getAllAgentList(), strategy_name );
 						TaskManager.forget();
 					}
 					if( resultTypeNode.get( "check_network" ).asBoolean() ) {
@@ -129,8 +128,7 @@ public class Manager implements Parameter {
 			System.out.println( "reciprocal members: " + main.research.agent.strategy.reliableAgents.MemberStrategy.countReciprocalMembers() );
 //			TransmissionPath.showMessages();
 
-//			writeSolicitationsReached( strategy_name );
-//			writeSubtasksHoldenByMembers( strategy_name );
+//			writeInformationAsMember( strategy_name );
 			System.out.println( "---------------------------------------------------------------------------------" );
 //			TransmissionPath.showMessages();
 			clearAll();
