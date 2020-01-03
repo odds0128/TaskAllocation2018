@@ -7,22 +7,18 @@ import main.research.communication.message.Solicitation;
 import main.research.task.Subtask;
 import main.research.task.Task;
 import main.research.task.TaskManager;
-import org.apache.xmlbeans.impl.xb.xsdschema.All;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static main.research.communication.TransmissionPath.sendMessage;
 
 
 public class LeaderStrategy extends LeaderTemplateStrategy {
 	@Override
-	protected Agent selectAMemberForASubtask( Subtask st ) {
-		for ( Dependability pair: reliableMembersRanking ) {
+	protected Agent selectMemberFor( Subtask st ) {
+		for ( Dependability pair: dependabilityRanking ) {
 			Agent ag = pair.getAgent();
-			if ( ( !exceptions.contains( ag ) ) && ag.canProcessTheSubtask( st ) ) return ag;
+			if ( ( !exceptions.contains( ag ) ) && ag.canProcess( st ) ) return ag;
 		}
 		return null;
 	}
@@ -43,7 +39,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy {
 			Subtask st = d.getSt();
 			removeAllocationHistory( from, st );
 
-			renewDE( reliableMembersRanking, from, 1 );
+			renewDE( dependabilityRanking, from, 1 );
 			exceptions.remove( from );
 
 			// タスク全体が終わったかどうかの判定と，それによる処理

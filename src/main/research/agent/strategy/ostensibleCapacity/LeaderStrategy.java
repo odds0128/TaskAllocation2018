@@ -45,7 +45,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 		for ( int i = 0; i < REDUNDANT_SOLICITATION_TIMES; i++ ) {
 			for ( Subtask st: subtasks ) {
 				if ( Agent.epsilonGreedy() ) candidate = selectMemberForASubtaskRandomly( st );
-				else candidate = this.selectAMemberForASubtask( st );
+				else candidate = this.selectMemberFor( st );
 
 				if ( candidate == null ) {
 					return null;
@@ -61,7 +61,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 	public static int nulls = 0, notNulls = 0;
 
 	@Override
-	protected Agent selectAMemberForASubtask( Subtask st ) {
+	protected Agent selectMemberFor( Subtask st ) {
 		Agent temp = selectMemberAccordingToOC( st );
 		if ( temp == null ) nulls++;
 		else notNulls++;
@@ -79,7 +79,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 			Agent temp = set.getTarget();
 			if ( exceptions.contains( temp ) ) continue;
 			double ocValue = OCTuple.getOC( resType, temp, ocTupleList );
-			double deValue = getDeByAgent( temp, reliableMembersRanking ).getValue();
+			double deValue = getDeByAgent( temp, dependabilityRanking ).getValue();
 			if ( ocValue > maxOC && maxDE > 0.5 || ocValue == maxOC && maxDE < deValue ) {
 				candidate = temp;
 				maxOC = ocValue;
@@ -90,9 +90,9 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 	}
 
 	private Agent selectMemberAccordingToDE( Subtask st ) {
-		for ( Dependability pair: reliableMembersRanking ) {
+		for ( Dependability pair: dependabilityRanking ) {
 			Agent ag = pair.getAgent();
-			if ( ( !exceptions.contains( ag ) ) && ag.canProcessTheSubtask( st ) ) return ag;
+			if ( ( !exceptions.contains( ag ) ) && ag.canProcess( st ) ) return ag;
 		}
 		return null;
 	}
@@ -115,7 +115,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 				Pair winnerAndLoser = compareDE( currentFrom, rival );
 
 				exceptions.remove( winnerAndLoser.getValue() );
-				sendMessage( new ResultOfTeamFormation( leader, ( Agent ) winnerAndLoser.getValue(), FAILURE, null ) );
+				sendMessage( new Result( leader, ( Agent ) winnerAndLoser.getValue(), FAILURE, null ) );
 				mapOfSubtaskAndAgent.put( st, ( Agent ) winnerAndLoser.getKey() );
 			} else {
 				mapOfSubtaskAndAgent.put( st, currentFrom );
@@ -126,7 +126,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 				Agent friend = ( Agent ) entry.getValue();
 				Subtask st = ( Subtask ) entry.getKey();
 
-				sendMessage( new ResultOfTeamFormation( leader, friend, SUCCESS, st ) );
+				sendMessage( new Result( leader, friend, SUCCESS, st ) );
 				appendAllocationHistory( friend, st );
 				if ( withinTimeWindow() ) leader.workWithAsL[ friend.id ]++;
 				leader.pastTasks.add( myTask );
@@ -167,7 +167,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 			int bindingTime = getCurrentTime() - timeToStartCommunicatingMap.get( from );
 			renewCongestionDegreeMap( from, st, bindingTime );
 
-			renewDE( reliableMembersRanking, from, 1 );
+			renewDE( dependabilityRanking, from, 1 );
 			exceptions.remove( from );
 
 			// タスク全体が終わったかどうかの判定と，それによる処理

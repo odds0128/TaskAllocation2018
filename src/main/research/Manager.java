@@ -8,7 +8,7 @@ import static main.research.others.random.MyRandom.*;
 
 import main.research.agent.strategy.MemberTemplateStrategy;
 import main.research.communication.TransmissionPath;
-import main.research.communication.message.ResultOfTeamFormation;
+import main.research.communication.message.Result;
 import main.research.graph.GraphAtAnWindow;
 import main.research.grid.Grid;
 import main.research.task.Task;
@@ -101,7 +101,7 @@ public class Manager implements Parameter {
 
 				if ( turn % bin_ == 1 && resultTypeNode.get( "check_network" ).asBoolean() ) {
 					graph = new GraphAtAnWindow();
-					ResultOfTeamFormation.setGraph( graph );
+					Result.setGraph( graph );
 				}
 
 				TransmissionPath.transmit();                // 通信遅延あり

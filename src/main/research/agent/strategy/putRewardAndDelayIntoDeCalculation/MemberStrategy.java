@@ -5,7 +5,7 @@ import main.research.agent.Agent;
 import main.research.agent.strategy.MemberTemplateStrategy;
 import main.research.communication.TransmissionPath;
 import main.research.communication.message.ReplyToSolicitation;
-import main.research.communication.message.ResultOfTeamFormation;
+import main.research.communication.message.Result;
 import main.research.communication.message.Solicitation;
 import main.research.others.Pair;
 import main.research.task.Subtask;
@@ -22,14 +22,14 @@ public class MemberStrategy extends MemberTemplateStrategy {
 	Map< Agent, Integer > agentStartTimeMap = new HashMap<>();
 
 	@Override
-	public void replyToSolicitations( Agent member, List< Solicitation > solicitations ) {
+	public void replyTo( List< Solicitation > solicitations, Agent member ) {
 		if ( solicitations.isEmpty() ) return;
 
 		if( solicitations.size() > 1 ) {
-			solicitations.sort( ( solicitation1, solicitation2 ) -> compareSolicitations( solicitation1, solicitation2, reliableLeadersRanking ) );
+			solicitations.sort( ( solicitation1, solicitation2 ) -> compareSolicitations( solicitation1, solicitation2, dependabilityRanking ) );
 		}
 
-		int capacity = SUBTASK_QUEUE_SIZE - mySubtaskQueue.size() - expectedResultMessage;
+		int capacity = Agent.subtask_queue_size_ - mySubtaskQueue.size() - expectedResultMessage;
 		while ( solicitations.size() > 0 && capacity-- > 0 ) {
 			Solicitation s = Agent.epsilonGreedy( ) ? selectSolicitationRandomly( solicitations ) : solicitations.remove( 0 );
 			TransmissionPath.sendMessage( new ReplyToSolicitation( member, s.getFrom(), ACCEPT, s.getExpectedSubtask() ) );
@@ -44,19 +44,19 @@ public class MemberStrategy extends MemberTemplateStrategy {
 	}
 
 	@Override
-	public void reactToResultMessage( ResultOfTeamFormation r ) {
+	public void reactTo( Result r ) {
 		if ( r.getResult() == SUCCESS ) {
 			Subtask st = r.getAllocatedSubtask();
 			int roundTripTime = Manager.getCurrentTime() - this.agentStartTimeMap.remove( r.getFrom() );
-			Pair< Agent, Subtask > pair = new Pair<>( r.getFrom(), st );
-			mySubtaskQueue.add( pair );
+			SubtaskFrom sf = new SubtaskFrom(st, r.getFrom());
+			mySubtaskQueue.add( sf);
 
 			double reward = ( double ) st.reqRes[ st.resType ] / ( double ) roundTripTime;
-			this.renewDE( reliableLeadersRanking, r.getFrom(), reward );
+			this.renewDE( dependabilityRanking, r.getFrom(), reward );
 
 		} else {
 			this.agentStartTimeMap.remove( r.getFrom() );
-			this.renewDE( reliableLeadersRanking, r.getFrom(), 0 );
+			this.renewDE( dependabilityRanking, r.getFrom(), 0 );
 		}
 	}
 

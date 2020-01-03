@@ -5,7 +5,7 @@ import main.research.agent.Agent;
 import main.research.graph.GraphAtAnWindow;
 import main.research.task.Subtask;
 
-public class ResultOfTeamFormation extends Message{
+public class Result extends Message{
 
 	static private int results = 0;
 	static GraphAtAnWindow graph;
@@ -13,7 +13,7 @@ public class ResultOfTeamFormation extends Message{
 	ResultType result;
 	Subtask allocatedSubtask;
 
-	public ResultOfTeamFormation( Agent from, Agent to, ResultType result, Subtask allocatedSubtask ) {
+	public Result( Agent from, Agent to, ResultType result, Subtask allocatedSubtask ) {
 		super( from, to );
 		results++;
 		this.result = result;

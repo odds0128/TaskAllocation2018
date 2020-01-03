@@ -5,7 +5,7 @@ import main.research.agent.Agent;
 import main.research.agent.strategy.LeaderTemplateStrategy;
 import main.research.communication.message.Done;
 import main.research.communication.message.ReplyToSolicitation;
-import main.research.communication.message.ResultOfTeamFormation;
+import main.research.communication.message.Result;
 import main.research.communication.message.Solicitation;
 import main.research.others.Pair;
 import main.research.task.Subtask;
@@ -27,10 +27,10 @@ public class LeaderStrategy extends LeaderTemplateStrategy {
 	Map< Agent, Integer > agentStartTimeMap = new HashMap<>();
 
 	@Override
-	protected Agent selectAMemberForASubtask( Subtask st ) {
-		for ( Dependability pair: reliableMembersRanking ) {
+	protected Agent selectMemberFor( Subtask st ) {
+		for ( Dependability pair: dependabilityRanking ) {
 			Agent ag = pair.getAgent();
-			if ( ( !exceptions.contains( ag ) ) && ag.canProcessTheSubtask( st ) ) return ag;
+			if ( ( !exceptions.contains( ag ) ) && ag.canProcess( st ) ) return ag;
 		}
 		return null;
 	}
@@ -60,7 +60,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy {
 				Pair winnerAndLoser = compareDE( currentFrom, rival );
 
 				exceptions.remove( winnerAndLoser.getValue() );
-				sendMessage( new ResultOfTeamFormation( leader, ( Agent ) winnerAndLoser.getValue(), FAILURE, null ) );
+				sendMessage( new Result( leader, ( Agent ) winnerAndLoser.getValue(), FAILURE, null ) );
 				mapOfSubtaskAndAgent.put( st, ( Agent ) winnerAndLoser.getKey() );
 			} else {
 				mapOfSubtaskAndAgent.put( st, currentFrom );
@@ -73,7 +73,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy {
 
 				agentStartTimeMap.put( friend, Manager.getCurrentTime() );
 
-				sendMessage( new ResultOfTeamFormation( leader, friend, SUCCESS, st ) );
+				sendMessage( new Result( leader, friend, SUCCESS, st ) );
 				appendAllocationHistory( friend, st );
 				if ( withinTimeWindow() ) leader.workWithAsL[ friend.id ]++;
 				leader.pastTasks.add( myTask );
@@ -100,7 +100,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy {
 			// consider: 謎の5
 			double reward = 5 * ( double ) st.reqRes[ st.resType ] / ( double ) roundTripTime;
 
-			this.renewDE( reliableMembersRanking, from, reward );
+			this.renewDE( dependabilityRanking, from, reward );
 			exceptions.remove( from );
 
 			// タスク全体が終わったかどうかの判定と，それによる処理

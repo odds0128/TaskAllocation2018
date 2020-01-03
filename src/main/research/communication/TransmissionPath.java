@@ -43,7 +43,7 @@ public class TransmissionPath implements Parameter {
 				else if ( rs.getReplyType() == ReplyType.DECLINE ) reply_decline_num_++;
 				break;
 			case "ResultOfTeamFormation":
-				ResultOfTeamFormation rt = ( ResultOfTeamFormation ) m;
+				Result rt = ( Result ) m;
 				if ( rt.getResult() == ResultType.SUCCESS ) result_success_num_++;
 				else if ( rt.getResult() == ResultType.FAILURE ) result_failure_num_++;
 				break;

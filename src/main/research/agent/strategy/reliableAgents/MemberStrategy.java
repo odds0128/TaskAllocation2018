@@ -22,42 +22,12 @@ public class MemberStrategy extends MemberTemplateStrategy implements Parameter 
 	public static int waiting = 0;
 	public Principle principle;
 
-	public static double calculateMeanDE() {
-		List<Agent> agentList = AgentManager.getAllAgentList();
-		List<Agent> members = new ArrayList<>(  );
-		for( Agent ag : agentList ) {
-			if( ag.e_member > ag.e_leader ) members.add( ag );
-		}
-
-		double sum = 0;
-		int nonZeroLeaders = 0;
-
-		for( Agent m : members ) {
-			List< Dependability > validPairsList = m.ms.reliableLeadersRanking.stream()
-				.filter( pair -> pair.getValue() > 0 )
-				.collect( Collectors.toList( ) );
-			nonZeroLeaders += validPairsList.stream()
-				.count();
-			sum += validPairsList.stream()
-				.mapToDouble( pair -> pair.getValue() )
-				.sum();
-		}
-		return sum/nonZeroLeaders;
-	}
-
-	public static int countReciprocalMembers() {
-		return ( int ) AgentManager.getAllAgentList().stream()
-			.filter( agent -> agent.e_member > agent.e_leader )
-			.filter( member -> member.ms.reliableLeadersRanking.get( 0 ).getValue() > threshold_of_reliable_leader )
-			.count();
-	}
-
 	@Override
-	public void replyToSolicitations( Agent member, List< Solicitation > solicitations ) {
+	public void replyTo( List< Solicitation > solicitations, Agent member ) {
 		if(  solicitations.isEmpty() ) return;
 
 		solicitations.sort( ( solicitation1, solicitation2 ) ->
-			compareSolicitations( solicitation1, solicitation2, reliableLeadersRanking ) );
+			compareSolicitations( solicitation1, solicitation2, dependabilityRanking ) );
 
 		if( haveReliableLeader() ) {
 			principle = Principle.RECIPROCAL;
@@ -69,8 +39,8 @@ public class MemberStrategy extends MemberTemplateStrategy implements Parameter 
 	}
 
 	private void replyToReliableLeader( Agent member, List< Solicitation> solicitations ) {
-		int capacity = SUBTASK_QUEUE_SIZE - mySubtaskQueue.size() - expectedResultMessage;
-		Agent relLeader = reliableLeadersRanking.get( 0 ).getAgent();
+		int capacity = Agent.subtask_queue_size_ - mySubtaskQueue.size() - expectedResultMessage;
+		Agent relLeader = dependabilityRanking.get( 0 ).getAgent();
 		while( ! solicitations.isEmpty() && capacity > 0) {
 			Solicitation s = solicitations.remove( 0 );
 			if( s.getFrom() == relLeader ) {
@@ -84,7 +54,7 @@ public class MemberStrategy extends MemberTemplateStrategy implements Parameter 
 	}
 
 	private boolean haveReliableLeader() {
-		return reliableLeadersRanking.get( 0 ).getValue() >= threshold_of_reliable_leader;
+		return dependabilityRanking.get( 0 ).getValue() >= threshold_of_reliable_leader;
 	}
 
 	private void accept( Agent member, Solicitation s ) {
@@ -100,7 +70,7 @@ public class MemberStrategy extends MemberTemplateStrategy implements Parameter 
 		}
 	}
 	private void replyToOrdinaryLeaders( Agent member, List<Solicitation> solicitations ) {
-		int capacity = SUBTASK_QUEUE_SIZE - mySubtaskQueue.size() - expectedResultMessage;
+		int capacity = Agent.subtask_queue_size_ - mySubtaskQueue.size() - expectedResultMessage;
 		while ( solicitations.size() > 0 && capacity-- > 0 ) {
 			// TODO : 単純にDEの高い順じゃなくて信頼エージェントを判定する.とりあえず信頼エージェントの上限は1で
 			Solicitation s = Agent.epsilonGreedy() ? selectSolicitationRandomly( solicitations ) : solicitations.remove( 0 );
@@ -109,11 +79,41 @@ public class MemberStrategy extends MemberTemplateStrategy implements Parameter 
 		declineAll( member, solicitations );
 	}
 
-
 	@Override
 	protected void renewDE( List< Dependability > pairList, Agent target, double evaluation ) {
 		Dependability pair = getDeByAgent( target, pairList );
 		pair.renewDEbyArbitraryReward( evaluation );
 	}
+
+	public static double calculateMeanDE() {
+		List<Agent> members = AgentManager.getAllAgentList().stream()
+			.filter(ag -> ag.e_member > ag.e_leader)
+			.collect( Collectors.toList());
+		new ArrayList<>(  );
+
+		double sum = 0;
+		int nonZeroLeaders = 0;
+
+		for( Agent m : members ) {
+			List< Dependability > validPairsList = m.ms.dependabilityRanking.stream()
+				.filter( pair -> pair.getValue() > 0 )
+				.collect( Collectors.toList( ) );
+			nonZeroLeaders += validPairsList.stream()
+				.count();
+			sum += validPairsList.stream()
+				.mapToDouble( pair -> pair.getValue() )
+				.sum();
+		}
+		return sum/nonZeroLeaders;
+	}
+
+	public static int countReciprocalMembers() {
+		return ( int ) AgentManager.getAllAgentList().stream()
+			.filter( agent -> agent.e_member > agent.e_leader )
+			.filter( member -> member.ms.dependabilityRanking.get( 0 ).getValue() > threshold_of_reliable_leader )
+			.count();
+	}
+
+
 }
 

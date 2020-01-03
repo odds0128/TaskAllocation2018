@@ -18,7 +18,7 @@
       "resource_types": 3,
       "min_capacity_value" : 0,
       "max_capacity_value" : 5,
-      "subtask_queue_size" : 5
+      "subtask_queue_size" : 10
     },
     "parameters" : {
       "ε": 0.05,
@@ -35,7 +35,7 @@
   },
   "tasks" : {
     "initial_tasks_num" : 0,
-    "additional_tasks_num" : 10.0,
+    "additional_tasks_num" : 15.0,
     "distribution" : "poisson",
     "task_queue_size" : 500,
     "min_subtasks_num" : 3,

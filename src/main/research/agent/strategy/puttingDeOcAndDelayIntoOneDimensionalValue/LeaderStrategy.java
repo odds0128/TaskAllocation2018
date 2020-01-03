@@ -6,7 +6,7 @@ import main.research.agent.strategy.LeaderTemplateStrategy;
 import main.research.agent.strategy.OCTuple;
 import main.research.communication.message.Done;
 import main.research.communication.message.ReplyToSolicitation;
-import main.research.communication.message.ResultOfTeamFormation;
+import main.research.communication.message.Result;
 import main.research.communication.message.Solicitation;
 import main.research.others.Pair;
 import main.research.task.Subtask;
@@ -14,7 +14,6 @@ import main.research.task.Task;
 import main.research.task.TaskManager;
 import org.apache.commons.math3.stat.descriptive.SynchronizedSummaryStatistics;
 import org.apache.commons.math3.util.Precision;
-import org.apache.xmlbeans.impl.xb.xsdschema.All;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,10 +41,10 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 	private List< OCTuple > ocTupleList = new ArrayList<>();
 
 	@Override
-	protected Agent selectAMemberForASubtask( Subtask st ) {
-		for ( Dependability pair: reliableMembersRanking ) {
+	protected Agent selectMemberFor( Subtask st ) {
+		for ( Dependability pair: dependabilityRanking ) {
 			Agent ag = pair.getAgent();
-			if ( ( !exceptions.contains( ag ) ) && ag.canProcessTheSubtask( st ) ) return ag;
+			if ( ( !exceptions.contains( ag ) ) && ag.canProcess( st ) ) return ag;
 		}
 		return null;
 	}
@@ -102,9 +101,9 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 		double maxEvaluation = 0;
 		Agent returnAgent = null;
 
-		for ( Dependability pair: reliableMembersRanking ) {
+		for ( Dependability pair: dependabilityRanking ) {
 			Agent tempAgent = pair.getAgent();
-			if ( !tempAgent.canProcessTheSubtask( st ) ) break;
+			if ( !tempAgent.canProcess( st ) ) break;
 			if ( exceptions.contains( tempAgent ) ) continue;
 			double tempEvaluation = calculateMemberEvaluation( tempAgent, st );
 			if ( tempEvaluation > maxEvaluation ) {
@@ -118,7 +117,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 
 	private double calculateMemberEvaluation( Agent target, Subtask st ) {
 		if ( !OCTuple.alreadyExists( target, ocTupleList ) ) {
-			return α * getDeByAgent( target, reliableMembersRanking ).getValue();
+			return α * getDeByAgent( target, dependabilityRanking ).getValue();
 		}
 
 		double[] ocs = ocTupleList.stream()
@@ -131,7 +130,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 		double oc_standard_deviation = calculateStandardDeviation( ocs );
 		double rtt_standard_deviation = calculateStandardDeviation( rtts );
 
-		return α * getDeByAgent( target, reliableMembersRanking ).getValue()
+		return α * getDeByAgent( target, dependabilityRanking ).getValue()
 			+ β * ( OCTuple.calculateAverageOC( st.resType, ocTupleList ) - OCTuple.getOC( st.resType, target, ocTupleList ) ) / oc_standard_deviation
 			+ γ * ( calculateAverageRoundTripTime() - roundTripTimeMap.get( target ) ) / rtt_standard_deviation;
 	}
@@ -151,9 +150,9 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 	}
 
 	private Agent selectMemberAccordingToDE( Subtask st ) {
-		for ( Dependability pair: reliableMembersRanking ) {
+		for ( Dependability pair: dependabilityRanking ) {
 			Agent ag = pair.getAgent();
-			if ( ( !exceptions.contains( ag ) ) && ag.canProcessTheSubtask( st ) ) return ag;
+			if ( ( !exceptions.contains( ag ) ) && ag.canProcess( st ) ) return ag;
 		}
 		return null;
 	}
@@ -178,7 +177,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 				Pair winnerAndLoser = compareDE( currentFrom, rival );
 
 				exceptions.remove( winnerAndLoser.getValue() );
-				sendMessage( new ResultOfTeamFormation( leader, ( Agent ) winnerAndLoser.getValue(), FAILURE, null ) );
+				sendMessage( new Result( leader, ( Agent ) winnerAndLoser.getValue(), FAILURE, null ) );
 				mapOfSubtaskAndAgent.put( st, ( Agent ) winnerAndLoser.getKey() );
 			} else {
 				mapOfSubtaskAndAgent.put( st, currentFrom );
@@ -189,7 +188,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 				Agent friend = ( Agent ) entry.getValue();
 				Subtask st = ( Subtask ) entry.getKey();
 
-				sendMessage( new ResultOfTeamFormation( leader, friend, SUCCESS, st ) );
+				sendMessage( new Result( leader, friend, SUCCESS, st ) );
 				appendAllocationHistory( friend, st );
 				if ( withinTimeWindow() ) leader.workWithAsL[ friend.id ]++;
 				leader.pastTasks.add( myTask );
@@ -225,7 +224,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 			int bindingTime = getCurrentTime() - timeToStartCommunicatingMap.get( from );
 			renewCongestionDegreeMap( from, st, bindingTime );
 
-			renewDE( reliableMembersRanking, from, 1 );
+			renewDE( dependabilityRanking, from, 1 );
 			exceptions.remove( from );
 
 			// タスク全体が終わったかどうかの判定と，それによる処理
