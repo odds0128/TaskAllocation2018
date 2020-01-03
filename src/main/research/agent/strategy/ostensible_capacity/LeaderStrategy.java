@@ -1,4 +1,4 @@
-package main.research.agent.strategy.ostensibleCapacity;
+package main.research.agent.strategy.ostensible_capacity;
 
 import main.research.*;
 import main.research.agent.Agent;

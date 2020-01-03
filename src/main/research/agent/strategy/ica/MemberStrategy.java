@@ -1,4 +1,4 @@
-package main.research.agent.strategy.putRewardAndDelayIntoDeCalculation;
+package main.research.agent.strategy.ica;
 
 import main.research.Manager;
 import main.research.agent.Agent;
@@ -34,7 +34,6 @@ public class MemberStrategy extends MemberTemplateStrategy {
 			TransmissionPath.sendMessage( new Reply( member, s.getFrom(), ACCEPT, s.getExpectedSubtask() ) );
 			this.agentStartTimeMap.put( s.getFrom(), Manager.getCurrentTime() );
 			expectedResultMessage++;
-			joinFlag = true;
 		}
 		while ( !solicitations.isEmpty() ) {
 			Solicitation s = solicitations.remove( 0 );
@@ -48,7 +47,8 @@ public class MemberStrategy extends MemberTemplateStrategy {
 			Subtask st = r.getAllocatedSubtask();
 			int roundTripTime = Manager.getCurrentTime() - this.agentStartTimeMap.remove( r.getFrom() );
 			SubtaskFrom sf = new SubtaskFrom(st, r.getFrom());
-			mySubtaskQueue.add( sf);
+			mySubtaskQueue.add( sf );
+			currentSubtaskProcessTime = calculateProcessTime( r.getTo(), st );
 
 			double reward = ( double ) st.reqRes[ st.resType ] / ( double ) roundTripTime;
 			this.renewDE( dependabilityRanking, r.getFrom(), reward );

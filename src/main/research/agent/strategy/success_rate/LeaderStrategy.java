@@ -1,4 +1,4 @@
-package main.research.agent.strategy.learningOnlyTeamingSuccessRate;
+package main.research.agent.strategy.success_rate;
 
 import main.research.agent.Agent;
 import main.research.agent.strategy.LeaderTemplateStrategy;

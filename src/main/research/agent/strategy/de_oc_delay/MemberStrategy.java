@@ -1,4 +1,4 @@
-package main.research.agent.strategy.puttingDeOcAndDelayIntoOneDimensionalValue;
+package main.research.agent.strategy.de_oc_delay;
 
 import main.research.Parameter;
 import main.research.agent.Agent;

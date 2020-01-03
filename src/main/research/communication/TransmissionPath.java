@@ -21,8 +21,17 @@ public class TransmissionPath implements Parameter {
 	static int result_success_num_ = 0, result_failure_num_ = 0, done_num_ = 0;
 	public static int[] solicitToAgents = new int[ AgentManager.agent_num_ ];
 
+	private static final int monitored = 236;
+	private static final boolean doMonitor = false;
+
 	public static void sendMessage( Message m ) {
 		assert m.getFrom() != m.getTo() : "he asks himself";
+
+		if ( doMonitor ) {
+			if ( m.getFrom().id == monitored || m.getTo().id == monitored ) {
+				System.out.println( m );
+			}
+		}
 
 		countMessage( m );
 		int untilArrival = Grid.getDelay( m.getFrom(), m.getTo() );
@@ -34,7 +43,7 @@ public class TransmissionPath implements Parameter {
 	private static void countMessage( Message m ) {
 		switch ( m.getClass().getSimpleName() ) {
 			case "Solicitation":
-				solicitToAgents[m.getTo().id]++;
+				solicitToAgents[ m.getTo().id ]++;
 				solicit_num_++;
 				break;
 			case "ReplyToSolicitation":

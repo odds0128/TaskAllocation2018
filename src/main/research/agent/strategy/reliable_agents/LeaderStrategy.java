@@ -1,4 +1,4 @@
-package main.research.agent.strategy.reliableAgents;
+package main.research.agent.strategy.reliable_agents;
 
 import main.research.Parameter;
 import main.research.agent.Agent;

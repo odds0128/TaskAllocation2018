@@ -4,13 +4,12 @@ import main.research.agent.Agent;
 import main.research.agent.AgentManager;
 import main.research.agent.strategy.OCTuple;
 import main.research.agent.strategy.TemplateStrategy;
-import main.research.agent.strategy.reliableAgents.LeaderStrategy;
+import main.research.agent.strategy.reliable_agents.LeaderStrategy;
 import main.research.task.Task;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static main.research.Parameter.*;
 

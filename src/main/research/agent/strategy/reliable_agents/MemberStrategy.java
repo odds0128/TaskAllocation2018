@@ -1,4 +1,4 @@
-package main.research.agent.strategy.reliableAgents;
+package main.research.agent.strategy.reliable_agents;
 
 import main.research.Parameter;
 import main.research.agent.Agent;
@@ -113,7 +113,5 @@ public class MemberStrategy extends MemberTemplateStrategy implements Parameter 
 			.filter( member -> member.ms.dependabilityRanking.get( 0 ).getValue() > threshold_of_reliable_leader )
 			.count();
 	}
-
-
 }
 

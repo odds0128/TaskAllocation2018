@@ -1,4 +1,4 @@
-package main.research.agent.strategy.putRewardAndDelayIntoDeCalculation;
+package main.research.agent.strategy.ica;
 
 import main.research.Manager;
 import main.research.agent.Agent;

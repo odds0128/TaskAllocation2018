@@ -206,7 +206,6 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 		r.getTo().replyList.add( r );
 	}
 
-	@Override
 	protected Phase nextPhase( Agent leader, boolean wasSuccess ) {
 		leader.validatedTicks = Manager.getCurrentTime();
 
@@ -224,7 +223,6 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 		}
 	}
 
-	@Override
 	public Role inactivate( Agent leader, double value ) {
 		leader.e_leader = leader.e_leader * ( 1.0 - α_ ) + α_ * value;
 		return Role.JONE_DOE;
