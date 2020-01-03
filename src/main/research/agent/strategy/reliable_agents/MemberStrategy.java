@@ -24,12 +24,10 @@ public class MemberStrategy extends MemberTemplateStrategy implements Parameter 
 
 	@Override
 	public void replyTo( List< Solicitation > solicitations, Agent member ) {
-		if(  solicitations.isEmpty() ) return;
-
 		solicitations.sort( ( solicitation1, solicitation2 ) ->
 			compareSolicitations( solicitation1, solicitation2, dependabilityRanking ) );
 
-		if( haveReliableLeader() ) {
+		if ( haveReliableLeader() ) {
 			principle = Principle.RECIPROCAL;
 			replyToReliableLeader( member, solicitations );
 		} else {
@@ -38,41 +36,63 @@ public class MemberStrategy extends MemberTemplateStrategy implements Parameter 
 		}
 	}
 
-	private void replyToReliableLeader( Agent member, List< Solicitation> solicitations ) {
+	private void replyToReliableLeader( Agent member, List< Solicitation > solicitations ) {
 		int capacity = Agent.subtask_queue_size_ - mySubtaskQueue.size() - expectedResultMessage;
-		Agent relLeader = dependabilityRanking.get( 0 ).getAgent();
-		while( ! solicitations.isEmpty() && capacity > 0) {
-			Solicitation s = solicitations.remove( 0 );
-			if( s.getFrom() == relLeader ) {
-				accept( member, s );
-				capacity--;
-			}else {
-				TransmissionPath.sendMessage( new Reply( member, s.getFrom(), DECLINE, s.getExpectedSubtask() ) );
+		// todo: 複数のリーダーを信頼するようにする
+
+		List< Agent > reliableLeaders = dependabilityRanking.stream()
+			.filter( dep -> dep.getValue() > threshold_of_reliable_leader )
+			.map( dep -> dep.getAgent() )
+			.collect( Collectors.toList() );
+
+		for ( Agent targetRelL: reliableLeaders ) {
+			List< Solicitation > solicitationsFromTargetRelL = solicitations.stream()
+				.filter( s -> s.getFrom() == targetRelL )
+				.collect( Collectors.toList() );
+
+			boolean canDoAll = true;
+			if( capacity < solicitationsFromTargetRelL.size() ) {
+				canDoAll = false;
+			} else {
+				for ( Solicitation s: solicitationsFromTargetRelL ) {
+					if ( !member.canProcess( s.getExpectedSubtask() ) ) {
+						canDoAll = false;
+						break;
+					}
+				}
 			}
+			if ( !canDoAll ) {
+				declineAll( member, solicitationsFromTargetRelL );
+			} else {
+				for ( Solicitation s: solicitationsFromTargetRelL ) {
+					accept( member, s );
+				}
+			}
+			solicitations.removeAll( solicitationsFromTargetRelL );
 		}
 		declineAll( member, solicitations );
 	}
 
 	private boolean haveReliableLeader() {
+//		return false;
 		return dependabilityRanking.get( 0 ).getValue() >= threshold_of_reliable_leader;
 	}
 
 	private void accept( Agent member, Solicitation s ) {
 		TransmissionPath.sendMessage( new Reply( member, s.getFrom(), ACCEPT, s.getExpectedSubtask() ) );
 		expectedResultMessage++;
-		joinFlag = true;
 	}
 
-	private void declineAll( Agent member, List<Solicitation> solicitations ) {
+	private void declineAll( Agent member, List< Solicitation > solicitations ) {
 		while ( !solicitations.isEmpty() ) {
 			Solicitation s = solicitations.remove( 0 );
 			TransmissionPath.sendMessage( new Reply( member, s.getFrom(), DECLINE, s.getExpectedSubtask() ) );
 		}
 	}
-	private void replyToOrdinaryLeaders( Agent member, List<Solicitation> solicitations ) {
+
+	private void replyToOrdinaryLeaders( Agent member, List< Solicitation > solicitations ) {
 		int capacity = Agent.subtask_queue_size_ - mySubtaskQueue.size() - expectedResultMessage;
 		while ( solicitations.size() > 0 && capacity-- > 0 ) {
-			// TODO : 単純にDEの高い順じゃなくて信頼エージェントを判定する.とりあえず信頼エージェントの上限は1で
 			Solicitation s = Agent.epsilonGreedy() ? selectSolicitationRandomly( solicitations ) : solicitations.remove( 0 );
 			accept( member, s );
 		}
@@ -86,25 +106,25 @@ public class MemberStrategy extends MemberTemplateStrategy implements Parameter 
 	}
 
 	public static double calculateMeanDE() {
-		List<Agent> members = AgentManager.getAllAgentList().stream()
-			.filter(ag -> ag.e_member > ag.e_leader)
-			.collect( Collectors.toList());
-		new ArrayList<>(  );
+		List< Agent > members = AgentManager.getAllAgentList().stream()
+			.filter( ag -> ag.e_member > ag.e_leader )
+			.collect( Collectors.toList() );
+		new ArrayList<>();
 
 		double sum = 0;
 		int nonZeroLeaders = 0;
 
-		for( Agent m : members ) {
+		for ( Agent m: members ) {
 			List< Dependability > validPairsList = m.ms.dependabilityRanking.stream()
 				.filter( pair -> pair.getValue() > 0 )
-				.collect( Collectors.toList( ) );
+				.collect( Collectors.toList() );
 			nonZeroLeaders += validPairsList.stream()
 				.count();
 			sum += validPairsList.stream()
 				.mapToDouble( pair -> pair.getValue() )
 				.sum();
 		}
-		return sum/nonZeroLeaders;
+		return sum / nonZeroLeaders;
 	}
 
 	public static int countReciprocalMembers() {

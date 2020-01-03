@@ -112,7 +112,8 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 //
 	public void formTeamAsL( Agent leader ) {
 		if ( leader.replyList.size() < repliesToCome ) return;
-		else repliesToCome = 0;
+
+		assert repliesToCome == leader.replyList.size() : "Expected: " + repliesToCome + ", Actual: " + leader.resultList.size();
 
 		Map< Subtask, Agent > SubtaskAgentMap = new HashMap<>();
 		while ( !leader.replyList.isEmpty() ) {
@@ -140,8 +141,8 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 				sendMessage( new Result( leader, friend, SUCCESS, st ) );
 				appendAllocationHistory( friend, st );
 				if ( withinTimeWindow() ) leader.workWithAsL[ friend.id ]++;
-				leader.pastTasks.add( myTask );
 			}
+			leader.pastTasks.add( myTask );
 			nextPhase( leader, true );
 		} else {
 			apologizeToFriends( leader, new ArrayList<>( SubtaskAgentMap.values() ) );
@@ -171,7 +172,9 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 	}
 
 	protected void apologizeToFriends( Agent failingLeader, List< Agent > friends ) {
-		for ( Agent friend: friends ) sendMessage( new Result( failingLeader, friend, FAILURE, null ) );
+		for ( Agent friend: friends ) {
+			sendMessage( new Result( failingLeader, friend, FAILURE, null ) );
+		}
 	}
 
 
@@ -179,13 +182,15 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 		allocationHistory.add( new Allocation( member, s ) );
 	}
 
-	protected int countReciprocalLeader() {
-		return 0;
-	}
-
 	protected boolean removeAllocationHistory( Agent member, Subtask st ) {
 		return allocationHistory.remove( new Allocation( member, st ) );
 	}
+
+	protected void finishTask(Agent leader, Task finishedTask) {
+		leader.pastTasks.remove( finishedTask );
+		TaskManager.finishTask( leader );
+	}
+
 
 	public void setMemberRankingRandomly( Agent self, List< Agent > agentList ) {
 		List< Agent > tempList = AgentManager.generateRandomAgentList( agentList );
@@ -263,6 +268,14 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 			result = 31 * result + ag.id;
 			result = 31 * result + st.getId();
 			return result;
+		}
+
+		@Override
+		public String toString() {
+			return "Allocation{" +
+				"ag=" + ag +
+				", st=" + st +
+				'}';
 		}
 	}
 }

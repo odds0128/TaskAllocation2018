@@ -146,10 +146,14 @@ public class Agent implements Parameter, Cloneable {
 
 
 	public boolean canProcess( Subtask subtask ) {
-		return resources[ subtask.resType ] > 0;
+		return resources[ subtask.reqResType ] > 0;
 	}
 
-	public Task findTaskContainingThisSubtask( Subtask finishedSubtask ) {
+	public Task findTaskContaining( Subtask finishedSubtask ) {
+		// remove
+		if( id == 327 && finishedSubtask.getId() == 30179 ) {
+			System.out.println(pastTasks);
+		}
 		for ( Task t: pastTasks ) {
 			if ( t.getId() == finishedSubtask.parentId ) return t;
 		}
@@ -183,11 +187,6 @@ public class Agent implements Parameter, Cloneable {
 	public String toString() {
 		StringBuilder str = new StringBuilder();
 		str.append( role + " No." + String.format( "%3d, ", id ) );
-		if ( role == LEADER ) {
-
-		} else if ( role == MEMBER ) {
-			str.append( "resources: " + Arrays.toString( resources ) + ", " );
-		}
 		return str.toString();
 	}
 

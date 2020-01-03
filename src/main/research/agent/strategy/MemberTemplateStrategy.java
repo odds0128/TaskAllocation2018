@@ -23,7 +23,6 @@ import static main.research.agent.Agent.α_;
 import java.util.*;
 
 public abstract class MemberTemplateStrategy extends TemplateStrategy implements Parameter {
-	protected boolean joinFlag = false;
 	public int subtaskExecution = 0;
 	public List< Dependability > dependabilityRanking = new ArrayList<>();
 
@@ -45,6 +44,7 @@ public abstract class MemberTemplateStrategy extends TemplateStrategy implements
 		// todo: if文いらんくね
 		if( ! member.solicitationList.isEmpty() ) {
 			member.ms.replyTo( member.solicitationList, member );
+//			replyTo( member.solicitationList, member );
 		}
 		if( ! member.resultList.isEmpty() ) {
 			member.ms.reactTo( member.resultList, member );
@@ -86,7 +86,6 @@ public abstract class MemberTemplateStrategy extends TemplateStrategy implements
 			Solicitation s = Agent.epsilonGreedy() ? selectSolicitationRandomly( solicitations ) : solicitations.remove( 0 );
 			TransmissionPath.sendMessage( new Reply( member, s.getFrom(), ACCEPT, s.getExpectedSubtask() ) );
 			expectedResultMessage++;
-//			joinFlag = true;
 		}
 		while ( !solicitations.isEmpty() ) {
 			Solicitation s = solicitations.remove( 0 );
@@ -129,7 +128,7 @@ public abstract class MemberTemplateStrategy extends TemplateStrategy implements
 	}
 
 	public int calculateProcessTime( Agent a, Subtask st ) {
-		int res = ( int ) Math.ceil( ( double ) st.reqRes[ st.resType ] / ( double ) a.resources[ st.resType ] );
+		int res = ( int ) Math.ceil( ( double ) st.reqRes[ st.reqResType ] / ( double ) a.resources[ st.reqResType ] );
 		OutPut.sumExecutionTime( res );
 		return res;
 	}

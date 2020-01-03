@@ -50,7 +50,7 @@ public class MemberStrategy extends MemberTemplateStrategy {
 			mySubtaskQueue.add( sf );
 			currentSubtaskProcessTime = calculateProcessTime( r.getTo(), st );
 
-			double reward = ( double ) st.reqRes[ st.resType ] / ( double ) roundTripTime;
+			double reward = ( double ) st.reqRes[ st.reqResType ] / ( double ) roundTripTime;
 			this.renewDE( dependabilityRanking, r.getFrom(), reward );
 
 		} else {

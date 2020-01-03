@@ -2,7 +2,7 @@ package main.research;
 
 import main.research.agent.AgentManager;
 import main.research.agent.strategy.MemberTemplateStrategy;
-import main.research.agent.strategy.OCTuple;
+import main.research.agent.strategy.OstensibleCapacity;
 import main.research.agent.strategy.TemplateStrategy;
 import main.research.agent.strategy.reliable_agents.LeaderStrategy;
 import main.research.agent.strategy.reliable_agents.MemberStrategy;
@@ -295,8 +295,8 @@ public class OutPut implements Parameter {
 		for ( Agent leader: AgentManager.getAllAgentList() ) {
 			if ( leader.role == LEADER ) {
 				LeaderStrategy pl = ( LeaderStrategy ) leader.ls;
-				boolean exists = OCTuple.alreadyExists( target, pl.getCdTupleList() );
-				double temp = exists ? OCTuple.getOC( 1, target, pl.getCdTupleList() ) : -1;
+				boolean exists = OstensibleCapacity.alreadyExists( target, pl.getOCList() );
+				double temp = exists ? OstensibleCapacity.getOC( 1, target, pl.getOCList() ) : -1;
 
 				pw.print( "," + temp );
 			}

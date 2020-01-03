@@ -37,6 +37,7 @@ public class Reply extends Message {
 		sb.append( "From: " + from );
 		sb.append( "To: " + to );
 		sb.append( "Reply: " + replyType );
+		sb.append( ", Bitten task: " + subtask );
 		return sb.toString();
 	}
 

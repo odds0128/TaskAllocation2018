@@ -3,7 +3,7 @@ package main.research.agent.strategy.ostensible_capacity;
 import main.research.*;
 import main.research.agent.Agent;
 import main.research.agent.strategy.LeaderTemplateStrategy;
-import main.research.agent.strategy.OCTuple;
+import main.research.agent.strategy.OstensibleCapacity;
 import main.research.communication.message.*;
 import main.research.others.Pair;
 import main.research.task.Subtask;
@@ -25,7 +25,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 
 	private Map< Agent, Integer > timeToStartCommunicatingMap = new HashMap<>();
 	private Map< Agent, Integer > roundTripTimeMap = new HashMap<>();
-	private List< OCTuple > ocTupleList = new ArrayList<>();
+	private List< OstensibleCapacity > ostensibleCapacityList = new ArrayList<>();
 
 	@Override
 	public void sendSolicitations( Agent leader, List< Allocation > allocationList ) {
@@ -40,7 +40,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 	protected List< Allocation > makePreAllocationMap( List< Subtask > subtasks ) {
 		List<Allocation> preAllocationList = new ArrayList<>(  );
 		Agent candidate;
-		OCTuple.forgetOldOcInformation( ocTupleList );
+		OstensibleCapacity.forgetOldOcInformation( ostensibleCapacityList );
 
 		for ( int i = 0; i < REDUNDANT_SOLICITATION_TIMES; i++ ) {
 			for ( Subtask st: subtasks ) {
@@ -73,12 +73,12 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 	private Agent selectMemberAccordingToOC( Subtask st ) {
 		Agent candidate = null;
 		double maxOC = OC_THRESHOLD, maxDE = 0.5;
-		int resType = st.resType;
+		int resType = st.reqResType;
 
-		for ( OCTuple set: ocTupleList ) {
+		for ( OstensibleCapacity set: ostensibleCapacityList ) {
 			Agent temp = set.getTarget();
 			if ( exceptions.contains( temp ) ) continue;
-			double ocValue = OCTuple.getOC( resType, temp, ocTupleList );
+			double ocValue = OstensibleCapacity.getOC( resType, temp, ostensibleCapacityList );
 			double deValue = getDeByAgent( temp, dependabilityRanking ).getValue();
 			if ( ocValue > maxOC && maxDE > 0.5 || ocValue == maxOC && maxDE < deValue ) {
 				candidate = temp;
@@ -129,8 +129,8 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 				sendMessage( new Result( leader, friend, SUCCESS, st ) );
 				appendAllocationHistory( friend, st );
 				if ( withinTimeWindow() ) leader.workWithAsL[ friend.id ]++;
-				leader.pastTasks.add( myTask );
 			}
+			leader.pastTasks.add( myTask );
 			leader.phase = nextPhase( leader, true );
 		} else {
 			apologizeToFriends( leader, new ArrayList<>( mapOfSubtaskAndAgent.values() ) );
@@ -172,7 +172,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 
 			// タスク全体が終わったかどうかの判定と，それによる処理
 			// HACK: もうちょいどうにかならんか
-			Task task = leader.findTaskContainingThisSubtask( st );
+			Task task = leader.findTaskContaining( st );
 
 			task.subtasks.remove( st );
 
@@ -193,19 +193,19 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 
 	private void renewCongestionDegreeMap( Agent target, Subtask st, int bindingTime ) {
 		double[] tempArray = new double[ Agent.resource_types_ ];
-		int resourceType = st.resType;
+		int resourceType = st.reqResType;
 
-		if ( OCTuple.alreadyExists( target, ocTupleList ) ) {
+		if ( OstensibleCapacity.alreadyExists( target, ostensibleCapacityList ) ) {
 			double newOC = calculateOC( bindingTime, roundTripTimeMap.get( target ), st );
-			OCTuple.updateOC( target, ocTupleList, resourceType, newOC );
+			OstensibleCapacity.updateOC( target, ostensibleCapacityList, resourceType, newOC );
 		} else {
 			tempArray[ resourceType ] = calculateOC( bindingTime, roundTripTimeMap.get( target ), st );
-			ocTupleList.add( new OCTuple( target, tempArray, getCurrentTime() ) );
+			ostensibleCapacityList.add( new OstensibleCapacity( target, tempArray, getCurrentTime() ) );
 		}
 	}
 
 	private double calculateOC( int bindingTime, int roundTripTime, Subtask subtask ) {
-		int difficulty = subtask.reqRes[ subtask.resType ];
+		int difficulty = subtask.reqRes[ subtask.reqResType ];
 		return difficulty / ( bindingTime - 2.0 * roundTripTime );
 	}
 
@@ -213,7 +213,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append( ", exceptions: " + exceptions.size() );
-		sb.append( ", ocList: " + ocTupleList );
+		sb.append( ", ocList: " + ostensibleCapacityList );
 		return sb.toString();
 	}
 }

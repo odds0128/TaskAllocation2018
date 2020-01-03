@@ -15,7 +15,7 @@ public class Subtask implements Parameter, Cloneable {
 
     private int id;
     public int[] reqRes;
-    public int resType;
+    public int reqResType;
     public int parentId;
 
     public static void setConstants( JsonNode parameterNode ) {
@@ -32,8 +32,8 @@ public class Subtask implements Parameter, Cloneable {
 
     private void setResources() {
         reqRes = new int[resource_types_];
-        resType = MyRandom.getRandomInt(0, resource_types_ - 1);
-        reqRes[resType] = MyRandom.getRandomInt( min_request_value_, max_request_value_ );
+        reqResType = MyRandom.getRandomInt(0, resource_types_ - 1);
+        reqRes[ reqResType ] = MyRandom.getRandomInt( min_request_value_, max_request_value_ );
     }
 
     public int getId() {
@@ -53,8 +53,8 @@ public class Subtask implements Parameter, Cloneable {
 
     public static class SubtaskRewardComparator implements Comparator<Subtask> {
         public int compare(Subtask a, Subtask b ){
-            int no1 = a.reqRes[a.resType];
-            int no2 = b.reqRes[b.resType];
+            int no1 = a.reqRes[a.reqResType ];
+            int no2 = b.reqRes[b.reqResType ];
 
             return Integer.compare(no2, no1);
         }

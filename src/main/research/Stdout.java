@@ -2,7 +2,7 @@ package main.research;
 
 import main.research.agent.Agent;
 import main.research.agent.AgentManager;
-import main.research.agent.strategy.OCTuple;
+import main.research.agent.strategy.OstensibleCapacity;
 import main.research.agent.strategy.TemplateStrategy;
 import main.research.agent.strategy.reliable_agents.LeaderStrategy;
 import main.research.task.Task;
@@ -65,20 +65,20 @@ public class Stdout {
 
 		try {
 			// TODO: 委譲によるラッパー化
-			LeaderStrategy.class.getDeclaredMethod( "getCdTupleList", LeaderStrategy.class );
+			LeaderStrategy.class.getDeclaredMethod( "getOCList", LeaderStrategy.class );
 		} catch ( NoSuchMethodException e ) {
 			return;
 		}
 		for ( Agent ag: agents ) {
-			List< OCTuple > ocTupleList = LeaderStrategy.getOcTupleList( ( LeaderStrategy ) ag.ls );
-			int size = ocTupleList.size();
+			List< OstensibleCapacity > ostensibleCapacityList = LeaderStrategy.getOcTupleList( ( LeaderStrategy ) ag.ls );
+			int size = ostensibleCapacityList.size();
 			if ( size == 0 || size == 1 ) continue;
 
 			double[] OCs = new double[ size ];
 			double[] DEs = new double[ size ];
 
 			for ( int i = 0; i < size; i++ ) {
-				OCTuple temp = ocTupleList.remove( 0 );
+				OstensibleCapacity temp = ostensibleCapacityList.remove( 0 );
 				Agent target = temp.getTarget();
 
 				double[] tempOC = temp.getOCArray();

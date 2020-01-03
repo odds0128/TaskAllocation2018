@@ -1,5 +1,6 @@
 package main.research.communication;
 
+import main.research.Manager;
 import main.research.agent.AgentManager;
 import main.research.communication.message.*;
 import main.research.others.Pair;
@@ -21,15 +22,20 @@ public class TransmissionPath implements Parameter {
 	static int result_success_num_ = 0, result_failure_num_ = 0, done_num_ = 0;
 	public static int[] solicitToAgents = new int[ AgentManager.agent_num_ ];
 
-	private static final int monitored = 236;
+	private static final int monitoredAgent1 = 327;
+	private static final int monitoredAgent2 = 248;
 	private static final boolean doMonitor = false;
+	private static final boolean doMonitorAll = false;
 
 	public static void sendMessage( Message m ) {
 		assert m.getFrom() != m.getTo() : "he asks himself";
 
 		if ( doMonitor ) {
-			if ( m.getFrom().id == monitored || m.getTo().id == monitored ) {
+			if ( doMonitorAll ) {
 				System.out.println( m );
+			} else if ( m.getFrom().id == monitoredAgent1 && m.getTo().id == monitoredAgent2 ||
+				m.getTo().id == monitoredAgent1 && m.getFrom().id == monitoredAgent2 ) {
+				System.out.println( String.format( "%8d: ", Manager.getCurrentTime() ) + m );
 			}
 		}
 

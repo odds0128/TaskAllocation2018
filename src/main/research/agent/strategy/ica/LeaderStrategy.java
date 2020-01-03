@@ -46,7 +46,8 @@ public class LeaderStrategy extends LeaderTemplateStrategy {
 	@Override
 	public void formTeamAsL( Agent leader ) {
 		if ( leader.replyList.size() < repliesToCome ) return;
-		else repliesToCome = 0;
+
+		assert repliesToCome == leader.replyList.size() : "Expected: " + repliesToCome + ", Actual: " + leader.resultList.size();
 
 		Map< Subtask, Agent > mapOfSubtaskAndAgent = new HashMap<>();
 		while ( !leader.replyList.isEmpty() ) {
@@ -76,8 +77,8 @@ public class LeaderStrategy extends LeaderTemplateStrategy {
 				sendMessage( new Result( leader, friend, SUCCESS, st ) );
 				appendAllocationHistory( friend, st );
 				if ( withinTimeWindow() ) leader.workWithAsL[ friend.id ]++;
-				leader.pastTasks.add( myTask );
 			}
+			leader.pastTasks.add( myTask );
 			leader.phase = nextPhase( leader, true );
 		} else {
 			apologizeToFriends( leader, new ArrayList<>( mapOfSubtaskAndAgent.values() ) );
@@ -98,7 +99,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy {
 
 			int roundTripTime = Manager.getCurrentTime() - this.agentStartTimeMap.remove( from );
 			// consider: 謎の5
-			double reward = 5 * ( double ) st.reqRes[ st.resType ] / ( double ) roundTripTime;
+			double reward = 5 * ( double ) st.reqRes[ st.reqResType ] / ( double ) roundTripTime;
 
 			this.renewDE( dependabilityRanking, from, reward );
 			exceptions.remove( from );
@@ -108,7 +109,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy {
 			// 今終わったサブタスクasが含まれるtaskを見つける
 			// それによってタスク全体が終われば終了報告等をする
 
-			Task task = leader.findTaskContainingThisSubtask( st );
+			Task task = leader.findTaskContaining( st );
 			task.subtasks.remove( st );
 			if ( task.subtasks.isEmpty() ) {
 				from.pastTasks.remove( task );

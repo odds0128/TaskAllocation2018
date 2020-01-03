@@ -47,7 +47,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy {
 			// 今終わったサブタスクasが含まれるtaskを見つける
 			// それによってタスク全体が終われば終了報告等をする
 
-			Task task = leader.findTaskContainingThisSubtask( st );
+			Task task = leader.findTaskContaining( st );
 			task.subtasks.remove( st );
 			if ( task.subtasks.isEmpty() ) {
 				from.pastTasks.remove( task );
