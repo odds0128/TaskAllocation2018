@@ -4,7 +4,7 @@ import main.research.Manager;
 import main.research.Parameter;
 import main.research.agent.Agent;
 import main.research.agent.AgentManager;
-import main.research.communication.message.ReplyToSolicitation;
+import main.research.communication.message.Reply;
 import main.research.communication.message.Result;
 import main.research.communication.message.Solicitation;
 import main.research.others.Pair;
@@ -51,7 +51,7 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 	private void declineAllSolicitations( Agent leader ) {
 		while ( !leader.solicitationList.isEmpty() ) {
 			Solicitation s = leader.solicitationList.remove( 0 );
-			sendMessage( new ReplyToSolicitation( leader, s.getFrom(), DECLINE, s.getExpectedSubtask() ) );
+			sendMessage( new Reply( leader, s.getFrom(), DECLINE, s.getExpectedSubtask() ) );
 		}
 	}
 
@@ -116,7 +116,7 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 
 		Map< Subtask, Agent > SubtaskAgentMap = new HashMap<>();
 		while ( !leader.replyList.isEmpty() ) {
-			ReplyToSolicitation r = leader.replyList.remove( 0 );
+			Reply r = leader.replyList.remove( 0 );
 			Subtask st = r.getSubtask();
 			Agent currentFrom = r.getFrom();
 
@@ -202,7 +202,7 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 	protected abstract void renewDE( List< Dependability > pairList, Agent target, double evaluation );
 
 	// todo: 削除
-	public void reachReply( ReplyToSolicitation r ) {
+	public void reachReply( Reply r ) {
 		r.getTo().replyList.add( r );
 	}
 

@@ -38,7 +38,7 @@ public class TransmissionPath implements Parameter {
 				solicit_num_++;
 				break;
 			case "ReplyToSolicitation":
-				ReplyToSolicitation rs = ( ReplyToSolicitation ) m;
+				Reply rs = ( Reply ) m;
 				if ( rs.getReplyType() == ReplyType.ACCEPT ) reply_accept_num_++;
 				else if ( rs.getReplyType() == ReplyType.DECLINE ) reply_decline_num_++;
 				break;

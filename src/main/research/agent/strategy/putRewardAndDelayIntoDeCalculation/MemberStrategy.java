@@ -4,10 +4,9 @@ import main.research.Manager;
 import main.research.agent.Agent;
 import main.research.agent.strategy.MemberTemplateStrategy;
 import main.research.communication.TransmissionPath;
-import main.research.communication.message.ReplyToSolicitation;
+import main.research.communication.message.Reply;
 import main.research.communication.message.Result;
 import main.research.communication.message.Solicitation;
-import main.research.others.Pair;
 import main.research.task.Subtask;
 
 import java.util.List;
@@ -32,14 +31,14 @@ public class MemberStrategy extends MemberTemplateStrategy {
 		int capacity = Agent.subtask_queue_size_ - mySubtaskQueue.size() - expectedResultMessage;
 		while ( solicitations.size() > 0 && capacity-- > 0 ) {
 			Solicitation s = Agent.epsilonGreedy( ) ? selectSolicitationRandomly( solicitations ) : solicitations.remove( 0 );
-			TransmissionPath.sendMessage( new ReplyToSolicitation( member, s.getFrom(), ACCEPT, s.getExpectedSubtask() ) );
+			TransmissionPath.sendMessage( new Reply( member, s.getFrom(), ACCEPT, s.getExpectedSubtask() ) );
 			this.agentStartTimeMap.put( s.getFrom(), Manager.getCurrentTime() );
 			expectedResultMessage++;
 			joinFlag = true;
 		}
 		while ( !solicitations.isEmpty() ) {
 			Solicitation s = solicitations.remove( 0 );
-			TransmissionPath.sendMessage( new ReplyToSolicitation( member, s.getFrom(), DECLINE, s.getExpectedSubtask() ) );
+			TransmissionPath.sendMessage( new Reply( member, s.getFrom(), DECLINE, s.getExpectedSubtask() ) );
 		}
 	}
 

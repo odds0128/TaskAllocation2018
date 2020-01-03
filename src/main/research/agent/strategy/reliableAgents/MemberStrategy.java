@@ -5,7 +5,7 @@ import main.research.agent.Agent;
 import main.research.agent.AgentManager;
 import main.research.agent.strategy.MemberTemplateStrategy;
 import main.research.communication.TransmissionPath;
-import main.research.communication.message.ReplyToSolicitation;
+import main.research.communication.message.Reply;
 import main.research.communication.message.Solicitation;
 
 import java.util.ArrayList;
@@ -47,7 +47,7 @@ public class MemberStrategy extends MemberTemplateStrategy implements Parameter 
 				accept( member, s );
 				capacity--;
 			}else {
-				TransmissionPath.sendMessage( new ReplyToSolicitation( member, s.getFrom(), DECLINE, s.getExpectedSubtask() ) );
+				TransmissionPath.sendMessage( new Reply( member, s.getFrom(), DECLINE, s.getExpectedSubtask() ) );
 			}
 		}
 		declineAll( member, solicitations );
@@ -58,7 +58,7 @@ public class MemberStrategy extends MemberTemplateStrategy implements Parameter 
 	}
 
 	private void accept( Agent member, Solicitation s ) {
-		TransmissionPath.sendMessage( new ReplyToSolicitation( member, s.getFrom(), ACCEPT, s.getExpectedSubtask() ) );
+		TransmissionPath.sendMessage( new Reply( member, s.getFrom(), ACCEPT, s.getExpectedSubtask() ) );
 		expectedResultMessage++;
 		joinFlag = true;
 	}
@@ -66,7 +66,7 @@ public class MemberStrategy extends MemberTemplateStrategy implements Parameter 
 	private void declineAll( Agent member, List<Solicitation> solicitations ) {
 		while ( !solicitations.isEmpty() ) {
 			Solicitation s = solicitations.remove( 0 );
-			TransmissionPath.sendMessage( new ReplyToSolicitation( member, s.getFrom(), DECLINE, s.getExpectedSubtask() ) );
+			TransmissionPath.sendMessage( new Reply( member, s.getFrom(), DECLINE, s.getExpectedSubtask() ) );
 		}
 	}
 	private void replyToOrdinaryLeaders( Agent member, List<Solicitation> solicitations ) {

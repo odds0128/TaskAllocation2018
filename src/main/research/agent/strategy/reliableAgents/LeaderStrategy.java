@@ -5,7 +5,7 @@ import main.research.agent.Agent;
 import main.research.agent.strategy.OCTuple;
 import main.research.agent.strategy.LeaderTemplateStrategy;
 import main.research.communication.message.Done;
-import main.research.communication.message.ReplyToSolicitation;
+import main.research.communication.message.Reply;
 import main.research.communication.message.Result;
 import main.research.communication.message.Solicitation;
 import main.research.others.Pair;
@@ -143,7 +143,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 
 		Map< Subtask, Agent > allocationMap = new HashMap<>();
 		while ( !leader.replyList.isEmpty() ) {
-			ReplyToSolicitation r = leader.replyList.remove( 0 );
+			Reply r = leader.replyList.remove( 0 );
 			Subtask st = r.getSubtask();
 			Agent currentFrom = r.getFrom();
 
@@ -187,7 +187,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 	}
 
 	@Override
-	public void reachReply( ReplyToSolicitation r ) {
+	public void reachReply( Reply r ) {
 		super.reachReply( r );
 		roundTripTimeMap.put( r.getFrom(), getCurrentTime() - timeToStartCommunicatingMap.get( r.getFrom() ) );
 	}

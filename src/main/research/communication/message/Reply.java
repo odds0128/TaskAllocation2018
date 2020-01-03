@@ -5,13 +5,13 @@ import static main.research.Parameter.ReplyType;
 import main.research.agent.Agent;
 import main.research.task.Subtask;
 
-public class ReplyToSolicitation extends Message {
+public class Reply extends Message {
 	static private int replies = 0;
 
 	ReplyType replyType;
 	Subtask   subtask;
 
-	public ReplyToSolicitation( Agent from, Agent to, ReplyType replyType, Subtask subtask ) {
+	public Reply( Agent from, Agent to, ReplyType replyType, Subtask subtask ) {
 		super( from, to );
 		replies++;
 		this.replyType = replyType;

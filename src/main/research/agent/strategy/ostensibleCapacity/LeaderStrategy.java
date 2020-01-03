@@ -104,7 +104,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 
 		Map< Subtask, Agent > mapOfSubtaskAndAgent = new HashMap<>();
 		while ( !leader.replyList.isEmpty() ) {
-			ReplyToSolicitation r = leader.replyList.remove( 0 );
+			Reply r = leader.replyList.remove( 0 );
 			Subtask st = r.getSubtask();
 			Agent currentFrom = r.getFrom();
 			updateRoundTripTime( currentFrom );
@@ -151,7 +151,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 	}
 
 	@Override
-	public void reachReply( ReplyToSolicitation r ) {
+	public void reachReply( Reply r ) {
 		super.reachReply( r );
 		roundTripTimeMap.put( r.getFrom(), getCurrentTime() - timeToStartCommunicatingMap.get( r.getFrom() ) );
 	}

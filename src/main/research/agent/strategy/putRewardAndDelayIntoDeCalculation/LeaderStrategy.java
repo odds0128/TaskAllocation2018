@@ -4,7 +4,7 @@ import main.research.Manager;
 import main.research.agent.Agent;
 import main.research.agent.strategy.LeaderTemplateStrategy;
 import main.research.communication.message.Done;
-import main.research.communication.message.ReplyToSolicitation;
+import main.research.communication.message.Reply;
 import main.research.communication.message.Result;
 import main.research.communication.message.Solicitation;
 import main.research.others.Pair;
@@ -50,7 +50,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy {
 
 		Map< Subtask, Agent > mapOfSubtaskAndAgent = new HashMap<>();
 		while ( !leader.replyList.isEmpty() ) {
-			ReplyToSolicitation r = leader.replyList.remove( 0 );
+			Reply r = leader.replyList.remove( 0 );
 			Subtask st = r.getSubtask();
 			Agent currentFrom = r.getFrom();
 

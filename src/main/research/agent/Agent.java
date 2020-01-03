@@ -10,7 +10,6 @@ import static main.research.Parameter.Role.*;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import main.research.Manager;
-import main.research.OutPut;
 import main.research.Parameter;
 import main.research.agent.strategy.LeaderTemplateStrategy;
 import main.research.agent.strategy.MemberTemplateStrategy;
@@ -53,7 +52,7 @@ public class Agent implements Parameter, Cloneable {
 	public int[][] allocated = new int[ agent_num_ ][ resource_types_ ]; // そのエージェントからそのリソースを要求するサブタスクが割り当てられた回数
 
 	public List< Solicitation > solicitationList = new ArrayList<>();
-	public List< ReplyToSolicitation > replyList = new ArrayList<>();
+	public List< Reply > replyList = new ArrayList<>();
 	public List< Result > resultList = new ArrayList<>();
 	public List< Done > doneList = new ArrayList<>();
 
@@ -224,11 +223,11 @@ public class Agent implements Parameter, Cloneable {
 			case "Solicitation":
 				solicitationList.add( ( Solicitation ) m );
 				break;
-			case "ReplyToSolicitation":
+			case "Reply":
 				// todo: modify
-				m.getTo().ls.reachReply( ( ReplyToSolicitation ) m );
+				m.getTo().ls.reachReply( ( Reply ) m );
 				break;
-			case "ResultOfTeamFormation":
+			case "Result":
 				resultList.add( ( Result ) m );
 				break;
 			case "Done":
