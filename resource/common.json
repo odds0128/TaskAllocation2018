@@ -13,6 +13,8 @@
   },
   "agents" : {
     "agent_num" : 500,
+    "initial_leaders_ratio" : 0.2,
+    "role_change" : false,
     "time_observing_team_formation" : 50,
     "agent" : {
       "resource_types": 3,

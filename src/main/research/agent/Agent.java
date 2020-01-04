@@ -31,6 +31,8 @@ public class Agent implements Parameter, Cloneable {
 	public static int agent_num_ = AgentManager.agent_num_;
 	public static int resource_types_;
 	public static int subtask_queue_size_;
+	public static double initial_leaders_ratio_;
+	public static boolean can_change_role_;
 	public LeaderTemplateStrategy ls;
 	public MemberTemplateStrategy ms;
 	public static int min_capacity_value_;
@@ -61,6 +63,8 @@ public class Agent implements Parameter, Cloneable {
 	public List< Task > pastTasks = new ArrayList<>();
 
 	public static void setConstants( JsonNode agentNode ) {
+		initial_leaders_ratio_ = agentNode.get( "initial_leaders_ratio" ).asDouble();
+		can_change_role_ = agentNode.get( "role_change" ).asBoolean();
 		ε_ = agentNode.get( "parameters" ).get( "ε" ).asDouble();
 		α_ = agentNode.get( "parameters" ).get( "α" ).asDouble();
 		resource_types_ = agentNode.get( "agent" ).get( "resource_types" ).asInt();
@@ -79,7 +83,7 @@ public class Agent implements Parameter, Cloneable {
 		this.id = _id++;
 		setResource();
 		setStrategies( package_name, ls_name, ms_name );
-		selectRole();
+		setInitialRole();
 	}
 
 	public static boolean epsilonGreedy() {
@@ -112,14 +116,22 @@ public class Agent implements Parameter, Cloneable {
 		ms.actAsMember( this );
 	}
 
+	void setInitialRole() {
+		double toBeLeader = MyRandom.getRandomDouble( );
+		if ( toBeLeader <= initial_leaders_ratio_ ) selectLeaderRole();
+		else selectMemberRole();
+	}
+
 	void selectRole() {
 		assert ms.expectedResultMessage == 0 : "Expect some result message.";
 		assert ms.mySubtaskQueue.size() == 0 : "Remain some subtasks not finished.";
 
-		if ( e_leader == e_member ) selectRandomRole();
-		else if ( epsilonGreedy() ) selectReverseRole();
-		else if ( e_leader > e_member ) selectLeaderRole();
-		else if ( e_member > e_leader ) selectMemberRole();
+		if( can_change_role_ ) {
+			if ( e_leader == e_member ) selectRandomRole();
+			else if ( epsilonGreedy() ) selectReverseRole();
+			else if ( e_leader > e_member ) selectLeaderRole();
+			else if ( e_member > e_leader ) selectMemberRole();
+		}
 	}
 
 	private void selectLeaderRole() {
