@@ -56,7 +56,7 @@ public class AgentManager implements Parameter {
 		return originalList;
 	}
 
-	public static Agent getAgentRandomly( Set< Agent > exceptions, List< Agent > targets ) {
+	public static Agent getAgentRandomly( List< Agent > exceptions, List< Agent > targets ) {
 		int random;
 		Agent candidate;
 

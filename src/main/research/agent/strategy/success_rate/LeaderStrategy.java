@@ -15,7 +15,7 @@ import static main.research.communication.TransmissionPath.sendMessage;
 
 public class LeaderStrategy extends LeaderTemplateStrategy {
 	@Override
-	protected Agent selectMemberFor( Subtask st ) {
+	protected Agent selectMemberFor( List<Agent> exceptions, Subtask st ) {
 		for ( Dependability pair: dependabilityRanking ) {
 			Agent ag = pair.getAgent();
 			if ( ( !exceptions.contains( ag ) ) && ag.canProcess( st ) ) return ag;
@@ -40,7 +40,6 @@ public class LeaderStrategy extends LeaderTemplateStrategy {
 			removeAllocationHistory( from, st );
 
 			renewDE( dependabilityRanking, from, 1 );
-			exceptions.remove( from );
 
 			// タスク全体が終わったかどうかの判定と，それによる処理
 			// HACK: もうちょいどうにかならんか

@@ -13,7 +13,7 @@ import main.research.task.Task;
 import main.research.task.TaskManager;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -24,10 +24,10 @@ import static main.research.communication.TransmissionPath.sendMessage;
 import static main.research.task.TaskManager.disposeTask;
 
 public class LeaderStrategy extends LeaderTemplateStrategy {
-	Map< Agent, Integer > agentStartTimeMap = new HashMap<>();
+	Map< Agent, Integer > agentStartTimeMap = new LinkedHashMap<>();
 
 	@Override
-	protected Agent selectMemberFor( Subtask st ) {
+	protected Agent selectMemberFor( List<Agent> exceptions, Subtask st ) {
 		for ( Dependability pair: dependabilityRanking ) {
 			Agent ag = pair.getAgent();
 			if ( ( !exceptions.contains( ag ) ) && ag.canProcess( st ) ) return ag;
@@ -49,7 +49,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy {
 
 		assert repliesToCome == leader.replyList.size() : "Expected: " + repliesToCome + ", Actual: " + leader.resultList.size();
 
-		Map< Subtask, Agent > mapOfSubtaskAndAgent = new HashMap<>();
+		Map< Subtask, Agent > mapOfSubtaskAndAgent = new LinkedHashMap<>();
 		while ( !leader.replyList.isEmpty() ) {
 			Reply r = leader.replyList.remove( 0 );
 			Subtask st = r.getSubtask();
@@ -60,7 +60,6 @@ public class LeaderStrategy extends LeaderTemplateStrategy {
 				Agent rival = mapOfSubtaskAndAgent.get( st );
 				Pair winnerAndLoser = compareDE( currentFrom, rival );
 
-				exceptions.remove( winnerAndLoser.getValue() );
 				sendMessage( new Result( leader, ( Agent ) winnerAndLoser.getValue(), FAILURE, null ) );
 				mapOfSubtaskAndAgent.put( st, ( Agent ) winnerAndLoser.getKey() );
 			} else {
@@ -82,7 +81,6 @@ public class LeaderStrategy extends LeaderTemplateStrategy {
 			leader.phase = nextPhase( leader, true );
 		} else {
 			apologizeToFriends( leader, new ArrayList<>( mapOfSubtaskAndAgent.values() ) );
-			exceptions.removeAll( new ArrayList<>( mapOfSubtaskAndAgent.values() ) );
 			disposeTask(leader);
 			leader.phase = nextPhase( leader, false );
 		}
@@ -97,12 +95,11 @@ public class LeaderStrategy extends LeaderTemplateStrategy {
 			Subtask st = d.getSt();
 			removeAllocationHistory( from, st );
 
-			int roundTripTime = Manager.getCurrentTime() - this.agentStartTimeMap.remove( from );
+			int roundTripTime = Manager.getCurrentTime() - this.agentStartTimeMap.get( from );
 			// consider: 謎の5
 			double reward = 5 * ( double ) st.reqRes[ st.reqResType ] / ( double ) roundTripTime;
 
 			this.renewDE( dependabilityRanking, from, reward );
-			exceptions.remove( from );
 
 			// タスク全体が終わったかどうかの判定と，それによる処理
 			// HACK: もうちょいどうにかならんか

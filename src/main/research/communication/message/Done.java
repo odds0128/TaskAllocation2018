@@ -28,7 +28,7 @@ public class Done extends Message{
 		sb.append( "Done         - " );
 		sb.append( "From: " + from );
 		sb.append( "To: " + to );
-		sb.append( "Finished: " + st );
+		sb.append( "Finished: " + st + "\n");
 		return sb.toString();
 	}
 

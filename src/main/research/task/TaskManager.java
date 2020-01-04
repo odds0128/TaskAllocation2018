@@ -85,7 +85,7 @@ public class TaskManager {
 		disposedTasks++;
 	}
 
-	public static Map<Agent, Integer> goodLeaders = new HashMap<>(  );
+	public static Map<Agent, Integer> goodLeaders = new LinkedHashMap<>(  );
 	public static void finishTask( Agent leader ) {
 		goodLeaders.merge( leader, 1, Integer::sum);
 		finishedTasks++;

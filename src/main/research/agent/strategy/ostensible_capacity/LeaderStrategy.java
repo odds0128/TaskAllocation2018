@@ -23,8 +23,8 @@ import java.util.*;
 public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter {
 	static double OC_THRESHOLD = 3.0;
 
-	private Map< Agent, Integer > timeToStartCommunicatingMap = new HashMap<>();
-	private Map< Agent, Integer > roundTripTimeMap = new HashMap<>();
+	private Map< Agent, Integer > timeToStartCommunicatingMap = new LinkedHashMap<>();
+	private Map< Agent, Integer > roundTripTimeMap = new LinkedHashMap<>();
 	private List< OstensibleCapacity > ostensibleCapacityList = new ArrayList<>();
 
 	@Override
@@ -37,15 +37,17 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 
 
 	@Override
-	protected List< Allocation > makePreAllocationMap( List< Subtask > subtasks ) {
+	protected List< Allocation > makePreAllocationMap( Agent self, List< Subtask > subtasks ) {
 		List<Allocation> preAllocationList = new ArrayList<>(  );
 		Agent candidate;
 		OstensibleCapacity.forgetOldOcInformation( ostensibleCapacityList );
 
+		List<Agent> exceptions = new ArrayList<>( Arrays.asList( self ) );
+
 		for ( int i = 0; i < REDUNDANT_SOLICITATION_TIMES; i++ ) {
 			for ( Subtask st: subtasks ) {
-				if ( Agent.epsilonGreedy() ) candidate = selectMemberForASubtaskRandomly( st );
-				else candidate = this.selectMemberFor( st );
+				if ( Agent.epsilonGreedy() ) candidate = selectMemberForASubtaskRandomly( exceptions, st );
+				else candidate = this.selectMemberFor( exceptions, st );
 
 				if ( candidate == null ) {
 					return null;
@@ -61,16 +63,16 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 	public static int nulls = 0, notNulls = 0;
 
 	@Override
-	protected Agent selectMemberFor( Subtask st ) {
-		Agent temp = selectMemberAccordingToOC( st );
+	protected Agent selectMemberFor( List<Agent> exceptions, Subtask st ) {
+		Agent temp = selectMemberAccordingToOC( exceptions, st );
 		if ( temp == null ) nulls++;
 		else notNulls++;
-		return temp == null ? selectMemberAccordingToDE( st ) : temp;
+		return temp == null ? selectMemberAccordingToDE( exceptions, st ) : temp;
 	}
 
 	// Todo: DE優先の場合も試す
 	// TODO: 複数渡せるようにしなきゃ
-	private Agent selectMemberAccordingToOC( Subtask st ) {
+	private Agent selectMemberAccordingToOC( List<Agent> exceptions, Subtask st ) {
 		Agent candidate = null;
 		double maxOC = OC_THRESHOLD, maxDE = 0.5;
 		int resType = st.reqResType;
@@ -89,7 +91,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 		return candidate;
 	}
 
-	private Agent selectMemberAccordingToDE( Subtask st ) {
+	private Agent selectMemberAccordingToDE( List<Agent> exceptions, Subtask st ) {
 		for ( Dependability pair: dependabilityRanking ) {
 			Agent ag = pair.getAgent();
 			if ( ( !exceptions.contains( ag ) ) && ag.canProcess( st ) ) return ag;
@@ -102,7 +104,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 		if ( leader.replyList.size() < repliesToCome ) return;
 		else repliesToCome = 0;
 
-		Map< Subtask, Agent > mapOfSubtaskAndAgent = new HashMap<>();
+		Map< Subtask, Agent > mapOfSubtaskAndAgent = new LinkedHashMap<>();
 		while ( !leader.replyList.isEmpty() ) {
 			Reply r = leader.replyList.remove( 0 );
 			Subtask st = r.getSubtask();
@@ -114,7 +116,6 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 				Agent rival = mapOfSubtaskAndAgent.get( st );
 				Pair winnerAndLoser = compareDE( currentFrom, rival );
 
-				exceptions.remove( winnerAndLoser.getValue() );
 				sendMessage( new Result( leader, ( Agent ) winnerAndLoser.getValue(), FAILURE, null ) );
 				mapOfSubtaskAndAgent.put( st, ( Agent ) winnerAndLoser.getKey() );
 			} else {
@@ -134,7 +135,6 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 			leader.phase = nextPhase( leader, true );
 		} else {
 			apologizeToFriends( leader, new ArrayList<>( mapOfSubtaskAndAgent.values() ) );
-			exceptions.removeAll( new ArrayList<>( mapOfSubtaskAndAgent.values() ) );
 			disposeTask( leader );
 			leader.phase = nextPhase( leader, false );
 		}
@@ -168,7 +168,6 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 			renewCongestionDegreeMap( from, st, bindingTime );
 
 			renewDE( dependabilityRanking, from, 1 );
-			exceptions.remove( from );
 
 			// タスク全体が終わったかどうかの判定と，それによる処理
 			// HACK: もうちょいどうにかならんか
@@ -212,7 +211,6 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append( ", exceptions: " + exceptions.size() );
 		sb.append( ", ocList: " + ostensibleCapacityList );
 		return sb.toString();
 	}

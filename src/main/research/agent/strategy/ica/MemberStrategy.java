@@ -10,7 +10,7 @@ import main.research.communication.message.Solicitation;
 import main.research.task.Subtask;
 
 import java.util.List;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static main.research.Parameter.ReplyType.ACCEPT;
@@ -18,7 +18,7 @@ import static main.research.Parameter.ReplyType.DECLINE;
 import static main.research.Parameter.ResultType.SUCCESS;
 
 public class MemberStrategy extends MemberTemplateStrategy {
-	Map< Agent, Integer > agentStartTimeMap = new HashMap<>();
+	Map< Agent, Integer > agentStartTimeMap = new LinkedHashMap<>();
 
 	@Override
 	public void replyTo( List< Solicitation > solicitations, Agent member ) {

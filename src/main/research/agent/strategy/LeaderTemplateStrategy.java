@@ -24,7 +24,6 @@ import java.util.*;
 
 public abstract class LeaderTemplateStrategy extends TemplateStrategy implements Parameter {
 
-	protected Set< Agent > exceptions = new HashSet<>();
 	protected int repliesToCome = 0;            // 送ったsolicitationの数を覚えておく
 	protected Task myTask;
 	private List< Allocation > allocationHistory = new ArrayList<>();
@@ -62,7 +61,7 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 		boolean canGoNext = false;
 
 		if ( myTask != null ) {
-			List<Allocation> allocationMap = makePreAllocationMap( myTask.subtasks );
+			List<Allocation> allocationMap = makePreAllocationMap( leader, myTask.subtasks );
 			repliesToCome = allocationMap.size();
 
 			if ( !allocationMap.isEmpty() ) {
@@ -73,14 +72,15 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 		leader.phase = nextPhase( leader, canGoNext );  // 次のフェイズへ
 	}
 
-	protected List< Allocation > makePreAllocationMap( List< Subtask > subtasks ) {
+	protected List< Allocation > makePreAllocationMap( Agent self, List< Subtask > subtasks ) {
 		List<Allocation> preAllocationList = new ArrayList<>(  );
 		Agent candidate;
 
+		List<Agent> exceptions = new ArrayList<>( Arrays.asList( self ) );
 		for ( int i = 0; i < REDUNDANT_SOLICITATION_TIMES; i++ ) {
 			for ( Subtask st: subtasks ) {
-				if ( Agent.epsilonGreedy() ) candidate = selectMemberForASubtaskRandomly( st );
-				else candidate = selectMemberFor( st );
+				if ( Agent.epsilonGreedy() ) candidate = selectMemberForASubtaskRandomly( exceptions, st );
+				else candidate = selectMemberFor( exceptions, st );
 
 				if ( candidate == null ) return null;
 
@@ -91,7 +91,7 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 		return preAllocationList;
 	}
 
-	protected Agent selectMemberForASubtaskRandomly( Subtask st ) {
+	protected Agent selectMemberForASubtaskRandomly( List<Agent> exceptions, Subtask st ) {
 		Agent candidate;
 		do {
 			candidate = AgentManager.getAgentRandomly( exceptions, AgentManager.getAllAgentList() );
@@ -100,7 +100,7 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 	}
 
 
-	protected abstract Agent selectMemberFor( Subtask st);
+	protected abstract Agent selectMemberFor( List<Agent> exceptions, Subtask st);
 
 	protected abstract void sendSolicitations( Agent from, List<Allocation> allocationList );
 
@@ -115,7 +115,7 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 
 		assert repliesToCome == leader.replyList.size() : "Expected: " + repliesToCome + ", Actual: " + leader.resultList.size();
 
-		Map< Subtask, Agent > SubtaskAgentMap = new HashMap<>();
+		Map< Subtask, Agent > SubtaskAgentMap = new LinkedHashMap<>();
 		while ( !leader.replyList.isEmpty() ) {
 			Reply r = leader.replyList.remove( 0 );
 			Subtask st = r.getSubtask();
@@ -126,7 +126,6 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 				Agent rival = SubtaskAgentMap.get( st );
 				Pair winnerAndLoser = compareDE( currentFrom, rival );
 
-				exceptions.remove( winnerAndLoser.getValue() );
 				sendMessage( new Result( leader, ( Agent ) winnerAndLoser.getValue(), FAILURE, null ) );
 				SubtaskAgentMap.put( st, ( Agent ) winnerAndLoser.getKey() );
 			} else {
@@ -146,7 +145,6 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 			nextPhase( leader, true );
 		} else {
 			apologizeToFriends( leader, new ArrayList<>( SubtaskAgentMap.values() ) );
-			exceptions.removeAll( new ArrayList<>( SubtaskAgentMap.values() ) );
 			disposeTask( leader );
 			nextPhase( leader, false );
 		}
@@ -160,7 +158,6 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 	}
 
 	protected void treatBetrayer( Agent betrayer ) {
-		exceptions.remove( betrayer );
 		renewDE( dependabilityRanking, betrayer, 0 );
 	}
 
@@ -198,10 +195,6 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 			dependabilityRanking.add( new Dependability( temp, Agent.initial_de_ ) );
 		}
 		dependabilityRanking.remove( self );
-	}
-
-	public void addMyselfToExceptions( Agent self ) {
-		exceptions.add( self );
 	}
 
 	protected abstract void renewDE( List< Dependability > pairList, Agent target, double evaluation );
@@ -275,7 +268,7 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 			return "Allocation{" +
 				"ag=" + ag +
 				", st=" + st +
-				'}';
+				"} \n";
 		}
 	}
 }

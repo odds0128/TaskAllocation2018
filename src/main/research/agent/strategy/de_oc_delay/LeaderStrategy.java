@@ -15,10 +15,7 @@ import main.research.task.TaskManager;
 import org.apache.commons.math3.stat.descriptive.SynchronizedSummaryStatistics;
 import org.apache.commons.math3.util.Precision;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static main.research.Manager.getCurrentTime;
 import static main.research.Parameter.ReplyType.DECLINE;
@@ -35,13 +32,13 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 	static final double γ = 0.3;
 	private static final double EVALUATION_THRESHOLD = 0.5;
 
-	private Map< Agent, Integer > timeToStartCommunicatingMap = new HashMap<>();
-	private Map< Agent, Integer > roundTripTimeMap = new HashMap<>();
-	private Map< Agent, Integer > extraWaitingTimeMap = new HashMap<>();
+	private Map< Agent, Integer > timeToStartCommunicatingMap = new LinkedHashMap<>();
+	private Map< Agent, Integer > roundTripTimeMap = new LinkedHashMap<>();
+	private Map< Agent, Integer > extraWaitingTimeMap = new LinkedHashMap<>();
 	private List< OstensibleCapacity > ostensibleCapacityList = new ArrayList<>();
 
 	@Override
-	protected Agent selectMemberFor( Subtask st ) {
+	protected Agent selectMemberFor( List<Agent> exceptions, Subtask st ) {
 		for ( Dependability pair: dependabilityRanking ) {
 			Agent ag = pair.getAgent();
 			if ( ( !exceptions.contains( ag ) ) && ag.canProcess( st ) ) return ag;
@@ -59,8 +56,9 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 	}
 
 	// todo: 混雑度を元にしたメンバー選定のロジックの実装
+	List<Agent> exceptions = new ArrayList<>( Arrays.asList(  ) );
 	@Override
-	protected List< LeaderTemplateStrategy.Allocation > makePreAllocationMap( List< Subtask > subtasks ) {
+	protected List< LeaderTemplateStrategy.Allocation > makePreAllocationMap( Agent self, List< Subtask > subtasks ) {
 		List<Allocation> preAllocationList = new ArrayList<>(  );
 
 		Agent candidate;
@@ -69,7 +67,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 
 		for ( int i = 0; i < REDUNDANT_SOLICITATION_TIMES; i++ ) {
 			for ( Subtask st: subtasks ) {
-				if ( Agent.epsilonGreedy() ) candidate = selectMemberForASubtaskRandomly( st );
+				if ( Agent.epsilonGreedy() ) candidate = selectMemberForASubtaskRandomly( exceptions, st );
 				else candidate = this.selectMemberArbitrary( st );
 
 				if ( candidate == null ) {
@@ -162,7 +160,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 		if ( leader.replyList.size() < repliesToCome ) return;
 		else repliesToCome = 0;
 
-		Map< Subtask, Agent > mapOfSubtaskAndAgent = new HashMap<>();
+		Map< Subtask, Agent > mapOfSubtaskAndAgent = new LinkedHashMap<>();
 		while ( !leader.replyList.isEmpty() ) {
 			Reply r = leader.replyList.remove( 0 );
 			Subtask st = r.getSubtask();

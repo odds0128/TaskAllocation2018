@@ -9,6 +9,7 @@ import main.research.communication.message.Reply;
 import main.research.communication.message.Solicitation;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,10 +37,13 @@ public class MemberStrategy extends MemberTemplateStrategy implements Parameter 
 		}
 	}
 
+	// remove
+	static int averageReliableLeadersNum = 0;
 	private void replyToReliableLeader( Agent member, List< Solicitation > solicitations ) {
 		int capacity = Agent.subtask_queue_size_ - mySubtaskQueue.size() - expectedResultMessage;
 		// todo: 複数のリーダーを信頼するようにする
 
+//		List<Agent> reliableLeaders = new ArrayList<>( Arrays.asList( dependabilityRanking.get( 0 ).getAgent() ) );
 		List< Agent > reliableLeaders = dependabilityRanking.stream()
 			.filter( dep -> dep.getValue() > threshold_of_reliable_leader )
 			.map( dep -> dep.getAgent() )
@@ -71,6 +75,7 @@ public class MemberStrategy extends MemberTemplateStrategy implements Parameter 
 			solicitations.removeAll( solicitationsFromTargetRelL );
 		}
 		declineAll( member, solicitations );
+		solicitations.clear();
 	}
 
 	private boolean haveReliableLeader() {
@@ -84,8 +89,7 @@ public class MemberStrategy extends MemberTemplateStrategy implements Parameter 
 	}
 
 	private void declineAll( Agent member, List< Solicitation > solicitations ) {
-		while ( !solicitations.isEmpty() ) {
-			Solicitation s = solicitations.remove( 0 );
+		for( Solicitation s : solicitations ) {
 			TransmissionPath.sendMessage( new Reply( member, s.getFrom(), DECLINE, s.getExpectedSubtask() ) );
 		}
 	}
@@ -97,6 +101,7 @@ public class MemberStrategy extends MemberTemplateStrategy implements Parameter 
 			accept( member, s );
 		}
 		declineAll( member, solicitations );
+		solicitations.clear();
 	}
 
 	@Override

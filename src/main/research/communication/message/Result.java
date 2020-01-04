@@ -44,7 +44,7 @@ public class Result extends Message{
 		sb.append( "From: " + from );
 		sb.append( "To: " + to );
 		sb.append( "Result: " + result + ", " );
-		sb.append( "AllocatedSubtask: " + allocatedSubtask );
+		sb.append( "AllocatedSubtask: " + allocatedSubtask + "\n");
 		return sb.toString();
 	}
 

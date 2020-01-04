@@ -67,7 +67,6 @@ public abstract class MemberTemplateStrategy extends TemplateStrategy implements
 
 			}
 		}
-
 		evaporateAllDependability( dependabilityRanking );
 	}
 

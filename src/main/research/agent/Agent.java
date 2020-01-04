@@ -150,10 +150,6 @@ public class Agent implements Parameter, Cloneable {
 	}
 
 	public Task findTaskContaining( Subtask finishedSubtask ) {
-		// remove
-		if( id == 327 && finishedSubtask.getId() == 30179 ) {
-			System.out.println(pastTasks);
-		}
 		for ( Task t: pastTasks ) {
 			if ( t.getId() == finishedSubtask.parentId ) return t;
 		}
@@ -199,7 +195,6 @@ public class Agent implements Parameter, Cloneable {
 			MemberStrategyClass = Class.forName( package_name.concat( ms_name ) );
 			this.ls = ( LeaderTemplateStrategy ) LeaderStrategyClass.getDeclaredConstructor().newInstance();
 			this.ms = ( MemberTemplateStrategy ) MemberStrategyClass.getDeclaredConstructor().newInstance();
-			this.ls.addMyselfToExceptions( this );
 		} catch ( ClassNotFoundException | NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException e ) {
 			e.printStackTrace();
 		}
