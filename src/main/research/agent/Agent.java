@@ -118,13 +118,25 @@ public class Agent implements Parameter, Cloneable {
 
 	void setInitialRole() {
 		double toBeLeader = MyRandom.getRandomDouble( );
-		if ( toBeLeader <= initial_leaders_ratio_ ) selectLeaderRole();
-		else selectMemberRole();
+		if ( toBeLeader <= initial_leaders_ratio_ ) {
+			selectLeaderRole();
+			if( ! can_change_role_ ) {
+				e_leader = 1.0; e_member = 0.0;
+			}
+		}
+		else {
+			selectMemberRole();
+			if( ! can_change_role_ ) {
+				e_leader = 0.0; e_member = 1.0;
+			}
+		}
+
 	}
 
 	void selectRole() {
 		assert ms.expectedResultMessage == 0 : "Expect some result message.";
 		assert ms.mySubtaskQueue.size() == 0 : "Remain some subtasks not finished.";
+		assert can_change_role_ == true : "役割更新なしのはずなのになんでSelectRole呼んでんの？";
 
 		if( can_change_role_ ) {
 			if ( e_leader == e_member ) selectRandomRole();

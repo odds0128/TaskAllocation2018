@@ -135,6 +135,8 @@ public class Manager implements Parameter {
 				.sum();
 			System.out.println("Average reliable leaders: " + (double) averageReliableLeaderNum / countReciprocalMembers() );
 
+			TransmissionPath.showMessages();
+
 //			TransmissionPath.showMessages();
 
 //			writeInformationAsMember( strategy_name );

@@ -52,12 +52,12 @@ public class TransmissionPath implements Parameter {
 				solicitToAgents[ m.getTo().id ]++;
 				solicit_num_++;
 				break;
-			case "ReplyToSolicitation":
+			case "Reply":
 				Reply rs = ( Reply ) m;
 				if ( rs.getReplyType() == ReplyType.ACCEPT ) reply_accept_num_++;
 				else if ( rs.getReplyType() == ReplyType.DECLINE ) reply_decline_num_++;
 				break;
-			case "ResultOfTeamFormation":
+			case "Result":
 				Result rt = ( Result ) m;
 				if ( rt.getResult() == ResultType.SUCCESS ) result_success_num_++;
 				else if ( rt.getResult() == ResultType.FAILURE ) result_failure_num_++;
