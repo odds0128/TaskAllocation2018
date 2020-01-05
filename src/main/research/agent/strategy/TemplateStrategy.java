@@ -30,7 +30,7 @@ public abstract class TemplateStrategy {
 		return null;
 	}
 
-	public class Dependability {
+	public static class Dependability {
 		private final double γ  = Agent.γ_;
 		private final double α_ = Agent.α_;
 
@@ -60,13 +60,22 @@ public abstract class TemplateStrategy {
 			value = value * ( 1.0 - α_ ) + multiplier * α_;
 		}
 
+		public static Dependability searchDEof(Agent target, List<Dependability> deList ) {
+			for( Dependability de : deList ) {
+				if ( de.getAgent().equals( target ) ) {
+					return de;
+				}
+			}
+			return null;
+		}
+
 		public void renewDEbyArbitraryReward( double reward ){
 			value = value * ( 1.0 - α_ ) + reward * α_;
 		}
 
 		@Override
 		public String toString() {
-			return agent.toString();
+			return agent.toString() + value;
 		}
 	}
 }
