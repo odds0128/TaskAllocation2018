@@ -28,7 +28,8 @@ public class MemberStrategy extends MemberTemplateStrategy {
 			solicitations.sort( ( solicitation1, solicitation2 ) -> compareSolicitations( solicitation1, solicitation2, dependabilityRanking ) );
 		}
 
-		int capacity = Agent.subtask_queue_size_ - mySubtaskQueue.size() - expectedResultMessage;
+//		int capacity = Agent.subtask_queue_size_ - mySubtaskQueue.size() - expectedResultMessage;
+		int capacity = Agent.subtask_queue_size_ - mySubtaskQueue.size();
 		while ( solicitations.size() > 0 && capacity-- > 0 ) {
 			Solicitation s = Agent.epsilonGreedy( ) ? selectSolicitationRandomly( solicitations ) : solicitations.remove( 0 );
 			TransmissionPath.sendMessage( new Reply( member, s.getFrom(), ACCEPT, s.getExpectedSubtask() ) );

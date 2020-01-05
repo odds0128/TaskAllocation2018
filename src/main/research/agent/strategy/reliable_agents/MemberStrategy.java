@@ -9,7 +9,6 @@ import main.research.communication.message.Reply;
 import main.research.communication.message.Solicitation;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,13 +36,10 @@ public class MemberStrategy extends MemberTemplateStrategy implements Parameter 
 		}
 	}
 
-	// remove
-	static int averageReliableLeadersNum = 0;
 	private void replyToReliableLeader( Agent member, List< Solicitation > solicitations ) {
 		int capacity = Agent.subtask_queue_size_ - mySubtaskQueue.size() - expectedResultMessage;
 		// todo: 複数のリーダーを信頼するようにする
 
-//		List<Agent> reliableLeaders = new ArrayList<>( Arrays.asList( dependabilityRanking.get( 0 ).getAgent() ) );
 		List< Agent > reliableLeaders = dependabilityRanking.stream()
 			.filter( dep -> dep.getValue() > threshold_of_reliable_leader )
 			.map( dep -> dep.getAgent() )

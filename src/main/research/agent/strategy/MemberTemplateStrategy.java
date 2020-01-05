@@ -33,7 +33,7 @@ public abstract class MemberTemplateStrategy extends TemplateStrategy implements
 	public static int idleTime = 0;
 
 	public void actAsMember( Agent member ) {
-		assert mySubtaskQueue.size() <= Agent.subtask_queue_size_ : "Over weight " + mySubtaskQueue.size();
+//		assert mySubtaskQueue.size() <= Agent.subtask_queue_size_ : "Over weight " + mySubtaskQueue.size();
 
 		member.ls.checkAllDoneMessages( member );
 
