@@ -18,6 +18,7 @@ import static main.research.Parameter.ReplyType.ACCEPT;
 import static main.research.Parameter.ReplyType.DECLINE;
 import static main.research.Parameter.ResultType.*;
 import static main.research.Parameter.Role.JONE_DOE;
+import static main.research.agent.Agent.can_change_role_;
 import static main.research.agent.Agent.α_;
 
 import java.util.*;
@@ -140,11 +141,15 @@ public abstract class MemberTemplateStrategy extends TemplateStrategy implements
 	protected abstract void renewDE( List< Dependability > pairList, Agent target, double evaluation );
 
 	private void updateRoleValue( Agent member, double value ) {
-		member.e_member = member.e_member * ( 1.0 - α_ ) + α_ * value;
+		if( can_change_role_ ) {
+			member.e_member = member.e_member * ( 1.0 - α_ ) + α_ * value;
+		}
 	}
 
-	public void inactivate( Agent member ) {
-		member.role = JONE_DOE;
+	final public void inactivate( Agent member ) {
+		if( can_change_role_ ) {
+			member.role = JONE_DOE;
+		}
 	}
 
 	// todo: イニシャライザは別んとこやる？

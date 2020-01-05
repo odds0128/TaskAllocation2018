@@ -53,7 +53,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 				sendSolicitations( leader, allocationMap );
 			}
 		}
-		leader.phase = nextPhase( leader, canGoNext );  // 次のフェイズへ
+		nextPhase( leader, canGoNext );  // 次のフェイズへ
 	}
 
 	private List< Allocation > makePreAllocation( Agent self, List< Subtask > subtasks ) {
@@ -180,12 +180,12 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 				if ( withinTimeWindow() ) leader.workWithAsL[ friend.id ]++;
 			}
 			leader.pastTasks.add( myTask );
-			leader.phase = nextPhase( leader, true );
+			nextPhase( leader, true );
 		} else {
 			apologizeToFriends( leader, new ArrayList<>( mapOfSubtaskAndAgent.values() ) );
 
 			disposeTask( leader );
-			leader.phase = nextPhase( leader, false );
+			nextPhase( leader, false );
 		}
 		myTask = null;
 	}

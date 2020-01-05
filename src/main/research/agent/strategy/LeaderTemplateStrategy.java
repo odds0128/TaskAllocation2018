@@ -16,6 +16,7 @@ import static main.research.Parameter.Phase.*;
 import static main.research.Parameter.ReplyType.DECLINE;
 import static main.research.Parameter.ResultType.FAILURE;
 import static main.research.Parameter.ResultType.SUCCESS;
+import static main.research.agent.Agent.can_change_role_;
 import static main.research.agent.Agent.α_;
 import static main.research.communication.TransmissionPath.sendMessage;
 import static main.research.task.TaskManager.disposeTask;
@@ -69,7 +70,7 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 				canGoNext = true;
 			}
 		}
-		leader.phase = nextPhase( leader, canGoNext );  // 次のフェイズへ
+		nextPhase( leader, canGoNext );  // 次のフェイズへ
 	}
 
 	protected List< Allocation > makePreAllocationMap( Agent self, List< Subtask > subtasks ) {
@@ -204,26 +205,30 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 		r.getTo().replyList.add( r );
 	}
 
-	protected Phase nextPhase( Agent leader, boolean wasSuccess ) {
+	protected void nextPhase( Agent leader, boolean wasSuccess ) {
 		leader.validatedTicks = Manager.getCurrentTime();
 
 		if ( !wasSuccess ) {
-			leader.role = inactivate( leader, 0 );
-			return SELECT_ROLE;
+			inactivate( leader, 0 );
+			return;
 		}
 		switch ( leader.phase ) {
 			case SOLICIT:
-				return FORM_TEAM;
+				leader.phase = FORM_TEAM;
+				break;
 			case FORM_TEAM:
-				leader.role = inactivate( leader, 1 );
-			default:
-				return SELECT_ROLE;
+				inactivate( leader, 1 );
 		}
 	}
 
-	public Role inactivate( Agent leader, double value ) {
-		leader.e_leader = leader.e_leader * ( 1.0 - α_ ) + α_ * value;
-		return Role.JONE_DOE;
+	final public void inactivate( Agent leader, double value ) {
+		if( can_change_role_ ) {
+			leader.e_leader = leader.e_leader * ( 1.0 - α_ ) + α_ * value;
+			leader.role = Role.JONE_DOE;
+			leader.phase = SELECT_ROLE;
+		}else{
+			leader.phase = SOLICIT;
+		}
 	}
 
 	protected class Allocation {
