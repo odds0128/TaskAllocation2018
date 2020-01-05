@@ -122,7 +122,7 @@ public abstract class MemberTemplateStrategy extends TemplateStrategy implements
 	}
 
 	protected int compareSolicitations( Solicitation a, Solicitation b, List< Dependability > pairList ) {
-		if ( getDeByAgent( a.getFrom(), pairList ).getValue() < getDeByAgent( b.getFrom(), pairList ).getValue() )
+		if ( getDeByAgent( a.getFrom(), pairList ).getValue() > getDeByAgent( b.getFrom(), pairList ).getValue() )
 			return -1;
 		else return 1;
 	}
