@@ -1,8 +1,8 @@
 {
   "environment" : {
     "execution_times" : 1,
-    "max_turn" : 1000,
-    "writing_times" : 10
+    "max_turn" : 50000,
+    "writing_times" : 500
   },
   "result_type" : {
     "check_data" : true,
@@ -37,11 +37,11 @@
   },
   "tasks" : {
     "initial_tasks_num" : 0,
-    "additional_tasks_num" : 10.0,
+    "additional_tasks_num" : 12.5,
     "distribution" : "poisson",
     "task_queue_size" : 500,
-    "min_subtasks_num" : 3,
-    "max_subtasks_num" : 6,
+    "min_subtasks_num" : 8,
+    "max_subtasks_num" : 12,
     "subtask" : {
       "resource_types" : 3,
       "min_request_value" : 5,
