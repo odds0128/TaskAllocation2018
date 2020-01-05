@@ -1,9 +1,10 @@
 package main.research.task;
 
-import java.util.List;
-import java.util.ArrayList;
+import java.util.*;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import main.research.Manager;
+import main.research.agent.Agent;
 import main.research.others.random.MyRandom;
 
 public class TaskManager {
@@ -76,12 +77,23 @@ public class TaskManager {
 		return temp;
 	}
 
-	static public void disposeTask() {
+	public static Set< Agent > badLeaders = new HashSet<>(  );
+	static public void disposeTask( Agent leader ) {
+		if( ! badLeaders.contains( leader ) ) {
+			badLeaders.add(leader);
+		}
 		disposedTasks++;
 	}
 
-	public static void finishTask() {
+	public static Map<Agent, Integer> goodLeaders = new LinkedHashMap<>(  );
+	public static void finishTask( Agent leader ) {
+		goodLeaders.merge( leader, 1, Integer::sum);
 		finishedTasks++;
+	}
+
+	public static void clearLeadersInfo() {
+		badLeaders.clear();
+		goodLeaders.clear();
 	}
 
 	public static double getAdditional_tasks_num_() {

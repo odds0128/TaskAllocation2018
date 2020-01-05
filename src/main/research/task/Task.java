@@ -9,7 +9,7 @@ import java.util.List;
 public class Task implements Parameter {
     private static int _task_id = 0;
 
-    private int id;
+    private final int id;
     public List<Subtask> subtasks = new ArrayList<>();
 
     Task( int minSubtask, int maxSubtask ){

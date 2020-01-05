@@ -1,11 +1,10 @@
 package main.research;
 
 import main.research.agent.Agent;
-import main.research.agent.AgentDePair;
 import main.research.agent.AgentManager;
-import main.research.agent.strategy.OCTuple;
-import main.research.agent.strategy.reliableAgents.LeaderStrategy;
-import main.research.agent.strategy.reliableAgents.MemberStrategy;
+import main.research.agent.strategy.OstensibleCapacity;
+import main.research.agent.strategy.TemplateStrategy;
+import main.research.agent.strategy.reliable_agents.LeaderStrategy;
 import main.research.task.Task;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 
@@ -57,6 +56,7 @@ public class Stdout {
 		}
 	}
 
+
 	static void showRelationsBetweenOCandDE( List< Agent > agents ) {
 		double average = 0;
 		int num = 0;
@@ -65,28 +65,28 @@ public class Stdout {
 
 		try {
 			// TODO: 委譲によるラッパー化
-			LeaderStrategy.class.getDeclaredMethod( "getCdTupleList", LeaderStrategy.class );
+			LeaderStrategy.class.getDeclaredMethod( "getOCList", LeaderStrategy.class );
 		} catch ( NoSuchMethodException e ) {
 			return;
 		}
 		for ( Agent ag: agents ) {
-			List< OCTuple > ocTupleList = LeaderStrategy.getOcTupleList( ( LeaderStrategy ) ag.ls );
-			int size = ocTupleList.size();
+			List< OstensibleCapacity > ostensibleCapacityList = LeaderStrategy.getOcTupleList( ( LeaderStrategy ) ag.ls );
+			int size = ostensibleCapacityList.size();
 			if ( size == 0 || size == 1 ) continue;
 
 			double[] OCs = new double[ size ];
 			double[] DEs = new double[ size ];
 
 			for ( int i = 0; i < size; i++ ) {
-				OCTuple temp = ocTupleList.remove( 0 );
+				OstensibleCapacity temp = ostensibleCapacityList.remove( 0 );
 				Agent target = temp.getTarget();
 
 				double[] tempOC = temp.getOCArray();
 				OCs[ i ] = Arrays.stream( tempOC ).max().getAsDouble();
 
-				for ( AgentDePair pair: ag.ls.reliableMembersRanking ) {
+				for ( TemplateStrategy.Dependability pair: ag.ls.dependabilityRanking ) {
 					if ( target.equals( pair.getAgent() ) ) {
-						DEs[ i ] = pair.getDe();
+						DEs[ i ] = pair.getValue();
 					}
 				}
 			}
@@ -113,36 +113,6 @@ public class Stdout {
 		System.out.println( agents.stream()
 			.filter( agent -> agent.e_leader < agent.e_member )
 			.count() );
-	}
-
-	static void showGrowApartDegree() {
-		List< Agent > agentList = AgentManager.getAllAgentList();
-		int reciprocalMembersNum = 0, reciprocalApart = 0;
-		int rationalMembersNum = 0, rationalApart = 0;
-		int allMembersNum = 0, allApart = 0;
-
-		for ( Agent ag: agentList ) {
-			if ( ag.e_member > ag.e_leader ) {
-				allMembersNum++;
-				if ( ag.ms.reliableLeadersRanking.get( 0 ).getDe() > MemberStrategy.threshold_of_reliable_leader ) {
-					reciprocalMembersNum++;
-					if ( AgentDePair.searchDEofAgent( ag, ag.ms.reliableLeadersRanking.get( 0 ).getAgent().ls.reliableMembersRanking ) < MemberStrategy.threshold_of_reliable_leader ) {
-						reciprocalApart++;
-						allApart++;
-					}
-				} else {
-					rationalMembersNum++;
-					if ( AgentDePair.searchDEofAgent( ag, ag.ms.reliableLeadersRanking.get( 0 ).getAgent().ls.reliableMembersRanking ) < MemberStrategy.threshold_of_reliable_leader ) {
-						rationalApart++;
-						allApart++;
-					}
-				}
-			}
-		}
-		System.out.println( "All members num       : " + allMembersNum + ", apart relationships: " + allApart + ", apart rate: " + ( double ) allApart / allMembersNum );
-		System.out.println( "reciprocal members num: " + reciprocalMembersNum + ", apart relationships: " + reciprocalApart + ", apart rate: " + ( double ) reciprocalApart / reciprocalMembersNum );
-		System.out.println( "rational members num  : " + rationalMembersNum + ", apart relationships: " + rationalApart + ", apart rate: " + ( double ) rationalApart / rationalMembersNum );
-
 	}
 
 }

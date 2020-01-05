@@ -1,13 +1,12 @@
-package main.research.agent.strategy.puttingDeOcAndDelayIntoOneDimensionalValue;
+package main.research.agent.strategy.de_oc_delay;
 
 import main.research.Parameter;
 import main.research.agent.Agent;
-import main.research.agent.AgentDePair;
 import main.research.agent.strategy.LeaderTemplateStrategy;
-import main.research.agent.strategy.OCTuple;
+import main.research.agent.strategy.OstensibleCapacity;
 import main.research.communication.message.Done;
-import main.research.communication.message.ReplyToSolicitation;
-import main.research.communication.message.ResultOfTeamFormation;
+import main.research.communication.message.Reply;
+import main.research.communication.message.Result;
 import main.research.communication.message.Solicitation;
 import main.research.others.Pair;
 import main.research.task.Subtask;
@@ -16,16 +15,12 @@ import main.research.task.TaskManager;
 import org.apache.commons.math3.stat.descriptive.SynchronizedSummaryStatistics;
 import org.apache.commons.math3.util.Precision;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static main.research.Manager.getCurrentTime;
 import static main.research.Parameter.ReplyType.DECLINE;
 import static main.research.Parameter.ResultType.FAILURE;
 import static main.research.Parameter.ResultType.SUCCESS;
-import static main.research.agent.AgentDePair.getPairByAgent;
 import static main.research.communication.TransmissionPath.sendMessage;
 import static main.research.task.TaskManager.disposeTask;
 
@@ -37,41 +32,53 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 	static final double γ = 0.3;
 	private static final double EVALUATION_THRESHOLD = 0.5;
 
-	private Map< Agent, Integer > timeToStartCommunicatingMap = new HashMap<>();
-	private Map< Agent, Integer > roundTripTimeMap = new HashMap<>();
-	private Map< Agent, Integer > extraWaitingTimeMap = new HashMap<>();
-	private List< OCTuple > ocTupleList = new ArrayList<>();
+	private Map< Agent, Integer > timeToStartCommunicatingMap = new LinkedHashMap<>();
+	private Map< Agent, Integer > roundTripTimeMap = new LinkedHashMap<>();
+	private Map< Agent, Integer > extraWaitingTimeMap = new LinkedHashMap<>();
+	private List< OstensibleCapacity > ostensibleCapacityList = new ArrayList<>();
 
 	@Override
-	public void sendSolicitations( Agent leader, Map< Agent, Subtask > agentSubtaskMap ) {
-		for ( Map.Entry< Agent, Subtask > ag_st: agentSubtaskMap.entrySet() ) {
-			timeToStartCommunicatingMap.put( ag_st.getKey(), getCurrentTime() );
-			sendMessage( new Solicitation( leader, ag_st.getKey(), ag_st.getValue() ) );
+	protected Agent selectMemberFor( List<Agent> exceptions, Subtask st ) {
+		for ( Dependability pair: dependabilityRanking ) {
+			Agent ag = pair.getAgent();
+			if ( ( !exceptions.contains( ag ) ) && ag.canProcess( st ) ) return ag;
+		}
+		return null;
+	}
+
+
+	@Override
+	public void sendSolicitations( Agent leader, List< Allocation > allocationList ) {
+		for ( Allocation al : allocationList ) {
+			timeToStartCommunicatingMap.put( al.getAg(), getCurrentTime() );
+			sendMessage( new Solicitation( leader, al.getAg(), al.getSt() ) );
 		}
 	}
 
 	// todo: 混雑度を元にしたメンバー選定のロジックの実装
+	List<Agent> exceptions = new ArrayList<>( Arrays.asList(  ) );
 	@Override
-	protected Map< Agent, Subtask > selectMembers( List< Subtask > subtasks ) {
-		Map< Agent, Subtask > memberCandidates = new HashMap<>();
+	protected List< LeaderTemplateStrategy.Allocation > makePreAllocationMap( Agent self, List< Subtask > subtasks ) {
+		List<Allocation> preAllocationList = new ArrayList<>(  );
+
 		Agent candidate;
-		OCTuple.forgetOldOcInformation( ocTupleList );
+		OstensibleCapacity.forgetOldOcInformation( ostensibleCapacityList );
 		forgetOldRoundTripTimeInformation();
 
 		for ( int i = 0; i < REDUNDANT_SOLICITATION_TIMES; i++ ) {
 			for ( Subtask st: subtasks ) {
-				if ( Agent.epsilonGreedy() ) candidate = selectMemberForASubtaskRandomly( st );
+				if ( Agent.epsilonGreedy() ) candidate = selectMemberForASubtaskRandomly( exceptions, st );
 				else candidate = this.selectMemberArbitrary( st );
 
 				if ( candidate == null ) {
-					return new HashMap<>();
+					return null;
 				}
 
 				exceptions.add( candidate );
-				memberCandidates.put( candidate, st );
+				preAllocationList.add( new Allocation( candidate, st ) );
 			}
 		}
-		return memberCandidates;
+		return preAllocationList;
 	}
 
 	public static int nulls = 0;
@@ -92,9 +99,9 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 		double maxEvaluation = 0;
 		Agent returnAgent = null;
 
-		for ( AgentDePair pair: reliableMembersRanking ) {
+		for ( Dependability pair: dependabilityRanking ) {
 			Agent tempAgent = pair.getAgent();
-			if ( !tempAgent.canProcessTheSubtask( st ) ) break;
+			if ( !tempAgent.canProcess( st ) ) break;
 			if ( exceptions.contains( tempAgent ) ) continue;
 			double tempEvaluation = calculateMemberEvaluation( tempAgent, st );
 			if ( tempEvaluation > maxEvaluation ) {
@@ -107,12 +114,12 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 	}
 
 	private double calculateMemberEvaluation( Agent target, Subtask st ) {
-		if ( !OCTuple.alreadyExists( target, ocTupleList ) ) {
-			return α * AgentDePair.searchDEofAgent( target, reliableMembersRanking );
+		if ( !OstensibleCapacity.alreadyExists( target, ostensibleCapacityList ) ) {
+			return α * getDeByAgent( target, dependabilityRanking ).getValue();
 		}
 
-		double[] ocs = ocTupleList.stream()
-			.mapToDouble( tuple -> tuple.getOCArray()[ st.resType ] )
+		double[] ocs = ostensibleCapacityList.stream()
+			.mapToDouble( tuple -> tuple.getOCArray()[ st.reqResType ] )
 			.toArray();
 		double[] rtts = roundTripTimeMap.values().stream()
 			.mapToDouble( value -> value )
@@ -121,8 +128,8 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 		double oc_standard_deviation = calculateStandardDeviation( ocs );
 		double rtt_standard_deviation = calculateStandardDeviation( rtts );
 
-		return α * AgentDePair.searchDEofAgent( target, reliableMembersRanking )
-			+ β * ( OCTuple.calculateAverageOC( st.resType, ocTupleList ) - OCTuple.getOC( st.resType, target, ocTupleList ) ) / oc_standard_deviation
+		return α * getDeByAgent( target, dependabilityRanking ).getValue()
+			+ β * ( OstensibleCapacity.calculateAverageOC( st.reqResType, ostensibleCapacityList ) - OstensibleCapacity.getOC( st.reqResType, target, ostensibleCapacityList ) ) / oc_standard_deviation
 			+ γ * ( calculateAverageRoundTripTime() - roundTripTimeMap.get( target ) ) / rtt_standard_deviation;
 	}
 
@@ -141,9 +148,9 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 	}
 
 	private Agent selectMemberAccordingToDE( Subtask st ) {
-		for ( AgentDePair pair: reliableMembersRanking ) {
+		for ( Dependability pair: dependabilityRanking ) {
 			Agent ag = pair.getAgent();
-			if ( ( !exceptions.contains( ag ) ) && ag.canProcessTheSubtask( st ) ) return ag;
+			if ( ( !exceptions.contains( ag ) ) && ag.canProcess( st ) ) return ag;
 		}
 		return null;
 	}
@@ -153,9 +160,9 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 		if ( leader.replyList.size() < repliesToCome ) return;
 		else repliesToCome = 0;
 
-		Map< Subtask, Agent > mapOfSubtaskAndAgent = new HashMap<>();
+		Map< Subtask, Agent > mapOfSubtaskAndAgent = new LinkedHashMap<>();
 		while ( !leader.replyList.isEmpty() ) {
-			ReplyToSolicitation r = leader.replyList.remove( 0 );
+			Reply r = leader.replyList.remove( 0 );
 			Subtask st = r.getSubtask();
 			Agent currentFrom = r.getFrom();
 			// TODO: 待たせた時間は別で保持する
@@ -168,7 +175,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 				Pair winnerAndLoser = compareDE( currentFrom, rival );
 
 				exceptions.remove( winnerAndLoser.getValue() );
-				sendMessage( new ResultOfTeamFormation( leader, ( Agent ) winnerAndLoser.getValue(), FAILURE, null ) );
+				sendMessage( new Result( leader, ( Agent ) winnerAndLoser.getValue(), FAILURE, null ) );
 				mapOfSubtaskAndAgent.put( st, ( Agent ) winnerAndLoser.getKey() );
 			} else {
 				mapOfSubtaskAndAgent.put( st, currentFrom );
@@ -179,17 +186,17 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 				Agent friend = ( Agent ) entry.getValue();
 				Subtask st = ( Subtask ) entry.getKey();
 
-				sendMessage( new ResultOfTeamFormation( leader, friend, SUCCESS, st ) );
+				sendMessage( new Result( leader, friend, SUCCESS, st ) );
 				appendAllocationHistory( friend, st );
 				if ( withinTimeWindow() ) leader.workWithAsL[ friend.id ]++;
-				leader.pastTasks.add( myTask );
 			}
-			leader.phase = nextPhase( leader, true );
+			leader.pastTasks.add( myTask );
+			nextPhase( leader, true );
 		} else {
 			apologizeToFriends( leader, new ArrayList<>( mapOfSubtaskAndAgent.values() ) );
 			exceptions.removeAll( new ArrayList<>( mapOfSubtaskAndAgent.values() ) );
-			disposeTask();
-			leader.phase = nextPhase( leader, false );
+			disposeTask(leader);
+			nextPhase( leader, false );
 		}
 		myTask = null;
 	}
@@ -199,7 +206,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 	}
 
 	@Override
-	public void reachReply( ReplyToSolicitation r ) {
+	public void reachReply( Reply r ) {
 		super.reachReply( r );
 		roundTripTimeMap.put( r.getFrom(), getCurrentTime() - timeToStartCommunicatingMap.get( r.getFrom() ) );
 	}
@@ -209,50 +216,51 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 		while ( !leader.doneList.isEmpty() ) {
 			Done d = leader.doneList.remove( 0 );
 			Agent from = d.getFrom();
-			Subtask st = getAllocatedSubtask( from );
+			Subtask st = d.getSt();
+			removeAllocationHistory( from, st );
 
 			int bindingTime = getCurrentTime() - timeToStartCommunicatingMap.get( from );
 			renewCongestionDegreeMap( from, st, bindingTime );
 
-			renewDE( reliableMembersRanking, from, 1 );
+			renewDE( dependabilityRanking, from, 1 );
 			exceptions.remove( from );
 
 			// タスク全体が終わったかどうかの判定と，それによる処理
 			// HACK: もうちょいどうにかならんか
-			Task task = leader.findTaskContainingThisSubtask( st );
+			Task task = leader.findTaskContaining( st );
 
 			task.subtasks.remove( st );
 
 			if ( task.subtasks.isEmpty() ) {
 				from.pastTasks.remove( task );
-				TaskManager.finishTask();
+				TaskManager.finishTask(leader);
 				from.didTasksAsLeader++;
 			}
 		}
 	}
 
 	@Override
-	protected void renewDE( List< AgentDePair > pairList, Agent target, double evaluation ) {
-		AgentDePair pair = getPairByAgent( target, pairList );
+	protected void renewDE( List< Dependability > pairList, Agent target, double evaluation ) {
+		Dependability pair = getDeByAgent( target, pairList );
 		pair.renewDEbyArbitraryReward( evaluation );
 	}
 
 	private void renewCongestionDegreeMap( Agent target, Subtask st, int bindingTime ) {
 		double[] tempArray = new double[ Agent.resource_types_ ];
-		int resourceType = st.resType;
+		int resourceType = st.reqResType;
 
-		if ( OCTuple.alreadyExists( target, ocTupleList ) ) {
+		if ( OstensibleCapacity.alreadyExists( target, ostensibleCapacityList ) ) {
 			double newOC = calculateOC( bindingTime, target, st );
 			assert newOC > 0 : "illegal congestion degree";
-			OCTuple.updateOC( target, ocTupleList, resourceType, newOC );
+			OstensibleCapacity.updateOC( target, ostensibleCapacityList, resourceType, newOC );
 		} else {
 			tempArray[ resourceType ] = calculateOC( bindingTime, target, st );
-			ocTupleList.add( new OCTuple( target, tempArray, getCurrentTime() ) );
+			ostensibleCapacityList.add( new OstensibleCapacity( target, tempArray, getCurrentTime() ) );
 		}
 	}
 
 	private double calculateOC( int bindingTime, Agent ag, Subtask subtask ) {
-		int difficulty = subtask.reqRes[ subtask.resType ];
+		int difficulty = subtask.reqRes[ subtask.reqResType ];
 		return difficulty / ( bindingTime - ( 2.0 * roundTripTimeMap.get( ag ) + extraWaitingTimeMap.get( ag ) ) );
 	}
 
@@ -261,7 +269,7 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 		for ( int i = 0; i < size; i++ ) {
 			// OCの蒸発と同じタイミングで蒸発させる
 			Map.Entry< Agent, Integer > entry = roundTripTimeMap.entrySet().iterator().next();
-			if ( !OCTuple.alreadyExists( entry.getKey(), ocTupleList ) ) {
+			if ( !OstensibleCapacity.alreadyExists( entry.getKey(), ostensibleCapacityList ) ) {
 				roundTripTimeMap.remove( entry );
 			}
 		}
@@ -271,12 +279,12 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append( ", exceptions: " + exceptions.size() );
-		sb.append( ", ocList: " + ocTupleList );
+		sb.append( ", ocList: " + ostensibleCapacityList );
 		return sb.toString();
 	}
 
-	public static List< OCTuple > getCdSetList( LeaderStrategy psl ) {
-		return psl.ocTupleList;
+	public static List< OstensibleCapacity > getCdSetList( LeaderStrategy psl ) {
+		return psl.ostensibleCapacityList;
 	}
 
 }

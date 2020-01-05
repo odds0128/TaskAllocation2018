@@ -27,7 +27,7 @@ public class Solicitation extends Message {
 		sb.append( "Solicitation - " );
 		sb.append( "From: " + from );
 		sb.append( "To: " + to );
-		sb.append( "Subtask: " + expectedSubtask );
+		sb.append( "Subtask: " + expectedSubtask + "\n");
 		return sb.toString();
 	}
 

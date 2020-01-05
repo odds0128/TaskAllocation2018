@@ -1,149 +1,136 @@
 package main.research.agent.strategy;
 
-import main.research.Manager;
+import main.research.OutPut;
 import main.research.Parameter;
 import main.research.agent.Agent;
-import main.research.agent.AgentDePair;
 import main.research.agent.AgentManager;
 import main.research.communication.TransmissionPath;
 import main.research.communication.message.Done;
-import main.research.communication.message.ReplyToSolicitation;
-import main.research.communication.message.ResultOfTeamFormation;
+import main.research.communication.message.Reply;
+import main.research.communication.message.Result;
 import main.research.communication.message.Solicitation;
-import main.research.others.Pair;
 import main.research.others.random.MyRandom;
 import main.research.task.Subtask;
 
 import static main.research.Manager.bin_;
 import static main.research.Manager.getCurrentTime;
-import static main.research.Parameter.Phase.*;
 import static main.research.Parameter.ReplyType.ACCEPT;
 import static main.research.Parameter.ReplyType.DECLINE;
 import static main.research.Parameter.ResultType.*;
 import static main.research.Parameter.Role.JONE_DOE;
+import static main.research.agent.Agent.can_change_role_;
 import static main.research.agent.Agent.α_;
-import static main.research.agent.AgentDePair.getPairByAgent;
 
 import java.util.*;
 
 public abstract class MemberTemplateStrategy extends TemplateStrategy implements Parameter {
-	protected boolean joinFlag = false;
-	public List< AgentDePair > reliableLeadersRanking = new ArrayList<>();
+	public int subtaskExecution = 0;
+	public List< Dependability > dependabilityRanking = new ArrayList<>();
 
 	public int expectedResultMessage = 0;
-	public List< Pair< Agent, Subtask > > mySubtaskQueue = new ArrayList<>();  // consider Agentとsubtaskの順番逆のがよくね
-
+	public List< SubtaskFrom > mySubtaskQueue = new ArrayList<>();  // consider Agentとsubtaskの順番逆のがよくね
+	public int currentSubtaskProcessTime;
 	public static int idleTime = 0;
 
 	public void actAsMember( Agent member ) {
-		preprocess( member );
-
-		if ( member.phase == WAIT_FOR_SOLICITATION ) replyAsM( member );
-		else if ( member.phase == WAIT_FOR_SUBTASK ) receiveAsM( member );
-		else if ( member.phase == EXECUTE_SUBTASK ) execute( member );
-		evaporateDE( reliableLeadersRanking );
-	}
-
-	private void preprocess( Agent member ) {
-		assert mySubtaskQueue.size() <= SUBTASK_QUEUE_SIZE : "Over weight " + mySubtaskQueue.size();
-
-		member.ms.replyToSolicitations( member, member.solicitationList );
-
-		if ( mySubtaskQueue.isEmpty() && getCurrentTime() % bin_ == 0 ) idleTime++;
-		while ( !member.resultList.isEmpty() ) {
-			ResultOfTeamFormation r = member.resultList.remove( 0 );
-
-			expectedResultMessage--;
-			member.ms.reactToResultMessage( r );
-		}
+		assert mySubtaskQueue.size() <= Agent.subtask_queue_size_ : "Over weight " + mySubtaskQueue.size();
 
 		member.ls.checkAllDoneMessages( member );
 
-		Collections.sort( reliableLeadersRanking, Comparator.comparingDouble( AgentDePair::getDe ).reversed() );
-	}
-
-	public void setLeaderRankingRandomly( Agent self, List< Agent > agentList ) {
-		List< Agent > tempList = AgentManager.generateRandomAgentList( agentList );
-		for ( Agent temp: tempList ) {
-			reliableLeadersRanking.add( new AgentDePair( temp, Agent.initial_de_ ) );
+		/*
+		if solicitationが来ている then reply
+		if resultが来ている then サブタスクキューに入れる
+		if サブタスクを持っている then その残り時間をデクリメントする
+		 */
+		// todo: if文いらんくね
+		if( ! member.solicitationList.isEmpty() ) {
+			member.ms.replyTo( member.solicitationList, member );
+//			replyTo( member.solicitationList, member );
 		}
-		reliableLeadersRanking.remove( self );
-	}
-
-	public void reactToResultMessage( ResultOfTeamFormation r ) {
-		if ( r.getResult() == SUCCESS ) {
-			Pair< Agent, Subtask > pair = new Pair<>( r.getFrom(), r.getAllocatedSubtask() );
-			mySubtaskQueue.add( pair );
-			r.getTo().ms.renewDE( reliableLeadersRanking, r.getFrom(), 1 );
-		} else {
-			r.getTo().ms.renewDE( reliableLeadersRanking, r.getFrom(), 0 );
+		if( ! member.resultList.isEmpty() ) {
+			member.ms.reactTo( member.resultList, member );
+			Collections.sort( dependabilityRanking, Comparator.comparingDouble( Dependability::getValue ).reversed() );
 		}
-	}
+		if( ! mySubtaskQueue.isEmpty() ) {
+			member.validatedTicks = getCurrentTime();
+			currentSubtaskProcessTime--;
 
-	// remove
-	public static int tired_of_waiting = 0;
+			assert currentSubtaskProcessTime >= 0 : member.id + " が虚を処理している";
 
-	private void replyAsM( Agent member ) {
-		if ( joinFlag ) {
-			member.phase = this.nextPhase( member, true );
-			joinFlag = false;
-		} else if ( getCurrentTime() - member.validatedTicks > THRESHOLD_FOR_ROLE_RENEWAL ) {
-			tired_of_waiting++;
-			member.phase = nextPhase( member, false );
+			if( currentSubtaskProcessTime == 0 ) {
+				member.ms.finishCurrentSubtask( member );
+				updateRoleValue( member, 1 );
+				if( ! mySubtaskQueue.isEmpty() ) {
+					currentSubtaskProcessTime = calculateProcessTime( member, mySubtaskQueue.get( 0 ).getSubtask() );
+				}else if( expectedResultMessage == 0 ) {
+					inactivate( member );
+				}
+
+			}
 		}
+		evaporateAllDependability( dependabilityRanking );
 	}
 
-	public void replyToSolicitations( Agent member, List< Solicitation > solicitations ) {
-		if ( solicitations.isEmpty() ) return;
+	private void finishCurrentSubtask(Agent member) {
+		SubtaskFrom sf = mySubtaskQueue.remove( 0 );
+		TransmissionPath.sendMessage( new Done( member, sf.getLeader(), sf.getSubtask() ) );
+		subtaskExecution++;
+	}
 
+	public void replyTo( List< Solicitation > solicitations, Agent member ) {
 		solicitations.sort( ( solicitation1, solicitation2 ) ->
-			compareSolicitations( solicitation1, solicitation2, reliableLeadersRanking ) );
+			compareSolicitations( solicitation1, solicitation2, dependabilityRanking ) );
 
-		int capacity = SUBTASK_QUEUE_SIZE - mySubtaskQueue.size() - expectedResultMessage;
+		int capacity = Agent.subtask_queue_size_ - mySubtaskQueue.size() - expectedResultMessage;
 		while ( solicitations.size() > 0 && capacity-- > 0 ) {
 			Solicitation s = Agent.epsilonGreedy() ? selectSolicitationRandomly( solicitations ) : solicitations.remove( 0 );
-			TransmissionPath.sendMessage( new ReplyToSolicitation( member, s.getFrom(), ACCEPT, s.getExpectedSubtask() ) );
+			TransmissionPath.sendMessage( new Reply( member, s.getFrom(), ACCEPT, s.getExpectedSubtask() ) );
 			expectedResultMessage++;
-			joinFlag = true;
 		}
 		while ( !solicitations.isEmpty() ) {
 			Solicitation s = solicitations.remove( 0 );
-			TransmissionPath.sendMessage( new ReplyToSolicitation( member, s.getFrom(), DECLINE, s.getExpectedSubtask() ) );
+			TransmissionPath.sendMessage( new Reply( member, s.getFrom(), DECLINE, s.getExpectedSubtask() ) );
 		}
 	}
 
-	protected int compareSolicitations( Solicitation a, Solicitation b, List< AgentDePair > pairList ) {
-		if ( getPairByAgent( a.getFrom(), pairList ).getDe() < getPairByAgent( b.getFrom(), pairList ).getDe() )
+	public void reactTo( List< Result > resultList, Agent member ) {
+		if ( mySubtaskQueue.isEmpty() && getCurrentTime() % bin_ == 0 ) idleTime++;
+		expectedResultMessage -= resultList.size();
+
+		while ( !resultList.isEmpty() ) {
+			Result r = resultList.remove( 0 );
+			member.ms.reactTo( r );
+		}
+
+		if( expectedResultMessage == 0 && mySubtaskQueue.isEmpty()) {
+			updateRoleValue( member, 0 );
+			inactivate( member );
+		}
+	}
+
+	public void reactTo( Result r ) {
+		if ( r.getResult() == SUCCESS ) {
+			SubtaskFrom sf = new SubtaskFrom( r.getAllocatedSubtask(), r.getFrom() );
+			if( mySubtaskQueue.isEmpty() ) {
+				currentSubtaskProcessTime = calculateProcessTime( r.getTo(), sf.getSubtask() );
+			}
+			mySubtaskQueue.add( sf );
+			renewDE( dependabilityRanking, r.getFrom(), 1 );
+		} else {
+			renewDE( dependabilityRanking, r.getFrom(), 0 );
+		}
+	}
+
+	protected int compareSolicitations( Solicitation a, Solicitation b, List< Dependability > pairList ) {
+		if ( getDeByAgent( a.getFrom(), pairList ).getValue() < getDeByAgent( b.getFrom(), pairList ).getValue() )
 			return -1;
 		else return 1;
 	}
 
-	private void receiveAsM( Agent member ) {
-		if ( expectedResultMessage > 0 ) return;
-
-		boolean canGoNext = false;
-		// todo: ここに至るまでにmySubtaskQueueに放り込まれてるのはおかしくない？
-		if ( !mySubtaskQueue.isEmpty() ) {
-			Subtask currentSubtask = mySubtaskQueue.get( 0 ).getValue();
-			Agent currentLeader = mySubtaskQueue.get( 0 ).getKey();
-
-			member.allocated[ currentLeader.id ][ currentSubtask.resType ]++;
-			member.processTime = Agent.calculateProcessTime( member, currentSubtask );
-			canGoNext = true;
-		}
-		member.phase = nextPhase( member, canGoNext );
-	}
-
-	private void execute( Agent member ) {
-		assert member.processTime >= 0 : "sabotage";
-		if ( --member.processTime > 0 ) {
-			member.validatedTicks = getCurrentTime();
-			return;
-		}
-		Pair< Agent, Subtask > pair = mySubtaskQueue.remove( 0 );
-		TransmissionPath.sendMessage( new Done( member, pair.getKey() ) );
-		mySubtaskQueue.remove( pair.getValue() );
-		member.phase = nextPhase( member, true );
+	public int calculateProcessTime( Agent a, Subtask st ) {
+		int res = ( int ) Math.ceil( ( double ) st.reqRes[ st.reqResType ] / ( double ) a.resources[ st.reqResType ] );
+		OutPut.sumExecutionTime( res );
+		return res;
 	}
 
 	protected static Solicitation selectSolicitationRandomly( List< Solicitation > solicitations ) {
@@ -151,42 +138,45 @@ public abstract class MemberTemplateStrategy extends TemplateStrategy implements
 		return solicitations.remove( index );
 	}
 
+	protected abstract void renewDE( List< Dependability > pairList, Agent target, double evaluation );
 
-	protected abstract void renewDE( List< AgentDePair > pairList, Agent target, double evaluation );
-
-	@Override
-	protected Phase nextPhase( Agent member, boolean wasSuccess ) {
-		member.validatedTicks = Manager.getCurrentTime();
-
-		if ( !wasSuccess ) {
-			member.role = inactivate( member, 0 );
-			return SELECT_ROLE;
-		}
-		switch ( member.phase ) {
-			case WAIT_FOR_SOLICITATION:
-				return WAIT_FOR_SUBTASK;
-			case WAIT_FOR_SUBTASK:
-				return EXECUTE_SUBTASK;
-			case EXECUTE_SUBTASK:
- 				member.e_member = member.e_member * ( 1.0 - α_ ) + α_ * 1.0;
-				if ( !mySubtaskQueue.isEmpty() ) {
-					member.processTime = Agent.calculateProcessTime( member, mySubtaskQueue.get( 0 ).getValue() );
-					return EXECUTE_SUBTASK;
-				}
-				else if ( expectedResultMessage > 0 ) {
-					return WAIT_FOR_SUBTASK;
-				} else {
-					member.role = inactivate( member, 1 );
-				}
-			default:
-				return SELECT_ROLE;
+	private void updateRoleValue( Agent member, double value ) {
+		if( can_change_role_ ) {
+			member.e_member = member.e_member * ( 1.0 - α_ ) + α_ * value;
 		}
 	}
 
-	@Override
-	public Role inactivate( Agent member, double value ) {
-		member.e_member = member.e_member * ( 1.0 - α_ ) + α_ * value;
-		return JONE_DOE;
+	final public void inactivate( Agent member ) {
+		if( can_change_role_ ) {
+			member.role = JONE_DOE;
+		}
 	}
 
+	// todo: イニシャライザは別んとこやる？
+	public void setLeaderRankingRandomly( Agent self, List< Agent > agentList ) {
+		List< Agent > tempList = AgentManager.generateRandomAgentList( agentList );
+		for ( Agent temp: tempList ) {
+			dependabilityRanking.add( new Dependability( temp, Agent.initial_de_ ) );
+		}
+		dependabilityRanking.remove( self );
+	}
+
+
+	public class SubtaskFrom{
+		Subtask st;
+		Agent l;
+
+		public SubtaskFrom( Subtask st, Agent l ) {
+			this.st = st;
+			this.l  = l;
+		}
+
+		Subtask getSubtask() {
+			return st;
+		}
+
+		Agent getLeader() {
+			return l;
+		}
+	}
 }

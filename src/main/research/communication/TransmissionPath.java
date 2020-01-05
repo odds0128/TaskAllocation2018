@@ -1,5 +1,7 @@
 package main.research.communication;
 
+import main.research.Manager;
+import main.research.agent.AgentManager;
 import main.research.communication.message.*;
 import main.research.others.Pair;
 import main.research.Parameter;
@@ -18,9 +20,24 @@ public class TransmissionPath implements Parameter {
 
 	static int solicit_num_ = 0, reply_accept_num_ = 0, reply_decline_num_ = 0;
 	static int result_success_num_ = 0, result_failure_num_ = 0, done_num_ = 0;
+	public static int[] solicitToAgents = new int[ AgentManager.agent_num_ ];
+
+	private static final int monitoredAgent1 = 26;
+	private static final int monitoredAgent2 = 491;
+	private static final boolean doMonitor = false;
+	private static final boolean doMonitorAll = false;
 
 	public static void sendMessage( Message m ) {
 		assert m.getFrom() != m.getTo() : "he asks himself";
+
+		if ( doMonitor ) {
+			if ( doMonitorAll ) {
+				System.out.print( m );
+			} else if ( m.getFrom().id == monitoredAgent1 && m.getTo().id == monitoredAgent2 ||
+				m.getTo().id == monitoredAgent1 && m.getFrom().id == monitoredAgent2 ) {
+				System.out.print( String.format( "%8d: ", Manager.getCurrentTime() ) + m );
+			}
+		}
 
 		countMessage( m );
 		int untilArrival = Grid.getDelay( m.getFrom(), m.getTo() );
@@ -32,15 +49,16 @@ public class TransmissionPath implements Parameter {
 	private static void countMessage( Message m ) {
 		switch ( m.getClass().getSimpleName() ) {
 			case "Solicitation":
+				solicitToAgents[ m.getTo().id ]++;
 				solicit_num_++;
 				break;
-			case "ReplyToSolicitation":
-				ReplyToSolicitation rs = ( ReplyToSolicitation ) m;
+			case "Reply":
+				Reply rs = ( Reply ) m;
 				if ( rs.getReplyType() == ReplyType.ACCEPT ) reply_accept_num_++;
 				else if ( rs.getReplyType() == ReplyType.DECLINE ) reply_decline_num_++;
 				break;
-			case "ResultOfTeamFormation":
-				ResultOfTeamFormation rt = ( ResultOfTeamFormation ) m;
+			case "Result":
+				Result rt = ( Result ) m;
 				if ( rt.getResult() == ResultType.SUCCESS ) result_success_num_++;
 				else if ( rt.getResult() == ResultType.FAILURE ) result_failure_num_++;
 				break;
@@ -57,7 +75,6 @@ public class TransmissionPath implements Parameter {
 		while ( !messageQueue.isEmpty() ) {
 			Pair< Message, Integer > pair = messageQueue.remove( 0 );
 			if ( pair.getValue() == 0 ) {
-				// todo: 回りくどすぎ
 				pair.getKey().getTo().reachPost( pair.getKey() );
 			} else {
 				messageQueue.add( 0, pair );

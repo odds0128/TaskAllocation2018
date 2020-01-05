@@ -7,11 +7,9 @@ package main.research.agent;
 
 import static main.research.Parameter.Phase.*;
 import static main.research.Parameter.Role.*;
-import static main.research.Parameter.Principle.*;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import main.research.Manager;
-import main.research.OutPut;
 import main.research.Parameter;
 import main.research.agent.strategy.LeaderTemplateStrategy;
 import main.research.agent.strategy.MemberTemplateStrategy;
@@ -32,6 +30,9 @@ public class Agent implements Parameter, Cloneable {
 	public static int _coalition_check_end_time = Manager.max_turn_;
 	public static int agent_num_ = AgentManager.agent_num_;
 	public static int resource_types_;
+	public static int subtask_queue_size_;
+	public static double initial_leaders_ratio_;
+	public static boolean can_change_role_;
 	public LeaderTemplateStrategy ls;
 	public MemberTemplateStrategy ms;
 	public static int min_capacity_value_;
@@ -50,30 +51,26 @@ public class Agent implements Parameter, Cloneable {
 	public int validatedTicks = 0;
 	public double e_leader;
 	public double e_member;
-	public Principle principle = RATIONAL;
-	public int[] required = new int[ resource_types_ ];            // そのリソースを要求するサブタスクが割り当てられた回数
 	public int[][] allocated = new int[ agent_num_ ][ resource_types_ ]; // そのエージェントからそのリソースを要求するサブタスクが割り当てられた回数
 
 	public List< Solicitation > solicitationList = new ArrayList<>();
-	public List< ReplyToSolicitation > replyList = new ArrayList<>();
-	public List< ResultOfTeamFormation > resultList = new ArrayList<>();
+	public List< Reply > replyList = new ArrayList<>();
+	public List< Result > resultList = new ArrayList<>();
 	public List< Done > doneList = new ArrayList<>();
 
 	// リーダーエージェントのみが持つパラメータ
 	public int didTasksAsLeader = 0;
 	public List< Task > pastTasks = new ArrayList<>();
 
-	// メンバエージェントのみが持つパラメータ
-	public int didTasksAsMember = 0;
-	public int processTime = 0;
-
-
 	public static void setConstants( JsonNode agentNode ) {
+		initial_leaders_ratio_ = agentNode.get( "initial_leaders_ratio" ).asDouble();
+		can_change_role_ = agentNode.get( "role_change" ).asBoolean();
 		ε_ = agentNode.get( "parameters" ).get( "ε" ).asDouble();
 		α_ = agentNode.get( "parameters" ).get( "α" ).asDouble();
 		resource_types_ = agentNode.get( "agent" ).get( "resource_types" ).asInt();
 		min_capacity_value_ = agentNode.get( "agent" ).get( "min_capacity_value" ).asInt();
 		max_capacity_value_ = agentNode.get( "agent" ).get( "max_capacity_value" ).asInt();
+		subtask_queue_size_ = agentNode.get( "agent" ).get( "subtask_queue_size" ).asInt();
 
 		JsonNode parameterNode = agentNode.get( "parameters" );
 		γ_ = parameterNode.get( "γ" ).asDouble();
@@ -86,7 +83,7 @@ public class Agent implements Parameter, Cloneable {
 		this.id = _id++;
 		setResource();
 		setStrategies( package_name, ls_name, ms_name );
-		selectRole();
+		setInitialRole();
 	}
 
 	public static boolean epsilonGreedy() {
@@ -119,14 +116,34 @@ public class Agent implements Parameter, Cloneable {
 		ms.actAsMember( this );
 	}
 
+	void setInitialRole() {
+		double toBeLeader = MyRandom.getRandomDouble( );
+		if ( toBeLeader <= initial_leaders_ratio_ ) {
+			selectLeaderRole();
+			if( ! can_change_role_ ) {
+				e_leader = 1.0; e_member = 0.0;
+			}
+		}
+		else {
+			selectMemberRole();
+			if( ! can_change_role_ ) {
+				e_leader = 0.0; e_member = 1.0;
+			}
+		}
+
+	}
+
 	void selectRole() {
 		assert ms.expectedResultMessage == 0 : "Expect some result message.";
 		assert ms.mySubtaskQueue.size() == 0 : "Remain some subtasks not finished.";
+		assert can_change_role_ == true : "役割更新なしのはずなのになんでSelectRole呼んでんの？";
 
-		if ( e_leader == e_member ) selectRandomRole();
-		else if ( epsilonGreedy() ) selectReverseRole();
-		else if ( e_leader > e_member ) selectLeaderRole();
-		else if ( e_member > e_leader ) selectMemberRole();
+		if( can_change_role_ ) {
+			if ( e_leader == e_member ) selectRandomRole();
+			else if ( epsilonGreedy() ) selectReverseRole();
+			else if ( e_leader > e_member ) selectLeaderRole();
+			else if ( e_member > e_leader ) selectMemberRole();
+		}
 	}
 
 	private void selectLeaderRole() {
@@ -152,17 +169,11 @@ public class Agent implements Parameter, Cloneable {
 	}
 
 
-	public static int calculateProcessTime( Agent a, Subtask st ) {
-		int res = ( int ) Math.ceil( ( double ) st.reqRes[ st.resType ] / ( double ) a.resources[ st.resType ] );
-		OutPut.sumExecutionTime( res );
-		return res;
+	public boolean canProcess( Subtask subtask ) {
+		return resources[ subtask.reqResType ] > 0;
 	}
 
-	public boolean canProcessTheSubtask( Subtask subtask ) {
-		return resources[ subtask.resType ] > 0;
-	}
-
-	public Task findTaskContainingThisSubtask( Subtask finishedSubtask ) {
+	public Task findTaskContaining( Subtask finishedSubtask ) {
 		for ( Task t: pastTasks ) {
 			if ( t.getId() == finishedSubtask.parentId ) return t;
 		}
@@ -171,18 +182,6 @@ public class Agent implements Parameter, Cloneable {
 
 	public static void clear() {
 		_id = 0;
-	}
-
-	public static int countReciprocalMember( List< Agent > agents ) {
-		return ( int ) agents.stream()
-			.filter( ag -> ag.e_member > ag.e_leader && ag.principle == RECIPROCAL )
-			.count();
-	}
-
-	public static int countReciprocalLeader( List< Agent > agents ) {
-		return ( int ) agents.stream()
-			.filter( ag -> ag.e_leader > ag.e_member && ag.principle == RECIPROCAL )
-			.count();
 	}
 
 	public static int countNEETmembers( List< Agent > agents, int span ) {
@@ -208,11 +207,6 @@ public class Agent implements Parameter, Cloneable {
 	public String toString() {
 		StringBuilder str = new StringBuilder();
 		str.append( role + " No." + String.format( "%3d, ", id ) );
-		if ( role == LEADER ) {
-
-		} else if ( role == MEMBER ) {
-			str.append( "resources: " + Arrays.toString( resources ) + ", " );
-		}
 		return str.toString();
 	}
 
@@ -225,7 +219,6 @@ public class Agent implements Parameter, Cloneable {
 			MemberStrategyClass = Class.forName( package_name.concat( ms_name ) );
 			this.ls = ( LeaderTemplateStrategy ) LeaderStrategyClass.getDeclaredConstructor().newInstance();
 			this.ms = ( MemberTemplateStrategy ) MemberStrategyClass.getDeclaredConstructor().newInstance();
-			this.ls.addMyselfToExceptions( this );
 		} catch ( ClassNotFoundException | NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException e ) {
 			e.printStackTrace();
 		}
@@ -248,12 +241,12 @@ public class Agent implements Parameter, Cloneable {
 			case "Solicitation":
 				solicitationList.add( ( Solicitation ) m );
 				break;
-			case "ReplyToSolicitation":
+			case "Reply":
 				// todo: modify
-				m.getTo().ls.reachReply( ( ReplyToSolicitation ) m );
+				m.getTo().ls.reachReply( ( Reply ) m );
 				break;
-			case "ResultOfTeamFormation":
-				resultList.add( ( ResultOfTeamFormation ) m );
+			case "Result":
+				resultList.add( ( Result ) m );
 				break;
 			case "Done":
 				doneList.add( ( Done ) m );
@@ -273,4 +266,5 @@ public class Agent implements Parameter, Cloneable {
 	public int hashCode() {
 		return Objects.hash( id );
 	}
+
 }

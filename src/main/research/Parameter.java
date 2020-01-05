@@ -15,7 +15,6 @@ public interface Parameter {
 
 	// リソース推定にまつわる定数
 	int OC_CACHE_TIME = 100;
-	int SUBTASK_QUEUE_SIZE = 5;
 
 	// エージェント
 	enum Role {

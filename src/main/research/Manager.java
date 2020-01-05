@@ -4,11 +4,11 @@ import main.research.agent.Agent;
 import main.research.agent.AgentManager;
 
 import static main.research.OutPut.*;
+import static main.research.agent.strategy.reliable_agents.MemberStrategy.countReciprocalMembers;
 import static main.research.others.random.MyRandom.*;
 
-import main.research.agent.strategy.MemberTemplateStrategy;
 import main.research.communication.TransmissionPath;
-import main.research.communication.message.ResultOfTeamFormation;
+import main.research.communication.message.Result;
 import main.research.graph.GraphAtAnWindow;
 import main.research.grid.Grid;
 import main.research.task.Task;
@@ -36,13 +36,13 @@ public class Manager implements Parameter {
 	static final int writing_times_;
 	public static final int bin_;
 
-	//TODO: こんな風にするならsingletonにしたほうがいいよね
+	// TODO: こんな風にするならsingletonにしたほうがいいよね
 	// TODO: lsとmsで分けて指定しなきゃいけないの無駄じゃない?
-	private static String package_name = "main.research.agent.strategy.reliableAgents.";
-//	private static String package_name = "main.research.agent.strategy.puttingDeOcAndDelayIntoOneDimensionalValue.";
-//	private static String package_name = "main.research.agent.strategy.putRewardAndDelayIntoDeCalculation.";
-//	private static String package_name = "main.research.agent.strategy.learningOnlyTeamingSuccessRate.";
-	private static String ls_name = "LeaderStrategy";      // ICA2018における提案手法役割更新あり    //    private static main.research.strategy.Strategy strategy = new ProposedMethodForSingapore();
+//	private static String package_name = "main.research.agent.strategy.de_oc_delay.";
+//	private static String package_name = "main.research.agent.strategy.ica.";
+//	private static String package_name = "main.research.agent.strategy.success_rate.";
+	private static String package_name = "main.research.agent.strategy.reliable_agents.";
+	private static String ls_name = "LeaderStrategy";
 	private static String ms_name = "MemberStrategy";
 
 	static {
@@ -90,7 +90,7 @@ public class Manager implements Parameter {
 
 				if ( turn % bin_ == 0 ) {
 					if( resultTypeNode.get( "check_data" ).asBoolean()  ) {
-						aggregateData( AgentManager.getAllAgentList() );
+						aggregateData( AgentManager.getAllAgentList(), strategy_name );
 						TaskManager.forget();
 					}
 					if( resultTypeNode.get( "check_network" ).asBoolean() ) {
@@ -101,7 +101,7 @@ public class Manager implements Parameter {
 
 				if ( turn % bin_ == 1 && resultTypeNode.get( "check_network" ).asBoolean() ) {
 					graph = new GraphAtAnWindow();
-					ResultOfTeamFormation.setGraph( graph );
+					Result.setGraph( graph );
 				}
 
 				TransmissionPath.transmit();                // 通信遅延あり
@@ -122,19 +122,34 @@ public class Manager implements Parameter {
 
 			// remove
 			// 信頼エージェントについて
-			System.out.println( "waiting: " + main.research.agent.strategy.reliableAgents.MemberStrategy.waiting );
-			System.out.println( "tired of waiting: " + MemberTemplateStrategy.tired_of_waiting );
-			System.out.println( "average de from member to leader: " + main.research.agent.strategy.reliableAgents.MemberStrategy.calculateMeanDE() );
-			System.out.println( "reciprocal members: " + main.research.agent.strategy.reliableAgents.MemberStrategy.countReciprocalMembers() );
-//			showGrowApartDegree();
+			System.out.println( "waiting: " + main.research.agent.strategy.reliable_agents.MemberStrategy.waiting );
+			System.out.println( "average de from member to leader: " + main.research.agent.strategy.reliable_agents.MemberStrategy.calculateMeanDE() );
+			System.out.println( "reciprocal members: " + countReciprocalMembers() );
+			int averageReliableLeaderNum = AgentManager.getAllAgentList().stream()
+				.filter( agent -> agent.role == MEMBER )
+				.mapToInt( member ->
+					(int) member.ms.dependabilityRanking.stream()
+						.filter( d -> d.getValue() > de_threshold )
+						.count()
+				)
+				.sum();
+			System.out.println("Average reliable leaders: " + (double) averageReliableLeaderNum / countReciprocalMembers() );
+
+			TransmissionPath.showMessages();
+
 //			TransmissionPath.showMessages();
 
+//			writeInformationAsMember( strategy_name );
 			System.out.println( "---------------------------------------------------------------------------------" );
+//			TransmissionPath.showMessages();
 			clearAll();
 			if ( num == executionTimes_ ) break;
 		}
 		// ↑ 全実験の終了のカッコ．以下は後処理
-		if ( resultTypeNode.get( "check_data" ).asBoolean() )       writeResults( strategy_name );
+		if ( resultTypeNode.get( "check_data" ).asBoolean() )  {
+//			writeLeadersExecutionNum( strategy_name );
+			writeMainResultData( strategy_name );
+		}
 		AgentManager.getAllAgentList().stream()
 			.filter( ag -> ag.id < 10 )
 			.forEach( ag -> System.out.println("id: " + ag.id + ", role: " + ag.role) );

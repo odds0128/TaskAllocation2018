@@ -1,25 +1,26 @@
 {
   "environment" : {
     "execution_times" : 1,
-    "max_turn" : 10000,
-    "writing_times" : 100
+    "max_turn" : 1000,
+    "writing_times" : 10
   },
   "result_type" : {
     "check_data" : true,
     "check_network" : false,
-    "check_relationships" : false,
     "check_interim_relationships" : false,
     "check_initiation" : false,
     "check_agents" : false
   },
   "agents" : {
-    "agent_num" : 100,
+    "agent_num" : 500,
+    "initial_leaders_ratio" : 0.2,
+    "role_change" : false,
     "time_observing_team_formation" : 50,
     "agent" : {
       "resource_types": 3,
       "min_capacity_value" : 0,
       "max_capacity_value" : 5,
-      "subtask_queue_size" : 5
+      "subtask_queue_size" : 10
     },
     "parameters" : {
       "ε": 0.05,
@@ -36,7 +37,7 @@
   },
   "tasks" : {
     "initial_tasks_num" : 0,
-    "additional_tasks_num" : 3.0,
+    "additional_tasks_num" : 10.0,
     "distribution" : "poisson",
     "task_queue_size" : 500,
     "min_subtasks_num" : 3,

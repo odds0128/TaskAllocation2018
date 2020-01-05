@@ -2,7 +2,7 @@ package main.research.graph;
 
 import main.research.Parameter;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 
@@ -14,7 +14,7 @@ public class GraphAtAnWindow implements Parameter {
 	private Map<Edge, Integer> graph;
 
     public GraphAtAnWindow( ) {
-    	graph = new HashMap<>(  );
+    	graph = new LinkedHashMap<>(  );
     }
 
     public void aggregate( int leader_id , int member_id ) {

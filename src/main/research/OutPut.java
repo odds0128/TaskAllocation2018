@@ -1,14 +1,14 @@
 package main.research;
 
-import main.research.agent.AgentDePair;
 import main.research.agent.AgentManager;
 import main.research.agent.strategy.MemberTemplateStrategy;
-import main.research.agent.strategy.OCTuple;
-import main.research.agent.strategy.reliableAgents.LeaderStrategy;
+import main.research.agent.strategy.OstensibleCapacity;
+import main.research.agent.strategy.TemplateStrategy;
+import main.research.agent.strategy.reliable_agents.LeaderStrategy;
+import main.research.agent.strategy.reliable_agents.MemberStrategy;
 import main.research.graph.Edge;
 import main.research.task.TaskManager;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
-import org.apache.poi.ss.usermodel.*;
 import main.research.agent.Agent;
 import main.research.communication.TransmissionPath;
 import main.research.graph.GraphAtAnWindow;
@@ -17,7 +17,6 @@ import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static main.research.Parameter.Role.LEADER;
 import static main.research.Parameter.Role.MEMBER;
@@ -35,8 +34,6 @@ public class OutPut implements Parameter {
 
 	private static OutPut _singleton = new OutPut();
 	static String outputDirectoryPath = System.getProperty( "user.dir" ) + "/out/";
-	static Workbook book = null;
-	static FileOutputStream fout = null;
 
 	static int index = 0;
 
@@ -50,9 +47,15 @@ public class OutPut implements Parameter {
 	static int[] reciprocalLeaderArray = new int[ writing_times_ ];
 	static int[] rationalistsArray = new int[ writing_times_ ];
 
+	static int[] leadersDisposeTask = new int[ writing_times_ ];
+	static int[] leadersExecuteTask = new int[ writing_times_ ];
+
 	static double[] membersHaveNoSubtask = new double[ writing_times_ ];
 	static double[] averageSubtaskQueueSizeForAllMembers = new double[ writing_times_ ];
 	static double[] averageSubtaskQueueSizeForWorkingMembers = new double[ writing_times_ ];
+
+	static int[] membersTrustedByLeaderArray = new int[ writing_times_ ];
+	static double[] growApartDegreeArray = new double[ writing_times_ ];
 
 	static int[] reciprocalMembersArray = new int[ writing_times_ ];
 	static double[] idleMembersRateArray = new double[ writing_times_ ];
@@ -62,39 +65,118 @@ public class OutPut implements Parameter {
 	static double[] taskExecutionTimeArray = new double[ writing_times_ ];
 	static int subtaskExecutionCount = 0;
 
-	static void aggregateData( List< Agent > agents ) {
+	static void aggregateData( List< Agent > agents, String strategy_name ) {
 		neetMembersArray[ index ] += Agent.countNEETmembers( agents, max_turn_ / writing_times_ );
 		leaderNumArray[ index ] += countLeader( agents );
 		finishedTasksArray[ index ] += TaskManager.getFinishedTasks();
 		tempMessagesArray[ index ] = TransmissionPath.getMessageNum();
 
-		List<Agent> memberList = agents.stream().filter( ag -> ag.role == MEMBER ).collect( Collectors.toList());
+		leadersDisposeTask[ index ] += TaskManager.badLeaders.size();
+		leadersExecuteTask[ index ] += TaskManager.goodLeaders.size();
+
+//		TaskManager.clearLeadersInfo();
+
+		membersTrustedByLeaderArray[ index ] += countMembersTrustedByLeader();
+
+		List< Agent > memberList = agents.stream().filter( ag -> ag.role == MEMBER ).collect( Collectors.toList() );
 		int allMemberNum = ( int ) memberList.stream().count();
-		int allSubtasksHolden =  memberList.stream().mapToInt( ag -> ag.ms.mySubtaskQueue.size() ).sum();
+		int allSubtasksHolden = memberList.stream().mapToInt( ag -> ag.ms.mySubtaskQueue.size() ).sum();
 		int tempMembersHaveNoSubtask = ( int ) memberList.stream().filter( ag -> ag.ms.mySubtaskQueue.size() == 0 ).count();
-		membersHaveNoSubtask[index] += tempMembersHaveNoSubtask;
-		averageSubtaskQueueSizeForAllMembers[index] += (double) allSubtasksHolden / allMemberNum;
-		averageSubtaskQueueSizeForWorkingMembers[index] += (double) allSubtasksHolden / (allMemberNum - tempMembersHaveNoSubtask);
+		membersHaveNoSubtask[ index ] += tempMembersHaveNoSubtask;
+		averageSubtaskQueueSizeForAllMembers[ index ] += ( double ) allSubtasksHolden / allMemberNum;
+		averageSubtaskQueueSizeForWorkingMembers[ index ] += ( double ) allSubtasksHolden / ( allMemberNum - tempMembersHaveNoSubtask );
 
 		int gap = index > 0 ? tempMessagesArray[ index - 1 ] : 0;
 		messagesArray[ index ] += TransmissionPath.getMessageNum() - gap;
 		communicationDelayArray[ index ] += TransmissionPath.getAverageCommunicationTime();
 		disposedTasksArray[ index ] += TaskManager.getDisposedTasks();
 		overflownTasksArray[ index ] += TaskManager.getOverflowTasks();
-		reciprocalMembersArray[ index ] += Agent.countReciprocalMember( agents );
-		reciprocalLeaderArray[ index ] += Agent.countReciprocalLeader( agents );
 
+		// なんか知らんけどここの有無で結果が変わるようなので注意したほうがいいかも
+		if ( strategy_name.equals( "reliableAgents" ) ) {
+			reciprocalMembersArray[ index ] += agents.stream()
+				.filter( ag -> ag.role == MEMBER )
+				.filter( m -> {
+					MemberStrategy ms = ( MemberStrategy ) m.ms;
+					return ms.principle == Principle.RECIPROCAL;
+				} )
+				.count();
+			reciprocalLeaderArray[ index ] += agents.stream()
+				.filter( ag -> ag.role == LEADER )
+				.filter( l -> {
+					LeaderStrategy ls = ( LeaderStrategy ) l.ls;
+					return ls.principle == Principle.RECIPROCAL;
+				} )
+				.count();
+		}
 		if ( index == writing_times_ - 1 ) {
 			tempMessagesArray = new int[ writing_times_ ];
 		}
-		idleMembersRateArray[ index ] += (double) MemberTemplateStrategy.idleTime / AgentManager.countMembers();
+		idleMembersRateArray[ index ] += ( double ) MemberTemplateStrategy.idleTime / AgentManager.countMembers();
 		MemberTemplateStrategy.idleTime = 0;
 		indexIncrement();
 	}
 
+	private static int countMembersTrustedByLeader() {
+		Set< Agent > trustedMemberSet = new HashSet<>();
+		for ( Agent ag: AgentManager.getAllAgentList() ) {
+			for ( TemplateStrategy.Dependability pair: ag.ls.dependabilityRanking ) {
+				if ( pair.getValue() > LeaderStrategy.de_threshold_ ) {
+					trustedMemberSet.add( pair.getAgent() );
+				}
+			}
+		}
+		return trustedMemberSet.size();
+	}
+
+	static final double de_threshold = 0.7;
+	static void checkMutualRelation( List<Agent> agentList ) {
+		List<Agent> leaders = agentList.stream()
+			.filter( ag -> ag.role == Role.LEADER )
+			.collect( Collectors.toList());
+		List<Agent> members = agentList.stream()
+			.filter( ag -> ag.role == Role.MEMBER )
+			.collect( Collectors.toList());
+
+	}
+
+	static double ratioOfMutualRelationOf( Agent ag ) {
+		int one_wayCount = 0;
+		int mutualCount = 0;
+
+		if( ag.role == Role.LEADER ) {
+			for ( TemplateStrategy.Dependability d: ag.ls.dependabilityRanking ) {
+				// leaderがd.agentを信頼している
+				if ( d.getValue() > de_threshold ) {
+					one_wayCount++;
+					// leaderがd.agentに信頼されている
+					if ( d.getAgent().ms.getDeByAgent( ag, d.getAgent().ms.dependabilityRanking ).getValue() > de_threshold ) {
+						mutualCount++;
+					}
+				} else {
+					break;
+				}
+			}
+		} else {
+			for ( TemplateStrategy.Dependability d: ag.ms.dependabilityRanking ) {
+				// memberがd.agentを信頼している
+				if ( d.getValue() > de_threshold ) {
+					one_wayCount++;
+					// memberがd.agentに信頼されている
+					if ( d.getAgent().ls.getDeByAgent( ag, d.getAgent().ls.dependabilityRanking ).getValue() > de_threshold ) {
+						mutualCount++;
+					}
+				} else {
+					break;
+				}
+			}
+		}
+		return (double) mutualCount/one_wayCount;
+	}
+
 	public static void sumExecutionTime( int time ) {
 		subtaskExecutionCount++;
-		tempSubtaskExecutionTimeArray[index] += time;
+		tempSubtaskExecutionTimeArray[ index ] += time;
 	}
 
 	private static int countLeader( List< Agent > agentList ) {
@@ -114,50 +196,57 @@ public class OutPut implements Parameter {
 		index = ( index + 1 ) % writing_times_;
 	}
 
-	static void writeResults( String st ) {
+	static void writeMainResultData( String st ) {
 		System.out.println( "called" );
 		String outputFilePath = _singleton.setPath( "results", st, "csv" );
 		System.out.println( "writing now" );
 		FileWriter fw;
 		BufferedWriter bw;
 		PrintWriter pw;
+
 		try {
 			fw = new FileWriter( outputFilePath, false );
 			bw = new BufferedWriter( fw );
 			pw = new PrintWriter( bw );
 
-			pw.println( "turn" + ", "
-					+ "FinishedTasks" + ", " + "DisposedTasks" + ", " + "OverflownTasks" + ", "
-					+ "Success rate(except overflow)" + ", " + "Success rate" + ", "
-					+ "CommunicationTime" + ", " + "Messages" + "," + "ExecutionTime" + ","
-					+ "Sabotage members" + ", " + "average subtasks holden for all members" + ", " + "average subtasks holden for working members" + ", "
-					+ "Leader" + ", " // + "Member"                            + ", "
-					+ "NEET Members" + ", "
-					// + "Lonely leaders"                    + ", " + "Lonely members"                    + ", "
-					// + "Accompanied leaders"               + ", " + "Accompanied members"               + ", "
-					+ "ReciprocalLeaders" + ", " + "ReciprocalMembers" + ", "
-					+ "IdleTime" + ", "
-				// + "Rational"                          + ", " + "ReciprocalMembers" + ","
-				// + "FinishedTasks in depopulated area" + ", " + "FinishedTasks in populated area"   + ", "
+			pw.println( "turn" + ","
+					+ "FinishedTasks" + "," + "DisposedTasks" + "," + "OverflownTasks" + ","
+					+ "Success rate(except overflow)" + "," + "Success rate" + ","
+					+ "CommunicationTime" + "," + "Messages" + "," + "ExecutionTime" + ","
+					+ "Leaders Num" + "," // + "Member"                            + ","
+//					+ "Sabotage leaders" + "," + "Hard-work leaders" + ","
+					+ "Sabotage members" + "," + "average subtasks holden for all members" + "," + "average subtasks holden for working members" + "," + "Trusted members" + ","
+//					+ "Grow apart ratio" + ","
+					+ "NEET Members" + ","
+					// + "Lonely leaders"                    + "," + "Lonely members"                    + ","
+					// + "Accompanied leaders"               + "," + "Accompanied members"               + ","
+					+ "ReciprocalLeaders" + "," + "ReciprocalMembers" + ","
+					+ "IdleTime" + ","
+				// + "Rational"                          + "," + "ReciprocalMembers" + ","
+				// + "FinishedTasks in depopulated area" + "," + "FinishedTasks in populated area"   + ","
 			);
 			for ( int i = 0; i < writing_times_; i++ ) {
-				pw.println( ( i + 1 ) * ( max_turn_ / writing_times_ ) + ", "
-					+ finishedTasksArray[ i ] / executionTimes_ + ", "
-					+ disposedTasksArray[ i ] / executionTimes_ + ", "
-					+ overflownTasksArray[ i ] / executionTimes_ + ", "
-					+ ( double ) finishedTasksArray[ i ] / ( finishedTasksArray[ i ] + disposedTasksArray[ i ] ) + ", "
-					+ ( double ) finishedTasksArray[ i ] / ( finishedTasksArray[ i ] + disposedTasksArray[ i ] + overflownTasksArray[ i ] ) + ", "
-					+ ( double ) communicationDelayArray[ i ] / executionTimes_ + ", "
-					+ ( double ) messagesArray[ i ] / executionTimes_ + ", "
-					+ ( double ) taskExecutionTimeArray[ i ] / executionTimes_ + ", "
-					+ ( int  )   membersHaveNoSubtask[i] / executionTimes_ + ", "
-					+ ( double ) averageSubtaskQueueSizeForAllMembers[i] / executionTimes_ + ", "
-					+ (double) averageSubtaskQueueSizeForWorkingMembers[i] / executionTimes_ + ", "
-					+ ( double ) leaderNumArray[ i ] / executionTimes_ + ", "
-					+ ( double ) neetMembersArray[ i ] / executionTimes_ + ", "
-					+ ( double ) reciprocalLeaderArray[ i ] / executionTimes_ + ", "
-					+ ( double ) reciprocalMembersArray[ i ] / executionTimes_ + ", "
-					+ ( double ) idleMembersRateArray[i] / executionTimes_ + ", "
+				pw.println( ( i + 1 ) * ( max_turn_ / writing_times_ ) + ","
+						+ finishedTasksArray[ i ] / executionTimes_ + ","
+						+ disposedTasksArray[ i ] / executionTimes_ + ","
+						+ overflownTasksArray[ i ] / executionTimes_ + ","
+						+ ( double ) finishedTasksArray[ i ] / ( finishedTasksArray[ i ] + disposedTasksArray[ i ] ) + ","
+						+ ( double ) finishedTasksArray[ i ] / ( finishedTasksArray[ i ] + disposedTasksArray[ i ] + overflownTasksArray[ i ] ) + ","
+						+ communicationDelayArray[ i ] / executionTimes_ + ","
+						+ ( double ) messagesArray[ i ] / executionTimes_ + ","
+						+ taskExecutionTimeArray[ i ] / executionTimes_ + ","
+						+ ( double ) leaderNumArray[ i ] / executionTimes_ + ","
+//					+ leadersDisposeTask[i] / executionTimes_ + ","
+//					+ leadersExecuteTask[i] / executionTimes_ + ","
+						+ ( int ) membersHaveNoSubtask[ i ] / executionTimes_ + ","
+						+ averageSubtaskQueueSizeForAllMembers[ i ] / executionTimes_ + ","
+						+ averageSubtaskQueueSizeForWorkingMembers[ i ] / executionTimes_ + ","
+						+ membersTrustedByLeaderArray[ i ] / executionTimes_ + ","
+//					+ growApartDegreeArray[i] / executionTimes_ + ","
+						+ ( double ) neetMembersArray[ i ] / executionTimes_ + ","
+						+ ( double ) reciprocalLeaderArray[ i ] / executionTimes_ + ","
+						+ ( double ) reciprocalMembersArray[ i ] / executionTimes_ + ","
+						+ idleMembersRateArray[ i ] / executionTimes_ + ","
 				);
 			}
 			pw.close();
@@ -166,25 +255,50 @@ public class OutPut implements Parameter {
 		}
 	}
 
-	static void writeAgentsSubtaskQueueSize( PrintWriter pw ) {
-		pw.print( Manager.getCurrentTime() );
-		List< Agent > agList = AgentManager.getAllAgentList();
-		for ( int i = 0; i < agent_num_; i++ ) {
-			Agent ag = agList.get( i );
-			pw.print( ", " + ag.role + ", " + ag.ms.mySubtaskQueue.size() );
-//		writeLeadersOC( pw, ag );
+	static void writeLeadersExecutionNum( String strategy_name ) {
+		String path = "results/workingLeadersOf" + strategy_name;
+		PrintWriter pw = newCSVPrintWriter( path );
+
+		pw.println( "id,role,finished" );
+		for ( Map.Entry< Agent, Integer > item: TaskManager.goodLeaders.entrySet() ) {
+			Role role = item.getKey().e_leader > item.getKey().e_member ? LEADER : MEMBER;
+			pw.println( item.getKey().id + "," + role + "," + item.getValue() );
 		}
-		pw.println();
+		pw.close();
+	}
+
+	static void writeInformationAsMember( String strategy_name ) {
+		String path = "results/informationAsMember_" + strategy_name;
+		PrintWriter pw = newCSVPrintWriter( path );
+
+		pw.println( "id,role,excellence," +
+			"holding_subtasks,solicitations_received,subtask_executions" );
+		for ( Agent ag: AgentManager.getAllAgentList() ) {
+			Role role = ag.e_leader > ag.e_member ? LEADER : MEMBER;
+			pw.println( ag.id + "," + role + "," + getExcellence( ag ) + ","
+				+ ag.ms.mySubtaskQueue.size() + "," + TransmissionPath.solicitToAgents[ag.id] + "," + ag.ms.subtaskExecution );
+		}
+		pw.close();
+	}
+
+	private static double getExcellence( Agent ag ) {
+		int ret = 0;
+		int notZero = 0;
+		for ( int res: ag.resources ) {
+			if ( res > 0 ) notZero++;
+			ret += res;
+		}
+		return ( double ) ret / notZero;
 	}
 
 	static void writeLeadersOC( PrintWriter pw, Agent target ) {
 		for ( Agent leader: AgentManager.getAllAgentList() ) {
 			if ( leader.role == LEADER ) {
 				LeaderStrategy pl = ( LeaderStrategy ) leader.ls;
-				boolean exists = OCTuple.alreadyExists( target, pl.getCdTupleList() );
-				double temp = exists ? OCTuple.getOC( 1, target, pl.getCdTupleList() ) : -1;
+				boolean exists = OstensibleCapacity.alreadyExists( target, pl.getOCList() );
+				double temp = exists ? OstensibleCapacity.getOC( 1, target, pl.getOCList() ) : -1;
 
-				pw.print( ", " + temp );
+				pw.print( "," + temp );
 			}
 		}
 	}
@@ -195,12 +309,12 @@ public class OutPut implements Parameter {
 		PrintWriter pw = newCSVPrintWriter( path );
 
 		pw.print( "id" );
-		for ( int i = 0; i < agent_num_; i++ ) pw.print( ", " + i );
-		pw.println(", ");
+		for ( int i = 0; i < agent_num_; i++ ) pw.print( "," + i );
+		pw.println( "," );
 		for ( int i = 0; i < agent_num_; i++ ) {
-			pw.print( i + ", " );
+			pw.print( i + "," );
 			for ( int j = 0; j < agent_num_; j++ ) {
-				pw.print( delays[ i ][ j ] + ", " );
+				pw.print( delays[ i ][ j ] + "," );
 			}
 			pw.println();
 		}
@@ -221,10 +335,11 @@ public class OutPut implements Parameter {
 	}
 
 	static String graphDirectoryName;
+
 	static void makeGraphDirectory() {
 		// 出力先であるgraphディレクトリが無かったら作る
 		File f = new File( outputDirectoryPath + "graph" );
-		if( ! f.exists() ) f.mkdir();
+		if ( !f.exists() ) f.mkdir();
 
 		// 一意に区別できるように「日付+時刻」を名前とするディレクトリを作る
 		Date date = new Date();
@@ -237,22 +352,22 @@ public class OutPut implements Parameter {
 		new File( outputDirectoryPath + "graph/" + graphDirectoryName + "/edges" ).mkdir();
 	}
 
-	static void writeNodeInformationAsCSV( int currentTicks, List<Agent> agentList ) {
-		try{
+	static void writeNodeInformationAsCSV( int currentTicks, List< Agent > agentList ) {
+		try {
 			// nodeファイルを作ってそこにnode(agent)の情報を出力する
-			PrintWriter pw = newCSVPrintWriter( "graph/" + graphDirectoryName + "/nodes/" +  currentTicks);
+			PrintWriter pw = newCSVPrintWriter( "graph/" + graphDirectoryName + "/nodes/" + currentTicks );
 			pw.print( "id," );
 			pw.print( "role," );
 			pw.print( "x," );
 			pw.print( "y," );
 			pw.println( "principle" );
 
-			for( Agent ag : agentList ) {
-				pw.print( ag.id +"," );
-				pw.print( ag.role +"," );
+			for ( Agent ag: agentList ) {
+				pw.print( ag.id + "," );
+				pw.print( ag.role + "," );
 				pw.print( ag.getX() + "," );
 				pw.print( ag.getY() + "," );
-				pw.println( ag.principle );
+//				pw.println( ag.principle );
 			}
 
 			pw.close();
@@ -262,18 +377,18 @@ public class OutPut implements Parameter {
 	}
 
 	static void writeGraphInformationAsCSV( int currentTick, GraphAtAnWindow graph ) {
-		try{
+		try {
 			// graphファイルを作ってそこにedge(team formationの濃度)の情報を出力する
-			PrintWriter pw = newCSVPrintWriter( "graph/" + graphDirectoryName +"/edges/" + currentTick );
+			PrintWriter pw = newCSVPrintWriter( "graph/" + graphDirectoryName + "/edges/" + currentTick );
 			pw.println( "from," + "to," + "times" );
 
-			for( Map.Entry< Edge, Integer > e : graph.getGraph().entrySet() ) {
+			for ( Map.Entry< Edge, Integer > e: graph.getGraph().entrySet() ) {
 				pw.print( e.getKey().from_id + "," );
 				pw.print( e.getKey().to_id + "," );
 				pw.println( e.getValue() );
 			}
 			pw.close();
-		}catch ( Exception e ) {
+		} catch ( Exception e ) {
 			e.printStackTrace();
 		}
 	}
@@ -283,16 +398,16 @@ public class OutPut implements Parameter {
 		int leaders = 0, members = 0;
 
 		for ( Agent ag: agents ) {
-			List< AgentDePair > pairList = ag.e_leader > ag.e_member ? ag.ls.reliableMembersRanking : ag.ms.reliableLeadersRanking;
+			List< TemplateStrategy.Dependability > pairList = ag.e_leader > ag.e_member ? ag.ls.dependabilityRanking : ag.ms.dependabilityRanking;
 			int size = pairList.size();
 
 			double[] DEs = new double[ size ];
 			double[] delay = new double[ size ];
 			for ( int i = 0; i < size; i++ ) {
-				AgentDePair pair = pairList.get( i );
+				TemplateStrategy.Dependability pair = pairList.get( i );
 				Agent target = pair.getAgent();
 
-				DEs[ i ] = pair.getDe();
+				DEs[ i ] = pair.getValue();
 				delay[ i ] = delays[ ag.id ][ target.id ];
 			}
 			PearsonsCorrelation p = new PearsonsCorrelation();

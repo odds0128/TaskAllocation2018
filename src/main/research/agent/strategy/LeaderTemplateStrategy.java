@@ -3,10 +3,9 @@ package main.research.agent.strategy;
 import main.research.Manager;
 import main.research.Parameter;
 import main.research.agent.Agent;
-import main.research.agent.AgentDePair;
 import main.research.agent.AgentManager;
-import main.research.communication.message.ReplyToSolicitation;
-import main.research.communication.message.ResultOfTeamFormation;
+import main.research.communication.message.Reply;
+import main.research.communication.message.Result;
 import main.research.communication.message.Solicitation;
 import main.research.others.Pair;
 import main.research.task.Subtask;
@@ -17,6 +16,7 @@ import static main.research.Parameter.Phase.*;
 import static main.research.Parameter.ReplyType.DECLINE;
 import static main.research.Parameter.ResultType.FAILURE;
 import static main.research.Parameter.ResultType.SUCCESS;
+import static main.research.agent.Agent.can_change_role_;
 import static main.research.agent.Agent.α_;
 import static main.research.communication.TransmissionPath.sendMessage;
 import static main.research.task.TaskManager.disposeTask;
@@ -25,22 +25,22 @@ import java.util.*;
 
 public abstract class LeaderTemplateStrategy extends TemplateStrategy implements Parameter {
 
-	protected Set< Agent > exceptions = new HashSet<>();
 	protected int repliesToCome = 0;            // 送ったsolicitationの数を覚えておく
 	protected Task myTask;
-	private Map< Agent, List< Subtask > > allocationHistory = new HashMap<>();
-	public List< AgentDePair > reliableMembersRanking = new ArrayList<>();
+	private List< Allocation > allocationHistory = new ArrayList<>();
+	public List< Dependability > dependabilityRanking = new ArrayList<>();
 
 	// question: Leader has a LeaderStrategy のはずなので本来引数に「自分」を渡さなくてもいいはずでは？
 	// TODO: Leaderクラスのインスタンスメソッドにする
 	public void actAsLeader( Agent leader ) {
 		preprocess( leader );
 
-		Collections.sort( reliableMembersRanking, Comparator.comparingDouble( AgentDePair::getDe ).reversed() );
+		Collections.sort( dependabilityRanking, Comparator.comparingDouble( Dependability::getValue ).reversed() );
+
 		if ( leader.phase == SOLICIT ) leader.ls.solicitAsL( leader );
 		else if ( leader.phase == FORM_TEAM ) leader.ls.formTeamAsL( leader );
 
-		evaporateDE( reliableMembersRanking );
+		evaporateAllDependability( dependabilityRanking );
 	}
 
 	private void preprocess( Agent leader ) {
@@ -51,7 +51,7 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 	private void declineAllSolicitations( Agent leader ) {
 		while ( !leader.solicitationList.isEmpty() ) {
 			Solicitation s = leader.solicitationList.remove( 0 );
-			sendMessage( new ReplyToSolicitation( leader, s.getFrom(), DECLINE, s.getExpectedSubtask() ) );
+			sendMessage( new Reply( leader, s.getFrom(), DECLINE, s.getExpectedSubtask() ) );
 		}
 	}
 
@@ -62,65 +62,63 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 		boolean canGoNext = false;
 
 		if ( myTask != null ) {
-			Map< Agent, Subtask > allocationMap = selectMembers( myTask.subtasks );
+			List<Allocation> allocationMap = makePreAllocationMap( leader, myTask.subtasks );
 			repliesToCome = allocationMap.size();
 
-			if ( ! allocationMap.isEmpty() ) {
-				leader.ls.sendSolicitations( leader, allocationMap );
+			if ( !allocationMap.isEmpty() ) {
+				sendSolicitations( leader, allocationMap );
 				canGoNext = true;
 			}
 		}
-		leader.phase = nextPhase( leader, canGoNext );  // 次のフェイズへ
+		nextPhase( leader, canGoNext );  // 次のフェイズへ
 	}
 
-
-	protected Map< Agent, Subtask > selectMembers( List< Subtask > subtasks ) {
-		Map< Agent, Subtask > memberCandidates = new HashMap<>();
+	protected List< Allocation > makePreAllocationMap( Agent self, List< Subtask > subtasks ) {
+		List<Allocation> preAllocationList = new ArrayList<>(  );
 		Agent candidate;
 
+		List<Agent> exceptions = new ArrayList<>( Arrays.asList( self ) );
 		for ( int i = 0; i < REDUNDANT_SOLICITATION_TIMES; i++ ) {
 			for ( Subtask st: subtasks ) {
-				if ( Agent.epsilonGreedy() ) candidate = selectMemberForASubtaskRandomly( st );
-				else candidate = selectAMemberForASubtask( st );
+				if ( Agent.epsilonGreedy() ) candidate = selectMemberForASubtaskRandomly( exceptions, st );
+				else candidate = selectMemberFor( exceptions, st );
 
-				if ( candidate == null ) return new HashMap<>();
+				if ( candidate == null ) return null;
 
 				exceptions.add( candidate );
-				memberCandidates.put( candidate, st );
+				preAllocationList.add( new Allocation( candidate, st ) );
 			}
 		}
-		return memberCandidates;
+		return preAllocationList;
 	}
 
-	protected Agent selectMemberForASubtaskRandomly( Subtask st ) {
+	protected Agent selectMemberForASubtaskRandomly( List<Agent> exceptions, Subtask st ) {
 		Agent candidate;
 		do {
 			candidate = AgentManager.getAgentRandomly( exceptions, AgentManager.getAllAgentList() );
-		} while ( !candidate.canProcessTheSubtask( st ) );
+		} while ( !candidate.canProcess( st ) );
 		return candidate;
 	}
 
-	private Agent selectAMemberForASubtask( Subtask st ) {
-		for ( AgentDePair pair: reliableMembersRanking ) {
-			Agent ag = pair.getAgent();
-			if ( ( !exceptions.contains( ag ) ) && ag.canProcessTheSubtask( st ) ) return ag;
-		}
-		return null;
-	}
 
-	public void sendSolicitations( Agent leader, Map< Agent, Subtask > agentSubtaskMap ) {
-		for ( Map.Entry< Agent, Subtask > ag_st: agentSubtaskMap.entrySet() ) {
-			sendMessage( new Solicitation( leader, ag_st.getKey(), ag_st.getValue() ) );
-		}
-	}
+	protected abstract Agent selectMemberFor( List<Agent> exceptions, Subtask st);
 
+	protected abstract void sendSolicitations( Agent from, List<Allocation> allocationList );
+
+//	public void sendSolicitations( Agent leader, Map< Agent, Subtask > agentSubtaskMap ) {
+//		for ( Map.Entry< Agent, Subtask > ag_st: agentSubtaskMap.entrySet() ) {
+//			sendMessage( new Solicitation( leader, ag_st.getKey(), ag_st.getValue() ) );
+//		}
+//	}
+//
 	public void formTeamAsL( Agent leader ) {
 		if ( leader.replyList.size() < repliesToCome ) return;
-		else repliesToCome = 0;
 
-		Map< Subtask, Agent > SubtaskAgentMap = new HashMap<>();
+		assert repliesToCome == leader.replyList.size() : "Expected: " + repliesToCome + ", Actual: " + leader.resultList.size();
+
+		Map< Subtask, Agent > SubtaskAgentMap = new LinkedHashMap<>();
 		while ( !leader.replyList.isEmpty() ) {
-			ReplyToSolicitation r = leader.replyList.remove( 0 );
+			Reply r = leader.replyList.remove( 0 );
 			Subtask st = r.getSubtask();
 			Agent currentFrom = r.getFrom();
 
@@ -129,8 +127,7 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 				Agent rival = SubtaskAgentMap.get( st );
 				Pair winnerAndLoser = compareDE( currentFrom, rival );
 
-				exceptions.remove( winnerAndLoser.getValue() );
-				sendMessage( new ResultOfTeamFormation( leader, ( Agent ) winnerAndLoser.getValue(), FAILURE, null ) );
+				sendMessage( new Result( leader, ( Agent ) winnerAndLoser.getValue(), FAILURE, null ) );
 				SubtaskAgentMap.put( st, ( Agent ) winnerAndLoser.getKey() );
 			} else {
 				SubtaskAgentMap.put( st, currentFrom );
@@ -141,30 +138,28 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 				Agent friend = ( Agent ) entry.getValue();
 				Subtask st = ( Subtask ) entry.getKey();
 
-				sendMessage( new ResultOfTeamFormation( leader, friend, SUCCESS, st ) );
+				sendMessage( new Result( leader, friend, SUCCESS, st ) );
 				appendAllocationHistory( friend, st );
 				if ( withinTimeWindow() ) leader.workWithAsL[ friend.id ]++;
-				leader.pastTasks.add( myTask );
 			}
-			nextPhase(leader, true );
+			leader.pastTasks.add( myTask );
+			nextPhase( leader, true );
 		} else {
 			apologizeToFriends( leader, new ArrayList<>( SubtaskAgentMap.values() ) );
-			exceptions.removeAll( new ArrayList<>( SubtaskAgentMap.values() ) );
-			disposeTask();
+			disposeTask( leader );
 			nextPhase( leader, false );
 		}
 		myTask = null;
 	}
 
 	protected Pair compareDE( Agent a, Agent b ) {
-		if ( AgentDePair.getPairByAgent( a, reliableMembersRanking ).getDe() < AgentDePair.getPairByAgent( b, reliableMembersRanking ).getDe() )
+		if ( getDeByAgent( a, dependabilityRanking ).getValue() < getDeByAgent( b, dependabilityRanking ).getValue() )
 			return new Pair( b, a );
 		return new Pair( a, b );
 	}
 
 	protected void treatBetrayer( Agent betrayer ) {
-		exceptions.remove( betrayer );
-		renewDE( reliableMembersRanking, betrayer, 0 );
+		renewDE( dependabilityRanking, betrayer, 0 );
 	}
 
 	protected boolean canExecuteTheTask( Task task, Set< Subtask > subtaskSet ) {
@@ -175,64 +170,110 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 	}
 
 	protected void apologizeToFriends( Agent failingLeader, List< Agent > friends ) {
-		for ( Agent friend: friends ) sendMessage( new ResultOfTeamFormation( failingLeader, friend, FAILURE, null ) );
+		for ( Agent friend: friends ) {
+			sendMessage( new Result( failingLeader, friend, FAILURE, null ) );
+		}
 	}
 
 
 	protected void appendAllocationHistory( Agent member, Subtask s ) {
-		if ( !allocationHistory.containsKey( member ) ) {
-			List temp = new ArrayList();
-			allocationHistory.put( member, temp );
-		}
-		allocationHistory.get( member ).add( s );
+		allocationHistory.add( new Allocation( member, s ) );
 	}
 
-	protected Subtask getAllocatedSubtask( Agent member ) {
-		Subtask temp = allocationHistory.get( member ).remove( 0 );
-		if ( allocationHistory.get( member ).isEmpty() ) allocationHistory.remove( member );
-		return temp;
+	protected boolean removeAllocationHistory( Agent member, Subtask st ) {
+		return allocationHistory.remove( new Allocation( member, st ) );
 	}
+
+	protected void finishTask(Agent leader, Task finishedTask) {
+		leader.pastTasks.remove( finishedTask );
+		TaskManager.finishTask( leader );
+	}
+
 
 	public void setMemberRankingRandomly( Agent self, List< Agent > agentList ) {
 		List< Agent > tempList = AgentManager.generateRandomAgentList( agentList );
 		for ( Agent temp: tempList ) {
-			reliableMembersRanking.add( new AgentDePair( temp, Agent.initial_de_ ) );
+			dependabilityRanking.add( new Dependability( temp, Agent.initial_de_ ) );
 		}
-		reliableMembersRanking.remove( self );
+		dependabilityRanking.remove( self );
 	}
 
-	public void addMyselfToExceptions( Agent self ) {
-		exceptions.add( self );
-	}
-
-	protected abstract void renewDE( List< AgentDePair > pairList, Agent target, double evaluation );
+	protected abstract void renewDE( List< Dependability > pairList, Agent target, double evaluation );
 
 	// todo: 削除
-	public void reachReply( ReplyToSolicitation r ) {
+	public void reachReply( Reply r ) {
 		r.getTo().replyList.add( r );
 	}
 
-	@Override
-	protected Phase nextPhase( Agent leader, boolean wasSuccess ) {
+	protected void nextPhase( Agent leader, boolean wasSuccess ) {
 		leader.validatedTicks = Manager.getCurrentTime();
 
 		if ( !wasSuccess ) {
-			leader.role = inactivate( leader, 0 );
-			return SELECT_ROLE;
+			inactivate( leader, 0 );
+			return;
 		}
 		switch ( leader.phase ) {
 			case SOLICIT:
-				return FORM_TEAM;
+				leader.phase = FORM_TEAM;
+				break;
 			case FORM_TEAM:
-				leader.role = inactivate( leader, 1 );
-			default:
-				return SELECT_ROLE;
+				inactivate( leader, 1 );
 		}
 	}
 
-	@Override
-	public Role inactivate( Agent leader, double value ) {
-		leader.e_leader = leader.e_leader * ( 1.0 - α_ ) + α_ * value;
-		return Role.JONE_DOE;
+	final public void inactivate( Agent leader, double value ) {
+		if( can_change_role_ ) {
+			leader.e_leader = leader.e_leader * ( 1.0 - α_ ) + α_ * value;
+			leader.role = Role.JONE_DOE;
+			leader.phase = SELECT_ROLE;
+		}else{
+			leader.phase = SOLICIT;
+		}
+	}
+
+	protected class Allocation {
+		final Agent ag;
+		final Subtask st;
+
+		public Allocation( Agent ag, Subtask st ) {
+			this.ag = ag;
+			this.st = st;
+		}
+
+		public Agent getAg() {
+			return ag;
+		}
+
+		public Subtask getSt() {
+			return st;
+		}
+
+		@Override
+		public boolean equals( Object o ) {
+			if ( o == this ) {
+				return true;
+			}
+			if ( !( o instanceof Allocation ) ) {
+				return false;
+			}
+			Allocation d = ( Allocation ) o;
+			return d.ag == ag && d.st == st;
+		}
+
+		@Override
+		public int hashCode() {
+			int result = 17;
+			result = 31 * result + ag.id;
+			result = 31 * result + st.getId();
+			return result;
+		}
+
+		@Override
+		public String toString() {
+			return "Allocation{" +
+				"ag=" + ag +
+				", st=" + st +
+				"} \n";
+		}
 	}
 }
