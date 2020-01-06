@@ -1,6 +1,5 @@
-package main.research.agent.strategy.reliable_agents;
+package main.research.agent.strategy.can_allocate_plural_subtasks_to_member;
 
-import main.research.Manager;
 import main.research.Parameter;
 import main.research.agent.Agent;
 import main.research.agent.strategy.OstensibleCapacity;
@@ -51,6 +50,8 @@ public class LeaderStrategy extends LeaderTemplateStrategy implements Parameter 
 			if ( !allocationMap.isEmpty() ) {
 				canGoNext = true;
 				sendSolicitations( leader, allocationMap );
+			}else{
+				disposeTask( leader );
 			}
 		}
 		nextPhase( leader, canGoNext );  // 次のフェイズへ

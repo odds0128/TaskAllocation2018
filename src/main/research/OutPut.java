@@ -4,8 +4,8 @@ import main.research.agent.AgentManager;
 import main.research.agent.strategy.MemberTemplateStrategy;
 import main.research.agent.strategy.OstensibleCapacity;
 import main.research.agent.strategy.TemplateStrategy;
-import main.research.agent.strategy.reliable_agents.LeaderStrategy;
-import main.research.agent.strategy.reliable_agents.MemberStrategy;
+import main.research.agent.strategy.reciprocal_agents.LeaderStrategy;
+import main.research.agent.strategy.reciprocal_agents.MemberStrategy;
 import main.research.graph.Edge;
 import main.research.task.TaskManager;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
@@ -93,7 +93,7 @@ public class OutPut implements Parameter {
 		overflownTasksArray[ index ] += TaskManager.getOverflowTasks();
 
 		// なんか知らんけどここの有無で結果が変わるようなので注意したほうがいいかも
-		if ( strategy_name.equals( "reliableAgents" ) ) {
+		if ( strategy_name.equals( "reliable_agents" ) || strategy_name.equals( "reciprocal_agents" ) ) {
 			reciprocalMembersArray[ index ] += agents.stream()
 				.filter( ag -> ag.role == MEMBER )
 				.filter( m -> {
@@ -290,19 +290,6 @@ public class OutPut implements Parameter {
 		}
 		return ( double ) ret / notZero;
 	}
-
-	static void writeLeadersOC( PrintWriter pw, Agent target ) {
-		for ( Agent leader: AgentManager.getAllAgentList() ) {
-			if ( leader.role == LEADER ) {
-				LeaderStrategy pl = ( LeaderStrategy ) leader.ls;
-				boolean exists = OstensibleCapacity.alreadyExists( target, pl.getOCList() );
-				double temp = exists ? OstensibleCapacity.getOC( 1, target, pl.getOCList() ) : -1;
-
-				pw.print( "," + temp );
-			}
-		}
-	}
-
 
 	static void writeDelays( int[][] delays ) {
 		String path = "results/communicationDelay=" + MAX_DELAY;

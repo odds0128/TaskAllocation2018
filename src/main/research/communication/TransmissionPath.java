@@ -25,7 +25,7 @@ public class TransmissionPath implements Parameter {
 	private static final int monitoredAgent1 = 26;
 	private static final int monitoredAgent2 = 491;
 	private static final boolean doMonitor = false;
-	private static final boolean doMonitorAll = false;
+	private static final boolean doMonitorAll = true;
 
 	public static void sendMessage( Message m ) {
 		assert m.getFrom() != m.getTo() : "he asks himself";

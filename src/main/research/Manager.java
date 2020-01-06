@@ -4,7 +4,7 @@ import main.research.agent.Agent;
 import main.research.agent.AgentManager;
 
 import static main.research.OutPut.*;
-import static main.research.agent.strategy.reliable_agents.MemberStrategy.countReciprocalMembers;
+import static main.research.agent.strategy.can_allocate_plural_subtasks_to_member.MemberStrategy.countReciprocalMembers;
 import static main.research.others.random.MyRandom.*;
 
 import main.research.communication.TransmissionPath;
@@ -39,9 +39,10 @@ public class Manager implements Parameter {
 	// TODO: こんな風にするならsingletonにしたほうがいいよね
 	// TODO: lsとmsで分けて指定しなきゃいけないの無駄じゃない?
 //	private static String package_name = "main.research.agent.strategy.de_oc_delay.";
-	private static String package_name = "main.research.agent.strategy.ica.";
+//	private static String package_name = "main.research.agent.strategy.ica.";
 //	private static String package_name = "main.research.agent.strategy.success_rate.";
 //	private static String package_name = "main.research.agent.strategy.reliable_agents.";
+	private static String package_name = "main.research.agent.strategy.reciprocal_agents.";
 	private static String ls_name = "LeaderStrategy";
 	private static String ms_name = "MemberStrategy";
 
@@ -122,8 +123,8 @@ public class Manager implements Parameter {
 
 			// remove
 			// 信頼エージェントについて
-			System.out.println( "waiting: " + main.research.agent.strategy.reliable_agents.MemberStrategy.waiting );
-			System.out.println( "average de from member to leader: " + main.research.agent.strategy.reliable_agents.MemberStrategy.calculateMeanDE() );
+			System.out.println( "waiting: " + main.research.agent.strategy.can_allocate_plural_subtasks_to_member.MemberStrategy.waiting );
+			System.out.println( "average de from member to leader: " + main.research.agent.strategy.can_allocate_plural_subtasks_to_member.MemberStrategy.calculateMeanDE() );
 			System.out.println( "reciprocal members: " + countReciprocalMembers() );
 			int averageReliableLeaderNum = AgentManager.getAllAgentList().stream()
 				.filter( agent -> agent.role == MEMBER )

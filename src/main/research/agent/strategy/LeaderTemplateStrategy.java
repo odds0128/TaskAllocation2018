@@ -68,6 +68,8 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 			if ( !allocationMap.isEmpty() ) {
 				sendSolicitations( leader, allocationMap );
 				canGoNext = true;
+			} else {
+				disposeTask( leader );
 			}
 		}
 		nextPhase( leader, canGoNext );  // 次のフェイズへ

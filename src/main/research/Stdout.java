@@ -4,7 +4,7 @@ import main.research.agent.Agent;
 import main.research.agent.AgentManager;
 import main.research.agent.strategy.OstensibleCapacity;
 import main.research.agent.strategy.TemplateStrategy;
-import main.research.agent.strategy.reliable_agents.LeaderStrategy;
+import main.research.agent.strategy.can_allocate_plural_subtasks_to_member.LeaderStrategy;
 import main.research.task.Task;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 

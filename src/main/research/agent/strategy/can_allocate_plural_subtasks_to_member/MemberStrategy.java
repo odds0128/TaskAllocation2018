@@ -1,4 +1,4 @@
-package main.research.agent.strategy.reliable_agents;
+package main.research.agent.strategy.can_allocate_plural_subtasks_to_member;
 
 import main.research.Parameter;
 import main.research.agent.Agent;
@@ -8,9 +8,7 @@ import main.research.communication.TransmissionPath;
 import main.research.communication.message.Reply;
 import main.research.communication.message.Solicitation;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static main.research.Parameter.ReplyType.ACCEPT;
@@ -94,14 +92,45 @@ public class MemberStrategy extends MemberTemplateStrategy implements Parameter 
 		}
 	}
 
-	private void replyToOrdinaryLeaders( Agent member, List< Solicitation > solicitations ) {
+	private void replyToOrdinaryLeaders( Agent member, List< Solicitation > solicitationList ) {
 		int capacity = Agent.subtask_queue_size_ - mySubtaskQueue.size() - expectedResultMessage;
-		while ( solicitations.size() > 0 && capacity-- > 0 ) {
-			Solicitation s = Agent.epsilonGreedy() ? selectSolicitationRandomly( solicitations ) : solicitations.remove( 0 );
-			accept( member, s );
+
+		Map<Agent, List<Solicitation> > dealtSolicitations = dealSolicitations( solicitationList );
+
+		if( solicitationList.size() > dealtSolicitations.size() ) {
+			System.out.println( "all solicitations : \n" + solicitationList );
+			System.out.println( " dealt solicitations : \n " + dealtSolicitations );
+			System.out.println();
 		}
-		declineAll( member, solicitations );
-		solicitations.clear();
+
+		for( Map.Entry<Agent, List<Solicitation>> e : dealtSolicitations.entrySet() ) {
+			boolean canDoAll = true;
+			List<Solicitation> targetSolicitations = e.getValue();
+			if ( capacity < targetSolicitations.size() ) {
+				canDoAll = false;
+			} else {
+				for ( Solicitation s : targetSolicitations ) {
+					if ( !member.canProcess( s.getExpectedSubtask() ) ) {
+						canDoAll = false;
+						break;
+					}
+				}
+			}
+			if ( !canDoAll ) {
+				declineAll( member, targetSolicitations );
+			} else {
+				for ( Solicitation s: targetSolicitations ) {
+					accept( member, s );
+					capacity--;
+				}
+			}
+		}
+	}
+
+	private Map< Agent, List< Solicitation > > dealSolicitations( List< Solicitation > solicitationList ) {
+		Map<Agent, List<Solicitation> > ret = solicitationList.stream()
+			.collect( Collectors.groupingBy( Solicitation::getFrom ) );
+		return ret;
 	}
 
 	@Override
@@ -139,4 +168,3 @@ public class MemberStrategy extends MemberTemplateStrategy implements Parameter 
 			.count();
 	}
 }
-

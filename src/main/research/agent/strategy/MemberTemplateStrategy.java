@@ -45,6 +45,7 @@ public abstract class MemberTemplateStrategy extends TemplateStrategy implements
 		// todo: if文いらんくね
 		if( ! member.solicitationList.isEmpty() ) {
 			member.ms.replyTo( member.solicitationList, member );
+			member.solicitationList.clear();
 //			replyTo( member.solicitationList, member );
 		}
 		if( ! member.resultList.isEmpty() ) {
