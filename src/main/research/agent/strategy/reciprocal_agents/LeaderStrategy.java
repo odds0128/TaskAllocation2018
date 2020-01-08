@@ -46,16 +46,25 @@ public class LeaderStrategy extends LeaderTemplateStrategy {
 		nextPhase( leader, canGoNext );  // 次のフェイズへ
 	}
 
+	static int count = 0;
 	@Override
 	protected List< Allocation > makePreAllocationMap( Agent self, List< Subtask > subtasks ) {
 		List< Agent > reliableMembers = selectReliableMembersFrom( dependabilityRanking );
 		List< Allocation > preAllocationList = allocatePreferentially( self, reliableMembers, subtasks );
 		List< Subtask > unallocatedSubtasks = getUnallocatedSubtasks( subtasks, preAllocationList );
 
+		// 信頼エージェントだけで割り当てが済む場合はそれを返す
+		if( unallocatedSubtasks.isEmpty() ) return preAllocationList;
+
+		// 信頼エージェントだけで出来ないサブタスクがあるときに冗長割り当てを行う
 		List< Allocation > redundantlyAllocations = allocateRedundantlyFor( self, reliableMembers, unallocatedSubtasks );
+
+		// 冗長割り当てできなかった時は空のリストを返して失敗を伝える
 		if ( redundantlyAllocations.isEmpty() ) return Collections.emptyList();
 		assert ! redundantlyAllocations.isEmpty() : "割り当ての可能性がないサブタスクがあるよ";
-		preAllocationList.addAll( redundantlyAllocations );
+
+		// 冗長割り当ても入れて返す
+	preAllocationList.addAll( redundantlyAllocations );
 		return preAllocationList;
 	}
 
@@ -94,9 +103,12 @@ public class LeaderStrategy extends LeaderTemplateStrategy {
 	private List< Subtask > getUnallocatedSubtasks( List< Subtask > subtasks, List< Allocation > preAllocationList ) {
 		if( preAllocationList.isEmpty() ) return subtasks;
 
-		List< Subtask > temp = new ArrayList<>( subtasks );
-		for ( Allocation toBeAllocated: preAllocationList ) {
-			temp.remove( toBeAllocated.getSt() );
+		List< Subtask > temp = new ArrayList<>();
+		int size = preAllocationList.size();
+		for ( int i = 0; i < size; i++ ) {
+			Allocation al = preAllocationList.remove( 0 );
+			if( al.getAg() == null ) temp.add( al.getSt() );
+			else preAllocationList.add( al );
 		}
 		return temp;
 	}
@@ -112,7 +124,9 @@ public class LeaderStrategy extends LeaderTemplateStrategy {
 				Agent candidate;
 				if ( Agent.epsilonGreedy() ) {
 					candidate = selectMemberForASubtaskRandomly( exceptions, st );
-				} else candidate = this.selectMemberFor( exceptions, st );
+				} else {
+					candidate = this.selectMemberFor( exceptions, st );
+				}
 				if ( candidate == null ) {
 					return Collections.emptyList();
 				}

@@ -1,8 +1,8 @@
 {
   "environment" : {
     "execution_times" : 1,
-    "max_turn" : 5000,
-    "writing_times" : 50
+    "max_turn" : 10000,
+    "writing_times" : 100
   },
   "result_type" : {
     "check_data" : true,
@@ -12,7 +12,7 @@
     "check_agents" : false
   },
   "agents" : {
-    "agent_num" : 100,
+    "agent_num" : 500,
     "initial_leaders_ratio" : 0.2,
     "role_change" : false,
     "time_observing_team_formation" : 50,
@@ -37,7 +37,7 @@
   },
   "tasks" : {
     "initial_tasks_num" : 0,
-    "additional_tasks_num" : 12.5,
+    "additional_tasks_num" : 10.0,
     "distribution" : "poisson",
     "task_queue_size" : 500,
     "min_subtasks_num" : 8,

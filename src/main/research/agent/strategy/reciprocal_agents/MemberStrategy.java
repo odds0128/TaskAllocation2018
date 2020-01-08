@@ -9,6 +9,8 @@ import java.util.List;
 public class MemberStrategy extends MemberTemplateStrategy {
 	public Principle principle = Principle.RATIONAL;
 
+	//todo : 互恵行動を入れよう！
+
 	@Override
 	protected void renewDE( List< Dependability > pairList, Agent target, double evaluation ) {
 		boolean b = evaluation > 0;
