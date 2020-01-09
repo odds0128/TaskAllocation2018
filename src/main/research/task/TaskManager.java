@@ -10,6 +10,10 @@ import main.research.others.random.MyRandom;
 public class TaskManager {
 	private static int initial_tasks_num_;
 	private static double additional_tasks_num_;
+	private static boolean occur_heavy_subtasks_;
+	private static boolean occur_many_subtasks_;
+	private static int hard_tasks_occurrence_start_at_ = 3750;
+	private static int hard_tasks_occurrence_end_at = 6250;
 	private static int task_queue_size_;
 	private static int min_subtasks_num_;
 	private static int max_subtasks_num_;
@@ -20,11 +24,13 @@ public class TaskManager {
 	private static int finishedTasks = 0;
 
 	public static void setConstants( JsonNode parameterNode ) {
-		initial_tasks_num_   = parameterNode.get( "initial_tasks_num" ).asInt();
+		initial_tasks_num_ = parameterNode.get( "initial_tasks_num" ).asInt();
 		additional_tasks_num_ = parameterNode.get( "additional_tasks_num" ).asDouble();
-		task_queue_size_     = parameterNode.get( "task_queue_size" ).asInt();
-		min_subtasks_num_    = parameterNode.get( "min_subtasks_num" ).asInt();
-		max_subtasks_num_    = parameterNode.get( "max_subtasks_num" ).asInt();
+		occur_heavy_subtasks_ = parameterNode.get( "occur_heavy_tasks" ).asBoolean();
+		occur_many_subtasks_ = parameterNode.get( "occur_many_tasks" ).asBoolean();
+		task_queue_size_ = parameterNode.get( "task_queue_size" ).asInt();
+		min_subtasks_num_ = parameterNode.get( "min_subtasks_num" ).asInt();
+		max_subtasks_num_ = parameterNode.get( "max_subtasks_num" ).asInt();
 		Subtask.setConstants( parameterNode.get( "subtask" ) );
 	}
 
@@ -35,10 +41,23 @@ public class TaskManager {
 	public static void addNewTasksToQueue() {
 		int room = task_queue_size_ - tasks.size();    // タスクキューの空き
 		int poisson = poissonDistribution();
+
+		if ( occur_many_subtasks_ && withinHeavyPeriod() ) {
+			poisson *= 1.5;
+		}
+
 		int overflow = poisson > room ? poisson - room : 0;
 		int additionalTasksNum = Math.min( poisson, room );
 
-		for ( int i = 0; i < additionalTasksNum; i++ ) tasks.add( new Task( min_subtasks_num_, max_subtasks_num_ ) );
+		if ( occur_heavy_subtasks_ && withinHeavyPeriod() ) {
+			for ( int i = 0; i < additionalTasksNum; i++ ) {
+				tasks.add( new Task( ( int ) ( min_subtasks_num_ * 1.5 ), ( int ) ( max_subtasks_num_ * 1.5 ) ) );
+			}
+		} else {
+			for ( int i = 0; i < additionalTasksNum; i++ ) {
+				tasks.add( new Task( min_subtasks_num_, max_subtasks_num_ ) );
+			}
+		}
 		overflowTasks += overflow;
 	}
 
@@ -46,11 +65,15 @@ public class TaskManager {
 		double xp;
 		int k = 0;
 		xp = MyRandom.getRandomDouble();
-		while ( xp >= Math.exp( -1 * additional_tasks_num_ ) ){
+		while ( xp >= Math.exp( -1 * additional_tasks_num_ ) ) {
 			xp = xp * MyRandom.getRandomDouble();
 			k = k + 1;
 		}
 		return ( k );
+	}
+
+	private static boolean withinHeavyPeriod() {
+		return Manager.getCurrentTime() > hard_tasks_occurrence_start_at_ && hard_tasks_occurrence_end_at > Manager.getCurrentTime();
 	}
 
 	public static int getFinishedTasks() {
@@ -77,17 +100,19 @@ public class TaskManager {
 		return temp;
 	}
 
-	public static Set< Agent > badLeaders = new HashSet<>(  );
+	public static Set< Agent > badLeaders = new HashSet<>();
+
 	static public void disposeTask( Agent leader ) {
-		if( ! badLeaders.contains( leader ) ) {
-			badLeaders.add(leader);
+		if ( !badLeaders.contains( leader ) ) {
+			badLeaders.add( leader );
 		}
 		disposedTasks++;
 	}
 
-	public static Map<Agent, Integer> goodLeaders = new LinkedHashMap<>(  );
+	public static Map< Agent, Integer > goodLeaders = new LinkedHashMap<>();
+
 	public static void finishTask( Agent leader ) {
-		goodLeaders.merge( leader, 1, Integer::sum);
+		goodLeaders.merge( leader, 1, Integer::sum );
 		finishedTasks++;
 	}
 

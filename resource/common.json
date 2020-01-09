@@ -38,6 +38,8 @@
   "tasks" : {
     "initial_tasks_num" : 0,
     "additional_tasks_num" : 10.0,
+    "occur_heavy_tasks" : true,
+    "occur_many_tasks" : false,
     "distribution" : "poisson",
     "task_queue_size" : 500,
     "min_subtasks_num" : 8,
