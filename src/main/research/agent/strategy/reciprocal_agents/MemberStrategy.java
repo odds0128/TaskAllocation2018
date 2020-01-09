@@ -16,7 +16,7 @@ import static main.research.Parameter.ReplyType.DECLINE;
 public class MemberStrategy extends MemberTemplateStrategy {
 	public Principle principle = Principle.RATIONAL;
 	private static double de_threshold_    = 0.7;
-	private static int reliable_leaders_ = 5;
+	private static int reliable_leaders_ = 4;
 
 	@Override
 	public void replyTo( List< Solicitation > solicitations, Agent member ) {
