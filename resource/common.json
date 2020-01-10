@@ -1,8 +1,8 @@
 {
   "environment" : {
-    "execution_times" : 1,
-    "max_turn" : 10000,
-    "writing_times" : 100
+    "execution_times" : 30,
+    "max_turn" : 20000,
+    "writing_times" : 200
   },
   "result_type" : {
     "check_data" : true,
@@ -38,7 +38,7 @@
   "tasks" : {
     "initial_tasks_num" : 0,
     "additional_tasks_num" : 10.0,
-    "occur_heavy_tasks" : true,
+    "occur_heavy_tasks" : false,
     "occur_many_tasks" : false,
     "distribution" : "poisson",
     "task_queue_size" : 500,

@@ -1,4 +1,4 @@
-package main.research.agent.strategy.reciprocal_agents;
+package main.research.agent.strategy.proposed;
 
 import main.research.agent.Agent;
 import main.research.agent.AgentManager;

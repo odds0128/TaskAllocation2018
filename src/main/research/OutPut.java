@@ -2,10 +2,9 @@ package main.research;
 
 import main.research.agent.AgentManager;
 import main.research.agent.strategy.MemberTemplateStrategy;
-import main.research.agent.strategy.OstensibleCapacity;
 import main.research.agent.strategy.TemplateStrategy;
-import main.research.agent.strategy.reciprocal_agents.LeaderStrategy;
-import main.research.agent.strategy.reciprocal_agents.MemberStrategy;
+import main.research.agent.strategy.proposed.LeaderStrategy;
+import main.research.agent.strategy.proposed.MemberStrategy;
 import main.research.graph.Edge;
 import main.research.task.TaskManager;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;

@@ -1,4 +1,4 @@
-package main.research.agent.strategy.success_rate;
+package main.research.agent.strategy.rational;
 
 import main.research.agent.Agent;
 import main.research.agent.strategy.MemberTemplateStrategy;
