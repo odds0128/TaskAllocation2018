@@ -25,6 +25,8 @@ import java.util.*;
 
 public abstract class MemberTemplateStrategy extends TemplateStrategy implements Parameter {
 	public int subtaskExecution = 0;
+	public static int dependabilityTopInterchangeTimes = 0;
+
 	public List< Dependability > dependabilityRanking = new ArrayList<>();
 
 	public int expectedResultMessage = 0;
@@ -50,7 +52,13 @@ public abstract class MemberTemplateStrategy extends TemplateStrategy implements
 		}
 		if( ! member.resultList.isEmpty() ) {
 			member.ms.reactTo( member.resultList, member );
-			Collections.sort( dependabilityRanking, Comparator.comparingDouble( Dependability::getValue ).reversed() );
+
+			Agent priorTop = dependabilityRanking.get( 0 ).getAgent();
+			dependabilityRanking.sort( Comparator.comparingDouble( Dependability::getValue ).reversed() );
+			Agent newTop = dependabilityRanking.get( 0 ).getAgent();
+			if( !priorTop.equals( newTop ) ) {
+				dependabilityTopInterchangeTimes++;
+			}
 		}
 		if( ! mySubtaskQueue.isEmpty() ) {
 			member.validatedTicks = getCurrentTime();
@@ -70,6 +78,10 @@ public abstract class MemberTemplateStrategy extends TemplateStrategy implements
 			}
 		}
 		evaporateAllDependability( dependabilityRanking );
+	}
+
+	public static void resetDependabilityTopInterchangeTimes() {
+		dependabilityTopInterchangeTimes=0;
 	}
 
 	private void finishCurrentSubtask(Agent member) {

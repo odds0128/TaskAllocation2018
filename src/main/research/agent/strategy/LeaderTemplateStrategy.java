@@ -24,6 +24,7 @@ import static main.research.task.TaskManager.disposeTask;
 import java.util.*;
 
 public abstract class LeaderTemplateStrategy extends TemplateStrategy implements Parameter {
+	public static int dependabilityTopInterchangeTimes = 0;
 
 	protected int repliesToCome = 0;            // 送ったsolicitationの数を覚えておく
 	protected Task myTask;
@@ -35,13 +36,23 @@ public abstract class LeaderTemplateStrategy extends TemplateStrategy implements
 	public void actAsLeader( Agent leader ) {
 		preprocess( leader );
 
+		Agent priorTop = dependabilityRanking.get( 0 ).getAgent();
 		Collections.sort( dependabilityRanking, Comparator.comparingDouble( Dependability::getValue ).reversed() );
+		Agent newTop = dependabilityRanking.get( 0 ).getAgent();
+		if( !priorTop.equals( newTop ) ) {
+			dependabilityTopInterchangeTimes++;
+		}
 
 		if ( leader.phase == SOLICIT ) leader.ls.solicitAsL( leader );
 		else if ( leader.phase == FORM_TEAM ) leader.ls.formTeamAsL( leader );
 
 		evaporateAllDependability( dependabilityRanking );
 	}
+
+	public static void resetDependabilityTopInterchangeTimes() {
+		dependabilityTopInterchangeTimes=0;
+	}
+
 
 	private void preprocess( Agent leader ) {
 		declineAllSolicitations( leader );

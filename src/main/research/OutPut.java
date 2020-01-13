@@ -1,6 +1,7 @@
 package main.research;
 
 import main.research.agent.AgentManager;
+import main.research.agent.strategy.LeaderTemplateStrategy;
 import main.research.agent.strategy.MemberTemplateStrategy;
 import main.research.agent.strategy.TemplateStrategy;
 import main.research.agent.strategy.proposed.LeaderStrategy;
@@ -46,6 +47,9 @@ public class OutPut implements Parameter {
 	static int[] reciprocalLeaderArray = new int[ writing_times_ ];
 	static int[] rationalistsArray = new int[ writing_times_ ];
 
+	static int[] deChangeTimesForM = new int[writing_times_];
+	static int[] deChangeTimesForL = new int[writing_times_];
+
 	static int[] leadersDisposeTask = new int[ writing_times_ ];
 	static int[] leadersExecuteTask = new int[ writing_times_ ];
 
@@ -75,6 +79,11 @@ public class OutPut implements Parameter {
 
 //		TaskManager.clearLeadersInfo();
 
+		deChangeTimesForL[index] += LeaderTemplateStrategy.dependabilityTopInterchangeTimes;
+		deChangeTimesForM[index] += MemberTemplateStrategy.dependabilityTopInterchangeTimes;
+		LeaderTemplateStrategy.resetDependabilityTopInterchangeTimes();
+		MemberTemplateStrategy.resetDependabilityTopInterchangeTimes();
+
 		membersTrustedByLeaderArray[ index ] += countMembersTrustedByLeader();
 
 		List< Agent > memberList = agents.stream().filter( ag -> ag.role == MEMBER ).collect( Collectors.toList() );
@@ -92,7 +101,7 @@ public class OutPut implements Parameter {
 		overflownTasksArray[ index ] += TaskManager.getOverflowTasks();
 
 		// なんか知らんけどここの有無で結果が変わるようなので注意したほうがいいかも
-		if ( strategy_name.equals( "reliable_agents" ) || strategy_name.equals( "reciprocal_agents" ) ) {
+		if ( strategy_name.equals( "reliable_agents" ) || strategy_name.equals( "reciprocal_agents" ) || strategy_name.equals( "proposed" ) ) {
 			reciprocalMembersArray[ index ] += agents.stream()
 				.filter( ag -> ag.role == MEMBER )
 				.filter( m -> {
@@ -208,7 +217,7 @@ public class OutPut implements Parameter {
 			bw = new BufferedWriter( fw );
 			pw = new PrintWriter( bw );
 
-			pw.println( "turn" + ","
+			pw.println( "tick" + ","
 					+ "FinishedTasks" + "," + "DisposedTasks" + "," + "OverflownTasks" + ","
 					+ "Success rate(except overflow)" + "," + "Success rate" + ","
 					+ "CommunicationTime" + "," + "Messages" + "," + "ExecutionTime" + ","
@@ -221,6 +230,8 @@ public class OutPut implements Parameter {
 					// + "Accompanied leaders"               + "," + "Accompanied members"               + ","
 					+ "ReciprocalLeaders" + "," + "ReciprocalMembers" + ","
 					+ "IdleTime" + ","
+					+ "deTopChangeForL" + ","
+					+ "deTopChangeForM"
 				// + "Rational"                          + "," + "ReciprocalMembers" + ","
 				// + "FinishedTasks in depopulated area" + "," + "FinishedTasks in populated area"   + ","
 			);
@@ -246,6 +257,8 @@ public class OutPut implements Parameter {
 						+ ( double ) reciprocalLeaderArray[ i ] / executionTimes_ + ","
 						+ ( double ) reciprocalMembersArray[ i ] / executionTimes_ + ","
 						+ idleMembersRateArray[ i ] / executionTimes_ + ","
+						+ (double) deChangeTimesForL[i] / executionTimes_ + ","
+						+ (double) deChangeTimesForM[i] / executionTimes_
 				);
 			}
 			pw.close();

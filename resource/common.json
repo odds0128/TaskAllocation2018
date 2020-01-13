@@ -1,8 +1,8 @@
 {
   "environment" : {
-    "execution_times" : 30,
-    "max_turn" : 20000,
-    "writing_times" : 200
+    "execution_times" : 10,
+    "max_turn" : 50000,
+    "writing_times" : 500
   },
   "result_type" : {
     "check_data" : true,
